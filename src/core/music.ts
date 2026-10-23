@@ -11,6 +11,10 @@ const tracks = [
   ['officious-march', 'Officious March.mp3'],
   ['square-stomp', 'Square Stomp.mp3'],
   ['victory-fanfare', 'Victory Fanfare.mp3'],
+  ['bureaucratic-efficiency', 'Bureaucratic Efficiency.mp3'],
+  ['bureaucratic-loop', 'Bureaucratic Loop.mp3'],
+  ['bureaucratic-pulse', 'Bureaucratic Pulse.mp3'],
+  ['untitled', 'Untitled.mp3'],
 ] as const;
 
 export const musicPlaylist = tracks.map(([id]) => id);

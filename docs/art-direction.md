@@ -2,6 +2,8 @@
 
 The game uses an original, subdued occupational-health clinic setting with an old-fashioned analog atmosphere. Institutional olive, charcoal, yellowed paper, and occasional brick-red stamps carry the atmosphere. Humor should come from forms, rules, institutional language, and uncomfortable decisions and everyday details. Keep the environment worn and ordinary rather than gory. Keep the artwork, characters, writing, and game identity original.
 
+The visual reference for version 0.2 is an understated 1980s institutional interior: olive enamel furniture, wood veneer, cream electrical fittings, wool jackets, paper records, and a plain analog wall clock. This guides the artwork without identifying a country or displaying a decade in the game.
+
 The current title-screen atmosphere is the approved baseline. Use paper records, rubber stamps, filing cabinets, worn furniture, tiled walls, institutional lighting, and clothing consistent with the existing artwork. Keep the setting unnamed and undated: do not explicitly identify a country, city, calendar date, year, decade, or real currency in the game's presentation or story. Polish and English are interface languages, not declarations of the story's location. [FACTS.md](../FACTS.md) records established world facts; whether the location is fictional remains undecided.
 
 The title scene reserves its left 43–45% for the title and controls. The bright service window and doctor sit on the right. Put text in the interface rather than baking words into images so Polish and English share the same artwork. Preserve recognizable silhouettes and hard pixel edges at the native 570 × 320 viewport.
@@ -45,3 +47,19 @@ Text: absolutely no text, no letters, no numbers; all paperwork and signs remain
 ```
 
 The palette in the prompt describes the visual target; the generated PNG is not an indexed 18-color image. Future interactive sprites should use a smaller explicit palette and consistent one-pixel outlines where useful for readability.
+
+## Introduction and cabinet artwork
+
+`src/render/clinic.ts` contains the original code-drawn introduction illustrations, cabinet, three patient portraits, furniture, instruments, and decorations added for version 0.2. These assets were authored specifically for this project as Canvas 2D geometry; they contain no extracted game art, stock imagery, or third-party asset dependencies. Their provenance is the project source code and they have no separate third-party attribution requirement.
+
+The four illustrations show a scalpel, soft catheter tubing, a fountain pen, and a rubber stamp. Each appears with one brief sentence and a Next action; the final card enters the cabinet. Avoid intro headings, repeated captions, progress strips, and footer bars. They carry no embedded text, dates, flags, or place names.
+
+The cabinet continues the title palette with worn olive tiles, yellowed plaster, a wooden desk, a green document blotter, and a switchable plant/certificate decoration. Physical wooden dividers make four areas immediately legible: patient and doorway at upper left, examination wall at upper right, paperwork at lower left, and loose tools at lower right. The vertical divider occupies x = 282–287, and the horizontal divider occupies y = 128–137. The upper areas are 128 pixels high; the lower desktop areas are 182 pixels high. Keep those larger lower areas clear enough to move the document, stamps, rulebook, cup, and pencil.
+
+Patients use three distinct original silhouettes and faces, seen from the waist up behind the doctor's desk, without detailed patient-chair furniture. A distant open doorway, corridor, cast shadow, and original pixel-drawn enamel **04** plate give the room depth and identity. Entry and exit use six simple poses with small changes to position, walking bob, and the door. Reduced motion shows the settled state immediately. The plain analog clock on the examination wall displays simulation time provided by the gameplay state, without work-hour labels or colored sectors.
+
+Shapes are drawn with integer rectangles, pixel lines, and scanline polygons so diagonal edges retain deliberate hard pixels. Decorations, examination controls, document controls, and localized narration remain separate from the illustration geometry. The artwork renderer reads the supplied state and never creates time or random values.
+
+The introduction and consulting room use the full 570 × 320 scene without interface header/footer bars; the cabinet's internal divisions are physical joinery. Settings, music, language, fullscreen, and cabinet navigation belong below that area. There is no title or department label above the scene, and PL / EN use 14px page lettering. In the room, use recognizable objects and aligned hotspots without panel captions or object labels. Confine lettering to the physical paperwork and eye chart; draw the 04 plate as pixel geometry. Keep patient details and results on the documents and provide action feedback through accessible descriptions and announcements. Moved objects retain hard pixel edges and cast a small shadow while lifted.
+
+Document and rulebook text uses a separate original compact mixed-case bitmap face in `src/render/font.ts`, with Polish diacritics and an eleven-pixel line advance. The user-provided Papers, Please screenshot guides relative type size and heading hierarchy only; no font, artwork, interface, branding, or world details are taken from it. The approved title lettering stays unchanged.

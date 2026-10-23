@@ -151,3 +151,76 @@ export function drawText(
 
   ctx.restore();
 }
+
+/** Original compact, mixed-case document lettering. It shares the title font's
+ * capitals, but uses narrow lowercase glyphs, a five-pixel x-height, and an
+ * eleven-pixel line advance. Accents and descenders remain inside nine rows. */
+const DOCUMENT_GLYPHS: Record<string, string[]> = {
+  a: ['0000', '0000', '0000', '0110', '0001', '0111', '1001', '0111', '0000'],
+  b: ['0000', '1000', '1000', '1110', '1001', '1001', '1001', '1110', '0000'],
+  c: ['0000', '0000', '0000', '0111', '1000', '1000', '1000', '0111', '0000'],
+  d: ['0000', '0001', '0001', '0111', '1001', '1001', '1001', '0111', '0000'],
+  e: ['0000', '0000', '0000', '0110', '1001', '1111', '1000', '0111', '0000'],
+  f: ['000', '011', '100', '110', '100', '100', '100', '100', '000'],
+  g: ['0000', '0000', '0000', '0111', '1001', '1001', '0111', '0001', '1110'],
+  h: ['0000', '1000', '1000', '1110', '1001', '1001', '1001', '1001', '0000'],
+  i: ['0', '1', '0', '1', '1', '1', '1', '1', '0'],
+  j: ['000', '001', '000', '001', '001', '001', '001', '101', '010'],
+  k: ['0000', '1000', '1000', '1001', '1010', '1100', '1010', '1001', '0000'],
+  l: ['00', '10', '10', '10', '10', '10', '10', '01', '00'],
+  m: ['00000', '00000', '00000', '11010', '10101', '10101', '10101', '10101', '00000'],
+  n: ['0000', '0000', '0000', '1110', '1001', '1001', '1001', '1001', '0000'],
+  o: ['0000', '0000', '0000', '0110', '1001', '1001', '1001', '0110', '0000'],
+  p: ['0000', '0000', '0000', '1110', '1001', '1001', '1110', '1000', '1000'],
+  q: ['0000', '0000', '0000', '0111', '1001', '1001', '0111', '0001', '0001'],
+  r: ['000', '000', '000', '101', '110', '100', '100', '100', '000'],
+  s: ['0000', '0000', '0000', '0111', '1000', '0110', '0001', '1110', '0000'],
+  t: ['000', '010', '010', '111', '010', '010', '010', '001', '000'],
+  u: ['0000', '0000', '0000', '1001', '1001', '1001', '1001', '0111', '0000'],
+  v: ['00000', '00000', '00000', '10001', '10001', '10001', '01010', '00100', '00000'],
+  w: ['00000', '00000', '00000', '10001', '10001', '10101', '10101', '01010', '00000'],
+  x: ['0000', '0000', '0000', '1001', '1001', '0110', '1001', '1001', '0000'],
+  y: ['0000', '0000', '0000', '1001', '1001', '1001', '0111', '0001', '1110'],
+  z: ['0000', '0000', '0000', '1111', '0001', '0110', '1000', '1111', '0000'],
+};
+for (const [letter, base] of Object.entries({ ć: 'c', ń: 'n', ó: 'o', ś: 's', ź: 'z' })) {
+  DOCUMENT_GLYPHS[letter] = ['0001', '0010', '0000', ...DOCUMENT_GLYPHS[base].slice(3)];
+}
+DOCUMENT_GLYPHS.ż = ['0010', '0000', '0000', ...DOCUMENT_GLYPHS.z.slice(3)];
+DOCUMENT_GLYPHS.ł = ['000', '100', '100', '101', '110', '100', '100', '010', '000'];
+DOCUMENT_GLYPHS.ą = ['0000', '0000', '0000', '0110', '0001', '0111', '1001', '0111', '0001'];
+DOCUMENT_GLYPHS.ę = ['0000', '0000', '0000', '0110', '1001', '1111', '1000', '0111', '0010'];
+
+function documentGlyph(character: string): string[] {
+  return DOCUMENT_GLYPHS[character] ?? GLYPHS[character] ?? GLYPHS['?'];
+}
+
+function documentWidth(value: string): number {
+  return Math.max(0, [...value].reduce((width, character) => width + (character === ' ' ? 3 : documentGlyph(character)[0].length + 1), 0) - 1);
+}
+
+export function measureDocumentText(value: string): number {
+  return Math.max(...value.normalize('NFC').replace(/\r\n?/g, '\n').split('\n').map(documentWidth));
+}
+
+export function drawDocumentText(ctx: CanvasRenderingContext2D, value: string, x: number, y: number, options: Omit<TextOptions, 'scale'> = {}): void {
+  ctx.save();
+  ctx.fillStyle = options.color ?? '#282e24';
+  for (const [lineIndex, line] of value.normalize('NFC').replace(/\r\n?/g, '\n').split('\n').entries()) {
+    const width = documentWidth(line);
+    const offset = options.align === 'center' ? width / 2 : options.align === 'right' ? width : 0;
+    let cursorX = Math.round(x - offset);
+    const cursorY = Math.round(y) + lineIndex * 11;
+    for (const character of line) {
+      if (character === ' ') { cursorX += 3; continue; }
+      const rows = documentGlyph(character);
+      for (let row = 0; row < rows.length; row += 1) {
+        for (let column = 0; column < rows[row].length; column += 1) {
+          if (rows[row][column] === '1') ctx.fillRect(cursorX + column, cursorY + row, 1, 1);
+        }
+      }
+      cursorX += rows[0].length + 1;
+    }
+  }
+  ctx.restore();
+}

@@ -1,5 +1,6 @@
-import { gzipSync, strToU8 } from 'fflate';
+import { gunzipSync, gzipSync, strToU8 } from 'fflate';
 import { describe, expect, it } from 'vitest';
+import { applyAction, type GameState } from '../src/core/game';
 import {
   createInitialState,
   decodeSave,
@@ -13,7 +14,7 @@ import {
 function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
   return gzipSync(strToU8(JSON.stringify({
     game: 'next-please',
-    version: 1,
+    version: 3,
     savedAt: '2026-10-23T12:00:00.000Z',
     state: createInitialState(),
     ...overrides,
@@ -26,14 +27,14 @@ function expectCode(action: () => unknown, code: SaveError['code']): void {
 
 describe('portable saves', () => {
   it('round-trips an independent state with debt and progressed counters', () => {
-    const state = { day: 18, money: -250, patientsProcessed: 127 };
+    const state = { ...createInitialState(), day: 18, money: -250, patientsProcessed: 127 };
     const decoded = decodeSave(encodeSave(state));
     expect(decoded).toEqual(state);
     expect(decoded).not.toBe(state);
   });
 
   it('rejects unsupported versions without interpreting their state', () => {
-    expectCode(() => decodeSave(envelope({ version: 2, state: {} })), 'unsupported-version');
+    expectCode(() => decodeSave(envelope({ version: 4, state: {} })), 'unsupported-version');
   });
 
   it('rejects a save for another game', () => {
@@ -54,12 +55,12 @@ describe('portable saves', () => {
     { day: 1, money: 0, patientsProcessed: 0, unexpected: true },
     null,
     [],
-  ])('rejects invalid state: %j', (state) => {
-    expectCode(() => decodeSave(envelope({ state })), 'invalid-state');
+  ])('preserves strict validation of legacy state: %j', (state) => {
+    expectCode(() => decodeSave(envelope({ version: 1, state })), 'invalid-state');
   });
 
   it('checks state before exporting it', () => {
-    expectCode(() => encodeSave({ day: 1, money: Number.NaN, patientsProcessed: 0 }), 'invalid-state');
+    expectCode(() => encodeSave({ ...createInitialState(), money: Number.NaN }), 'invalid-state');
   });
 
   it.each(['2026-02-30T12:00:00.000Z', 'yesterday', null])('rejects malformed timestamps: %j', (savedAt) => {
@@ -119,7 +120,7 @@ describe('portable saves', () => {
   it('accepts gzip metadata produced by standard encoders', () => {
     const bytes = gzipSync(strToU8(JSON.stringify({
       game: 'next-please',
-      version: 1,
+      version: 3,
       savedAt: '2026-10-23T12:00:00.000Z',
       state: createInitialState(),
     })), { filename: 'save.json' });
@@ -129,6 +130,132 @@ describe('portable saves', () => {
   it('imports a browser-selected file', async () => {
     const bytes = new Uint8Array(encodeSave(createInitialState()));
     await expect(importSave(new File([bytes], 'save.npsave'))).resolves.toEqual(createInitialState());
+  });
+
+  it('migrates legacy counters into an empty cabinet without replaying the introduction', () => {
+    const legacy = { day: 18, money: -250, patientsProcessed: 127 };
+    expect(decodeSave(envelope({ version: 1, state: legacy }))).toEqual({
+      ...createInitialState(), ...legacy, phase: 'cabinet', introStep: 3, clockMinutes: 477,
+    });
+    expectCode(() => decodeSave(envelope({ version: 1, state: createInitialState() })), 'invalid-state');
+  });
+
+  it.each([0, 1, 2, 3])('keeps v2 introduction card %i at the same place', (introStep) => {
+    const state = { ...createInitialState(), introStep };
+    expect(decodeSave(envelope({ version: 2, state }))).toEqual(state);
+  });
+
+  it.each([4, 5])('migrates removed v2 card %i directly into the empty cabinet', (introStep) => {
+    const legacy = { ...createInitialState(), introStep, day: 7, money: -20, patientsProcessed: 16, lampOn: false, decoration: 'certificate' };
+    expect(decodeSave(envelope({ version: 2, state: legacy }))).toEqual({
+      ...legacy, phase: 'cabinet', introStep: 3,
+    });
+  });
+
+  it('migrates a stamped v2 visit without changing its work, clock, or decoration', () => {
+    let state = createInitialState();
+    for (const action of ['skip-intro', 'toggle-lamp', 'change-decoration', 'call-patient', 'take-document', 'run-pressure', 'run-vision', 'stamp-fit'] as const) {
+      state = applyAction(state, action).state;
+    }
+    const decoded = decodeSave(envelope({ version: 2, state: { ...state, introStep: 5 } }));
+    expect(decoded).toEqual(state);
+    expect(decoded.visit).not.toBe(state.visit);
+    expect(applyAction(decoded, 'return-document').state).toMatchObject({
+      patientsProcessed: 1, shiftCompleted: 1, money: 10, clockMinutes: 600,
+    });
+  });
+
+  it.each([
+    { introStep: 6 },
+    { phase: 'cabinet', introStep: 3 },
+    { phase: 'cabinet', introStep: 5, clockMinutes: 480 },
+    { introStep: 4, visit: {} },
+    { introStep: 4, shiftCompleted: 1, patientsProcessed: 1 },
+    { unexpected: true },
+  ])('keeps the original v2 validation before migration: %j', (patch) => {
+    expectCode(() => decodeSave(envelope({ version: 2, state: { ...createInitialState(), ...patch } })), 'invalid-state');
+  });
+
+  it('exports version 3 after migrating an older save', () => {
+    const migrated = decodeSave(envelope({ version: 2, state: { ...createInitialState(), introStep: 5 } }));
+    const bytes = encodeSave(migrated);
+    const exported = JSON.parse(new TextDecoder().decode(gunzipSync(bytes)));
+    expect(exported).toMatchObject({ version: 3, state: { phase: 'cabinet', introStep: 3 } });
+    expect(decodeSave(bytes)).toEqual(migrated);
+  });
+
+  it('round-trips a mid-visit state and preserves the decision awaiting return', () => {
+    let state = createInitialState();
+    for (const action of ['skip-intro', 'toggle-lamp', 'change-decoration', 'call-patient', 'take-document', 'run-pressure', 'run-vision', 'stamp-unfit'] as const) {
+      state = applyAction(state, action).state;
+    }
+    const decoded = decodeSave(encodeSave(state));
+    expect(decoded).toEqual(state);
+    expect(decoded.visit).not.toBe(state.visit);
+    expect(decoded.clockMinutes).toBe(570);
+    expect(applyAction(decoded, 'return-document').feedback).toBe('patient-error');
+  });
+
+  it.each([
+    { phase: 'unknown' }, { introStep: 4 }, { introStep: 5 }, { introStep: 6 }, { introStep: 0.5 }, { shiftCompleted: -1 },
+    { shiftCompleted: 4 }, { shiftCompleted: 1 }, { lampOn: 1 }, { decoration: 'portrait' },
+    { phase: 'cabinet', introStep: 0 }, { unexpected: true }, { money: Number.MAX_SAFE_INTEGER },
+  ])('rejects malformed current state fields: %j', (patch) => {
+    expectCode(() => decodeSave(envelope({ state: { ...createInitialState(), ...patch } })), 'invalid-state');
+  });
+
+  it('rejects missing state fields and visits inconsistent with their phase or progress', () => {
+    const initial = createInitialState();
+    const active = applyAction(applyAction(initial, 'skip-intro').state, 'call-patient').state;
+    const invalidStates: unknown[] = [
+      null, [], { ...initial, visit: undefined }, { ...initial, visit: active.visit },
+      { ...active, visit: { ...active.visit, patientId: 1 } },
+      { ...active, shiftCompleted: 3, patientsProcessed: 3 },
+      { ...active, visit: { ...active.visit, document: 'pocket' } },
+      { ...active, visit: { ...active.visit, visionTested: true } },
+      { ...active, visit: { ...active.visit, document: 'desk', decision: 'fit' } },
+      { ...active, visit: { ...active.visit, document: 'desk', decision: 'maybe' } },
+      { ...active, visit: { ...active.visit, pressureTested: 'yes' } },
+      { ...active, visit: { ...active.visit, unexpected: true } },
+    ];
+    for (const state of invalidStates) expectCode(() => decodeSave(envelope({ state })), 'invalid-state');
+    for (const key of Object.keys(initial)) {
+      const missing = { ...initial } as Record<string, unknown>;
+      delete missing[key];
+      expectCode(() => decodeSave(envelope({ state: missing })), 'invalid-state');
+    }
+  });
+
+  it('validates the clock against the appointment stage, including its start and end', () => {
+    const initial = createInitialState();
+    for (const clockMinutes of [476, 478, 480, 840, 841, 477.5, '477']) {
+      expectCode(() => decodeSave(envelope({ state: { ...initial, clockMinutes } })), 'invalid-state');
+    }
+    let state = applyAction(initial, 'skip-intro').state;
+    for (let appointment = 0; appointment < 3; appointment += 1) {
+      for (const action of ['call-patient', 'take-document', 'run-vision', 'run-pressure', 'stamp-fit', 'return-document'] as const) {
+        state = applyAction(state, action).state;
+        expect(decodeSave(encodeSave(state))).toEqual(state);
+        for (const offset of [-1, 1]) {
+          expectCode(() => decodeSave(envelope({ state: { ...state, clockMinutes: state.clockMinutes + offset } })), 'invalid-state');
+        }
+      }
+    }
+    expect(state.clockMinutes).toBe(840);
+    const nextDay = applyAction(state, 'next-day').state;
+    expect(decodeSave(encodeSave(nextDay)).clockMinutes).toBe(477);
+  });
+
+  it('leaves live progress untouched when an import fails validation', async () => {
+    let liveState: GameState = applyAction(createInitialState(), 'skip-intro').state;
+    const previous = liveState;
+    const bytes = new Uint8Array(envelope({ state: { ...liveState, visit: {} } }));
+    try {
+      liveState = await importSave(new File([bytes], 'invalid.npsave'));
+    } catch (error) {
+      expect(error).toMatchObject({ code: 'invalid-state' });
+    }
+    expect(liveState).toBe(previous);
   });
 
   it('reports read failures with a translatable error code', async () => {

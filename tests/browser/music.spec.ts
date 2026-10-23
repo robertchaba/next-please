@@ -1,5 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 import type { Howl } from 'howler';
+import { translations } from '../../src/i18n';
+
+const trackFiles = translations.en.musicTracks.map(title => `${title}.mp3`);
 
 // Inspect the actual Howler/Web Audio playback in the built app; no test-only
 // hooks or mocked audio are installed in production code.
@@ -9,16 +12,13 @@ declare global {
   }
 }
 
-const playing = (page: Page) => page.evaluate(() => window.Howler._howls.filter(sound => sound.playing()).map(sound => ({
+const playing = (page: Page) => page.evaluate(() => window.Howler._howls.filter(sound => sound.playing() && typeof sound._src === 'string' && sound._src.endsWith('.mp3')).map(sound => ({
   src: decodeURIComponent(sound._src), seek: sound.seek() as number, muted: sound.mute(), state: window.Howler.ctx?.state,
 })));
 
-// Observe the actual canvas pixels inside the speaker's meter.
-const meterPixels = (page: Page) => page.evaluate(() => {
-  const control = document.getElementById('control-sound')!;
-  const ctx = document.querySelector<HTMLCanvasElement>('#game')!.getContext('2d')!;
-  return Array.from(ctx.getImageData(parseInt(control.style.left) + 12, parseInt(control.style.top) + 7, 7, 7).data);
-});
+// Observe the rendered meter on the music control outside the game canvas.
+const meterHeights = (page: Page) => page.locator('#control-sound .music-meter > i')
+  .evaluateAll(bars => bars.map(bar => getComputedStyle(bar).height));
 
 test('music decodes, plays continuously across screens, repeats, and respects persisted mute', async ({ page }) => {
   const errors: string[] = [];
@@ -34,7 +34,7 @@ test('music decodes, plays continuously across screens, repeats, and respects pe
   await expect.poll(async () => (await playing(page))[0]?.seek).toBeGreaterThan(0.2);
   const position = (await playing(page))[0].seek;
   await page.getByRole('button', { name: 'ROZPOCZNIJ DYŻUR' }).click();
-  await expect(page.getByRole('dialog')).toContainText('Rozgrywka powstaje');
+  await expect(page.getByRole('heading', { name: 'INSTRUKTAŻ STANOWISKOWY' })).toBeAttached();
   expect((await playing(page))[0].seek).toBeGreaterThan(position);
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'AUTORZY', exact: true }).click();
@@ -45,9 +45,9 @@ test('music decodes, plays continuously across screens, repeats, and respects pe
   await page.getByRole('button', { name: 'Włącz dźwięk' }).click();
   expect((await playing(page))[0].seek).toBeGreaterThan(position);
 
-  for (const next of ['Bureaucratic March 2.mp3', 'Bureaucratic March 3.mp3', 'Happy Bureaucratic Anthem.mp3', 'Negative Bureaucratic March.mp3', 'New Bureaucratic March 1.mp3', 'New Bureaucratic March 2.mp3', 'Officious March.mp3', 'Square Stomp.mp3', 'Victory Fanfare.mp3', 'Bureaucratic March 1.mp3']) {
+  for (const next of [...trackFiles.slice(1), trackFiles[0]]) {
     await page.evaluate(() => {
-      const sound = window.Howler._howls.find(sound => sound.playing())!;
+      const sound = window.Howler._howls.find(sound => sound.playing() && typeof sound._src === 'string' && sound._src.endsWith('.mp3'))!;
       sound.seek(sound.duration() - 0.1);
     });
     await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining(next)]);
@@ -81,7 +81,7 @@ test('previous/next wrap, support the keyboard in both languages, and preserve m
   await page.keyboard.press('Enter');
   await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining('Bureaucratic March 1.mp3')]);
   await page.keyboard.press('Space');
-  await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining('Victory Fanfare.mp3')]);
+  await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining(trackFiles.at(-1)!)]);
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Następny utwór' })).toBeFocused();
   await page.keyboard.press('Enter');
@@ -135,22 +135,23 @@ test('the small meter follows playback and becomes still when muted or reduced m
   await expect(sound).toHaveAttribute('aria-description', 'Muzyka jest odtwarzana.');
   await page.getByRole('button', { name: 'ROZPOCZNIJ DYŻUR' }).focus();
   await page.mouse.move(0, 0);
-  const initial = await meterPixels(page);
-  await expect.poll(() => meterPixels(page)).not.toEqual(initial);
+  await expect(page.locator('#control-sound .music-meter > i')).toHaveCount(3);
+  const initial = await meterHeights(page);
+  await expect.poll(() => meterHeights(page)).not.toEqual(initial);
   await page.screenshot({ path: testInfo.outputPath('music-playing.png') });
 
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  // Allow one update to apply the changed OS preference, then compare later pixels.
+  // Allow one update to apply the changed OS preference, then compare later bars.
   await page.waitForTimeout(150);
-  const reduced = await meterPixels(page);
+  const reduced = await meterHeights(page);
   await page.waitForTimeout(350);
-  expect(await meterPixels(page)).toEqual(reduced);
+  expect(await meterHeights(page)).toEqual(reduced);
   await expect(sound).toHaveAttribute('aria-description', 'Muzyka jest odtwarzana.');
 
   await sound.click();
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await expect(page.getByRole('button', { name: 'Włącz dźwięk' })).toHaveAttribute('aria-description', 'Muzyka jest wyciszona.');
-  const muted = await meterPixels(page);
+  const muted = await meterHeights(page);
   await page.waitForTimeout(350);
-  expect(await meterPixels(page)).toEqual(muted);
+  expect(await meterHeights(page)).toEqual(muted);
 });

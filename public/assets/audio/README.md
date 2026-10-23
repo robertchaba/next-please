@@ -1,6 +1,23 @@
 # Music and sound effects
 
-Ten supplied MP3s are bundled in [music/](music/README.md) and registered in `src/core/music.ts`. The Howler manager in `src/core/audio.ts` provides lazy loading, separate music/effect volumes, mute, playlists, previous/next controls, and user-gesture unlocking. No effects are bundled yet.
+Ten supplied MP3s are bundled in [music/](music/README.md) and registered in `src/core/music.ts`. Four original effects are registered in `src/core/effects.ts`. The Howler manager in `src/core/audio.ts` provides lazy loading, separate music/effect volumes, mute, playlists, previous/next controls, and user-gesture unlocking.
+
+## Original effects
+
+| ID / file | Use | Duration |
+| --- | --- | --- |
+| `typewriter` / `typewriter.wav` | Mechanical key strike and release during text reveal | 85 ms |
+| `carriage` / `carriage.wav` | Short carriage slide and stop between introduction cards | 360 ms |
+| `stamp` / `stamp.wav` | Rubber stamp hitting a document | 160 ms |
+| `paper` / `paper.wav` | Handling a document or manual | 250 ms |
+
+Created specifically for Next, Please! on 2026-10-23 with the original deterministic synthesis code in [`scripts/generate-effects.mjs`](../../../scripts/generate-effects.mjs). No samples, external recordings, downloaded assets, voices, or third-party material are used. The sounds combine seeded filtered noise with damped mechanical resonances; each is mono 44.1 kHz, 16-bit PCM WAV with quiet peaks, clean endpoints and no added silence. Reproduce the committed files with `node scripts/generate-effects.mjs`; no dependencies or network access are needed.
+
+Provenance: project-original computer-synthesized audio, prepared with Codex for Robert Chaba. Source: the linked repository script. Redistribution terms: the same terms as this project's original source and assets; no separate third-party license, license URL, or attribution requirement applies. The repository does not currently declare an open-source license; these notes do not grant a separate public license.
+
+Register `effectsManifest` once with `audio.register(effectsManifest)`, then call `audio.playSound('typewriter')` (or another ID) after a user gesture has unlocked audio. For frequent text reveals, skip whitespace and limit keys to around one every 60 ms; finishing or skipping a card should not queue a burst of all remaining keys. Check `audio.isMuted()` before requesting an effect to avoid loading inaudible effects. No drawing function should request playback.
+
+## Playback
 
 Registration does not fetch or play audio. The application starts muted unless a saved preference says otherwise. Enabling sound starts the playlist in that gesture; a saved unmuted preference starts it on the first click or key press. Track changes repeat the playlist, and moving between the title screen and panels does not restart it. The application owns playback so future gameplay can use the same music continuously. Muting an active playlist silences it without resetting its position.
 

@@ -8,20 +8,19 @@ export function getScale(width: number, height: number): number {
 }
 
 export function installDisplay(app: HTMLElement, viewport: HTMLElement, stage: HTMLElement): void {
+  const surrounds = [...app.querySelectorAll<HTMLElement>('.surround-bottom')];
   const resize = () => {
-    const fullscreen = Boolean(document.fullscreenElement);
     const style = getComputedStyle(app);
     const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
     const paddingY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
     const width = window.innerWidth - paddingX;
-    const surrounds = [...app.querySelectorAll<HTMLElement>('.surround-top, .surround-bottom')];
     const gap = parseFloat(style.rowGap) || 0;
     // Measure the actual text rows, including wrapping, before choosing a scale.
     // Start wide, then shrink until the frame and its surrounding text both fit.
     let scale = getScale(width, window.innerHeight - paddingY);
     while (true) {
       app.style.setProperty('--game-width', `${WIDTH * scale}px`);
-      const chrome = fullscreen ? 0 : surrounds.reduce((height, element) => height + element.getBoundingClientRect().height, 0);
+      const chrome = surrounds.reduce((height, element) => height + element.getBoundingClientRect().height, 0);
       const visibleRows = surrounds.filter(element => element.getBoundingClientRect().height > 0).length;
       const fitted = getScale(width, window.innerHeight - paddingY - chrome - gap * visibleRows);
       if (fitted >= scale) break;
@@ -35,8 +34,8 @@ export function installDisplay(app: HTMLElement, viewport: HTMLElement, stage: H
   };
   window.addEventListener('resize', resize);
   document.addEventListener('fullscreenchange', resize);
-  new ResizeObserver(resize).observe(app.querySelector('.surround-top')!);
-  new ResizeObserver(resize).observe(app.querySelector('.surround-bottom')!);
+  const observer = new ResizeObserver(resize);
+  surrounds.forEach(element => observer.observe(element));
   resize();
 }
 
