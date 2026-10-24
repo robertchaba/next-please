@@ -1,5 +1,7 @@
 # Workstation composition revision — 2026-10-25
 
+This is the previous composition record. [The follow-up corrections](art-workstation-2026-10-25-corrections.md) supersede its pale telephone, rack height and scale crop. The original sources and exact prompts below remain archived.
+
 The requested visual polish uses the built-in OpenAI `image_gen.imagegen` tool with the imagegen skill. No CLI/API fallback, third-party artwork, copied game assets, or generated-code substitute was used. The approved title and cabinet informed the palette, materials, perspective and restrained analog atmosphere. This revision changes presentation and supply pickup positions; the save format and gameplay rules stay unchanged.
 
 ## Retained sources and current runtime assets
@@ -25,7 +27,7 @@ The cabinet generations are opaque; the telephone requested true transparency, r
 - The scale has a substantial cream dial, upright, height measure, platform and room shadow within the background. Its measurement target is (405,61), 42 × 67. It remains clear of the separately drawn clock and shares the room's lamp dimming.
 - A newly taken blank or certificate appears in hand at its actual rack-slot center. Cancellation returns it to a safe main-desk location. These are temporary presentation coordinates, absent from exported saves.
 
-The current in-game composition is [workstation-screen.png](workstation-screen.png). The native canvas remains 570 × 320 with integer coordinates and nearest-neighbor display.
+The latest in-game composition, including the follow-up corrections, is [workstation-screen.png](workstation-screen.png). The native canvas remains 570 × 320 with integer coordinates and nearest-neighbor display.
 
 ## Reproducible preparation
 

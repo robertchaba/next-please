@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   addDeskItem, containsPoint, createDeskState, DEFAULT_DOCUMENT, DESK_BOUNDS, CARRY_BOUNDS, ITEM_SIZES, CARRIED_ITEM_SIZES, restRect, itemAnchor,
-  itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, TRAY_DOCUMENT, MANUAL_OPEN_POSITION, MANUAL_OPEN_SIZE, RIGHT_DESK_X, type DeskItemId,
+  itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, TRAY_DOCUMENT, MANUAL_OPEN_POSITION, MANUAL_OPEN_SIZE, RIGHT_DESK_X, RIGHT_DESK_TOP, DESK_FRONT, type DeskItemId,
 } from '../src/core/desk';
 
 describe('temporary desktop layout', () => {
-  it.each((Object.keys(ITEM_SIZES) as DeskItemId[]).filter(id => id !== 'incoming-referral'))('keeps all of %s on the desk at integer coordinates', (id) => {
+  it.each((Object.keys(ITEM_SIZES) as DeskItemId[]).filter(id => id !== 'incoming-referral'))('keeps %s within its placement limits at integer coordinates', (id) => {
     const state = createDeskState();
     for (const point of [
       { x: -10000.6, y: -10000.6 },
@@ -20,11 +20,33 @@ describe('temporary desktop layout', () => {
       expect(Number.isInteger(rect.x)).toBe(true);
       expect(Number.isInteger(rect.y)).toBe(true);
       expect(rect.x).toBeGreaterThanOrEqual(DESK_BOUNDS.x);
-      expect(rect.y).toBeGreaterThanOrEqual(DESK_BOUNDS.y);
+      const minimumY = id === 'document' && rect.x >= RIGHT_DESK_X ? RIGHT_DESK_TOP - rect.h / 2 : DESK_BOUNDS.y;
+      expect(rect.y).toBeGreaterThanOrEqual(minimumY);
       expect(rect.x + rect.w).toBeLessThanOrEqual(DESK_BOUNDS.x + DESK_BOUNDS.w);
       expect(rect.y + rect.h).toBeLessThanOrEqual(DESK_BOUNDS.y + DESK_BOUNDS.h);
     }
     expect(moveDeskItem(state, id, { x: 250.4, y: 145.6 }).positions[id]).toEqual({ x: 250, y: 146 });
+  });
+
+  it.each(['document', 'paper-1'] as const)('allows %s over the room only while at least half remains over the right desktop', id => {
+    const initial = addDeskItem(createDeskState(), 'paper-1', { x: 300, y: 151 });
+    for (const y of [-Infinity, -100, 65, 66, 100, 138, 170, 300, Infinity]) {
+      const placed = itemRect(moveDeskItem(initial, id, { x: 300, y }), id);
+      const heightOnDesk = Math.min(placed.y + placed.h, DESK_FRONT.y) - Math.max(placed.y, RIGHT_DESK_TOP);
+      expect(heightOnDesk * placed.w).toBeGreaterThanOrEqual(placed.w * placed.h / 2);
+      expect(placed.y + placed.h).toBeLessThanOrEqual(DESK_BOUNDS.y + DESK_BOUNDS.h);
+    }
+    expect(itemRect(moveDeskItem(initial, id, { x: 300, y: -100 }), id)).toEqual({ x: 300, y: 66, w: 188, h: 144 });
+    expect(itemRect(moveDeskItem(initial, id, { x: 300, y: 90 }), id).y).toBe(90);
+    expect(itemRect(moveDeskItem(initial, id, { x: 90, y: -100 }), id).y).toBe(DESK_BOUNDS.y);
+  });
+
+  it('keeps the manual, stamps and loose clips below the room divider when placed', () => {
+    const initial = addDeskItem(createDeskState(), 'clip-1', { x: 300, y: 151 });
+    for (const id of ['manual', 'stamp-fit', 'stamp-unfit', 'clip-1'] as const) {
+      expect(itemRect(moveDeskItem(initial, id, { x: 300, y: -100 }), id).y).toBe(DESK_BOUNDS.y);
+    }
+    expect(itemRect(moveDeskItem(initial, 'manual', { x: 300, y: -100 }, false, true), 'manual', false, false, true).y).toBe(DESK_BOUNDS.y);
   });
 
   it('moves and raises an item without mutating the existing layout or other objects', () => {

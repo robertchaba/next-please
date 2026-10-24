@@ -74,7 +74,7 @@ test('patients speak sparingly, hesitate at failed vision tests and leave refusa
   await activate(page, 'take-certificate');
   await activate(page, 'run-vision');
   await expect(page.locator('#patient-speech')).toBeEmpty();
-  for (const id of ['stamp-fit', 'apply-stamp', 'return-document']) await activate(page, id);
+  for (const id of ['stamp-fit', 'apply-stamp', 'write-certificate', 'return-document']) await activate(page, id);
   await expect(page.locator('#patient-speech')).toHaveText('Irena Wolska: Dziękuję.');
   await page.clock.runFor(1200);
   await expect(page.locator('#patient-speech')).toHaveText('Irena Wolska: Dziękuję.');
@@ -92,7 +92,7 @@ test('patients speak sparingly, hesitate at failed vision tests and leave refusa
   await expect(page.locator('#patient-speech')).toHaveText('Leon Burek: Yyy...');
   await activate(page, 'run-vision');
   await expect(page.locator('#patient-speech')).toHaveText('Leon Burek: Rozmazane...');
-  for (const id of ['stamp-unfit', 'apply-stamp', 'return-document']) await activate(page, id);
+  for (const id of ['stamp-unfit', 'apply-stamp', 'write-certificate', 'return-document']) await activate(page, id);
   await expect(page.locator('#patient-speech')).toBeEmpty();
   await page.clock.runFor(1600);
   await expect(page.locator('#patient-speech')).toBeEmpty();
@@ -104,7 +104,7 @@ test('calling again finishes the previous farewell and pauses the new entrance u
   await enterCabinet(page);
   await activate(page, 'call-patient');
   await page.clock.runFor(720);
-  for (const id of ['take-document', 'take-certificate', 'stamp-fit', 'apply-stamp', 'return-document']) await activate(page, id);
+  for (const id of ['take-document', 'take-certificate', 'stamp-fit', 'apply-stamp', 'write-certificate', 'return-document']) await activate(page, id);
   await expect(page.locator('#patient-speech')).toContainText('Dziękuję.');
   await activate(page, 'call-patient');
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'enter');
@@ -125,7 +125,7 @@ test('a silent refusal starts the exit immediately, without a farewell pause', a
   await enterCabinet(page);
   await activate(page, 'call-patient');
   await page.clock.runFor(720);
-  for (const id of ['take-document', 'take-certificate', 'stamp-unfit', 'apply-stamp', 'return-document']) await activate(page, id);
+  for (const id of ['take-document', 'take-certificate', 'stamp-unfit', 'apply-stamp', 'write-certificate', 'return-document']) await activate(page, id);
   await expect(page.locator('#patient-speech')).toBeEmpty();
   await page.clock.runFor(180);
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'exit');

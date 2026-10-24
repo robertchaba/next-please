@@ -14,7 +14,7 @@ import {
 function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
   return gzipSync(strToU8(JSON.stringify({
     game: 'next-please',
-    version: 6,
+    version: 7,
     savedAt: '2026-10-23T12:00:00.000Z',
     state: createInitialState(),
     ...overrides,
@@ -23,10 +23,10 @@ function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
 
 function legacyState(state: object): Record<string, unknown> {
   const legacy = { ...state } as Record<string, unknown>;
-  delete legacy.papers; delete legacy.nextPaperId;
+  delete legacy.papers; delete legacy.nextPaperId; delete legacy.paperClips;
   if (legacy.visit && typeof legacy.visit === 'object') {
     const visit = { ...legacy.visit } as Record<string, unknown>;
-    delete visit.measurementsTaken; delete visit.certificateTaken; legacy.visit = visit;
+    delete visit.measurementsTaken; delete visit.certificateTaken; delete visit.certificateNamed; legacy.visit = visit;
   }
   return legacy;
 }
@@ -44,7 +44,7 @@ describe('portable saves', () => {
   });
 
   it('rejects unsupported versions without interpreting their state', () => {
-    expectCode(() => decodeSave(envelope({ version: 7, state: {} })), 'unsupported-version');
+    expectCode(() => decodeSave(envelope({ version: 8, state: {} })), 'unsupported-version');
   });
 
   it('rejects a save for another game', () => {
@@ -130,7 +130,7 @@ describe('portable saves', () => {
   it('accepts gzip metadata produced by standard encoders', () => {
     const bytes = gzipSync(strToU8(JSON.stringify({
       game: 'next-please',
-      version: 6,
+      version: 7,
       savedAt: '2026-10-23T12:00:00.000Z',
       state: createInitialState(),
     })), { filename: 'save.json' });
@@ -164,7 +164,7 @@ describe('portable saves', () => {
 
   it('migrates a stamped v2 visit without changing its work, clock, or decoration', () => {
     let state = createInitialState();
-    for (const action of ['skip-intro', 'toggle-lamp', 'change-decoration', 'call-patient', 'take-document', 'take-certificate', 'run-pressure', 'run-vision', 'stamp-fit'] as const) {
+    for (const action of ['skip-intro', 'toggle-lamp', 'change-decoration', 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-pressure', 'run-vision', 'stamp-fit'] as const) {
       state = applyAction(state, action).state;
     }
     const legacy = { ...state, clockMinutes: 570 };
@@ -187,23 +187,23 @@ describe('portable saves', () => {
     expectCode(() => decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), ...patch }) })), 'invalid-state');
   });
 
-  it('exports version 6 after migrating an older save', () => {
+  it('exports version 7 after migrating an older save', () => {
     const migrated = decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), introStep: 5 }) }));
     const bytes = encodeSave(migrated);
     const exported = JSON.parse(new TextDecoder().decode(gunzipSync(bytes)));
-    expect(exported).toMatchObject({ version: 6, state: { phase: 'cabinet', introStep: 3 } });
+    expect(exported).toMatchObject({ version: 7, state: { phase: 'cabinet', introStep: 3 } });
     expect(decodeSave(bytes)).toEqual(migrated);
   });
 
   it('round-trips a mid-visit state and preserves the decision awaiting return', () => {
     let state = createInitialState();
-    for (const action of ['skip-intro', 'toggle-lamp', 'change-decoration', 'call-patient', 'take-document', 'take-certificate', 'run-pressure', 'run-vision', 'stamp-unfit'] as const) {
+    for (const action of ['skip-intro', 'toggle-lamp', 'change-decoration', 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-pressure', 'run-vision', 'stamp-unfit'] as const) {
       state = applyAction(state, action).state;
     }
     const decoded = decodeSave(encodeSave(state));
     expect(decoded).toEqual(state);
     expect(decoded.visit).not.toBe(state.visit);
-    expect(decoded.clockMinutes).toBe(490);
+    expect(decoded.clockMinutes).toBe(491);
     expect(applyAction(decoded, 'return-document').feedback).toBe('patient-error');
   });
 
@@ -211,7 +211,7 @@ describe('portable saves', () => {
     [], ['run-vision'], ['run-pressure'],
   ] as const)('round-trips an early stamp with incomplete examinations %j', (...tests) => {
     let state = createInitialState();
-    for (const action of ['skip-intro', 'call-patient', 'take-document', 'take-certificate', ...tests, 'stamp-fit'] as const) {
+    for (const action of ['skip-intro', 'call-patient', 'take-document', 'take-certificate', 'write-certificate', ...tests, 'stamp-fit'] as const) {
       state = applyAction(state, action).state;
     }
     const decoded = decodeSave(encodeSave(state));
@@ -264,7 +264,7 @@ describe('portable saves', () => {
     }
     let state = applyAction(initial, 'skip-intro').state;
     for (let appointment = 0; appointment < 3; appointment += 1) {
-      for (const action of ['handle-item', 'read-manual', 'call-patient', 'take-document', 'take-certificate', 'run-vision', 'run-pressure', 'stamp-fit', 'return-document'] as const) {
+      for (const action of ['handle-item', 'read-manual', 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-vision', 'run-pressure', 'stamp-fit', 'return-document'] as const) {
         state = applyAction(state, action).state;
         expect(decodeSave(encodeSave(state))).toEqual(state);
         // Additional time can come from earlier item handling or examinations.
@@ -272,19 +272,19 @@ describe('portable saves', () => {
         expectCode(() => decodeSave(envelope({ state: { ...state, clockMinutes: 841 } })), 'invalid-state');
       }
     }
-    expect(state.clockMinutes).toBe(519);
+    expect(state.clockMinutes).toBe(522);
     const nextDay = applyAction(state, 'next-day').state;
     expect(decodeSave(encodeSave(nextDay)).clockMinutes).toBe(477);
     expectCode(() => decodeSave(envelope({ state: { ...state, clockMinutes: 482 } })), 'invalid-state');
   });
 
-  it('preserves v3 clocks after strict legacy validation and exports subsequent short actions as v6', () => {
+  it('preserves v3 clocks after strict legacy validation and exports subsequent short actions as v7', () => {
     const legacy = {
       ...createInitialState(), phase: 'cabinet', introStep: 3, clockMinutes: 500,
       visit: { patientId: 0, document: 'desk', visionTested: false, pressureTested: false, decision: 'fit' },
     };
     const migrated = decodeSave(envelope({ version: 3, state: legacyState(legacy) }));
-    expect(migrated).toEqual({ ...legacy, visit: { ...legacy.visit, measurementsTaken: false, certificateTaken: true }, papers: [{ id: 1, kind: 'referral', patientId: 0, day: 1, location: 'desk', clipped: false }], nextPaperId: 2 });
+    expect(migrated).toEqual({ ...legacy, visit: { ...legacy.visit, measurementsTaken: false, certificateTaken: true, certificateNamed: true }, papers: [{ id: 1, kind: 'referral', patientId: 0, day: 1, location: 'desk' }], nextPaperId: 2 });
     const updated = applyAction(migrated, 'run-vision').state;
     expect(updated.clockMinutes).toBe(503);
     expect(decodeSave(encodeSave(updated))).toEqual(updated);
@@ -322,9 +322,9 @@ describe('portable saves', () => {
   });
 });
 
-describe('version 6 paperwork saves', () => {
+describe('version 7 paperwork saves', () => {
   const run = (state: GameState, ...actions: Parameters<typeof applyAction>[1][]): GameState => actions.reduce((current, action) => applyAction(current, action).state, state);
-  const paperwork = (): GameState => run(createInitialState(), 'skip-intro', 'call-patient', 'take-document', 'take-certificate', 'run-vision', 'run-pressure', 'run-measurements', 'take-paper', { type: 'write-note', paperId: 2 }, { type: 'clip-paper', paperId: 2 }, { type: 'store-paper', paperId: 2 }, 'stamp-unfit', 'return-document', { type: 'open-letter', paperId: 3 });
+  const paperwork = (): GameState => run(createInitialState(), 'skip-intro', 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-vision', 'run-pressure', 'run-measurements', 'take-paper', { type: 'write-note', paperId: 2 }, { type: 'clip-paper', paperId: 2 }, { type: 'store-paper', paperId: 2 }, 'stamp-unfit', 'return-document', { type: 'open-letter', paperId: 3 });
 
   it('round-trips drawer contents, complete notes, clips and opened complaint letters without sharing references', () => {
     const state = paperwork();
@@ -341,7 +341,7 @@ describe('version 6 paperwork saves', () => {
   });
 
   it('migrates v4 intake into a referral with measurements still pending and preserves its clock', () => {
-    const current = run(createInitialState(), 'skip-intro', 'call-patient', 'take-document', 'take-certificate', 'run-vision', 'stamp-fit');
+    const current = run(createInitialState(), 'skip-intro', 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-vision', 'stamp-fit');
     const old = legacyState(current);
     const migrated = decodeSave(envelope({ version: 4, state: old }));
     expect(migrated).toEqual(current);
@@ -366,7 +366,7 @@ describe('version 6 paperwork saves', () => {
       { ...note, patientId: 3 }, { ...note, location: 'bin' }, { ...note, clipped: 'yes' },
       { ...note, unexpected: true }, { ...note, results: { vision: 'refer', pressure: 'pass', weight: 62, height: 164 } },
       { ...note, results: { vision: 'pass', pressure: 'pass', weight: 62, height: null } },
-      { ...note, patientId: null }, { ...note, results: { vision: null, pressure: null, weight: null, height: null } },
+      { ...note, patientId: null }, { ...note, additionalWritten: false, results: { vision: null, pressure: null, weight: null, height: null } },
       { ...letter, opened: 1 }, { ...letter, sender: 'zus' }, { ...letter, kind: 'memo' },
       { ...letter, patientId: 1, sender: 'zus' },
     ];
@@ -391,9 +391,14 @@ describe('version 6 paperwork saves', () => {
 describe('version 6 certificate availability', () => {
   const act = (state: GameState, ...actions: Parameters<typeof applyAction>[1][]): GameState => actions.reduce((current, action) => applyAction(current, action).state, state);
   const asV5 = (state: GameState): Record<string, unknown> => {
-    if (!state.visit) return { ...state };
-    const { certificateTaken: _taken, ...visit } = state.visit;
-    return { ...state, visit };
+    const { paperClips, ...previous } = state;
+    const papers = previous.papers.map(paper => {
+      const { additionalWritten: _written, ...old } = paper as typeof paper & { additionalWritten?: boolean };
+      return { ...old, clipped: paperClips.some(group => group.includes(paper.id)) };
+    });
+    if (!state.visit) return { ...previous, papers };
+    const { certificateTaken: _taken, certificateNamed: _named, ...visit } = state.visit;
+    return { ...previous, papers, visit };
   };
 
   it('round-trips a taken referral with no certificate and a separately fetched blank certificate', () => {
@@ -409,12 +414,12 @@ describe('version 6 certificate availability', () => {
     const stamped = act(createInitialState(), 'skip-intro', 'call-patient', 'take-document', 'take-certificate', 'stamp-fit');
     const old = { ...asV5(stamped), clockMinutes: 482 };
     const migrated = decodeSave(envelope({ version: 5, state: old }));
-    expect(migrated).toEqual({ ...stamped, clockMinutes: 482 });
+    expect(migrated).toEqual({ ...stamped, clockMinutes: 482, visit: { ...stamped.visit, certificateNamed: true } });
     expect(migrated.visit).toMatchObject({ certificateTaken: true, decision: 'fit' });
     expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(6);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(7);
     const intake = act(createInitialState(), 'skip-intro', 'call-patient', 'take-document');
-    expect(decodeSave(envelope({ version: 5, state: asV5(intake) }))).toEqual({ ...intake, visit: { ...intake.visit, certificateTaken: true } });
+    expect(decodeSave(envelope({ version: 5, state: asV5(intake) }))).toEqual({ ...intake, visit: { ...intake.visit, certificateTaken: true, certificateNamed: true } });
     const waiting = act(createInitialState(), 'skip-intro', 'call-patient');
     expect(decodeSave(envelope({ version: 5, state: asV5(waiting) }))).toEqual(waiting);
   });
@@ -437,5 +442,80 @@ describe('version 6 certificate availability', () => {
     expectCode(() => decodeSave(envelope({ state: { ...waiting, visit: { ...waiting.visit, certificateTaken: true } } })), 'invalid-state');
     expectCode(() => decodeSave(envelope({ state: { ...intake, clockMinutes: 482, visit: { ...intake.visit, decision: 'fit' } } })), 'invalid-state');
     expectCode(() => encodeSave({ ...intake, clockMinutes: 482, visit: { ...intake.visit!, decision: 'fit' } }), 'invalid-state');
+  });
+});
+
+describe('version 7 document writing and bundles', () => {
+  const run = (...actions: Parameters<typeof applyAction>[1][]): GameState => actions.reduce((state, action) => applyAction(state, action).state, createInitialState());
+
+  it('round-trips an unwritten certificate and supplementary notes before any examination', () => {
+    const state = run('skip-intro', 'call-patient', 'take-document', 'take-certificate', 'take-paper', { type: 'write-note', paperId: 2 });
+    const decoded = decodeSave(encodeSave(state));
+    expect(decoded).toEqual(state);
+    expect(decoded.visit?.certificateNamed).toBe(false);
+    expect(decoded.papers[1]).toMatchObject({ patientId: 0, additionalWritten: true, results: { vision: null, pressure: null, weight: null, height: null } });
+    expect(decodeSave(encodeSave(applyAction(decoded, 'write-certificate').state)).visit?.certificateNamed).toBe(true);
+  });
+
+  it('round-trips clips with multiple papers and a certificate without sharing arrays', () => {
+    const state = run('skip-intro', 'call-patient', 'take-document', 'take-certificate', 'take-paper',
+      { type: 'clip-document', documentId: 1 }, { type: 'join-documents', documentId: 2, targetId: 1 },
+      { type: 'join-documents', documentId: 'certificate', targetId: 2 });
+    const decoded = decodeSave(encodeSave(state));
+    expect(decoded).toEqual(state);
+    expect(decoded.paperClips).not.toBe(state.paperClips);
+    expect(decoded.paperClips[0]).not.toBe(state.paperClips[0]);
+    decoded.paperClips[0]!.pop();
+    expect(state.paperClips).toEqual([[1, 2, 'certificate']]);
+    const unclipped = applyAction(state, { type: 'unclip-document', documentId: 'certificate' }).state;
+    expect(decodeSave(encodeSave(unclipped)).paperClips).toEqual([]);
+  });
+
+  it('preserves historical v6 certificate identity, snapshots and singleton clips', () => {
+    const old = {
+      day: 1, money: 0, patientsProcessed: 0, phase: 'cabinet', introStep: 3, shiftCompleted: 0,
+      clockMinutes: 495, lampOn: true, decoration: 'plant', nextPaperId: 3,
+      visit: { patientId: 0, document: 'desk', certificateTaken: true, visionTested: true, pressureTested: true, measurementsTaken: false, decision: 'fit' },
+      papers: [
+        { id: 1, kind: 'referral', patientId: 0, day: 1, location: 'desk', clipped: true },
+        { id: 2, kind: 'note', patientId: 0, day: 1, location: 'drawer', clipped: true, results: { vision: 'pass', pressure: null, weight: null, height: null } },
+      ],
+    };
+    const state = decodeSave(envelope({ version: 6, state: old }));
+    expect(state.clockMinutes).toBe(495);
+    expect(state.visit).toEqual({ ...old.visit, certificateNamed: true });
+    expect(state.papers[1]).toMatchObject({ additionalWritten: false, results: { vision: 'pass', pressure: null } });
+    expect(state.paperClips).toEqual([[1], [2]]);
+    expect(state.papers.every(paper => !Object.hasOwn(paper, 'clipped'))).toBe(true);
+    expect(decodeSave(encodeSave(state))).toEqual(state);
+    for (const patch of [
+      { paperClips: [] },
+      { visit: { ...old.visit, certificateNamed: true } },
+      { papers: [{ ...old.papers[1], additionalWritten: true }] },
+      { papers: [{ ...old.papers[1], results: { vision: null, pressure: null, weight: null, height: null } }] },
+    ]) expectCode(() => decodeSave(envelope({ version: 6, state: { ...old, ...patch } })), 'invalid-state');
+  });
+
+  it('rejects missing documents, duplicate membership, invalid groups and mixed storage', () => {
+    const state = run('skip-intro', 'call-patient', 'take-document', 'take-certificate', 'take-paper', 'take-paper', { type: 'store-paper', paperId: 3 });
+    for (const paperClips of [
+      null, {}, [null], [[]], [[0]], [[4]], [['document']], [[1, 1]], [[1], [1]],
+      [['certificate'], ['certificate']], [[1, 3]], [['certificate', 3]], [[1.5]], [[true]],
+    ]) expectCode(() => decodeSave(envelope({ state: { ...state, paperClips } })), 'invalid-state');
+    const waiting = run('skip-intro', 'call-patient');
+    expectCode(() => decodeSave(envelope({ state: { ...waiting, paperClips: [['certificate']] } })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ state: { ...waiting, visit: { ...waiting.visit, certificateNamed: true } } })), 'invalid-state');
+    for (const certificateNamed of [undefined, null, 1, 'true']) {
+      expectCode(() => decodeSave(envelope({ state: { ...state, visit: { ...state.visit, certificateNamed } } })), 'invalid-state');
+    }
+  });
+
+  it('rejects unnamed supplementary notes and additional fields from old paper schemas', () => {
+    const state = run('skip-intro', 'call-patient', 'take-document', 'take-paper');
+    const note = state.papers[1]!;
+    for (const patch of [
+      { additionalWritten: undefined }, { additionalWritten: null }, { additionalWritten: true },
+      { patientId: 0 }, { clipped: false }, { results: { vision: 'pass', pressure: null, weight: null, height: null } },
+    ]) expectCode(() => decodeSave(envelope({ state: { ...state, papers: [state.papers[0], { ...note, ...patch }] } })), 'invalid-state');
   });
 });

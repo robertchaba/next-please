@@ -1,5 +1,5 @@
 import { Gunzip, gzipSync, strToU8 } from 'fflate';
-import { ARRIVAL_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_LENGTH, SHIFT_START_MINUTES, type GameState, type Visit, type Paper } from './game';
+import { ARRIVAL_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_LENGTH, SHIFT_START_MINUTES, type GameState, type Visit, type Paper, type DocumentId } from './game';
 
 export { createInitialState } from './game';
 export type { GameState } from './game';
@@ -10,14 +10,17 @@ interface LegacyState {
   patientsProcessed: number;
 }
 
-type LegacyVisit = Omit<Visit, 'measurementsTaken' | 'certificateTaken'>;
-type AppointmentState = Omit<GameState, 'papers' | 'nextPaperId' | 'visit'> & { visit: LegacyVisit | null };
-type VisitV5 = Omit<Visit, 'certificateTaken'>;
-type GameStateV5 = Omit<GameState, 'visit'> & { visit: VisitV5 | null };
+type LegacyVisit = Omit<Visit, 'measurementsTaken' | 'certificateTaken' | 'certificateNamed'>;
+type AppointmentState = Omit<GameState, 'papers' | 'nextPaperId' | 'paperClips' | 'visit'> & { visit: LegacyVisit | null };
+type LegacyPaper<T> = T extends Paper ? Omit<T, 'additionalWritten'> & { clipped: boolean } : never;
+type PaperV6 = LegacyPaper<Paper>;
+type VisitV5 = Omit<Visit, 'certificateTaken' | 'certificateNamed'>;
+type GameStateV5 = Omit<GameState, 'visit' | 'paperClips' | 'papers'> & { visit: VisitV5 | null; papers: PaperV6[] };
+type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<Visit, 'certificateNamed'> | null };
 
-interface SaveV6 {
+interface SaveV7 {
   game: 'next-please';
-  version: 6;
+  version: 7;
   savedAt: string;
   state: GameState;
 }
@@ -175,13 +178,13 @@ function migrateStateV3(state: AppointmentState): AppointmentState {
 }
 
 function migrateStateV4(state: AppointmentState): GameStateV5 {
-  const papers: Paper[] = state.visit?.document === 'desk'
+  const papers: PaperV6[] = state.visit?.document === 'desk'
     ? [{ id: 1, kind: 'referral', patientId: state.visit.patientId, day: state.day, location: 'desk', clipped: false }]
     : [];
   return { ...state, visit: state.visit ? { ...state.visit, measurementsTaken: false } : null, papers, nextPaperId: papers.length + 1 };
 }
 
-function validatePaper(value: unknown, day: number): Paper {
+function validatePaper(value: unknown, day: number): PaperV6 {
   if (!isRecord(value) || !isIntegerInRange(value.id, 1, GAME_LIMITS.paperId)
     || !isIntegerInRange(value.day, 1, day) || (value.location !== 'desk' && value.location !== 'drawer')
     || typeof value.clipped !== 'boolean') throw new SaveError('invalid-state');
@@ -261,13 +264,13 @@ function validateStateV5(value: unknown): GameStateV5 {
   return { ...state, visit: state.visit ? { ...state.visit, measurementsTaken } : null, papers, nextPaperId };
 }
 
-function migrateStateV5(state: GameStateV5): GameState {
+function migrateStateV5(state: GameStateV5): GameStateV6 {
   // Before v6, taking a referral also made a certificate available. Preserve
   // that availability and any applied stamp without adding fictitious time.
   return { ...state, visit: state.visit ? { ...state.visit, certificateTaken: state.visit.document === 'desk' } : null };
 }
 
-function validateStateV6(value: unknown): GameState {
+function validateStateV6(value: unknown): GameStateV6 {
   if (!isRecord(value)) throw new SaveError('invalid-state');
   let certificateTaken = false;
   let visit: unknown = null;
@@ -286,12 +289,102 @@ function validateStateV6(value: unknown): GameState {
   return { ...state, visit: state.visit ? { ...state.visit, certificateTaken } : null };
 }
 
+function migrateStateV6(state: GameStateV6): GameState {
+  return {
+    ...state,
+    visit: state.visit ? { ...state.visit, certificateNamed: state.visit.certificateTaken } : null,
+    papers: state.papers.map(({ clipped: _clipped, ...paper }) => paper.kind === 'note' ? { ...paper, additionalWritten: false } : paper),
+    paperClips: state.papers.filter(paper => paper.clipped).map(paper => [paper.id]),
+  };
+}
+
+function validatePaperV7(value: unknown, day: number): Paper {
+  if (!isRecord(value)) throw new SaveError('invalid-state');
+  if (value.kind !== 'note') {
+    if (Object.hasOwn(value, 'clipped')) throw new SaveError('invalid-state');
+    const { clipped: _clipped, ...paper } = validatePaper({ ...value, clipped: false }, day);
+    if (paper.kind === 'note') throw new SaveError('invalid-state');
+    return paper;
+  }
+  if (!hasOnlyKeys(value, ['id', 'kind', 'day', 'patientId', 'location', 'results', 'additionalWritten'])
+    || !isIntegerInRange(value.id, 1, GAME_LIMITS.paperId) || !isIntegerInRange(value.day, 1, day)
+    || (value.location !== 'desk' && value.location !== 'drawer') || typeof value.additionalWritten !== 'boolean'
+    || (value.patientId !== null && !isIntegerInRange(value.patientId, 0, SHIFT_LENGTH - 1))) throw new SaveError('invalid-state');
+  const results = value.results;
+  if (!isRecord(results) || !hasOnlyKeys(results, ['vision', 'pressure', 'weight', 'height'])) throw new SaveError('invalid-state');
+  const patient = value.patientId === null ? null : PATIENTS[value.patientId]!;
+  if ((results.vision !== null && (!patient || results.vision !== patient.vision))
+    || (results.pressure !== null && (!patient || results.pressure !== patient.pressure))
+    || (results.weight !== null && (!patient || results.weight !== patient.weight))
+    || (results.height !== null && (!patient || results.height !== patient.height))
+    || ((results.weight === null) !== (results.height === null))
+    || (!patient && value.additionalWritten)
+    || (patient && !value.additionalWritten && Object.values(results).every(entry => entry === null))) throw new SaveError('invalid-state');
+  return { id: value.id, kind: 'note', day: value.day, patientId: value.patientId, location: value.location, additionalWritten: value.additionalWritten,
+    results: { vision: results.vision as 'pass' | 'refer' | null, pressure: results.pressure as 'pass' | 'refer' | null,
+      weight: results.weight as number | null, height: results.height as number | null } };
+}
+
+function validateStateV7(value: unknown): GameState {
+  if (!isRecord(value) || !hasOnlyKeys(value, ['day', 'money', 'patientsProcessed', 'phase', 'introStep', 'shiftCompleted', 'clockMinutes', 'visit', 'lampOn', 'decoration', 'papers', 'nextPaperId', 'paperClips'])
+    || !Array.isArray(value.papers) || value.papers.length > GAME_LIMITS.papers
+    || !isIntegerInRange(value.nextPaperId, 1, GAME_LIMITS.paperId + 1)
+    || !Array.isArray(value.paperClips) || value.paperClips.length > value.papers.length + 1) throw new SaveError('invalid-state');
+  let certificateNamed = false;
+  let visit: unknown = null;
+  if (value.visit !== null) {
+    if (!isRecord(value.visit) || typeof value.visit.certificateNamed !== 'boolean'
+      || (value.visit.certificateNamed && !value.visit.certificateTaken)) throw new SaveError('invalid-state');
+    const { certificateNamed: named, ...previous } = value.visit;
+    certificateNamed = named; visit = previous;
+  }
+  // The unchanged v6 validator checks the appointment and clock. Current papers
+  // are validated below against their own exact schema, never reinterpreted as v6.
+  const { paperClips: rawClips, papers: rawPapers, nextPaperId, ...base } = value;
+  const previous = validateStateV6({ ...base, visit, papers: [], nextPaperId: 1 });
+  const papers = rawPapers.map(paper => validatePaperV7(paper, previous.day));
+  const seen = new Set<number>(), casePapers = new Set<string>();
+  for (const paper of papers) {
+    if (seen.has(paper.id) || paper.id >= nextPaperId) throw new SaveError('invalid-state');
+    seen.add(paper.id);
+    if (paper.kind !== 'note') {
+      const key = `${paper.day}:${paper.patientId}:${paper.kind}`;
+      if (casePapers.has(key)) throw new SaveError('invalid-state');
+      casePapers.add(key);
+    }
+    if (paper.day === previous.day && paper.patientId !== null) {
+      if (paper.patientId > previous.shiftCompleted
+        || (paper.patientId === previous.shiftCompleted && (paper.kind === 'letter' || !previous.visit || previous.visit.document !== 'desk'))) throw new SaveError('invalid-state');
+      if (paper.kind === 'note' && paper.patientId === previous.visit?.patientId
+        && ((paper.results.vision !== null && !previous.visit.visionTested)
+          || (paper.results.pressure !== null && !previous.visit.pressureTested)
+          || (paper.results.weight !== null && !previous.visit.measurementsTaken))) throw new SaveError('invalid-state');
+    }
+  }
+  const clipped = new Set<DocumentId>();
+  const paperClips: DocumentId[][] = rawClips.map(rawGroup => {
+    if (!Array.isArray(rawGroup) || rawGroup.length === 0 || rawGroup.length > papers.length + 1) throw new SaveError('invalid-state');
+    let location: Paper['location'] | undefined;
+    return rawGroup.map((id: unknown): DocumentId => {
+      if (id !== 'certificate' && !isIntegerInRange(id, 1, GAME_LIMITS.paperId)) throw new SaveError('invalid-state');
+      if (clipped.has(id)) throw new SaveError('invalid-state');
+      clipped.add(id);
+      const itemLocation = id === 'certificate' ? (previous.visit?.certificateTaken ? 'desk' : undefined) : papers.find(paper => paper.id === id)?.location;
+      if (!itemLocation || (location && location !== itemLocation)) throw new SaveError('invalid-state');
+      location = itemLocation;
+      return id;
+    });
+  });
+  if (previous.phase === 'intro' && (papers.length || nextPaperId !== 1 || paperClips.length)) throw new SaveError('invalid-state');
+  return { ...previous, visit: previous.visit ? { ...previous.visit, certificateNamed } : null, papers, nextPaperId, paperClips };
+}
+
 export function encodeSave(state: GameState): Uint8Array {
-  const envelope: SaveV6 = {
+  const envelope: SaveV7 = {
     game: 'next-please',
-    version: 6,
+    version: 7,
     savedAt: new Date().toISOString(),
-    state: validateStateV6(state),
+    state: validateStateV7(state),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -390,7 +483,7 @@ export function decodeSave(bytes: Uint8Array): GameState {
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6) throw new SaveError('unsupported-version');
+  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -405,11 +498,12 @@ export function decodeSave(bytes: Uint8Array): GameState {
       phase: 'cabinet', introStep: INTRO_SLIDES - 1,
     };
   }
-  if (envelope.version === 2) return migrateStateV5(migrateStateV4(migrateStateV3(migrateStateV2(validateStateV2(envelope.state)))));
-  if (envelope.version === 3) return migrateStateV5(migrateStateV4(migrateStateV3(validateStateV3(envelope.state))));
-  if (envelope.version === 4) return migrateStateV5(migrateStateV4(validateStateV4(envelope.state)));
-  if (envelope.version === 5) return migrateStateV5(validateStateV5(envelope.state));
-  return validateStateV6(envelope.state);
+  if (envelope.version === 2) return migrateStateV6(migrateStateV5(migrateStateV4(migrateStateV3(migrateStateV2(validateStateV2(envelope.state))))));
+  if (envelope.version === 3) return migrateStateV6(migrateStateV5(migrateStateV4(migrateStateV3(validateStateV3(envelope.state)))));
+  if (envelope.version === 4) return migrateStateV6(migrateStateV5(migrateStateV4(validateStateV4(envelope.state))));
+  if (envelope.version === 5) return migrateStateV6(migrateStateV5(validateStateV5(envelope.state)));
+  if (envelope.version === 6) return migrateStateV6(validateStateV6(envelope.state));
+  return validateStateV7(envelope.state);
 }
 
 /** Call from a user action. Saves are downloaded; no account or server is used. */

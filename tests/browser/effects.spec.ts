@@ -54,7 +54,7 @@ test('the desk bell loads on an unmuted patient call and uses the shared effect 
   for (let step = 0; step < 4; step++) await page.locator('#control-intro-next').click();
   await page.locator('#control-call-patient').click();
   expect(requested).toEqual([]);
-  for (const id of ['take-document', 'take-certificate', 'stamp-fit', 'apply-stamp', 'return-document']) await useKeyboard(page, id);
+  for (const id of ['take-document', 'take-certificate', 'stamp-fit', 'apply-stamp', 'write-certificate', 'return-document']) await useKeyboard(page, id);
 
   await page.getByRole('button', { name: 'Włącz dźwięk' }).click();
   expect(requested).toEqual([]);

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { PATIENT_HANDOFF, TRAY, type Point, type Rect } from '../../src/core/desk';
+import { PATIENT_HANDOFF, RIGHT_DESK_TOP, DESK_FRONT, TRAY, type Point, type Rect } from '../../src/core/desk';
 
 async function activate(page: Page, id: string): Promise<void> {
   await page.locator(`#control-${id}`).focus();
@@ -92,6 +92,7 @@ test('carried stamps stay in hand, rest at the side, and only handing the certif
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
   expect(await logicalRect(page, 'stamp-fit')).toEqual(stampHome);
 
+  await activate(page, 'write-certificate');
   await carryTo(page, 'apply-stamp', center(TRAY));
   await expect(page.locator('#control-apply-stamp')).toBeVisible();
   expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ w: 60, h: 80 });
@@ -109,6 +110,7 @@ test('an unstamped handoff preserves the visit and restores the document positio
   await activate(page, 'call-patient');
   await activate(page, 'take-document');
   await activate(page, 'take-certificate');
+  await activate(page, 'write-certificate');
   const before = await logicalRect(page, 'apply-stamp');
   expect(await logicalRect(page, 'return-document')).toEqual(PATIENT_HANDOFF);
   await carryTo(page, 'apply-stamp', center(PATIENT_HANDOFF));
@@ -168,6 +170,41 @@ test('documents shrink from the tray and both desktops, with aligned hit areas a
   expect(await logicalRect(page, 'apply-stamp')).toEqual({ ...lifted, x: lifted.x + 240 });
   await page.keyboard.press('Escape');
   expect(await logicalRect(page, 'apply-stamp')).toEqual(shelf);
+});
+
+test('right-side papers overlap the room while keeping half on the desk and covering its pointer controls', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await enterCabinet(page);
+  await activate(page, 'call-patient');
+  await activate(page, 'take-document');
+  await activate(page, 'take-certificate');
+  await carryTo(page, 'apply-stamp', { x: 394, y: 10 });
+  const certificate = await logicalRect(page, 'apply-stamp');
+  expect(certificate).toEqual({ x: 300, y: 66, w: 188, h: 144 });
+  const heightOnDesk = Math.min(certificate.y + certificate.h, DESK_FRONT.y) - RIGHT_DESK_TOP;
+  expect(heightOnDesk).toBe(certificate.h / 2);
+  const coveredInstrument = await screenPoint(page, { x: 360, y: 85 });
+  expect(await page.evaluate(point => document.elementFromPoint(point.x, point.y)?.id, coveredInstrument)).toBe('control-apply-stamp');
+  await expect(page.locator('#screen-description')).toContainText('CIŚNIENIE: BRAK');
+  await activate(page, 'run-pressure');
+  await expect(page.locator('#screen-description')).toContainText('Ciśnienie: NORMA.');
+  await carryTo(page, 'apply-stamp', { x: 394, y: 172 });
+  expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ x: 300, y: 100 });
+});
+
+test('a stamped certificate without a handwritten name is restored after a rejected handoff', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await enterCabinet(page);
+  for (const id of ['call-patient', 'take-document', 'take-certificate', 'stamp-fit', 'apply-stamp']) await activate(page, id);
+  const before = await logicalRect(page, 'apply-stamp');
+  await carryTo(page, 'apply-stamp', center(PATIENT_HANDOFF));
+  await expect(page.locator('#screen-description')).toContainText('Wpisz nazwisko na orzeczeniu');
+  expect(await logicalRect(page, 'apply-stamp')).toEqual(before);
+  await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+  await page.locator('#control-write-certificate').click();
+  await expect(page.locator('#screen-description')).toContainText('Nazwisko pacjenta wpisane na orzeczeniu.');
+  await carryTo(page, 'apply-stamp', center(PATIENT_HANDOFF));
+  await expect(page.locator('#control-apply-stamp')).toHaveCount(0);
 });
 
 test('the rulebook keeps its cover on placement and its physical corners open and turn all five spreads', async ({ page }) => {
@@ -366,7 +403,7 @@ test('reduced motion skips patient and clock transitions while preserving the co
   await activate(page, 'call-patient');
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
   await expect(page.locator('#controls')).toHaveAttribute('data-clock-moving', 'false');
-  for (const id of ['take-document', 'take-certificate', 'run-vision', 'run-pressure', 'run-measurements', 'stamp-fit', 'apply-stamp', 'return-document']) {
+  for (const id of ['take-document', 'take-certificate', 'run-vision', 'run-pressure', 'run-measurements', 'stamp-fit', 'apply-stamp', 'write-certificate', 'return-document']) {
     await activate(page, id);
   }
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');

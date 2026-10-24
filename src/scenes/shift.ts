@@ -1,9 +1,9 @@
 import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, type CabinetArtOptions } from '../render/clinic';
-import { drawPaperwork, paperDescription, paperActionRect } from '../render/paperwork';
+import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, drawActionCorner, HANDWRITING_INK } from '../render/paperwork';
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
 import { drawManual, drawManualCover, manualControls, MANUAL_PAGE_COUNT } from '../render/manual';
-import { INTRO_SLIDES, PATIENTS, SHIFT_LENGTH, type GameAction, type GameState } from '../core/game';
+import { INTRO_SLIDES, PATIENTS, SHIFT_LENGTH, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
 import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
 import { CABINET_HOTSPOTS, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
@@ -15,12 +15,22 @@ export type ShiftAction = GameAction | 'select-fit' | 'select-unfit' | 'apply-st
 export type SelectedStamp = 'fit' | 'unfit' | null;
 export type PatientSpeech = { patientId: number; line: keyof typeof translations.pl.patientSpeech };
 export type DeskPresentation = {
-  desk: DeskState; held: DeskItemId | null;
+  desk: DeskState; held: DeskItemId | null; heldItems?: readonly DeskItemId[];
   manualOpen: boolean; manualPage: number; clockMinutes?: number;
   patientMotion?: CabinetArtOptions['patientMotion'];
   patientSpeech?: PatientSpeech;
   departingPatientId?: number;
 };
+const documentItem = (id: DocumentId): DeskItemId => id === 'certificate' ? 'document' : `paper-${id}`;
+const isLifted = (view: DeskPresentation, id: DeskItemId): boolean => view.heldItems?.includes(id) ?? view.held === id;
+/** One physical clip is visible on the top sheet of a bundle. */
+export function visibleDocumentClip(state: GameState, documentId: DocumentId, view: DeskPresentation): boolean {
+  if (!isDocumentClipped(state, documentId)) return false;
+  const members = clippedDocuments(state, documentId).map(documentItem);
+  const top = [...view.desk.order].reverse().find(id => members.includes(id));
+  return top === documentItem(documentId);
+}
+
 const c = { ink: '#293226', paper: '#ded4ae', muted: '#a6ac8e', red: '#aa5d48', green: '#4e674e' };
 
 function box(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string): void {
@@ -37,7 +47,8 @@ export function shiftDescription(state: GameState, locale: Locale): string {
   return [t.cabinetHelp, `${t.clock}: ${clockTime(state)}.`, `${t.day}: ${state.day}.`, `${t.queue}: ${state.shiftCompleted}/${SHIFT_LENGTH}.`, `${t.points}: ${state.money}.`,
     visit && patient ? `${t.patientNames[visit.patientId]}. ${t.patientJobs[visit.patientId]}. ${visit.document === 'tray' ? t.awaitingDocument : t.document}. ${t.visionResult}: ${visit.visionTested ? t[patient.vision] : t.untested}. ${t.pressureResult}: ${visit.pressureTested ? t[patient.pressure] : t.untested}. ${t.paperwork.weight}: ${visit.measurementsTaken ? `${patient.weight} ${t.paperwork.kg}` : t.untested}. ${t.paperwork.height}: ${visit.measurementsTaken ? `${patient.height} ${t.paperwork.cm}` : t.untested}. ${visit.decision ? t[visit.decision] : t.stampHere}.`
       : state.shiftCompleted === SHIFT_LENGTH ? t.shiftDone : t.emptyChair,
-    ...state.papers.filter(paper => paper.location === 'desk').map(paper => paperDescription(paper, locale)),
+    ...(visit?.certificateTaken ? [`${t.certificate}. ${visit.certificateNamed ? `${t.paperwork.nameWritten}: ${t.patientNames[visit.patientId]}` : t.paperwork.nameMissing}.`] : []),
+    ...state.papers.filter(paper => paper.location === 'desk').map(paper => paperDescription(paper, locale, isDocumentClipped(state, paper.id))),
   ].join(' ');
 }
 
@@ -49,7 +60,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     button(id, label, bounds.x, bounds.y, bounds.w, bounds.h, action);
   const item = (id: string, label: string, itemId: DeskItemId, action?: ShiftAction): Button => ({
     id, label, kind: 'hotspot', action: action === undefined ? undefined : () => onAction(action),
-    ...itemRect(view.desk, itemId, state.visit?.document === 'tray' && view.held !== 'document', view.held === itemId, view.manualOpen), item: itemId,
+    ...itemRect(view.desk, itemId, state.visit?.document === 'tray' && view.held !== 'document', isLifted(view, itemId), view.manualOpen), item: itemId,
   });
   if (state.phase === 'intro') return [
     button('intro-next', state.introStep === INTRO_SLIDES - 1 ? t.enterCabinet : t.next, 391, 262, 155, 26, 'advance-intro', 'text'),
@@ -57,6 +68,8 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
   const rest = view.held ? restRect(view.held) : undefined;
   const restAction = view.held === 'stamp-fit' ? 'put-away-fit' : 'put-away-unfit';
   const restLabel = view.held === 'stamp-fit' ? t.putAwayFit : t.putAwayUnfit;
+  const certificateBounds = itemRect(view.desk, 'document', false, isLifted(view, 'document'));
+  const certificateOnDesk = !isLifted(view, 'document') && certificateBounds.x >= RIGHT_DESK_X;
   const pageCorners = manualControls(itemRect(view.desk, 'manual', false, false, view.manualOpen));
   return [
     ...(rest ? [button(restAction, restLabel, rest.x, rest.y, rest.w, rest.h, restAction)] : []),
@@ -64,7 +77,11 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
       : [hotspot('call-patient', t.callPatient, CABINET_HOTSPOTS.callPatient, 'call-patient')]),
     ...(state.visit?.document === 'tray' ? [item('take-document', t.takeDocument, 'incoming-referral', 'take-document')] : []),
     ...(state.visit?.certificateTaken ? [hotspot('return-document', t.returnDocument, PATIENT_HANDOFF, 'return-document'),
-      item('apply-stamp', t.applyStamp, 'document', 'apply-stamp')] : []),
+      item('apply-stamp', `${t.applyStamp}. ${state.visit.certificateNamed ? `${t.paperwork.nameWritten}: ${t.patientNames[state.visit.patientId]}` : t.paperwork.nameMissing}.`, 'document', 'apply-stamp'),
+      ...(certificateOnDesk ? [{ ...hotspot('write-certificate', t.paperwork.writeCertificate, paperActionRect(certificateBounds), 'write-certificate'), owner: 'document' as const }] : []),
+      ...(!isLifted(view, 'document') && visibleDocumentClip(state, 'certificate', view)
+        ? [{ ...hotspot('certificate-clip', t.paperwork.unclip, paperClipRect(certificateBounds), { type: 'unclip-document', documentId: 'certificate' }), owner: 'document' as const }] : []),
+    ] : []),
     hotspot('run-vision', t.vision, CABINET_HOTSPOTS.vision, 'run-vision'),
     hotspot('run-pressure', t.pressure, CABINET_HOTSPOTS.pressure, 'run-pressure'),
     hotspot('run-measurements', t.measurements, CABINET_HOTSPOTS.measurements, 'run-measurements'),
@@ -80,11 +97,13 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
       const action: ShiftAction = paper.kind === 'note' ? { type: 'write-note', paperId: paper.id }
         : paper.kind === 'letter' && !paper.opened ? { type: 'open-letter', paperId: paper.id }
         : { type: 'read-paper', paperId: paper.id };
-      const bounds = itemRect(view.desk, id, false, view.held === id);
-      const canAct = view.held !== id && bounds.x >= RIGHT_DESK_X
+      const bounds = itemRect(view.desk, id, false, isLifted(view, id));
+      const canAct = !isLifted(view, id) && bounds.x >= RIGHT_DESK_X
         && (paper.kind === 'note' || (paper.kind === 'letter' && !paper.opened));
-      return [item(id, paperDescription(paper, locale), id, action),
-        ...(canAct ? [hotspot(`paper-action-${paper.id}`, paper.kind === 'note' ? t.paperwork.write : t.paperwork.open, paperActionRect(bounds), action)] : [])];
+      return [item(id, paperDescription(paper, locale, isDocumentClipped(state, paper.id)), id, action),
+        ...(canAct ? [{ ...hotspot(`paper-action-${paper.id}`, paper.kind === 'note' ? t.paperwork.write : t.paperwork.open, paperActionRect(bounds), action), owner: id }] : []),
+        ...(!isLifted(view, id) && visibleDocumentClip(state, paper.id, view)
+          ? [{ ...hotspot(`paper-clip-${paper.id}`, t.paperwork.unclip, paperClipRect(bounds), { type: 'unclip-document', documentId: paper.id }), owner: id }] : [])];
     }),
     ...view.desk.order.filter(id => id.startsWith('clip-')).map(id => item(id, t.paperwork.paperclip, id)),
     { ...item('stamp-fit', t.stampFit, 'stamp-fit', 'select-fit'), pressed: selected === 'fit' },
@@ -120,7 +139,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
   drawDeskRests(ctx);
   drawWorkstationObjects(ctx, state.papers.filter(paper => paper.location === 'drawer').length);
   for (const id of view.desk.order) {
-    const lifted = view.held === id;
+    const lifted = isLifted(view, id);
     const bounds = itemRect(view.desk, id, visit?.document === 'tray' && !lifted, lifted, view.manualOpen);
     const { x, y, w, h } = bounds;
     if (id === 'incoming-referral') {
@@ -129,7 +148,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     }
     if (id.startsWith('paper-')) {
       const paper = state.papers.find(entry => `paper-${entry.id}` === id && entry.location === 'desk');
-      if (paper) drawPaperwork(ctx, paper, bounds, locale, lifted);
+      if (paper) drawPaperwork(ctx, paper, bounds, locale, lifted, visibleDocumentClip(state, paper.id, view));
       continue;
     }
     if (id.startsWith('clip-')) {
@@ -158,12 +177,20 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
         box(ctx, x + 12, y + h - 20, w - 24, 4, '#d4c69d');
       }
       drawDocumentText(ctx, String(visit.patientId + 1).padStart(2, '0'), x + 7, y + h - 12, { color: '#82785a' });
+      if (visibleDocumentClip(state, 'certificate', view)) { const clip = paperClipRect(bounds); drawPaperclip(ctx, clip.x, clip.y); }
       continue;
     }
+    const p = t.paperwork;
     write(t.documentTitleLabel, 12, 10);
-    drawDocumentText(ctx, `${state.shiftCompleted + 1}/${SHIFT_LENGTH}`, x + w - 12, y + 10, { color: '#8a8668', align: 'right' });
-    box(ctx, x + 12, y + 24, 164, 1, '#a59e79');
-    write(t.patientNames[visit.patientId], 12, 31);
+    drawDocumentText(ctx, `${p.reference} ${state.shiftCompleted + 1}`, x + w - 12, y + 10, { color: '#8a8668', align: 'right' });
+    write(p.occupational, 12, 21, '#79785c');
+    box(ctx, x + 12, y + 33, 164, 1, '#a59e79');
+    write(p.name, 12, 40, '#79785c');
+    if (visit.certificateNamed) write(t.patientNames[visit.patientId], 12, 52, HANDWRITING_INK);
+    else for (let dx = 12; dx < 150; dx += 4) box(ctx, x + dx, y + 60, 2, 1, '#b3a984');
+    write(`${p.position}: ${t.patientJobs[visit.patientId]}`, 12, 69);
+    write(p.certificatePurpose, 12, 82, '#79785c');
+    write(p.decisionHeading, 12, 96, '#79785c');
     // Clinical results belong only to the doctor's separate notes.
     if (visit.decision) {
       const ink = visit.decision === 'fit' ? c.green : '#914c3c';
@@ -173,6 +200,8 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
       drawText(ctx, t[visit.decision], sx + Math.floor(sw / 2), sy + 5, { align: 'center', color: ink });
       box(ctx, sx + 16, sy, 3, 1, c.paper); box(ctx, sx + 63, sy + 20, 2, 1, c.paper);
     } else for (let dx = 44; dx < 152; dx += 4) box(ctx, x + dx, y + 128, 2, 1, '#b3a984');
+    if (!lifted) drawActionCorner(ctx, bounds, true);
+    if (visibleDocumentClip(state, 'certificate', view)) { const clip = paperClipRect(bounds); drawPaperclip(ctx, clip.x, clip.y); }
   }
 }
 

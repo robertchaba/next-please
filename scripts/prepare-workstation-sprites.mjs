@@ -8,7 +8,7 @@ const art = new URL('../public/assets/art/', import.meta.url).pathname;
 const sprites = { phone: [73, 51], scale: [43, 65], clips: [37, 36], clip: [10, 19] };
 
 for (const [name, [width, height]] of Object.entries(sprites)) {
-  const source = `${art}workstation-${name === 'phone' ? 'phone-sage' : name}-source.png`;
+  const source = `${art}workstation-${name === 'phone' ? 'phone-olive' : name}-source.png`;
   const { data, info } = await sharp(source).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   let left = info.width, top = info.height, right = -1, bottom = -1;
   for (let y = 0; y < info.height; y++) for (let x = 0; x < info.width; x++) {

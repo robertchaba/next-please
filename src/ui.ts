@@ -7,4 +7,6 @@ export type Button = {
   pressed?: boolean;
   disabled?: boolean;
   item?: DeskItemId;
+  /** Physical sheet owning an action corner or attached clip. */
+  owner?: DeskItemId;
 };

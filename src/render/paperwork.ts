@@ -4,14 +4,16 @@ import { translations, type Locale } from '../i18n';
 import { drawPaper, drawPaperclip } from './clinic';
 import { drawDocumentText, measureDocumentText } from './font';
 
-const ink = '#333b2b', muted = '#79785c';
+export const DOCUMENT_INK = '#333b2b';
+export const HANDWRITING_INK = '#385b78';
+const ink = DOCUMENT_INK, muted = '#79785c';
 
 export function referralLines(patientId: number, locale: Locale): string[] {
   const t = translations[locale], p = t.paperwork, patient = PATIENTS[patientId]!;
   const referral = t.patientReferrals[patientId]!;
   return [
     `${p.employer}: ${referral.employer}`,
-    t.patientNames[patientId]!,
+    `${p.name}: ${t.patientNames[patientId]}`,
     `${p.birthShort}: ${patient.birthDate}   ${p.sex}: ${p[patient.sex]}`,
     `${p.examination}: ${p[patient.examination]}`,
     `${p.position}: ${t.patientJobs[patientId]}`,
@@ -21,7 +23,7 @@ export function referralLines(patientId: number, locale: Locale): string[] {
   ];
 }
 
-export function paperDescription(paper: Paper, locale: Locale): string {
+export function paperDescription(paper: Paper, locale: Locale, clipped = false): string {
   const t = translations[locale], p = t.paperwork;
   const name = paper.patientId === null ? '' : t.patientNames[paper.patientId];
   let text: string;
@@ -34,13 +36,18 @@ export function paperDescription(paper: Paper, locale: Locale): string {
     const r = paper.results;
     text = paper.patientId === null ? p.blank : `${p.note}. ${name}. ${t.documentVision}: ${r.vision ? t[r.vision] : t.untested}. ${t.documentPressure}: ${r.pressure ? t[r.pressure] : t.untested}. ${p.weight}: ${r.weight === null ? t.untested : `${r.weight} ${p.kg}`}. ${p.height}: ${r.height === null ? t.untested : `${r.height} ${p.cm}`}.`;
   }
-  if (paper.clipped) text += ` ${p.clipped}.`;
+  if (paper.kind === 'note' && paper.additionalWritten && paper.patientId !== null) text += ` ${p.additionalHeading}: ${t.patientNotes[paper.patientId]!.join(' ')}`;
+  if (clipped) text += ` ${p.clipped}.`;
   if (paper.location === 'drawer') text += ` ${p.stored}.`;
   return text;
 }
 
 export function paperActionRect(bounds: Rect): Rect {
   return { x: bounds.x + bounds.w - 27, y: bounds.y + bounds.h - 25, w: 24, h: 22 };
+}
+
+export function paperClipRect(bounds: Rect): Rect {
+  return { x: bounds.x + bounds.w - 17, y: bounds.y - 2, w: 10, h: 19 };
 }
 
 /** Native-pixel wrapping; text is never scaled or squeezed to fit a form. */
@@ -62,7 +69,7 @@ function fill(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h:
   ctx.fillStyle = color; ctx.fillRect(x, y, w, h);
 }
 
-function drawActionCorner(ctx: CanvasRenderingContext2D, bounds: Rect, pen: boolean): void {
+export function drawActionCorner(ctx: CanvasRenderingContext2D, bounds: Rect, pen: boolean): void {
   const { x, y, w, h } = bounds;
   if (pen) {
     // A small fountain-pen nib is printed at the writing corner of the sheet.
@@ -77,7 +84,7 @@ function drawActionCorner(ctx: CanvasRenderingContext2D, bounds: Rect, pen: bool
   }
 }
 
-export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bounds: Rect, locale: Locale, lifted: boolean): void {
+export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bounds: Rect, locale: Locale, lifted: boolean, clipped = false): void {
   const { x, y, w, h } = bounds, t = translations[locale], p = t.paperwork;
   const full = w >= 188;
   fill(ctx, x + (lifted ? 6 : 3), y + (lifted ? 6 : 3), w, h, '#20271fc0');
@@ -103,26 +110,34 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
   } else if (paper.kind === 'referral') {
     write(p.referral, 11, 10);
     write(p.occupational, 11, 20, muted);
+    drawDocumentText(ctx, `${p.reference} ${paper.id}`, x + w - 12, y + 20, { color: muted, align: 'right' });
     fill(ctx, x + 11, y + 31, w - 22, 1, '#b0a47e');
     const lines = wrapDocumentLines(referralLines(paper.patientId, locale), w - 22);
-    lines.forEach((line, index) => write(line, 11, 39 + index * 9));
+    lines.forEach((line, index) => write(line, 11, 39 + index * 8));
   } else if (paper.kind === 'note') {
     if (paper.patientId !== null) {
-      write(p.note, 11, 12);
-      write(t.patientNames[paper.patientId]!, 11, 29);
-      fill(ctx, x + 11, y + 42, w - 22, 1, '#b0a47e');
+      write(p.note, 11, 10);
+      write(p.occupational, 11, 20, muted);
+      drawDocumentText(ctx, `${p.reference} ${paper.id}`, x + w - 12, y + 20, { color: muted, align: 'right' });
+      write(t.patientNames[paper.patientId]!, 11, 34, HANDWRITING_INK);
+      fill(ctx, x + 11, y + 46, w - 22, 1, '#b0a47e');
+      write(p.resultsHeading, 11, 51, muted);
       const r = paper.results;
       const rows = [
         [t.documentVision, r.vision === null ? t.documentPending : t[r.vision]],
         [t.documentPressure, r.pressure === null ? t.documentPending : t[r.pressure]],
-        [p.weight, r.weight === null ? t.documentPending : `${r.weight} ${p.kg}`],
-        [p.height, r.height === null ? t.documentPending : `${r.height} ${p.cm}`],
       ];
-      rows.forEach(([label, value], index) => { write(`${label}:`, 11, 53 + index * 14, muted); write(value!, 91, 53 + index * 14); });
+      rows.forEach(([label, value], index) => { write(`${label}:`, 11, 63 + index * 12); write(value!, 91, 63 + index * 12, HANDWRITING_INK); });
+      write(`${p.weight}:`, 11, 87);
+      write(r.weight === null ? t.documentPending : `${r.weight} ${p.kg}`, 45, 87, HANDWRITING_INK);
+      write(`${p.height}:`, 91, 87);
+      write(r.height === null ? t.documentPending : `${r.height} ${p.cm}`, 131, 87, HANDWRITING_INK);
+      write(p.additionalHeading, 11, 102, muted);
+      if (paper.additionalWritten) t.patientNotes[paper.patientId]!.forEach((line, index) => write(line, 11, 114 + index * 9, HANDWRITING_INK));
     }
     if (!lifted) drawActionCorner(ctx, bounds, true);
   } else {
-    write(p.letter, 11, 11);
+    write(p.letter, 11, 10);
     write(paper.sender === 'zus' ? p.zus : t.patientReferrals[paper.patientId]!.employer, 11, 24, muted);
     fill(ctx, x + 11, y + 36, w - 22, 1, '#b0a47e');
     write(t.patientNames[paper.patientId]!, 11, 44);
@@ -130,5 +145,5 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     const lines = wrapDocumentLines(paper.sender === 'zus' ? p.zusBody : p.employerBody, w - 22);
     lines.forEach((line, index) => write(line, 11, 72 + index * 8));
   }
-  if (paper.clipped) drawPaperclip(ctx, x + w - 17, y - 2);
+  if (clipped) { const clip = paperClipRect(bounds); drawPaperclip(ctx, clip.x, clip.y); }
 }

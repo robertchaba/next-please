@@ -87,11 +87,13 @@ export function installDeskInput(stage: HTMLElement, options: DeskInputOptions):
       if ((event.target as HTMLElement).id.startsWith('control-put-away-')) return;
       event.preventDefault(); event.stopPropagation();
       const control = event.target as HTMLElement;
-      if ((held === 'document' && control.id === 'control-return-document')
+      const attachedClip = control.id === 'control-certificate-clip' || control.id.startsWith('control-paper-clip-');
+      if (((held === 'document' || held.startsWith('paper-')) && control.id === 'control-return-document')
         || ((held.startsWith('paper-') || held.startsWith('clip-')) && ['control-drawer', 'control-trash'].includes(control.id))
-        || (held.startsWith('clip-') && control.dataset.item?.startsWith('paper-'))) {
+        || (held.startsWith('clip-') && (control.dataset.item?.startsWith('paper-') || control.dataset.item === 'document'))
+        || ((held === 'document' || held === 'incoming-referral' || held.startsWith('paper-')) && attachedClip)) {
         activate({ x: parseFloat(control.style.left) + parseFloat(control.style.width) / 2,
-          y: parseFloat(control.style.top) + parseFloat(control.style.height) / 2 }, control.dataset.item as DeskItemId | undefined);
+          y: parseFloat(control.style.top) + parseFloat(control.style.height) / 2 }, (control.dataset.owner ?? control.dataset.item) as DeskItemId | undefined);
         return;
       }
       activate(); return;

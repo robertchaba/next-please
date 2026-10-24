@@ -22,6 +22,8 @@ export interface DeskState {
 
 export const LEFT_WIDTH = 204;
 export const RIGHT_DESK_X = 210;
+/** First desktop row below the horizontal wooden divider. */
+export const RIGHT_DESK_TOP = 138;
 export const CABINET_HOTSPOTS = {
   callPatient: { x: 150, y: 145, w: 44, h: 40 },
   vision: { x: 249, y: 16, w: 73, h: 60 },
@@ -29,16 +31,16 @@ export const CABINET_HOTSPOTS = {
   lamp: { x: 357, y: 10, w: 43, h: 31 },
   decoration: { x: 490, y: 4, w: 57, h: 42 },
   phone: { x: 216, y: 113, w: 73, h: 51 },
-  paperSupply: { x: 507, y: 142, w: 54, h: 20 },
-  certificateSupply: { x: 507, y: 162, w: 54, h: 14 },
+  paperSupply: { x: 507, y: 114, w: 54, h: 20 },
+  certificateSupply: { x: 507, y: 134, w: 54, h: 14 },
   clipSupply: { x: 296, y: 137, w: 37, h: 36 },
   drawer: { x: 222, y: 299, w: 110, h: 18 },
   trash: { x: 478, y: 297, w: 68, h: 23 },
   measurements: { x: 405, y: 61, w: 42, h: 67 },
 } as const satisfies Record<string, Rect>;
-export const DOCUMENT_RACK: Rect = { x: 504, y: 140, w: 60, h: 65 };
+export const DOCUMENT_RACK: Rect = { x: 504, y: 112, w: 60, h: 65 };
 export const DOCUMENT_RACK_SLOTS = [CABINET_HOTSPOTS.paperSupply, CABINET_HOTSPOTS.certificateSupply,
-  { x: 507, y: 176, w: 54, h: 14 }, { x: 507, y: 190, w: 54, h: 13 }] as const;
+  { x: 507, y: 148, w: 54, h: 14 }, { x: 507, y: 162, w: 54, h: 13 }] as const;
 export const DESK_FRONT: Rect = { x: 0, y: 296, w: 570, h: 24 };
 export const PATIENT_HANDOFF: Rect = { x: 38, y: 32, w: 94, h: 96 };
 export const MANUAL_OPEN_SIZE = { w: 276, h: 164 } as const;
@@ -67,8 +69,8 @@ const CARRIED_TRAY_DOCUMENT = { w: 28, h: 66 };
 
 /** Stamps return to compact fixed holders at the far edge of the desk. */
 export const ITEM_RESTS: Partial<Record<DeskItemId, Rect>> = {
-  'stamp-fit': { x: 520, y: 214, ...RESTING_STAMP },
-  'stamp-unfit': { x: 520, y: 257, ...RESTING_STAMP },
+  'stamp-fit': { x: 520, y: 190, ...RESTING_STAMP },
+  'stamp-unfit': { x: 520, y: 246, ...RESTING_STAMP },
 };
 
 export function restRect(id: DeskItemId): Rect | undefined {
@@ -113,8 +115,8 @@ export function createDeskState(): DeskState {
     positions: {
       document: { ...DEFAULT_DOCUMENT },
       'incoming-referral': { x: 17, y: 190 },
-      'stamp-fit': { x: 520, y: 214 },
-      'stamp-unfit': { x: 520, y: 257 },
+      'stamp-fit': { x: 520, y: 190 },
+      'stamp-unfit': { x: 520, y: 246 },
       manual: { x: 94, y: 247 },
     },
     order: ['document', 'incoming-referral', 'stamp-fit', 'stamp-unfit', 'manual'],
@@ -150,18 +152,20 @@ export function pickUpDeskItem(state: DeskState, id: DeskItemId, documentInTray 
   return raiseDeskItem(moveDeskItem(pickedUp, id, point, true), id);
 }
 
-/** Placed items stay on either desktop. Carried items can reach the patient. */
+/** Right-side papers may project over the room while keeping half on the desk. */
 export function moveDeskItem(state: DeskState, id: DeskItemId, point: Point, held = false, manualOpen = false): DeskState {
   const previous = state.positions[id];
   const requestedX = Math.round(Number.isNaN(point.x) ? previous.x : point.x);
   const requestedY = Math.round(Number.isNaN(point.y) ? previous.y : point.y);
   const onLeft = requestedX < RIGHT_DESK_X && !(id === 'manual' && manualOpen);
   const size = itemSize(id, onLeft ? 0 : RIGHT_DESK_X, held, manualOpen, state.documentCarrySize);
+  const paperOnRight = !onLeft && (id === 'document' || id.startsWith('paper-'));
+  const top = paperOnRight ? RIGHT_DESK_TOP - Math.floor(size.h / 2) : DESK_BOUNDS.y;
   const bounds = held ? CARRY_BOUNDS : {
     x: onLeft ? DESK_BOUNDS.x : RIGHT_DESK_X + 5,
-    y: DESK_BOUNDS.y,
+    y: top,
     w: onLeft ? LEFT_WIDTH - DESK_BOUNDS.x - 5 : 570 - RIGHT_DESK_X - 10,
-    h: DESK_BOUNDS.h,
+    h: DESK_BOUNDS.y + DESK_BOUNDS.h - top,
   };
   const x = Math.min(bounds.x + bounds.w - size.w, Math.max(bounds.x, requestedX));
   const y = Math.min(bounds.y + bounds.h - size.h, Math.max(bounds.y, requestedY));

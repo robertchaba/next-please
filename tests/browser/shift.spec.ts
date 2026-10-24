@@ -102,7 +102,7 @@ test('examinations, two-step stamping and the rulebook support a complete keyboa
   await expect(page.locator('#control-manual-next')).toHaveCount(0);
   await expect(page.locator('#screen-description')).toContainText('Czynności zabierają czas.');
   await useKeyboard(page, 'manual-prev');
-  await expect(page.locator('#screen-description')).toContainText('Dokumentację zachowaj w szufladzie lub wyrzuć do kosza.');
+  await expect(page.locator('#screen-description')).toContainText('Kliknięcie spinacza rozpina dokumenty.');
   await page.keyboard.press('Escape');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
   await expect(page.locator('#control-manual')).toBeFocused();
@@ -117,6 +117,7 @@ test('examinations, two-step stamping and the rulebook support a complete keyboa
     await expect(page.locator('#screen-description')).toContainText(patient.name);
     await useKeyboard(page, 'take-document');
     await useKeyboard(page, 'take-certificate');
+    await useKeyboard(page, 'write-certificate');
     if (index === 0) {
       await useKeyboard(page, 'stamp-fit');
       await useKeyboard(page, 'apply-stamp');
@@ -141,7 +142,8 @@ test('examinations, two-step stamping and the rulebook support a complete keyboa
   const completed = decodeSave(await exportFromArchive(page, testInfo, 'completed-shift.npsave'));
   expect(completed).toMatchObject({ day: 1, money: 30, patientsProcessed: 3, shiftCompleted: 3, visit: null });
   expect(completed.clockMinutes).toBeGreaterThan(480);
-  expect(completed.clockMinutes).toBeLessThan(540);
+  // Three handwritten names add three handling minutes to this short shift.
+  expect(completed.clockMinutes).toBeLessThanOrEqual(540);
   await useKeyboard(page, 'back');
   await useKeyboard(page, 'next-day');
   await expect(page.locator('#screen-description')).toContainText('Nowy dyżur. Te same formularze.');
@@ -152,7 +154,7 @@ test('examinations, two-step stamping and the rulebook support a complete keyboa
 
 test('mid-visit saves retain examinations, stamped papers and cabinet decor; bad imports retain the live visit', async ({ page }, testInfo) => {
   await enterCabinet(page);
-  for (const id of ['call-patient', 'take-document', 'take-certificate', 'run-vision', 'run-pressure', 'run-measurements', 'stamp-fit', 'apply-stamp', 'lamp', 'decoration', 'saves']) {
+  for (const id of ['call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-vision', 'run-pressure', 'run-measurements', 'stamp-fit', 'apply-stamp', 'lamp', 'decoration', 'saves']) {
     await useKeyboard(page, id);
   }
   const saved = await exportFromArchive(page, testInfo, 'mid-visit.npsave');
@@ -200,6 +202,7 @@ test('a certificate stamped before examinations survives import and can be retur
   await expect(page.getByRole('status')).toContainText('Zapis wczytany');
   expect(decodeSave(await exportFromArchive(page, testInfo, 'unexamined-restored.npsave'))).toEqual(decodeSave(saved));
   await useKeyboard(page, 'back');
+  await useKeyboard(page, 'write-certificate');
   await useKeyboard(page, 'return-document');
   await expect(page.locator('#screen-description')).toContainText('Bez premii.');
   await useKeyboard(page, 'saves');

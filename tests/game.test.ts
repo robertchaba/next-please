@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyAction, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_LENGTH, type GameAction, type GameState } from '../src/core/game';
+import { applyAction, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_LENGTH, clippedDocuments, isDocumentClipped, type GameAction, type GameState } from '../src/core/game';
 
 function act(state: GameState, ...actions: GameAction[]): GameState {
   return actions.reduce((current, action) => applyAction(current, action).state, state);
@@ -10,7 +10,7 @@ function cabinet(): GameState {
 }
 
 function readyToStamp(state = cabinet()): GameState {
-  return act(state, 'call-patient', 'take-document', 'take-certificate', 'run-vision', 'run-pressure', 'run-measurements');
+  return act(state, 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-vision', 'run-pressure', 'run-measurements');
 }
 
 describe('career introduction', () => {
@@ -44,7 +44,7 @@ describe('cabinet work', () => {
     state = act(state, 'call-patient');
     expect(state.visit?.document).toBe('tray');
     expect(applyAction(state, 'call-patient')).toEqual({ state, feedback: 'patient-waiting' });
-    for (const action of ['take-certificate', 'run-vision', 'run-pressure', 'stamp-fit', 'stamp-unfit', 'return-document'] as const) {
+    for (const action of ['take-certificate', 'write-certificate', 'run-vision', 'run-pressure', 'stamp-fit', 'stamp-unfit', 'return-document'] as const) {
       expect(applyAction(state, action)).toEqual({ state, feedback: 'document-needed' });
     }
     state = act(state, 'take-document', 'take-certificate');
@@ -58,7 +58,7 @@ describe('cabinet work', () => {
   it.each([
     [], ['run-vision'], ['run-pressure'],
   ] as const)('allows a stamped document with incomplete examinations %j to be returned as a mistake', (...tests) => {
-    const state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', ...tests, 'stamp-fit');
+    const state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'write-certificate', ...tests, 'stamp-fit');
     expect(state.visit?.decision).toBe('fit');
     const returned = applyAction(state, 'return-document');
     expect(returned.feedback).toBe('patient-error');
@@ -75,8 +75,9 @@ describe('cabinet work', () => {
     expect(state.visit?.decision).toBe('fit');
     state = act(state, 'run-vision', 'run-vision', 'run-measurements');
     expect(state.clockMinutes).toBe(497);
+    state = act(state, 'write-certificate');
     expect(applyAction(state, 'return-document')).toMatchObject({
-      feedback: 'patient-cleared', state: { money: 10, patientsProcessed: 1, clockMinutes: 498 },
+      feedback: 'patient-cleared', state: { money: 10, patientsProcessed: 1, clockMinutes: 499 },
     });
   });
 
@@ -105,9 +106,9 @@ describe('cabinet work', () => {
       expect(vision.feedback).toBe(`vision-${patient.vision}`);
       const pressure = applyAction(vision.state, 'run-pressure');
       expect(pressure.feedback).toBe(`pressure-${patient.pressure}`);
-      state = act(pressure.state, 'run-measurements', patient.expectedDecision === 'fit' ? 'stamp-fit' : 'stamp-unfit', 'return-document');
+      state = act(pressure.state, 'run-measurements', 'write-certificate', patient.expectedDecision === 'fit' ? 'stamp-fit' : 'stamp-unfit', 'return-document');
     }
-    expect(state).toMatchObject({ day: 1, shiftCompleted: SHIFT_LENGTH, money: 30, patientsProcessed: 3, clockMinutes: 521, visit: null });
+    expect(state).toMatchObject({ day: 1, shiftCompleted: SHIFT_LENGTH, money: 30, patientsProcessed: 3, clockMinutes: 524, visit: null });
     expect(applyAction(state, 'call-patient')).toEqual({ state, feedback: 'shift-finished' });
     const next = applyAction(state, 'next-day');
     expect(next.feedback).toBe('next-day');
@@ -139,8 +140,8 @@ describe('cabinet work', () => {
       ['call-patient', 480], ['take-document', 481], ['take-certificate', 482], ['run-pressure', 486],
       ['run-vision', 489], ['stamp-fit', 490], ['stamp-unfit', 491],
       ['stamp-fit', 492], ['run-vision', 495], ['run-pressure', 499],
-      ['handle-item', 500], ['read-manual', 501], ['return-document', 502],
-      ['call-patient', 503],
+      ['handle-item', 500], ['read-manual', 501], ['write-certificate', 502], ['return-document', 503],
+      ['call-patient', 504],
     ] as const;
     for (const [action, minutes] of stages) {
       state = act(state, action);
@@ -178,8 +179,17 @@ describe('cabinet work', () => {
 });
 
 describe('paperwork and the new instruments', () => {
+  it('fills a blank stored sheet when it is retrieved after examinations', () => {
+    const stored = act(cabinet(), 'take-paper', { type: 'store-paper', paperId: 1 },
+      'call-patient', 'take-document', 'run-vision');
+    expect(stored.papers.find(paper => paper.id === 1)).toMatchObject({ patientId: null, location: 'drawer', results: { vision: null } });
+    const retrieved = act(stored, { type: 'retrieve-paper', paperId: 1 });
+    expect(retrieved.papers.find(paper => paper.id === 1)).toMatchObject({ patientId: 0, location: 'desk', additionalWritten: false, results: { vision: 'pass' } });
+    expect(retrieved.clockMinutes).toBe(stored.clockMinutes + 1);
+  });
+
   it('requires measurements for a complete examination and returns reproducible weight and height', () => {
-    const state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'run-vision', 'run-pressure', 'stamp-fit');
+    const state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-vision', 'run-pressure', 'stamp-fit');
     expect(applyAction(state, 'return-document').feedback).toBe('patient-error');
     const measured = applyAction(state, 'run-measurements');
     expect(measured.feedback).toBe('measurements-taken');
@@ -189,34 +199,46 @@ describe('paperwork and the new instruments', () => {
     expect(applyAction(measured.state, 'run-measurements').state.clockMinutes).toBe(state.clockMinutes + 4);
   });
 
-  it('gives each referral its own paper and lets the doctor write, clip, store and retrieve a separate note', () => {
-    let state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'take-paper', 'run-vision', 'run-measurements');
+  it('automatically records results and uses the pen only for supplementary information', () => {
+    let state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'take-paper');
+    const blank = state.papers[1]!;
+    expect(blank).toMatchObject({ id: 2, kind: 'note', patientId: null, additionalWritten: false,
+      results: { vision: null, pressure: null, weight: null, height: null } });
+    state = act(state, 'run-vision', 'run-measurements');
     expect(state.papers).toHaveLength(2);
     expect(state.papers[0]).toMatchObject({ id: 1, kind: 'referral', patientId: 0 });
-    const blank = state.papers[1]!;
-    expect(blank).toMatchObject({ id: 2, kind: 'note', patientId: null, results: { vision: null, pressure: null, weight: null, height: null } });
-    state = act(state, { type: 'write-note', paperId: 2 });
-    expect(state.papers[1]).toMatchObject({ patientId: 0, results: { vision: 'pass', pressure: null, weight: 62, height: 164 } });
+    expect(state.papers[1]).toMatchObject({ patientId: 0, additionalWritten: false,
+      results: { vision: 'pass', pressure: null, weight: 62, height: 164 } });
     expect(blank).toMatchObject({ patientId: null, results: { vision: null } });
-    state = act(state, 'run-pressure', { type: 'write-note', paperId: 2 }, { type: 'clip-paper', paperId: 2 }, { type: 'store-paper', paperId: 2 });
-    expect(state.papers[1]).toMatchObject({ clipped: true, location: 'drawer', results: { pressure: 'pass' } });
+    state = act(state, { type: 'write-note', paperId: 2 });
+    expect(state.papers[1]).toMatchObject({ additionalWritten: true });
+    expect(applyAction(state, { type: 'write-note', paperId: 2 }).state).toBe(state);
+    state = act(state, { type: 'clip-document', documentId: 2 }, { type: 'store-paper', paperId: 2 }, 'run-pressure');
+    expect(state.papers[1]).toMatchObject({ location: 'drawer', results: { pressure: 'pass' } });
+    expect(isDocumentClipped(state, 2)).toBe(true);
     const stored = state;
     expect(applyAction(state, { type: 'write-note', paperId: 2 })).toEqual({ state, feedback: 'paper-missing' });
     state = act(state, { type: 'retrieve-paper', paperId: 2 });
-    expect(state.papers[1]).toMatchObject({ clipped: true, location: 'desk' });
+    expect(state.papers[1]).toMatchObject({ location: 'desk' });
+    expect(isDocumentClipped(state, 2)).toBe(true);
     expect(stored.papers[1]?.location).toBe('drawer');
     state = act(state, { type: 'trash-paper', paperId: 2 });
     expect(state.papers.map(paper => paper.kind)).toEqual(['referral']);
+    expect(state.paperClips).toEqual([]);
     expect(state.visit).toMatchObject({ visionTested: true, pressureTested: true, measurementsTaken: true, decision: null });
   });
 
-  it('keeps blank supplies independent and prevents overwriting another patient’s notes', () => {
-    let state = act(readyToStamp(), 'take-paper', 'take-paper', { type: 'write-note', paperId: 2 }, 'stamp-fit', 'return-document');
-    expect(state.papers).toHaveLength(3);
-    state = act(state, 'call-patient', 'take-document', 'take-certificate', 'run-vision');
+  it('backfills newly fetched notes while protecting previous patients and stored blank supplies', () => {
+    let state = act(readyToStamp(), 'take-paper');
+    expect(state.papers[1]).toMatchObject({ patientId: 0, additionalWritten: false,
+      results: { vision: 'pass', pressure: 'pass', weight: 62, height: 164 } });
+    state = act(state, 'stamp-fit', 'return-document', 'take-paper', { type: 'store-paper', paperId: 3 },
+      'call-patient', 'take-document', 'take-certificate', 'run-vision');
     expect(applyAction(state, { type: 'write-note', paperId: 2 })).toEqual({ state, feedback: 'paper-wrong-patient' });
-    state = act(state, { type: 'write-note', paperId: 3 });
-    expect(state.papers.find(paper => paper.id === 3)).toMatchObject({ patientId: 1, results: { vision: 'refer' } });
+    expect(state.papers.find(paper => paper.id === 2)).toMatchObject({ patientId: 0, results: { vision: 'pass' } });
+    expect(state.papers.find(paper => paper.id === 3)).toMatchObject({ patientId: null, results: { vision: null } });
+    state = act(state, { type: 'retrieve-paper', paperId: 3 }, 'run-pressure');
+    expect(state.papers.find(paper => paper.id === 3)).toMatchObject({ patientId: 1, results: { vision: 'refer', pressure: 'pass' } });
   });
 
   it('files documents in last-stored order, including older papers filed again', () => {
@@ -233,7 +255,10 @@ describe('paperwork and the new instruments', () => {
   it('does not invent results or consume paper when repeated intake is activated', () => {
     let state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'take-paper');
     expect(applyAction(state, 'take-document').state).toBe(state);
-    expect(applyAction(state, { type: 'write-note', paperId: 2 })).toEqual({ state, feedback: 'results-needed' });
+    state = act(state, { type: 'write-note', paperId: 2 });
+    expect(state.papers[1]).toMatchObject({ patientId: 0, additionalWritten: true,
+      results: { vision: null, pressure: null, weight: null, height: null } });
+    expect(applyAction(state, { type: 'write-note', paperId: 2 }).state).toBe(state);
     state = act(state, { type: 'trash-paper', paperId: 1 });
     expect(state.papers).toHaveLength(1);
     expect(state.visit?.document).toBe('desk');
@@ -252,15 +277,15 @@ describe('paperwork and the new instruments', () => {
   });
 
   it('delivers a ZUS complaint for accepting an unfit patient, and none for an incomplete correct decision', () => {
-    let state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'stamp-fit', 'return-document');
+    let state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document');
     expect(state.papers.some(paper => paper.kind === 'letter')).toBe(false);
-    state = act(state, 'call-patient', 'take-document', 'take-certificate', 'stamp-fit', 'return-document');
+    state = act(state, 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document');
     expect(state.papers.find(paper => paper.kind === 'letter')).toMatchObject({ sender: 'zus', patientId: 1, opened: false });
   });
 
   it('retains stored documentation across shifts and only records a telephone interaction', () => {
     let state = act(cabinet(), 'take-paper', { type: 'store-paper', paperId: 1 });
-    for (const patient of PATIENTS) state = act(state, 'call-patient', 'take-document', 'take-certificate', patient.expectedDecision === 'fit' ? 'stamp-fit' : 'stamp-unfit', 'return-document');
+    for (const patient of PATIENTS) state = act(state, 'call-patient', 'take-document', 'take-certificate', 'write-certificate', patient.expectedDecision === 'fit' ? 'stamp-fit' : 'stamp-unfit', 'return-document');
     const papers = state.papers;
     state = act(state, 'next-day');
     expect(state.papers).toBe(papers);
@@ -271,6 +296,22 @@ describe('paperwork and the new instruments', () => {
 });
 
 describe('separate referral and certificate intake', () => {
+  it('requires the handwritten name before handoff and writes it only once', () => {
+    const waiting = act(cabinet(), 'call-patient');
+    expect(applyAction(waiting, 'write-certificate')).toEqual({ state: waiting, feedback: 'document-needed' });
+    const referral = act(waiting, 'take-document');
+    expect(applyAction(referral, 'write-certificate')).toEqual({ state: referral, feedback: 'certificate-needed' });
+    const unnamed = act(referral, 'take-certificate', 'stamp-fit');
+    expect(unnamed.visit?.certificateNamed).toBe(false);
+    expect(applyAction(unnamed, 'return-document')).toEqual({ state: unnamed, feedback: 'certificate-name-needed' });
+    const named = applyAction(unnamed, 'write-certificate');
+    expect(named.feedback).toBe('certificate-written');
+    expect(named.state.visit?.certificateNamed).toBe(true);
+    expect(named.state.clockMinutes).toBe(unnamed.clockMinutes + 1);
+    expect(applyAction(named.state, 'write-certificate').state).toBe(named.state);
+    expect(act(named.state, 'return-document').visit).toBeNull();
+  });
+
   it('takes only the referral, permits examinations and notes, and requires a separately fetched certificate for a decision', () => {
     const empty = cabinet();
     expect(applyAction(empty, 'take-certificate')).toEqual({ state: empty, feedback: 'no-patient' });
@@ -294,7 +335,64 @@ describe('separate referral and certificate intake', () => {
     expect(fetched.state.nextPaperId).toBe(state.nextPaperId);
     expect(applyAction(fetched.state, 'take-certificate')).toEqual({ state: fetched.state, feedback: 'certificate-taken' });
     expect(applyAction(fetched.state, 'return-document').feedback).toBe('stamp-needed');
-    state = act(fetched.state, 'stamp-fit', 'return-document', 'call-patient', 'take-document');
+    state = act(fetched.state, 'write-certificate', 'stamp-fit', 'return-document', 'call-patient', 'take-document');
     expect(state.visit).toMatchObject({ patientId: 1, certificateTaken: false, decision: null });
+  });
+});
+
+describe('paperclip bundles', () => {
+  it('joins complete groups at an attached clip and clicking any member’s clip separates them', () => {
+    let state = act(cabinet(), 'take-paper', 'take-paper', 'take-paper', 'take-paper');
+    expect(applyAction(state, { type: 'join-documents', documentId: 2, targetId: 1 })).toEqual({ state, feedback: 'clip-needed' });
+    state = act(state, { type: 'clip-document', documentId: 1 }, { type: 'join-documents', documentId: 2, targetId: 1 },
+      { type: 'clip-document', documentId: 3 }, { type: 'join-documents', documentId: 4, targetId: 3 });
+    const before = structuredClone(state);
+    const joined = act(state, { type: 'join-documents', documentId: 2, targetId: 4 });
+    expect(joined.paperClips).toEqual([[3, 4, 1, 2]]);
+    expect(clippedDocuments(joined, 1)).toEqual([3, 4, 1, 2]);
+    const members = clippedDocuments(joined, 1);
+    members.pop();
+    expect(joined.paperClips[0]).toHaveLength(4);
+    expect(state).toEqual(before);
+    expect(applyAction(joined, { type: 'join-documents', documentId: 2, targetId: 1 }).state).toBe(joined);
+    expect(applyAction(joined, { type: 'clip-document', documentId: 2 }).state).toBe(joined);
+    state = act(joined, { type: 'unclip-document', documentId: 4 });
+    expect(state.paperClips).toEqual([]);
+    expect(clippedDocuments(state, 1)).toEqual([1]);
+    expect(isDocumentClipped(state, 1)).toBe(false);
+    expect(state.clockMinutes).toBe(joined.clockMinutes + 1);
+    expect(applyAction(state, { type: 'unclip-document', documentId: 4 }).state).toBe(state);
+  });
+
+  it('stores, retrieves and disposes the complete bundle with one action per operation', () => {
+    let state = act(cabinet(), 'take-paper', 'take-paper', 'take-paper',
+      { type: 'clip-document', documentId: 1 }, { type: 'join-documents', documentId: 2, targetId: 1 });
+    const before = state.clockMinutes;
+    state = act(state, { type: 'store-paper', paperId: 2 });
+    expect(state.papers.map(paper => [paper.id, paper.location])).toEqual([[3, 'desk'], [1, 'drawer'], [2, 'drawer']]);
+    expect(state.clockMinutes).toBe(before + 1);
+    expect(applyAction(state, { type: 'join-documents', documentId: 3, targetId: 1 })).toEqual({ state, feedback: 'paper-missing' });
+    expect(applyAction(state, { type: 'unclip-document', documentId: 2 })).toEqual({ state, feedback: 'paper-missing' });
+    state = act(state, { type: 'retrieve-paper', paperId: 1 });
+    expect(state.papers.every(paper => paper.location === 'desk')).toBe(true);
+    expect(state.paperClips).toEqual([[1, 2]]);
+    state = act(state, { type: 'trash-paper', paperId: 2 });
+    expect(state.papers.map(paper => paper.id)).toEqual([3]);
+    expect(state.paperClips).toEqual([]);
+    expect(state.clockMinutes).toBe(before + 3);
+  });
+
+  it('protects an active certificate from storage and disposal and detaches it on handoff', () => {
+    let state = act(readyToStamp(), 'take-paper', { type: 'clip-document', documentId: 'certificate' },
+      { type: 'join-documents', documentId: 1, targetId: 'certificate' },
+      { type: 'join-documents', documentId: 2, targetId: 1 });
+    expect(state.paperClips).toEqual([['certificate', 1, 2]]);
+    expect(applyAction(state, { type: 'store-paper', paperId: 1 })).toEqual({ state, feedback: 'certificate-in-bundle' });
+    expect(applyAction(state, { type: 'trash-paper', paperId: 2 })).toEqual({ state, feedback: 'certificate-in-bundle' });
+    state = act(state, 'stamp-fit', 'return-document');
+    expect(state.visit).toBeNull();
+    expect(state.papers).toHaveLength(2);
+    expect(state.paperClips).toEqual([[1, 2]]);
+    expect(applyAction(state, { type: 'clip-document', documentId: 'certificate' })).toEqual({ state, feedback: 'paper-missing' });
   });
 });

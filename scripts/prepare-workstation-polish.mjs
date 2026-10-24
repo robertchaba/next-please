@@ -14,7 +14,10 @@ const region = async (left, top, width, height, x, y, targetHeight = height) => 
 });
 await sharp(`${art}cabinet-corridor.png`).composite(await Promise.all([
   // The scale is part of the wall illustration and shares the room's lamp shading.
-  region(399, 61, 48, 67, 399, 61),
+  // Stop before the generated desk trim: it sits above the approved divider.
+  // Keep the platform's last dark row without importing the surrounding trim.
+  region(399, 61, 48, 64, 399, 61),
+  region(410, 125, 26, 1, 410, 125),
   // Both desks share one height and finish; retain the original central divider.
   region(0, 289, 204, 31, 0, 296, 24),
   region(210, 289, 360, 31, 210, 296, 24),
