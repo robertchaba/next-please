@@ -16,6 +16,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 #utility-controls { margin-left: auto; min-width: 0; max-width: 100%; flex-wrap: wrap; justify-content: flex-end; }
 .surround-bottom button { font: inherit; font-size: 12px; font-weight: bold; letter-spacing: .5px; color: #929c83; background: transparent; border: 0; border-radius: 0; padding: 0 8px; height: 32px; min-width: 32px; cursor: pointer; }
 #control-language-pl, #control-language-en { font-size: 14px; }
+#session-controls button { font-size: 16px; }
 .surround-bottom button:hover { color: #e0d7b5; background: #222c23; }
 .surround-bottom button:focus-visible, #control-volume:focus-visible { outline: 1px dashed #e0d7b5; outline-offset: 2px; }
 .surround-bottom button[aria-pressed='true'] { color: #e0d7b5; box-shadow: inset 0 -2px #ad7054; }
@@ -43,4 +44,5 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 
 .hit-target[data-item] { touch-action: none; cursor: grab; }
-#stage[data-carrying='true'], #stage[data-carrying='true'] .hit-target { cursor: grabbing; }
+#stage[data-carrying='true'] { touch-action: none; }
+#stage[data-carrying='true'], #stage[data-carrying='true'] .hit-target { cursor: none !important; }

@@ -1,5 +1,5 @@
 import { Gunzip, gzipSync, strToU8 } from 'fflate';
-import { APPOINTMENT_MINUTES, ARRIVAL_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, SHIFT_END_MINUTES, SHIFT_LENGTH, SHIFT_START_MINUTES, type GameState, type Visit } from './game';
+import { ARRIVAL_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, SHIFT_END_MINUTES, SHIFT_LENGTH, SHIFT_START_MINUTES, type GameState, type Visit } from './game';
 
 export { createInitialState } from './game';
 export type { GameState } from './game';
@@ -10,9 +10,9 @@ interface LegacyState {
   patientsProcessed: number;
 }
 
-interface SaveV3 {
+interface SaveV4 {
   game: 'next-please';
-  version: 3;
+  version: 4;
   savedAt: string;
   state: GameState;
 }
@@ -40,6 +40,9 @@ export const MAX_EXPANDED_SAVE_BYTES = 2 * 1024 * 1024;
 // Version 2 records the original six-card introduction. Its bounds must stay
 // fixed even when the current introduction changes.
 const V2_INTRO_LAST_STEP = 5;
+const V3_INTRO_LAST_STEP = 3;
+// Legacy two-hour slots remain fixed for validating old files.
+const LEGACY_APPOINTMENT_MINUTES = 120;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -68,7 +71,7 @@ function validateStateV1(value: unknown): LegacyState {
   return { day: value.day, money: value.money, patientsProcessed: value.patientsProcessed };
 }
 
-function validateStateV2(value: unknown): GameState {
+function validateAppointmentState(value: unknown, introLastStep: number, allowUntestedDecision: boolean, actionClock = false): GameState {
   if (
     !isRecord(value) ||
     !hasOnlyKeys(value, ['day', 'money', 'patientsProcessed', 'phase', 'introStep', 'shiftCompleted', 'clockMinutes', 'visit', 'lampOn', 'decoration']) ||
@@ -76,14 +79,14 @@ function validateStateV2(value: unknown): GameState {
     !isIntegerInRange(value.money, -GAME_LIMITS.money, GAME_LIMITS.money) ||
     !isIntegerInRange(value.patientsProcessed, 0, GAME_LIMITS.patients) ||
     (value.phase !== 'intro' && value.phase !== 'cabinet') ||
-    !isIntegerInRange(value.introStep, 0, V2_INTRO_LAST_STEP) ||
+    !isIntegerInRange(value.introStep, 0, introLastStep) ||
     !isIntegerInRange(value.shiftCompleted, 0, SHIFT_LENGTH) ||
     !isIntegerInRange(value.clockMinutes, ARRIVAL_MINUTES, SHIFT_END_MINUTES) ||
     value.shiftCompleted > value.patientsProcessed ||
     typeof value.lampOn !== 'boolean' ||
     (value.decoration !== 'plant' && value.decoration !== 'certificate') ||
     (value.phase === 'intro' && (value.visit !== null || value.shiftCompleted !== 0)) ||
-    (value.phase === 'cabinet' && value.introStep !== V2_INTRO_LAST_STEP)
+    (value.phase === 'cabinet' && value.introStep !== introLastStep)
   ) {
     throw new SaveError('invalid-state');
   }
@@ -100,7 +103,7 @@ function validateStateV2(value: unknown): GameState {
       typeof entry.visionTested !== 'boolean' || typeof entry.pressureTested !== 'boolean' ||
       (entry.decision !== null && entry.decision !== 'fit' && entry.decision !== 'unfit') ||
       (entry.document === 'tray' && (entry.visionTested || entry.pressureTested || entry.decision !== null)) ||
-      (entry.decision !== null && (!entry.visionTested || !entry.pressureTested))
+      (!allowUntestedDecision && entry.decision !== null && (!entry.visionTested || !entry.pressureTested))
     ) {
       throw new SaveError('invalid-state');
     }
@@ -110,19 +113,36 @@ function validateStateV2(value: unknown): GameState {
     };
   }
 
-  // The prototype advances time through work, never wall-clock time. Validate
-  // the exact appointment stage so imports cannot rewind or skip the shift.
-  const slotStart = SHIFT_START_MINUTES + APPOINTMENT_MINUTES * value.shiftCompleted;
-  const expectedMinutes = visit === null
-    ? (value.shiftCompleted === 0 ? ARRIVAL_MINUTES : slotStart)
-    : slotStart + (visit.document === 'desk' ? 10 : 0)
-      + (visit.visionTested ? 35 : 0) + (visit.pressureTested ? 35 : 0) + (visit.decision !== null ? 10 : 0);
-  if (value.clockMinutes !== expectedMinutes) throw new SaveError('invalid-state');
+  if (actionClock) {
+    // Handling and repeated work can spend additional minutes at every stage.
+    // Require the minimum work represented by the state, rather than an exact
+    // slot timestamp that would erase this history when importing.
+    const minimumMinutes = value.phase === 'intro' ? ARRIVAL_MINUTES
+      : visit === null
+        ? (value.shiftCompleted === 0 ? ARRIVAL_MINUTES : SHIFT_START_MINUTES + value.shiftCompleted * 4 - 1)
+        : SHIFT_START_MINUTES + value.shiftCompleted * 4 + (visit.document === 'desk' ? 1 : 0)
+          + (visit.visionTested ? 3 : 0) + (visit.pressureTested ? 4 : 0) + (visit.decision !== null ? 1 : 0);
+    if (value.clockMinutes < minimumMinutes || (value.phase === 'intro' && value.clockMinutes !== ARRIVAL_MINUTES)) {
+      throw new SaveError('invalid-state');
+    }
+  } else {
+    // Preserve v2/v3's exact slot invariant before migrating their clocks.
+    const slotStart = SHIFT_START_MINUTES + LEGACY_APPOINTMENT_MINUTES * value.shiftCompleted;
+    const expectedMinutes = visit === null
+      ? (value.shiftCompleted === 0 ? ARRIVAL_MINUTES : slotStart)
+      : slotStart + (visit.document === 'desk' ? 10 : 0)
+        + (visit.visionTested ? 35 : 0) + (visit.pressureTested ? 35 : 0) + (visit.decision !== null ? 10 : 0);
+    if (value.clockMinutes !== expectedMinutes) throw new SaveError('invalid-state');
+  }
   return {
     day: value.day, money: value.money, patientsProcessed: value.patientsProcessed,
     phase: value.phase, introStep: value.introStep, shiftCompleted: value.shiftCompleted, clockMinutes: value.clockMinutes,
     visit, lampOn: value.lampOn, decoration: value.decoration,
   };
+}
+
+function validateStateV2(value: unknown): GameState {
+  return validateAppointmentState(value, V2_INTRO_LAST_STEP, false);
 }
 
 function migrateStateV2(state: GameState): GameState {
@@ -134,28 +154,27 @@ function migrateStateV2(state: GameState): GameState {
 }
 
 function validateStateV3(value: unknown): GameState {
-  if (
-    !isRecord(value) ||
-    !isIntegerInRange(value.introStep, 0, INTRO_SLIDES - 1) ||
-    (value.phase === 'cabinet' && value.introStep !== INTRO_SLIDES - 1)
-  ) {
-    throw new SaveError('invalid-state');
-  }
-  // All remaining fields and cross-field invariants are unchanged from v2.
-  // Translate only the cabinet sentinel while applying that strict validator.
-  const state = validateStateV2({
-    ...value,
-    introStep: value.phase === 'cabinet' ? V2_INTRO_LAST_STEP : value.introStep,
-  });
-  return { ...state, introStep: value.introStep };
+  // A stamp can be applied before examinations. The existing fields represent
+  // this decision directly; keep v2's original examination gate for old saves.
+  return validateAppointmentState(value, V3_INTRO_LAST_STEP, true);
+}
+
+function validateStateV4(value: unknown): GameState {
+  return validateAppointmentState(value, INTRO_SLIDES - 1, true, true);
+}
+
+function migrateStateV3(state: GameState): GameState {
+  // Preserve the patient's progress and recorded time; subsequent actions use
+  // the short costs. Old saves are never silently rewound to a new clock.
+  return validateStateV4(state);
 }
 
 export function encodeSave(state: GameState): Uint8Array {
-  const envelope: SaveV3 = {
+  const envelope: SaveV4 = {
     game: 'next-please',
-    version: 3,
+    version: 4,
     savedAt: new Date().toISOString(),
-    state: validateStateV3(state),
+    state: validateStateV4(state),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -254,7 +273,7 @@ export function decodeSave(bytes: Uint8Array): GameState {
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3) throw new SaveError('unsupported-version');
+  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -269,8 +288,9 @@ export function decodeSave(bytes: Uint8Array): GameState {
       phase: 'cabinet', introStep: INTRO_SLIDES - 1,
     };
   }
-  if (envelope.version === 2) return migrateStateV2(validateStateV2(envelope.state));
-  return validateStateV3(envelope.state);
+  if (envelope.version === 2) return migrateStateV3(migrateStateV2(validateStateV2(envelope.state)));
+  if (envelope.version === 3) return migrateStateV3(validateStateV3(envelope.state));
+  return validateStateV4(envelope.state);
 }
 
 /** Call from a user action. Saves are downloaded; no account or server is used. */

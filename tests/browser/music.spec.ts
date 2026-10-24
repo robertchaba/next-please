@@ -1,8 +1,9 @@
 import { test, expect, type Page } from '@playwright/test';
+import { readdirSync } from 'node:fs';
 import type { Howl } from 'howler';
-import { translations } from '../../src/i18n';
 
-const trackFiles = translations.en.musicTracks.map(title => `${title}.mp3`);
+const trackFiles = readdirSync(new URL('../../public/assets/audio/music/', import.meta.url))
+  .filter(file => file.endsWith('.mp3')).sort();
 
 // Inspect the actual Howler/Web Audio playback in the built app; no test-only
 // hooks or mocked audio are installed in production code.
@@ -45,13 +46,21 @@ test('music decodes, plays continuously across screens, repeats, and respects pe
   await page.getByRole('button', { name: 'Włącz dźwięk' }).click();
   expect((await playing(page))[0].seek).toBeGreaterThan(position);
 
-  for (const next of [...trackFiles.slice(1), trackFiles[0]]) {
+  const heard = [(await playing(page))[0].src.split('/').at(-1)!];
+  for (let index = 0; index < trackFiles.length; index++) {
+    const previous = (await playing(page))[0].src;
     await page.evaluate(() => {
       const sound = window.Howler._howls.find(sound => sound.playing() && typeof sound._src === 'string' && sound._src.endsWith('.mp3'))!;
       sound.seek(sound.duration() - 0.1);
     });
-    await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining(next)]);
+    await expect.poll(async () => {
+      const sounds = await playing(page);
+      return sounds.length === 1 && sounds[0].src !== previous;
+    }).toBe(true);
+    heard.push((await playing(page))[0].src.split('/').at(-1)!);
   }
+  expect(heard.at(-1)).toBe(heard[0]);
+  expect(heard.slice(0, -1).sort()).toEqual(trackFiles);
 
   await page.reload();
   await expect(page.getByRole('button', { name: 'Wycisz dźwięk' })).toBeVisible();
@@ -81,7 +90,7 @@ test('previous/next wrap, support the keyboard in both languages, and preserve m
   await page.keyboard.press('Enter');
   await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining('Bureaucratic March 1.mp3')]);
   await page.keyboard.press('Space');
-  await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining(trackFiles.at(-1)!)]);
+  await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining('Untitled.mp3')]);
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Następny utwór' })).toBeFocused();
   await page.keyboard.press('Enter');

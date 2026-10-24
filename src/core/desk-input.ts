@@ -1,86 +1,98 @@
-import type { DeskItemId, Point, Rect } from './desk';
+import { itemAnchor, restRect, type DeskItemId, type Point, type Rect } from './desk';
 
 type DeskInputOptions = {
   enabled: () => boolean;
   rect: (id: DeskItemId) => Rect;
   begin: (id: DeskItemId) => void;
   move: (id: DeskItemId, point: Point) => void;
-  drop: (id: DeskItemId) => void;
+  /** Return true when the item was put down; false keeps the tool in hand. */
+  drop: (id: DeskItemId, point?: Point) => boolean;
   cancel: () => void;
 };
 
-/** Pointer capture and keyboard carrying share the same logical-pixel movement. */
-export function installDeskInput(stage: HTMLElement, options: DeskInputOptions): { cancel: () => void } {
+/** Click to carry, click again to place or use. No mouse button needs to stay down. */
+export function installDeskInput(stage: HTMLElement, options: DeskInputOptions): { cancel: () => void; putAway: (id: DeskItemId) => void } {
   let held: DeskItemId | null = null;
-  let pointer: { id: number; item: DeskItemId; start: Point; offset: Point } | null = null;
-  let suppressClick = false;
-  const point = (event: PointerEvent): Point => {
+  let activating = false;
+  const point = (event: MouseEvent): Point => {
     const bounds = stage.getBoundingClientRect();
     return { x: Math.round((event.clientX - bounds.left) * 570 / bounds.width), y: Math.round((event.clientY - bounds.top) * 320 / bounds.height) };
   };
-  const release = (): void => {
-    const id = pointer?.id;
-    pointer = null;
-    if (id !== undefined && stage.hasPointerCapture(id)) stage.releasePointerCapture(id);
-  };
   const cancel = (): void => {
-    if (held) { held = null; options.cancel(); }
-    release();
+    if (!held) return;
+    held = null;
+    options.cancel();
   };
-  const stopClick = (): void => {
-    suppressClick = true;
-    setTimeout(() => { suppressClick = false; }, 0);
+  const moveToPointer = (current: Point): void => {
+    if (!held) return;
+    const anchor = itemAnchor(held);
+    options.move(held, { x: current.x - anchor.x, y: current.y - anchor.y });
+  };
+  const activate = (current?: Point): void => {
+    if (!held) return;
+    const item = held;
+    activating = true;
+    try {
+      if (options.drop(item, current)) held = null;
+    } finally { activating = false; }
+  };
+  const pickUp = (id: DeskItemId): void => {
+    held = id;
+    activating = true;
+    try { options.begin(id); }
+    finally { activating = false; }
+  };
+  const putAway = (id: DeskItemId): void => {
+    const rest = restRect(id);
+    if (held !== id || !rest) return;
+    options.move(id, rest);
+    activate({ x: rest.x + Math.floor(rest.w / 2), y: rest.y + Math.floor(rest.h / 2) });
   };
   stage.addEventListener('click', event => {
-    if ((suppressClick && event.detail > 0) || held) { event.preventDefault(); event.stopImmediatePropagation(); }
+    // Keyboard and assistive activation retain the controls' normal actions.
+    if (!options.enabled() || event.detail === 0 || event.button !== 0) return;
+    const target = (event.target as HTMLElement).closest<HTMLElement>('[data-item]');
+    if (!held && !target) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    const current = point(event);
+    if (held) {
+      moveToPointer(current);
+      activate(current);
+    } else if (target) {
+      pickUp(target.dataset.item as DeskItemId);
+      moveToPointer(current);
+    }
   }, true);
   stage.addEventListener('pointerdown', event => {
-    if (!options.enabled() || event.button !== 0 || held || pointer) return;
-    const target = (event.target as HTMLElement).closest<HTMLElement>('[data-item]');
-    if (!target) return;
-    const item = target.dataset.item as DeskItemId;
-    const start = point(event), rect = options.rect(item);
-    pointer = { id: event.pointerId, item, start, offset: { x: start.x - rect.x, y: start.y - rect.y } };
-    // Capture only after the drag threshold, so ordinary clicks keep their target.
+    // A second touch can land on bare desk. Keep focus on the carried control
+    // until its click is handled instead of cancelling when the browser blurs it.
+    if (held && options.enabled() && event.button === 0) event.preventDefault();
   });
   stage.addEventListener('pointermove', event => {
-    if (!pointer || event.pointerId !== pointer.id) return;
-    const current = point(event);
-    if (!held && Math.hypot(current.x - pointer.start.x, current.y - pointer.start.y) < 3) return;
-    if (!held) {
-      held = pointer.item; stage.setPointerCapture(pointer.id); options.begin(held);
-    }
-    event.preventDefault();
-    options.move(held, { x: current.x - pointer.offset.x, y: current.y - pointer.offset.y });
-  });
-  stage.addEventListener('pointerup', event => {
-    if (!pointer || event.pointerId !== pointer.id) return;
-    const item = held;
-    held = null; release();
-    if (item) { stopClick(); options.drop(item); }
+    if (!held || !options.enabled() || event.pointerType === 'touch') return;
+    moveToPointer(point(event));
   });
   stage.addEventListener('pointercancel', cancel);
-  stage.addEventListener('lostpointercapture', event => {
-    // Touch begins with implicit capture on the item. Transferring it to the
-    // stage is expected and must not cancel the newly started drag.
-    if (event.target === stage && pointer && event.pointerId === pointer.id) cancel();
-  });
-  window.addEventListener('pointerup', event => {
-    if (!held && pointer?.id === event.pointerId) release();
-  });
   stage.addEventListener('keydown', event => {
     if (!options.enabled() || event.altKey || event.ctrlKey || event.metaKey) return;
     const target = (event.target as HTMLElement).closest<HTMLElement>('[data-item]');
     if (!held && event.code === 'Space' && target) {
       event.preventDefault(); event.stopPropagation();
-      held = target.dataset.item as DeskItemId; options.begin(held); return;
+      pickUp(target.dataset.item as DeskItemId); return;
     }
     if (!held) return;
-    if (event.key === 'Tab') { cancel(); return; }
-    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); stopClick(); cancel(); return; }
+    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); cancel(); return; }
     if (event.key === 'Enter' || event.code === 'Space') {
+      // The semantic holder buttons let keyboard users put tools away directly.
+      if ((event.target as HTMLElement).id.startsWith('control-put-away-')) return;
       event.preventDefault(); event.stopPropagation();
-      const item = held; held = null; release(); stopClick(); options.drop(item); return;
+      const control = event.target as HTMLElement;
+      if (held === 'document' && control.id === 'control-return-document') {
+        activate({ x: parseFloat(control.style.left) + parseFloat(control.style.width) / 2,
+          y: parseFloat(control.style.top) + parseFloat(control.style.height) / 2 });
+        return;
+      }
+      activate(); return;
     }
     const vectors: Record<string, Point> = { ArrowLeft: { x: -1, y: 0 }, ArrowRight: { x: 1, y: 0 }, ArrowUp: { x: 0, y: -1 }, ArrowDown: { x: 0, y: 1 } };
     const direction = vectors[event.key];
@@ -91,9 +103,12 @@ export function installDeskInput(stage: HTMLElement, options: DeskInputOptions):
     }
   });
   stage.addEventListener('focusout', event => {
-    if (held && !stage.contains(event.relatedTarget as Node | null)) cancel();
+    if (!activating && held && !stage.contains(event.relatedTarget as Node | null)) cancel();
+  });
+  window.addEventListener('pointerdown', event => {
+    if (held && !stage.contains(event.target as Node)) cancel();
   });
   window.addEventListener('blur', cancel);
   document.addEventListener('visibilitychange', () => { if (document.hidden) cancel(); });
-  return { cancel };
+  return { cancel, putAway };
 }

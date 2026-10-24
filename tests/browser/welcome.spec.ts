@@ -43,8 +43,10 @@ test('Polish default, English persistence, credits and keyboard controls', async
   await page.getByRole('button', { name: 'CREDITS', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Robert Chaba');
   await expect(page.getByRole('dialog')).not.toContainText('Papers, Please');
-  await expect(page.getByRole('dialog')).toContainText('Officious March');
-  await expect(page.getByRole('dialog')).toContainText('Generated with Suno');
+  await expect(page.getByRole('dialog')).toContainText('PROGRAMMING: Codex and OpenAI Models');
+  await expect(page.getByRole('dialog')).toContainText('MUSIC: Suno');
+  await expect(page.getByRole('dialog')).not.toContainText('Officious March');
+  await expect(page.getByRole('dialog')).not.toContainText('TITLE ART');
   await expect(page.getByRole('link', { name: 'github.com/robertchaba' })).toHaveAttribute('href', 'https://github.com/robertchaba');
   await page.screenshot({ path: testInfo.outputPath('credits-en.png') });
   await page.keyboard.press('Tab');

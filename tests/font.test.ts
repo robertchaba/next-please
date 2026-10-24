@@ -44,4 +44,18 @@ describe('compact original document font', () => {
       for (const caption of Object.values(t.feedback)) expect(measureDocumentText(caption)).toBeLessThanOrEqual(430);
     }
   });
+
+  it('keeps every manual spread readable within its two native-pixel pages', () => {
+    expect(translations.pl.manualPages).toHaveLength(5);
+    expect(translations.en.manualPages).toHaveLength(translations.pl.manualPages.length);
+    for (const t of Object.values(translations)) {
+      for (const page of t.manualPages) {
+        for (const heading of [page.title, page.facingTitle]) expect(measureDocumentText(heading)).toBeLessThanOrEqual(111);
+        for (const column of [page.lines, page.facingLines]) {
+          expect(column.length).toBeLessThanOrEqual(9);
+          for (const line of column) expect(measureDocumentText(line), line).toBeLessThanOrEqual(114);
+        }
+      }
+    }
+  });
 });

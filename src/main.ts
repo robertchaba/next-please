@@ -1,19 +1,19 @@
 import './style.css';
 import { applyAction, type GameAction } from './core/game';
 import { effectsManifest } from './core/effects';
-import { renderCabinet, renderIntro, shiftButtons, shiftDescription, type SelectedStamp, type ShiftAction } from './scenes/shift';
+import { renderCabinet, renderIntro, shiftButtons, shiftDescription, manualPageDescription, MANUAL_PAGE_COUNT, type SelectedStamp, type ShiftAction } from './scenes/shift';
 import type { Button } from './ui';
-import { createDeskState, itemRect, moveDeskItem, raiseDeskItem, containsPoint, TRAY, TRAY_DOCUMENT, DEFAULT_DOCUMENT, type DeskItemId } from './core/desk';
+import { createDeskState, itemRect, moveDeskItem, raiseDeskItem, containsPoint, restRect, itemAnchor, TRAY, TRAY_DOCUMENT, DEFAULT_DOCUMENT, PATIENT_HANDOFF, RIGHT_DESK_X, type DeskItemId } from './core/desk';
 import { installDeskInput } from './core/desk-input';
-import type { CabinetArtOptions } from './render/clinic';
-import { drawDocumentText, drawText } from './render/font';
+import { drawPaper, loadClinicArt, type CabinetArtOptions } from './render/clinic';
+import { drawText } from './render/font';
 import { installCursor, installDisplay, WIDTH, HEIGHT } from './core/display';
 import { translations, readPreferences, savePreferences, type Locale } from './i18n';
 import { audio } from './core/audio';
 import { musicManifest, musicPlaylist } from './core/music';
 import { createInitialState, downloadSave, importSave, SaveError } from './core/save';
 
-type Screen = 'welcome' | 'intro' | 'cabinet' | 'manual' | 'credits' | 'saves';
+type Screen = 'welcome' | 'intro' | 'cabinet' | 'credits' | 'saves';
 const app = document.querySelector<HTMLElement>('#app')!;
 const viewport = document.querySelector<HTMLElement>('#viewport')!;
 const stage = document.querySelector<HTMLElement>('#stage')!;
@@ -42,10 +42,15 @@ let gameState = createInitialState();
 let deskState = createDeskState();
 let heldItem: DeskItemId | null = null;
 let deskBeforePickup = deskState;
+let manualOpen = false;
+let manualPage = 0;
+let manualBeforePickup = false;
+let clockMinutes = gameState.clockMinutes;
+let clockTransition: { from: number; to: number; elapsed: number } | undefined;
 let patientMotion: CabinetArtOptions['patientMotion'];
 const motionQueue: NonNullable<CabinetArtOptions['patientMotion']>[] = [];
-const deskView = () => ({ desk: deskState, held: heldItem, patientMotion });
-const deskRect = (id: DeskItemId) => itemRect(deskState, id, gameState.visit?.document === 'tray' && heldItem !== 'document');
+const deskView = () => ({ desk: deskState, held: heldItem, patientMotion, manualOpen, manualPage, clockMinutes });
+const deskRect = (id: DeskItemId) => itemRect(deskState, id, gameState.visit?.document === 'tray' && heldItem !== 'document', heldItem === id, manualOpen);
 const itemControlId = (id: DeskItemId): string => id === 'document' ? (gameState.visit?.document === 'tray' ? 'take-document' : 'apply-stamp') : id;
 let busy = false;
 let status = '';
@@ -126,10 +131,44 @@ function animatePatient(patientId: number, direction: 'enter' | 'exit'): void {
   else patientMotion = next;
 }
 
+function updateClock(): void {
+  if (gameState.clockMinutes === clockTransition?.to || gameState.clockMinutes === clockMinutes) return;
+  if (reducedMotion.matches || gameState.clockMinutes < clockMinutes) {
+    clockMinutes = gameState.clockMinutes; clockTransition = undefined;
+  } else clockTransition = { from: clockMinutes, to: gameState.clockMinutes, elapsed: 0 };
+}
+
+function spendTime(action: 'handle-item' | 'read-manual'): void {
+  gameState = applyAction(gameState, action).state;
+  updateClock();
+}
+
+function setManualOpen(open: boolean): void {
+  manualOpen = open;
+  if (open) {
+    deskState = raiseDeskItem(moveDeskItem(deskState, 'manual', { x: 222, y: 144 }, false, true), 'manual');
+  } else deskState = moveDeskItem(deskState, 'manual', deskState.positions.manual);
+}
+
 function handleShiftAction(action: ShiftAction): void {
-  if (action === 'move-cup' || action === 'move-pencil') return;
-  if (action === 'manual') { playEffect('paper'); openScreen('manual', 'manual'); return; }
+  if (action === 'put-away-fit' || action === 'put-away-unfit') {
+    deskInput.putAway(action === 'put-away-fit' ? 'stamp-fit' : 'stamp-unfit');
+    return;
+  }
+  if (action === 'manual' || action === 'manual-close' || action === 'manual-prev' || action === 'manual-next') {
+    if (action === 'manual-prev') manualPage = Math.max(0, manualPage - 1);
+    else if (action === 'manual-next') manualPage = Math.min(MANUAL_PAGE_COUNT - 1, manualPage + 1);
+    else setManualOpen(action === 'manual' && !manualOpen);
+    spendTime('read-manual'); playEffect('paper');
+    feedback = manualOpen ? manualPageDescription(locale, manualPage) : t().manualClosed;
+    const pageFocus = action === 'manual-next' && manualPage === MANUAL_PAGE_COUNT - 1 ? 'manual-prev'
+      : action === 'manual-prev' && manualPage === 0 ? 'manual-next' : action;
+    syncControls(action === 'manual-prev' || action === 'manual-next' ? pageFocus : 'manual');
+    document.querySelector('#announcement')!.textContent = feedback;
+    return;
+  }
   if (action === 'select-fit' || action === 'select-unfit') {
+    spendTime('handle-item');
     selectedStamp = action === 'select-fit' ? 'fit' : 'unfit';
     feedback = `${t().selectedStamp}: ${t()[selectedStamp]}. ${t().stampHere}.`;
     syncControls(action === 'select-fit' ? 'stamp-fit' : 'stamp-unfit');
@@ -144,6 +183,7 @@ function handleShiftAction(action: ShiftAction): void {
   const previousState = gameState;
   const result = applyAction(gameState, actual);
   gameState = result.state; feedback = t().feedback[result.feedback];
+  updateClock();
   screen = gameState.phase;
   let focusId: string = action;
   if (actual === 'advance-intro' || actual === 'skip-intro') {
@@ -156,7 +196,7 @@ function handleShiftAction(action: ShiftAction): void {
     animatePatient(gameState.visit!.patientId, 'enter');
   } else if (actual === 'take-document' && result.feedback === 'document-taken') {
     playEffect('paper'); focusId = 'run-vision';
-    if (!heldItem) deskState = moveDeskItem(deskState, 'document', DEFAULT_DOCUMENT);
+    if (!heldItem) deskState = raiseDeskItem(moveDeskItem(deskState, 'document', DEFAULT_DOCUMENT), 'document');
   } else if (actual === 'run-vision') focusId = 'run-pressure';
   else if (actual === 'run-pressure') focusId = 'stamp-fit';
   else if (actual.startsWith('stamp-') && gameState !== previousState) {
@@ -179,7 +219,7 @@ function openScreen(next: Screen, trigger = 'start'): void {
 }
 function closeScreen(): void {
   deskInput.cancel();
-  const isPanel = screen === 'credits' || screen === 'saves' || screen === 'manual';
+  const isPanel = screen === 'credits' || screen === 'saves';
   screen = isPanel ? panelReturn : 'welcome'; status = ''; toast = '';
   if (screen === 'welcome') clearPatientMotion();
   if (screen === 'intro') startTyping();
@@ -219,7 +259,6 @@ function updateMusicMeter(): void {
 
 function getButtons(): Button[] {
   if (screen === 'intro' || screen === 'cabinet') return shiftButtons(gameState, locale, selectedStamp, handleShiftAction, deskView());
-  if (screen === 'manual') return [{ id: 'back', label: t().back, x: 227, y: 265, w: 116, h: 24, action: closeScreen }];
   if (screen === 'credits') return [
     { id: 'github', label: 'github.com/robertchaba', x: 104, y: 93, w: 170, h: 17, href: 'https://github.com/robertchaba', kind: 'text' },
     { id: 'back', label: t().back, x: 227, y: 277, w: 116, h: 24, action: closeScreen },
@@ -323,25 +362,25 @@ function syncControls(focusId?: string): void {
   document.title = t().documentTitle;
   document.querySelector('meta[name="description"]')!.setAttribute('content', t().description);
   app.dataset.screen = screen;
+  stage.dataset.carrying = String(screen === 'cabinet' && heldItem !== null);
   utilityControls.setAttribute('aria-label', t().utilityControls);
   controls.replaceChildren();
   hovered = ''; focused = '';
   buttons = getButtons();
   const heading = document.createElement('h1');
   heading.className = 'sr-only'; heading.id = 'screen-heading';
-  heading.textContent = screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'manual' ? t().manualTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
+  heading.textContent = screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
   const description = document.createElement('p');
   description.className = 'sr-only'; description.id = 'screen-description';
   description.textContent = screen === 'credits'
-    ? `${t().creator}: Robert Chaba. ${t().art}: ${t().artName}. ${t().font}. ${t().audio}: ${t().musicSource}. ${t().musicTracks.join(', ')}. ${t().creditsFooter}`
+    ? `${t().creator}: Robert Chaba. ${t().programming}: ${t().programmingName}. ${t().audio}: ${t().musicSource}. ${t().creditsFooter}`
     : screen === 'intro' ? t().intro[gameState.introStep].body
-    : screen === 'cabinet' ? `${shiftDescription(gameState, locale)} ${feedback}`
-    : screen === 'manual' ? t().manualLines.join(' ')
+    : screen === 'cabinet' ? `${shiftDescription(gameState, locale)} ${manualOpen ? manualPageDescription(locale, manualPage) : ''} ${feedback}`
     : screen === 'saves' ? `${t().savesBody.join(' ')} ${t().sample}. ${t().day}: ${gameState.day}. ${t().patients}: ${gameState.patientsProcessed}. ${t().money}: ${gameState.money}.`
     : `${t().subtitle} ${t().tagline} ${t().description}`;
   controls.append(heading, description);
   controls.dataset.screen = screen; controls.dataset.introStep = String(gameState.introStep);
-  const modal = screen === 'credits' || screen === 'saves' || screen === 'manual';
+  const modal = screen === 'credits' || screen === 'saves';
   controls.setAttribute('role', modal ? 'dialog' : 'group');
   controls.setAttribute('aria-labelledby', 'screen-heading');
   controls.setAttribute('aria-describedby', 'screen-description');
@@ -354,11 +393,13 @@ function syncControls(focusId?: string): void {
     if (screen !== 'cabinet') element.title = button.label;
     if (button.item) {
       element.dataset.item = button.item;
-      element.setAttribute('aria-description', t().dragHelp);
+      element.dataset.held = String(heldItem === button.item);
+      element.setAttribute('aria-description', heldItem === button.item ? t().carryingHelp : button.item === 'manual' ? t().manualHelp : t().dragHelp);
       element.setAttribute('aria-keyshortcuts', 'Space ArrowUp ArrowDown ArrowLeft ArrowRight Enter Escape');
     }
     element.style.cssText = `left:${button.x}px;top:${button.y}px;width:${button.w}px;height:${button.h}px;`;
-    if (button.item) element.style.zIndex = String(deskState.order.indexOf(button.item) + 1);
+    if (button.item) element.style.zIndex = String(deskState.order.indexOf(button.item) * 2 + 2);
+    else if (button.id.startsWith('manual-')) element.style.zIndex = String(deskState.order.indexOf('manual') * 2 + 3);
     if (button.pressed !== undefined) element.setAttribute('aria-pressed', String(button.pressed));
     if (element instanceof HTMLAnchorElement) { element.href = button.href!; element.target = '_blank'; element.rel = 'noopener noreferrer'; }
     if (element instanceof HTMLButtonElement) element.type = 'button';
@@ -391,10 +432,11 @@ function syncControls(focusId?: string): void {
 function drawButton(button: Button): void {
   const active = hovered === button.id || focused === button.id;
   const { x, y, w, h } = button;
-  const onPaper = screen === 'credits' || screen === 'saves' || screen === 'manual';
+  const onPaper = screen === 'credits' || screen === 'saves';
   const ink = onPaper ? colors.ink : colors.bone;
   if (button.kind === 'hotspot') {
-    if (active) outline(x, y, w, h, '#d0bc83');
+    // Objects keep their artwork on hover. Keyboard focus is the DOM indicator.
+    return;
   } else if (button.kind === 'fit' || button.kind === 'unfit') {
     const stampColor = button.kind === 'fit' ? '#667b55' : '#a35e49';
     rect(x + 2, y + 3, w, h, '#191e17');
@@ -420,10 +462,7 @@ function drawButton(button: Button): void {
 function paper(x: number, y: number, w: number, h: number, title: string, reference: string): void {
   rect(0, 0, WIDTH, HEIGHT, '#080d0bc9');
   rect(x + 5, y + 6, w, h, '#080d0b');
-  rect(x, y, w, h, colors.paper);
-  rect(x + 1, y + 1, w - 2, 2, '#e6dfbd');
-  // Subtle ruled-paper grain; deterministic at native pixel coordinates.
-  for (let row = y + 36; row < y + h - 4; row += 12) rect(x + 8, row, w - 16, 1, '#c4c09f');
+  drawPaper(ctx, x, y, w, h);
   rect(x, y, 4, h, colors.darkRed);
   text(reference, x + 18, y + 11, '#6a705d');
   text(title, x + 18, y + 28, colors.ink);
@@ -435,14 +474,15 @@ function render(): void {
   if (screen === 'intro') {
     renderIntro(ctx, gameState, locale, introCharacters); buttons.forEach(drawButton); drawToast(); return;
   }
-  if (screen === 'cabinet' || screen === 'manual') {
+  if (screen === 'cabinet') {
     renderCabinet(ctx, gameState, locale, selectedStamp, deskView());
     controls.dataset.patientMotion = patientMotion?.direction ?? 'idle';
     controls.dataset.patientFrame = String(patientMotion?.frame ?? 0);
-    if (screen === 'manual') {
-      paper(60, 32, 450, 267, t().manualTitle, 'NP / 004');
-      t().manualLines.forEach((line, index) => drawDocumentText(ctx, line, 82, 92 + index * 17, { color: colors.ink }));
-    }
+    controls.dataset.manualOpen = String(manualOpen);
+    controls.dataset.manualPage = String(manualPage);
+    controls.dataset.clockMinutes = String(gameState.clockMinutes);
+    controls.dataset.clockDisplay = String(clockMinutes);
+    controls.dataset.clockMoving = String(clockTransition !== undefined);
     buttons.forEach(drawButton); drawToast(); return;
   }
   rect(0, 0, WIDTH, HEIGHT, colors.ink);
@@ -471,13 +511,10 @@ function render(): void {
     paper(78, 15, 414, 298, t().creditsTitle, 'NP / 002');
     text(t().creator, 104, 65, '#6a705d');
     text('ROBERT CHABA', 104, 78, colors.ink);
-    text(t().art, 104, 112, '#6a705d');
-    text(t().artName, 104, 124, colors.ink);
-    text(t().font, 104, 136, colors.ink);
-    text(t().audio, 104, 150, '#6a705d');
-    text(t().musicSource, 104, 162, colors.ink);
-    const musicRows = Math.ceil(t().musicTracks.length / 2);
-    t().musicTracks.forEach((track, index) => text(track, 104 + Math.floor(index / musicRows) * 192, 175 + (index % musicRows) * 12, colors.ink));
+    text(t().programming, 104, 136, '#6a705d');
+    text(t().programmingName, 104, 151, colors.ink);
+    text(t().audio, 104, 197, '#6a705d');
+    text(t().musicSource, 104, 212, colors.ink);
     text(t().creditsFooter, 285, 259, '#6a705d', 1, 'center');
   } else if (screen === 'saves') {
     paper(78, 44, 414, 235, t().savesTitle, 'NP / 003');
@@ -510,10 +547,11 @@ fileInput.addEventListener('change', async () => {
     const loadedState = await importSave(file);
     deskInput.cancel(); clearPatientMotion(); deskState = createDeskState();
     gameState = loadedState; shiftStarted = true; selectedStamp = null; feedback = '';
+    manualOpen = false; manualPage = 0; clockMinutes = gameState.clockMinutes; clockTransition = undefined;
     if (panelReturn === 'intro' || panelReturn === 'cabinet') panelReturn = loadedState.phase;
     // File reads can finish after the player closes the archive. Reconcile the
     // active scene as well as the saved data before rebuilding its controls.
-    if (screen === 'intro' || screen === 'cabinet' || screen === 'manual') {
+    if (screen === 'intro' || screen === 'cabinet') {
       screen = loadedState.phase;
       if (screen === 'intro') startTyping();
     }
@@ -545,10 +583,14 @@ function updateDeskControls(): void {
     if (!element || !button.item) continue;
     element.style.left = `${button.x}px`; element.style.top = `${button.y}px`;
     element.style.width = `${button.w}px`; element.style.height = `${button.h}px`;
-    element.style.zIndex = String(deskState.order.indexOf(button.item) + 1);
+    element.style.zIndex = String(deskState.order.indexOf(button.item) * 2 + 2);
     element.dataset.held = String(heldItem === button.item);
-    element.setAttribute('aria-description', heldItem === button.item ? t().carryingHelp : t().dragHelp);
+    if (button.pressed !== undefined) element.setAttribute('aria-pressed', String(button.pressed));
+    element.setAttribute('aria-description', heldItem === button.item ? t().carryingHelp : button.item === 'manual' ? t().manualHelp : t().dragHelp);
   }
+  controls.querySelectorAll<HTMLElement>('[id^="control-put-away-"]').forEach(element => {
+    if (!buttons.some(button => element.id === `control-${button.id}`)) element.remove();
+  });
   stage.dataset.carrying = String(heldItem !== null);
   render();
 }
@@ -558,46 +600,97 @@ const deskInput = installDeskInput(stage, {
   rect: deskRect,
   begin: id => {
     deskBeforePickup = deskState;
+    manualBeforePickup = manualOpen;
     heldItem = id;
-    if (id === 'document' && gameState.visit?.document === 'tray') deskState = moveDeskItem(deskState, id, TRAY_DOCUMENT);
+    if (id === 'manual') manualOpen = false;
+    const origin = id === 'document' && gameState.visit?.document === 'tray' ? TRAY_DOCUMENT : deskState.positions[id];
+    deskState = moveDeskItem(deskState, id, origin, true);
+    if (id === 'stamp-fit' || id === 'stamp-unfit') selectedStamp = id === 'stamp-fit' ? 'fit' : 'unfit';
     deskState = raiseDeskItem(deskState, id);
-    playEffect('paper');
+    spendTime('handle-item');
+    startMusic(); playEffect('paper');
     document.querySelector('#announcement')!.textContent = t().itemPickedUp;
-    updateDeskControls();
+    syncControls(itemControlId(id));
   },
-  move: (id, point) => { deskState = moveDeskItem(deskState, id, point); updateDeskControls(); },
-  drop: id => {
+  move: (id, point) => { deskState = moveDeskItem(deskState, id, point, true); updateDeskControls(); },
+  drop: (id, point) => {
     const position = deskState.positions[id];
-    heldItem = null; stage.dataset.carrying = 'false';
+    const anchor = itemAnchor(id);
+    const target = point ?? { x: position.x + anchor.x, y: position.y + anchor.y };
+    const rest = restRect(id);
+    if (rest) {
+      if (containsPoint(rest, target)) {
+        deskState = moveDeskItem(deskState, id, rest);
+        heldItem = null; selectedStamp = null;
+        spendTime('handle-item');
+        playEffect('paper');
+        document.querySelector('#announcement')!.textContent = t().toolPutAway;
+        syncControls(itemControlId(id));
+        return true;
+      }
+      const surface = [...deskState.order].reverse().find(other => other !== id
+        && (other !== 'document' || gameState.visit !== null) && containsPoint(deskRect(other), target));
+      if (gameState.visit?.document === 'desk' && surface === 'document') {
+        selectedStamp = id === 'stamp-fit' ? 'fit' : 'unfit';
+        handleShiftAction('apply-stamp');
+      } else {
+        spendTime('handle-item');
+        feedback = t().toolNoTarget;
+        document.querySelector('#announcement')!.textContent = feedback;
+      }
+      // An impression or a missed attempt never puts the stamp down.
+      syncControls(itemControlId(id));
+      return false;
+    }
+    heldItem = null;
     let acted = false;
+    if (id === 'manual') {
+      manualOpen = target.x >= RIGHT_DESK_X;
+      deskState = moveDeskItem(deskState, id, manualOpen
+        ? { x: Math.max(RIGHT_DESK_X, target.x - 138), y: 144 }
+        : { x: Math.max(5, Math.min(RIGHT_DESK_X - 94, target.x - 44)), y: position.y }, false, manualOpen);
+      spendTime('read-manual');
+      feedback = manualOpen ? manualPageDescription(locale, manualPage) : t().manualClosed;
+      playEffect('paper'); document.querySelector('#announcement')!.textContent = feedback;
+      acted = true;
+    }
     if (id === 'document' && gameState.visit) {
-      const onTray = containsPoint(TRAY, { x: position.x + 8, y: position.y + 8 });
-      if (gameState.visit.document === 'tray' && !onTray) {
-        handleShiftAction('take-document');
-        deskState = moveDeskItem(deskState, id, position); acted = true;
-      } else if (gameState.visit.document === 'desk' && onTray) {
+      const onTray = containsPoint(TRAY, target);
+      const toPatient = containsPoint(PATIENT_HANDOFF, target);
+      if (gameState.visit.document === 'desk' && toPatient) {
         handleShiftAction('return-document');
         if (gameState.visit) deskState = deskBeforePickup;
         acted = true;
-      }
-    } else if ((id === 'stamp-fit' || id === 'stamp-unfit') && gameState.visit?.document === 'desk') {
-      const stamp = itemRect(deskState, id);
-      if (containsPoint(itemRect(deskState, 'document'), { x: stamp.x + 24, y: stamp.y + 42 })) {
-        selectedStamp = id === 'stamp-fit' ? 'fit' : 'unfit';
-        handleShiftAction('apply-stamp'); acted = true;
+      } else if (gameState.visit.document === 'tray' && (onTray || toPatient)) {
+        deskState = deskBeforePickup;
+      } else {
+        const placed = target.x >= RIGHT_DESK_X
+          ? { x: Math.max(RIGHT_DESK_X, position.x), y: position.y }
+          : { x: Math.max(5, Math.min(RIGHT_DESK_X - 66, target.x - 30)), y: position.y };
+        if (gameState.visit.document === 'tray') {
+          handleShiftAction('take-document');
+          acted = true;
+        }
+        deskState = moveDeskItem(deskState, id, placed);
       }
     }
-    if (!acted) { playEffect('paper'); document.querySelector('#announcement')!.textContent = t().itemDropped; }
+    if (!acted) { spendTime('handle-item'); playEffect('paper'); document.querySelector('#announcement')!.textContent = t().itemDropped; }
     syncControls(gameState.visit || id !== 'document' ? itemControlId(id) : gameState.shiftCompleted === 3 ? 'next-day' : 'call-patient');
+    return true;
   },
   cancel: () => {
-    deskState = deskBeforePickup; heldItem = null;
+    const cancelled = heldItem;
+    const restoreFocus = controls.contains(document.activeElement);
+    deskState = deskBeforePickup;
+    manualOpen = manualBeforePickup;
+    if (heldItem === 'stamp-fit' || heldItem === 'stamp-unfit') selectedStamp = null;
+    heldItem = null;
     document.querySelector('#announcement')!.textContent = t().moveCancelled;
-    updateDeskControls();
+    syncControls(restoreFocus && cancelled ? itemControlId(cancelled) : undefined);
   },
 });
 
-// Six authored poses, advanced only by updates; never by the drawing routines.
+// Six stationary shadow reveals, advanced only by updates.
 setInterval(() => {
   if (!patientMotion || screen !== 'cabinet' || document.hidden) return;
   if (reducedMotion.matches) clearPatientMotion();
@@ -605,16 +698,30 @@ setInterval(() => {
   else patientMotion = motionQueue.shift();
   render();
 }, 140);
-reducedMotion.addEventListener('change', () => { if (reducedMotion.matches) { clearPatientMotion(); render(); } });
+setInterval(() => {
+  if (!clockTransition || screen !== 'cabinet' || document.hidden) return;
+  clockTransition.elapsed += 40;
+  const progress = Math.min(1, clockTransition.elapsed / 800);
+  clockMinutes = clockTransition.from + (clockTransition.to - clockTransition.from) * progress;
+  if (progress === 1) clockTransition = undefined;
+  render();
+}, 40);
+reducedMotion.addEventListener('change', () => {
+  if (reducedMotion.matches) { clearPatientMotion(); clockTransition = undefined; clockMinutes = gameState.clockMinutes; render(); }
+});
 
 // Runs after button actions so enabling audio starts music in the same gesture.
 document.addEventListener('click', startMusic);
 document.addEventListener('keydown', event => {
   if (event.altKey || event.ctrlKey || event.metaKey) return;
   if (!event.repeat) startMusic();
-  if (event.key === 'Escape' && screen !== 'welcome') { event.preventDefault(); closeScreen(); }
+  if (event.key === 'Escape' && screen !== 'welcome') {
+    event.preventDefault();
+    if (screen === 'cabinet' && manualOpen) handleShiftAction('manual-close');
+    else closeScreen();
+  }
   if (event.key.toLowerCase() === 'f' && !event.repeat) { event.preventDefault(); void fullscreen(); }
-  if (event.key === 'Tab' && (screen === 'credits' || screen === 'saves' || screen === 'manual')) {
+  if (event.key === 'Tab' && (screen === 'credits' || screen === 'saves')) {
     const elements = [...controls.querySelectorAll<HTMLElement>('.hit-target')];
     const index = elements.indexOf(document.activeElement as HTMLElement);
     if ((event.shiftKey && index <= 0) || (!event.shiftKey && index === elements.length - 1)) {
@@ -633,6 +740,7 @@ document.addEventListener('fullscreenchange', () => {
 installDisplay(app, viewport, stage);
 installCursor(stage);
 syncControls();
+void loadClinicArt().then(() => { stage.dataset.artReady = 'true'; render(); }).catch(() => notify(t().artError));
 setInterval(() => {
   if (!document.hidden) updateMusicMeter();
 }, 100);
