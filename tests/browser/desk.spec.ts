@@ -104,26 +104,43 @@ test('an unstamped handoff preserves the visit and restores the document positio
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
 });
 
-test('documents change size between the left shelf, the hand, and the main desk with aligned hit areas', async ({ page }) => {
+test('documents retain their pickup size until placed, with aligned hit areas and cancellation', async ({ page }) => {
   await enterCabinet(page);
   await expect(page.locator('#control-cup, #control-pencil')).toHaveCount(0);
   await activate(page, 'call-patient');
-  await activate(page, 'take-document');
+  const tray = await logicalRect(page, 'take-document');
+  await page.locator('#control-take-document').click();
+  expect(await logicalRect(page, 'take-document')).toMatchObject({ w: tray.w, h: tray.h });
+  const firstTarget = await screenPoint(page, { x: 350, y: 220 });
+  await page.mouse.move(firstTarget.x, firstTarget.y);
+  expect(await logicalRect(page, 'take-document')).toMatchObject({ w: 35, h: 111 });
+  await page.keyboard.press('Escape');
+  expect(await logicalRect(page, 'take-document')).toEqual(tray);
+  await carryTo(page, 'take-document', { x: 350, y: 220 });
+  expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ w: 188, h: 144 });
   await carryTo(page, 'apply-stamp', { x: 110, y: 205 });
   expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ w: 60, h: 80 });
   await page.locator('#control-apply-stamp').click();
   const target = await screenPoint(page, { x: 358, y: 227 });
   await page.mouse.move(target.x, target.y);
   const held = await logicalRect(page, 'apply-stamp');
-  expect(held).toEqual({ x: 264, y: 155, w: 188, h: 144 });
+  expect(held).toEqual({ x: 328, y: 187, w: 60, h: 80 });
   const actual = (await page.locator('#control-apply-stamp').boundingBox())!;
   const expected = await screenPoint(page, held);
   expect(actual.x).toBeCloseTo(expected.x, 3);
   expect(actual.y).toBeCloseTo(expected.y, 3);
   await page.mouse.click(target.x, target.y);
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
-  expect(await logicalRect(page, 'apply-stamp')).toEqual(held);
+  expect(await logicalRect(page, 'apply-stamp')).toEqual({ x: 264, y: 155, w: 188, h: 144 });
   expect(await page.evaluate(point => document.elementFromPoint(point.x, point.y)?.id, target)).toBe('control-apply-stamp');
+  await carryTo(page, 'apply-stamp', { x: 110, y: 205 });
+  const shelf = await logicalRect(page, 'apply-stamp');
+  await page.locator('#control-apply-stamp').focus();
+  await page.keyboard.press('Space');
+  for (let step = 0; step < 20; step++) await page.keyboard.press('Shift+ArrowRight');
+  expect(await logicalRect(page, 'apply-stamp')).toEqual({ ...shelf, x: shelf.x + 240 });
+  await page.keyboard.press('Escape');
+  expect(await logicalRect(page, 'apply-stamp')).toEqual(shelf);
 });
 
 test('the rulebook keeps its cover on placement and its physical corners open and turn all five spreads', async ({ page }) => {
@@ -234,7 +251,7 @@ test('leaving the stage cancels carrying, and an open book can be carried back t
   expect(shelved).toMatchObject({ w: 88, h: 48 });
   expect(shelved.x).toBeLessThan(204);
   await page.keyboard.press('Escape');
-  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'welcome');
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'break-room');
   await expect(page.locator('#control-start')).toHaveAccessibleName('WRÓĆ DO DYŻURU');
   await page.locator('#control-start').click();
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');

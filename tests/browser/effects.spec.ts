@@ -27,7 +27,7 @@ test('mechanical stamping plays a decoded local effect after a gesture and stays
     }));
   }));
   await useKeyboard(page, 'apply-stamp');
-  expect(await playback).toEqual({ state: 'loaded', muted: false, volume: 0.7, duration: 0.19, context: 'running' });
+  expect(await playback).toEqual({ state: 'loaded', muted: false, volume: 0.7, duration: 0.26, context: 'running' });
   expect(requested).toHaveLength(1);
   await page.getByRole('button', { name: 'Wycisz dźwięk' }).click();
   expect(await page.evaluate(() => window.Howler._howls.find(sound => String(sound._src).endsWith('/stamp.wav'))!.mute())).toBe(true);

@@ -58,6 +58,14 @@ describe('compact original document font', () => {
     }
   });
 
+  it('fits the archive, staff room and restart copy into their quiet left wall', () => {
+    for (const t of Object.values(translations)) {
+      for (const title of [t.savesTitle, t.breakRoomTitle, t.restartTitle]) expect(measureText(title) * 2).toBeLessThanOrEqual(208);
+      for (const line of [...t.savesBody, ...t.breakRoomNote, ...t.restartBody]) expect(measureText(line), line).toBeLessThanOrEqual(208);
+      for (const label of [t.resume, t.restart, t.restartConfirm, t.restartCancel, t.saves]) expect(measureText(label)).toBeLessThanOrEqual(178);
+    }
+  });
+
   it('keeps every manual spread readable within its two native-pixel pages', () => {
     expect(translations.pl.manualPages).toHaveLength(5);
     expect(translations.en.manualPages).toHaveLength(translations.pl.manualPages.length);

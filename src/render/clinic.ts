@@ -12,7 +12,7 @@ const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate
 export const PATIENT_MOTION_FRAMES = 12;
 
 export async function loadClinicArt(): Promise<void> {
-  const files = ['cabinet-corridor', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
+  const files = ['cabinet-corridor', 'archives-clinic', 'break-room', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
   await Promise.all(files.map(name => new Promise<void>((resolve, reject) => {
     const image = new Image();
     images.set(name, image);
@@ -70,8 +70,6 @@ function wallClock(ctx: CanvasRenderingContext2D, clockMinutes: number): void {
   const hourAngle = clockMinutes % 720 * Math.PI / 360;
   line(ctx, x, y, x + Math.round(Math.sin(hourAngle) * 7), y - Math.round(Math.cos(hourAngle) * 7), '#29291f', 2);
   line(ctx, x, y, x + Math.round(Math.sin(minuteAngle) * 12), y - Math.round(Math.cos(minuteAngle) * 12), '#29291f');
-  const secondAngle = clockMinutes * 60 % 60 * Math.PI / 30;
-  line(ctx, x, y, x + Math.round(Math.sin(secondAngle) * 14), y - Math.round(Math.cos(secondAngle) * 14), '#96563d');
   rect(ctx, x, y, 2, 2, '#713d29');
 }
 
@@ -160,4 +158,10 @@ export function drawPaper(ctx: CanvasRenderingContext2D, x: number, y: number, w
 export function drawIntroIllustration(ctx: CanvasRenderingContext2D, slide: number): void {
   rect(ctx, 0, 0, 570, 320, '#171e18');
   asset(ctx, `intro-${introNames[slide]}`, 0, 0, 570, 320);
+}
+
+/** Quiet left-hand space keeps localized panel controls separate from the art. */
+export function drawPanelIllustration(ctx: CanvasRenderingContext2D, panel: 'saves' | 'break-room'): void {
+  rect(ctx, 0, 0, 570, 320, '#171e18');
+  asset(ctx, panel === 'saves' ? 'archives-clinic' : 'break-room', 0, 0, 570, 320);
 }

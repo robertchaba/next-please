@@ -2,7 +2,7 @@
 
 Generated for this project on 2026-10-24 with the built-in image_gen tool and the imagegen skill. The existing local cabinet-corridor.png was inspected and supplied as the edit target. Opaque output; no stock assets, third-party imagery or API/CLI fallback. Redistribution follows the project's terms; no separately acquired asset license or attribution requirement applies.
 
-The unmodified selected output is public/assets/art/cabinet-shadow-source.png (1675 × 939). scripts/prepare-corridor-art.mjs resizes it with nearest-neighbor to 570 × 320, retains both upper rooms, and crops the bell at (91,203), 44 × 40, onto the original left desk at (127,170). Original desktop surfaces and wooden dividers are retained. Runtime output is public/assets/art/cabinet-corridor.png; historical corridor sources remain archived. New compact stamp sources and prompts are recorded in art-generation-2026-10-24.md.
+The unmodified selected output is public/assets/art/cabinet-shadow-source.png (1675 × 939). scripts/prepare-corridor-art.mjs resizes it with nearest-neighbor to 570 × 320, retains both upper rooms, and retains the original lower desktop. The original bell crop at (91,203), 44 × 40, included an opaque green blotter rectangle; the transparent correction below replaces that crop at its current position (150,145). Original desktop surfaces and wooden dividers are retained. Runtime output is public/assets/art/cabinet-corridor.png; historical corridor sources remain archived. New compact stamp sources and prompts are recorded in art-generation-2026-10-24.md.
 
 Exact edit prompt:
 
@@ -16,3 +16,13 @@ Change only these three things:
 Preserve ALL remaining lower desk surfaces, tray, right desk, wooden dividers at x204..209 and y128..137, chart, pressure apparatus and shelf exactly. No text, letters, digits, arrows, labels, icons, people, extra objects or country identifiers. Keep hard pixel clusters, subtle textures, dark olive/sepia/charcoal palette and existing illumination. Do not add a clock or plant: those are separate runtime sprites. Opaque output.
 ```
 
+
+## Transparent bell correction
+
+On 2026-10-24 the built-in `image_gen` tool extracted the bell onto true transparency. Its edit reference was the original (91,203), 44 × 40 crop, enlarged 10× with nearest-neighbor sampling for inspection. Retained output: `public/assets/art/bell-transparent-source.png`; prepared local sprite: `public/assets/art/sprites/bell.png` (44 × 40 RGBA). The preparation script resizes the complete canvas with nearest-neighbor sampling, retains its alpha, and composites it at (150,145). No green background travels with the sprite; the wood and blotter remain visible around its circular foot. The semantic target stays 44 × 40, and the separate keyboard focus indicator is unchanged. This is an edit of original project artwork, with no acquired asset or separate third-party attribution requirement.
+
+Exact extraction prompt:
+
+```text
+Use case: background-extraction. Edit target: the provided cropped pixel-art brass clinic service bell. Remove ONLY the olive-green rectangular desktop background and all green texture around the bell, replacing it with true transparency (alpha). Preserve the exact bell design, plunger, dome, black circular foot, perspective, light direction, warm muted brass/charcoal colors, and hard square pixel clusters. Preserve only a small subtle semi-transparent dark contact shadow immediately beneath the circular base; no green rectangle, floor, paper, or scenery. Keep all bell pixels and full silhouette inside the frame. Do not redesign, smooth, sharpen, add detail or add text. Center with a small transparent margin. This is a tiny original 2D pixel-art game sprite, shown at 44x40 logical pixels in-game, so preserve its low-resolution chunky pixel character. Transparent PNG output.
+```

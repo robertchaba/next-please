@@ -75,19 +75,25 @@ const effects = {
       + decay(time, 0.246, 0.012) * (low * 1.3 + mid * 0.7 + tone(time, 210) * 0.18)
       + decay(time, 0.255, 0.035) * (tone(time, 2080) * 0.055 + tone(time, 3112) * 0.02);
   }),
-  'stamp.wav': synthesize(0.19, 0.84, 1637, (time, low, mid, high) => {
-    // Dry metal latch, a broad rubber-on-paper impact and a restrained release.
-    // Brief, differently damped body modes avoid a pitched or springy tail.
-    const impactTime = time - 0.009;
-    const latch = decay(time, 0.002, 0.004) * (mid * 0.7 + high * 0.18);
-    const impact = decay(time, 0.009, 0.019) * (low * 3.2 + mid * 1.7 + high * 0.08);
-    const body = decay(time, 0.009, 0.018) * tone(impactTime, 132) * 0.62
-      + decay(time, 0.009, 0.010) * tone(impactTime, 317) * 0.34
-      + decay(time, 0.009, 0.006) * tone(impactTime, 873) * 0.14;
-    const returnClick = decay(time, 0.076, 0.006) * (mid * 0.52 + high * 0.12)
-      + decay(time, 0.088, 0.005) * (low * 0.3 + mid * 0.17);
-    // Soft saturation gives the short impact body without digital clipping.
-    return Math.tanh((latch + impact + body) * 1.7) + returnClick;
+  'stamp.wav': synthesize(0.26, 0.79, 1637, (time, low, mid, high) => {
+    // One press/release stroke: rubber meets paper and the wooden desk gives a
+    // low, dry knock. The small return clack arrives separately, not as a ring.
+    const impactTime = time - 0.006;
+    const attack = Math.max(0, Math.min(1, impactTime / 0.0015));
+    const rubber = decay(time, 0.006, 0.013) * (low * 2.1 + mid * 0.30);
+    const desk = decay(time, 0.006, 0.022) * tone(impactTime, 146) * 0.58
+      + decay(time, 0.006, 0.013) * tone(impactTime, 237) * 0.26
+      + decay(time, 0.006, 0.008) * tone(impactTime, 431) * 0.09;
+    const mechanism = decay(time, 0.002, 0.002) * (mid * 0.25 + high * 0.035)
+      + decay(time, 0.018, 0.004) * (mid * 0.34 + high * 0.04);
+    const slide = time > 0.06 && time < 0.14
+      ? Math.sin((time - 0.06) / 0.08 * Math.PI) ** 2 * (low * 0.11 + mid * 0.025) : 0;
+    const releaseTime = time - 0.142;
+    const release = decay(time, 0.142, 0.005) * (mid * 0.45 + high * 0.065)
+      + decay(time, 0.142, 0.009) * tone(releaseTime, 584) * 0.12
+      + decay(time, 0.157, 0.0035) * (low * 0.16 + mid * 0.10);
+    // Only gentle saturation: retain the woody body instead of a noisy crack.
+    return Math.tanh((rubber + desk) * attack * 1.12) + mechanism + slide + release;
   }),
   'bell.wav': synthesize(0.68, 0.48, 7403, (time, low, mid, high) => {
     const strikeTime = time - 0.004;

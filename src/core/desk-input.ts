@@ -25,7 +25,7 @@ export function installDeskInput(stage: HTMLElement, options: DeskInputOptions):
   };
   const moveToPointer = (current: Point): void => {
     if (!held) return;
-    const anchor = itemAnchor(held);
+    const anchor = itemAnchor(held, options.rect(held));
     options.move(held, { x: current.x - anchor.x, y: current.y - anchor.y });
   };
   const activate = (current?: Point): void => {

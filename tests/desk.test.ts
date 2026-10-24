@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   containsPoint, createDeskState, DEFAULT_DOCUMENT, DESK_BOUNDS, CARRY_BOUNDS, ITEM_SIZES, restRect, itemAnchor,
-  itemRect, moveDeskItem, raiseDeskItem, TRAY_DOCUMENT, MANUAL_OPEN_POSITION, MANUAL_OPEN_SIZE, RIGHT_DESK_X, type DeskItemId,
+  itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, TRAY_DOCUMENT, MANUAL_OPEN_POSITION, MANUAL_OPEN_SIZE, RIGHT_DESK_X, type DeskItemId,
 } from '../src/core/desk';
 
 describe('temporary desktop layout', () => {
@@ -80,16 +80,32 @@ describe('temporary desktop layout', () => {
     expect(itemAnchor('stamp-fit')).toEqual({ x: 24, y: 42 });
   });
 
-  it('shrinks a paper on the left and expands it in hand or on the main desktop', () => {
+  it('keeps the shelf paper compact throughout carrying and expands it only when placed on the main desktop', () => {
     const left = moveDeskItem(createDeskState(), 'document', { x: 120, y: 220 });
     expect(itemRect(left, 'document')).toMatchObject({ w: 60, h: 80 });
-    const carried = moveDeskItem(left, 'document', { x: 38, y: 22 }, true);
-    expect(itemRect(carried, 'document', false, true)).toEqual({ x: 38, y: 22, ...ITEM_SIZES.document });
+    const carried = moveDeskItem(pickUpDeskItem(left, 'document'), 'document', { x: 38, y: 22 }, true);
+    expect(itemRect(carried, 'document', false, true)).toEqual({ x: 38, y: 22, w: 60, h: 80 });
+    const across = moveDeskItem(carried, 'document', { x: 500, y: 22 }, true);
+    expect(itemRect(across, 'document', false, true)).toEqual({ x: 500, y: 22, w: 60, h: 80 });
+    expect(itemAnchor('document', itemRect(across, 'document', false, true))).toEqual({ x: 30, y: 40 });
     const right = moveDeskItem(carried, 'document', { x: 300, y: 220 });
     const bounds = itemRect(right, 'document');
     expect(bounds.w).toBe(ITEM_SIZES.document.w);
     expect(bounds.x).toBeGreaterThanOrEqual(RIGHT_DESK_X);
     expect(bounds.y + bounds.h).toBeLessThanOrEqual(DESK_BOUNDS.y + DESK_BOUNDS.h);
+    expect(right.documentCarrySize).toBeUndefined();
+  });
+
+  it('preserves the incoming folded sheet in hand and keeps a large desk document large over the left side', () => {
+    const initial = createDeskState();
+    const carried = pickUpDeskItem(initial, 'document', true);
+    expect(itemRect(carried, 'document', false, true)).toEqual(TRAY_DOCUMENT);
+    const across = moveDeskItem(carried, 'document', { x: Infinity, y: Infinity }, true);
+    expect(itemRect(across, 'document', false, true)).toEqual({ x: 535, y: 209, w: 35, h: 111 });
+    expect(initial.documentCarrySize).toBeUndefined();
+    const right = moveDeskItem(across, 'document', DEFAULT_DOCUMENT);
+    const backLeft = moveDeskItem(pickUpDeskItem(right, 'document'), 'document', { x: 10, y: 30 }, true);
+    expect(itemRect(backLeft, 'document', false, true)).toEqual({ x: 10, y: 30, ...ITEM_SIZES.document });
   });
 
   it.each(Object.keys(ITEM_SIZES) as DeskItemId[])('lets a carried %s reach the upper room while retaining its full footprint', id => {

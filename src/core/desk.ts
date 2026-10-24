@@ -15,12 +15,14 @@ export interface DeskState {
   positions: Record<DeskItemId, Point>;
   /** Back-to-front drawing and hit-test order. */
   order: DeskItemId[];
+  /** Paper keeps its pickup footprint until it is placed on a desktop. */
+  documentCarrySize?: Pick<Rect, 'w' | 'h'>;
 }
 
 export const LEFT_WIDTH = 204;
 export const RIGHT_DESK_X = 210;
 export const CABINET_HOTSPOTS = {
-  callPatient: { x: 127, y: 170, w: 44, h: 40 },
+  callPatient: { x: 150, y: 145, w: 44, h: 40 },
   vision: { x: 249, y: 16, w: 73, h: 60 },
   pressure: { x: 341, y: 58, w: 43, h: 46 },
   lamp: { x: 357, y: 10, w: 43, h: 31 },
@@ -30,7 +32,7 @@ export const PATIENT_HANDOFF: Rect = { x: 38, y: 32, w: 94, h: 96 };
 export const MANUAL_OPEN_SIZE = { w: 276, h: 164 } as const;
 export const MANUAL_OPEN_POSITION: Point = { x: 222, y: 144 };
 
-/** Full-size artwork while carried or laid on the main desk. */
+/** Full-size artwork on the main desk; tools also use it while carried. */
 export const ITEM_SIZES: Record<DeskItemId, Pick<Rect, 'w' | 'h'>> = {
   document: { w: 188, h: 144 },
   'stamp-fit': { w: 48, h: 48 },
@@ -53,9 +55,9 @@ export function restRect(id: DeskItemId): Rect | undefined {
 }
 
 /** A carried stamp follows its printing face; other carried items their center. */
-export function itemAnchor(id: DeskItemId): Point {
+export function itemAnchor(id: DeskItemId, size: Pick<Rect, 'w' | 'h'> = ITEM_SIZES[id]): Point {
   if (id === 'stamp-fit' || id === 'stamp-unfit') return { x: 24, y: 42 };
-  const { w, h } = ITEM_SIZES[id];
+  const { w, h } = size;
   return { x: Math.floor(w / 2), y: Math.floor(h / 2) };
 }
 
@@ -77,8 +79,8 @@ export function createDeskState(): DeskState {
   };
 }
 
-function itemSize(id: DeskItemId, x: number, held: boolean, manualOpen: boolean): Pick<Rect, 'w' | 'h'> {
-  if (held) return ITEM_SIZES[id];
+function itemSize(id: DeskItemId, x: number, held: boolean, manualOpen: boolean, documentCarrySize?: Pick<Rect, 'w' | 'h'>): Pick<Rect, 'w' | 'h'> {
+  if (held) return id === 'document' && documentCarrySize ? documentCarrySize : ITEM_SIZES[id];
   if (id === 'stamp-fit' || id === 'stamp-unfit') return RESTING_STAMP;
   if (id === 'manual' && manualOpen) return MANUAL_OPEN_SIZE;
   if (x < RIGHT_DESK_X) return id === 'document' ? SMALL_DOCUMENT : MANUAL_SHELF_SIZE;
@@ -88,7 +90,14 @@ function itemSize(id: DeskItemId, x: number, held: boolean, manualOpen: boolean)
 export function itemRect(state: DeskState, id: DeskItemId, documentInTray = false, held = false, manualOpen = false): Rect {
   if (id === 'document' && documentInTray && !held) return { ...TRAY_DOCUMENT };
   const point = state.positions[id];
-  return { ...point, ...itemSize(id, point.x, held, manualOpen) };
+  return { ...point, ...itemSize(id, point.x, held, manualOpen, state.documentCarrySize) };
+}
+
+/** Capture paper size before moving it, so crossing the divider never resizes it. */
+export function pickUpDeskItem(state: DeskState, id: DeskItemId, documentInTray = false): DeskState {
+  const origin = itemRect(state, id, documentInTray);
+  const pickedUp = id === 'document' ? { ...state, documentCarrySize: { w: origin.w, h: origin.h } } : state;
+  return raiseDeskItem(moveDeskItem(pickedUp, id, origin, true), id);
 }
 
 /** Placed items stay on either desktop. Carried items can reach the patient. */
@@ -97,7 +106,7 @@ export function moveDeskItem(state: DeskState, id: DeskItemId, point: Point, hel
   const requestedX = Math.round(Number.isNaN(point.x) ? previous.x : point.x);
   const requestedY = Math.round(Number.isNaN(point.y) ? previous.y : point.y);
   const onLeft = requestedX < RIGHT_DESK_X && !(id === 'manual' && manualOpen);
-  const size = itemSize(id, onLeft ? 0 : RIGHT_DESK_X, held, manualOpen);
+  const size = itemSize(id, onLeft ? 0 : RIGHT_DESK_X, held, manualOpen, state.documentCarrySize);
   const bounds = held ? CARRY_BOUNDS : {
     x: onLeft ? DESK_BOUNDS.x : RIGHT_DESK_X + 5,
     y: DESK_BOUNDS.y,
@@ -106,7 +115,9 @@ export function moveDeskItem(state: DeskState, id: DeskItemId, point: Point, hel
   };
   const x = Math.min(bounds.x + bounds.w - size.w, Math.max(bounds.x, requestedX));
   const y = Math.min(bounds.y + bounds.h - size.h, Math.max(bounds.y, requestedY));
-  return { ...state, positions: { ...state.positions, [id]: { x, y } } };
+  const moved = { ...state, positions: { ...state.positions, [id]: { x, y } } };
+  if (id === 'document' && !held) delete moved.documentCarrySize;
+  return moved;
 }
 
 export function raiseDeskItem(state: DeskState, id: DeskItemId): DeskState {

@@ -56,13 +56,13 @@ test('the left desk bell calls a patient who emerges and sits within 720 ms with
   expect(Number(await page.locator('#controls').getAttribute('data-clock-minutes'))).toBe(Number(minutes) + 1);
 });
 
-test('short answers and a readable farewell work with and without patient motion', async ({ page }) => {
+test('patients speak sparingly, hesitate at failed vision tests and leave refusals silently', async ({ page }) => {
   await enterCabinet(page);
   await activate(page, 'call-patient');
   await page.clock.runFor(720);
   await activate(page, 'take-document');
   await activate(page, 'run-vision');
-  await expect(page.locator('#patient-speech')).toHaveText('Irena Wolska: Tak.');
+  await expect(page.locator('#patient-speech')).toBeEmpty();
   for (const id of ['stamp-fit', 'apply-stamp', 'return-document']) await activate(page, id);
   await expect(page.locator('#patient-speech')).toHaveText('Irena Wolska: Dziękuję.');
   await page.clock.runFor(1200);
@@ -73,13 +73,15 @@ test('short answers and a readable farewell work with and without patient motion
 
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await activate(page, 'call-patient');
-  await expect(page.locator('#patient-speech')).toHaveText('Leon Burek: Dzień dobry.');
+  await expect(page.locator('#patient-speech')).toBeEmpty();
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
   await activate(page, 'take-document');
   await activate(page, 'run-vision');
-  await expect(page.locator('#patient-speech')).toHaveText('Leon Burek: Nie.');
+  await expect(page.locator('#patient-speech')).toHaveText('Leon Burek: Yyy...');
+  await activate(page, 'run-vision');
+  await expect(page.locator('#patient-speech')).toHaveText('Leon Burek: Rozmazane...');
   for (const id of ['stamp-unfit', 'apply-stamp', 'return-document']) await activate(page, id);
-  await expect(page.locator('#patient-speech')).toHaveText('Leon Burek: Dziękuję.');
+  await expect(page.locator('#patient-speech')).toBeEmpty();
   await page.clock.runFor(1600);
   await expect(page.locator('#patient-speech')).toBeEmpty();
   await activate(page, 'menu');
@@ -103,6 +105,20 @@ test('calling again finishes the previous farewell and pauses the new entrance u
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-frame', frame!);
   await page.clock.runFor(540);
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
-  await expect(page.locator('#patient-speech')).toHaveText('Leon Burek: Dzień dobry.');
+  await expect(page.locator('#patient-speech')).toBeEmpty();
   await expect(page.locator('#screen-description')).toContainText('Leon Burek');
+});
+
+test('a silent refusal starts the exit immediately, without a farewell pause', async ({ page }) => {
+  await enterCabinet(page);
+  await activate(page, 'call-patient');
+  await page.clock.runFor(720);
+  for (const id of ['take-document', 'stamp-unfit', 'apply-stamp', 'return-document']) await activate(page, id);
+  await expect(page.locator('#patient-speech')).toBeEmpty();
+  await page.clock.runFor(180);
+  await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'exit');
+  expect(Number(await page.locator('#controls').getAttribute('data-patient-frame'))).toBeGreaterThan(0);
+  await page.clock.runFor(540);
+  await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
+  await expect(page.locator('#patient-speech')).toBeEmpty();
 });

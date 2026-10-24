@@ -1,11 +1,12 @@
 import './style.css';
 import { applyAction, type GameAction } from './core/game';
 import { effectsManifest } from './core/effects';
+import { choosePatientSpeech } from './core/patient-speech';
 import { renderCabinet, renderIntro, shiftButtons, shiftDescription, manualPageDescription, MANUAL_PAGE_COUNT, type SelectedStamp, type ShiftAction, type PatientSpeech } from './scenes/shift';
 import type { Button } from './ui';
-import { createDeskState, itemRect, moveDeskItem, raiseDeskItem, containsPoint, restRect, itemAnchor, TRAY, TRAY_DOCUMENT, DEFAULT_DOCUMENT, PATIENT_HANDOFF, MANUAL_SHELF_SIZE, RIGHT_DESK_X, type DeskItemId } from './core/desk';
+import { createDeskState, itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, containsPoint, restRect, itemAnchor, TRAY, DEFAULT_DOCUMENT, PATIENT_HANDOFF, MANUAL_SHELF_SIZE, RIGHT_DESK_X, type DeskItemId } from './core/desk';
 import { installDeskInput } from './core/desk-input';
-import { drawPaper, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
+import { drawPaper, drawPanelIllustration, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
 import { drawText } from './render/font';
 import { installCursor, installDisplay, WIDTH, HEIGHT } from './core/display';
 import { translations, readPreferences, savePreferences, type Locale } from './i18n';
@@ -13,7 +14,7 @@ import { audio } from './core/audio';
 import { musicManifest, musicPlaylist } from './core/music';
 import { createInitialState, downloadSave, importSave, SaveError } from './core/save';
 
-type Screen = 'welcome' | 'intro' | 'cabinet' | 'credits' | 'saves';
+type Screen = 'welcome' | 'intro' | 'cabinet' | 'credits' | 'saves' | 'break-room' | 'restart';
 const app = document.querySelector<HTMLElement>('#app')!;
 const viewport = document.querySelector<HTMLElement>('#viewport')!;
 const stage = document.querySelector<HTMLElement>('#stage')!;
@@ -49,13 +50,15 @@ let clockMinutes = gameState.clockMinutes;
 let clockTransition: { from: number; to: number; elapsed: number } | undefined;
 let patientMotion: CabinetArtOptions['patientMotion'];
 let patientExitHold = 0;
-let patientSpeech: (PatientSpeech & { remaining: number }) | undefined;
+let patientSpeech: (PatientSpeech & { remaining: number; departure: boolean }) | undefined;
+let visionSpeechAttempt = 0;
 const motionQueue: NonNullable<CabinetArtOptions['patientMotion']>[] = [];
 const deskView = () => ({ desk: deskState, held: heldItem, patientMotion, manualOpen, manualPage, clockMinutes,
   patientSpeech: visiblePatientSpeech(), departingPatientId: departingPatientId() });
 const deskRect = (id: DeskItemId) => itemRect(deskState, id, gameState.visit?.document === 'tray' && heldItem !== 'document', heldItem === id, manualOpen);
 const itemControlId = (id: DeskItemId): string => id === 'document' ? (gameState.visit?.document === 'tray' ? 'take-document' : 'apply-stamp') : id;
 let busy = false;
+let saveReadId = 0;
 let status = '';
 let toast = '';
 let toastTimer: ReturnType<typeof setTimeout>;
@@ -120,19 +123,19 @@ function startTyping(): void {
 }
 
 function startShift(): void {
-  shiftStarted = true; selectedStamp = null;
-  screen = gameState.phase; feedback = '';
+  shiftStarted = true;
+  screen = gameState.phase;
   if (screen === 'intro') startTyping();
   syncControls(screen === 'intro' ? 'intro-next' : 'call-patient');
 }
 
 function clearPatientMotion(preserveSpeech = false): void {
   patientMotion = undefined; motionQueue.length = 0; patientExitHold = 0;
-  if (!preserveSpeech) patientSpeech = undefined;
+  if (!preserveSpeech) { patientSpeech = undefined; visionSpeechAttempt = 0; }
 }
 
 function departingPatientId(): number | undefined {
-  return reducedMotion.matches && !gameState.visit && patientSpeech?.line === 'thanks' ? patientSpeech.patientId : undefined;
+  return reducedMotion.matches && !gameState.visit && patientSpeech?.departure ? patientSpeech.patientId : undefined;
 }
 
 function visiblePatientSpeech(): PatientSpeech | undefined {
@@ -146,15 +149,19 @@ function visiblePatientSpeech(): PatientSpeech | undefined {
   return patientSpeech;
 }
 
-function say(patientId: number, line: PatientSpeech['line']): void {
-  patientSpeech = { patientId, line, remaining: line === 'thanks' ? 1500 : 2400 };
+function say(patientId: number, line: PatientSpeech['line'] | undefined, departure = false): void {
+  patientSpeech = line ? { patientId, line, remaining: departure ? 1500 : 2400, departure } : undefined;
+}
+
+function farewellHold(patientId: number): number {
+  return patientSpeech?.departure && patientSpeech.patientId === patientId ? Math.min(1320, patientSpeech.remaining) : 0;
 }
 
 function animatePatient(patientId: number, direction: 'enter' | 'exit'): void {
   if (reducedMotion.matches) { clearPatientMotion(true); return; }
   const next = { patientId, direction, frame: 0 };
   if (patientMotion) motionQueue.push(next);
-  else { patientMotion = next; patientExitHold = direction === 'exit' ? 1320 : 0; }
+  else { patientMotion = next; patientExitHold = direction === 'exit' ? farewellHold(patientId) : 0; }
 }
 
 function updateClock(): void {
@@ -231,21 +238,27 @@ function handleShiftAction(action: ShiftAction): void {
     // always belong to the same patient, even when the doctor works quickly.
     clearPatientMotion();
     animatePatient(gameState.visit!.patientId, 'enter');
-    say(gameState.visit!.patientId, 'greeting');
+    say(gameState.visit!.patientId, choosePatientSpeech('arrival', { day: gameState.day, patientId: gameState.visit!.patientId }));
   } else if (actual === 'take-document' && result.feedback === 'document-taken') {
     playEffect('paper'); focusId = 'run-vision';
     if (!heldItem) deskState = raiseDeskItem(moveDeskItem(deskState, 'document', DEFAULT_DOCUMENT), 'document');
   } else if (actual === 'run-vision') {
     focusId = 'run-pressure';
-    if (gameState !== previousState && gameState.visit) say(gameState.visit.patientId, result.feedback === 'vision-pass' ? 'yes' : 'no');
+    if (gameState !== previousState && gameState.visit) {
+      say(gameState.visit.patientId, choosePatientSpeech(result.feedback === 'vision-pass' ? 'vision-pass' : 'vision-refer', {
+        day: gameState.day, patientId: gameState.visit.patientId, visionAttempt: visionSpeechAttempt++,
+      }));
+    }
   }
   else if (actual === 'run-pressure') focusId = 'stamp-fit';
   else if (actual.startsWith('stamp-') && gameState !== previousState) {
     playEffect('stamp'); focusId = 'return-document';
   } else if (actual === 'return-document' && !gameState.visit) {
     if (previousState.visit) {
+      say(previousState.visit.patientId, choosePatientSpeech('departure', {
+        day: previousState.day, patientId: previousState.visit.patientId, decision: previousState.visit.decision,
+      }), true);
       animatePatient(previousState.visit.patientId, 'exit');
-      say(previousState.visit.patientId, 'thanks');
     }
     selectedStamp = null; playEffect('paper'); focusId = gameState.shiftCompleted === 3 ? 'next-day' : 'call-patient';
   } else if (actual === 'next-day') { clearPatientMotion(); focusId = 'call-patient'; }
@@ -263,6 +276,9 @@ function openScreen(next: Screen, trigger = 'start'): void {
 }
 function closeScreen(): void {
   deskInput.cancel();
+  if (screen === 'cabinet') { goToMenu(); return; }
+  if (screen === 'break-room') { startShift(); return; }
+  if (screen === 'restart') { screen = 'break-room'; syncControls('restart'); return; }
   const isPanel = screen === 'credits' || screen === 'saves';
   screen = isPanel ? panelReturn : 'welcome'; status = ''; toast = '';
   if (screen === 'welcome') clearPatientMotion();
@@ -270,8 +286,18 @@ function closeScreen(): void {
   syncControls(isPanel ? returnFocus : 'start');
 }
 function goToMenu(): void {
-  deskInput.cancel(); clearPatientMotion();
-  clearInterval(typingTimer); screen = 'welcome'; toast = ''; syncControls('start');
+  deskInput.cancel();
+  clearInterval(typingTimer); screen = 'break-room'; toast = ''; syncControls('start');
+}
+
+function restartGame(): void {
+  deskInput.cancel(); clearPatientMotion(); clearInterval(typingTimer);
+  saveReadId++; busy = false;
+  gameState = createInitialState(); deskState = createDeskState(); deskBeforePickup = deskState;
+  heldItem = null; selectedStamp = null; manualOpen = false; manualPage = 0; manualBeforePickup = false;
+  clockMinutes = gameState.clockMinutes; clockTransition = undefined;
+  status = ''; toast = ''; feedback = ''; panelReturn = 'welcome';
+  startShift();
 }
 async function fullscreen(): Promise<void> {
   try {
@@ -308,13 +334,24 @@ function getButtons(): Button[] {
     { id: 'back', label: t().back, x: 227, y: 277, w: 116, h: 24, action: closeScreen },
   ];
   if (screen === 'saves') return [
-    { id: 'export', label: t().export, x: 106, y: 194, w: 170, h: 25, action: () => {
+    { id: 'export', label: t().export, x: 32, y: 195, w: 208, h: 25, action: () => {
       try { downloadSave(gameState); status = t().exported; }
       catch { status = t().errors['invalid-state']; }
       document.querySelector('#announcement')!.textContent = status; render();
     } },
-    { id: 'import', label: t().import, x: 292, y: 194, w: 170, h: 25, kind: 'primary', action: () => { if (!busy) fileInput.click(); } },
-    { id: 'back', label: t().back, x: 227, y: 244, w: 116, h: 23, action: closeScreen },
+    { id: 'import', label: t().import, x: 32, y: 227, w: 208, h: 25, kind: 'primary', action: () => { if (!busy) fileInput.click(); } },
+    { id: 'back', label: t().back, x: 32, y: 265, w: 116, h: 20, kind: 'text', action: closeScreen },
+  ];
+  if (screen === 'restart') return [
+    { id: 'restart-confirm', label: t().restartConfirm, x: 32, y: 191, w: 208, h: 27, kind: 'primary', action: restartGame },
+    { id: 'back', label: t().restartCancel, x: 32, y: 225, w: 208, h: 25, action: closeScreen },
+    { id: 'saves', label: t().saves, x: 32, y: 264, w: 208, h: 20, kind: 'text', action: () => openScreen('saves', 'saves') },
+  ];
+  if (screen === 'break-room') return [
+    { id: 'start', label: t().resume, x: 32, y: 158, w: 208, h: 27, kind: 'primary', action: startShift },
+    { id: 'saves', label: t().saves, x: 32, y: 193, w: 208, h: 25, action: () => openScreen('saves', 'saves') },
+    { id: 'restart', label: t().restart, x: 32, y: 228, w: 208, h: 25, action: () => { screen = 'restart'; syncControls('back'); } },
+    { id: 'credits', label: t().credits, x: 32, y: 264, w: 91, h: 18, kind: 'text', action: () => openScreen('credits', 'credits') },
   ];
   return [
     { id: 'start', label: shiftStarted ? t().resume : t().start, x: 32, y: 199, w: 208, h: 27, kind: 'primary', action: startShift },
@@ -413,18 +450,20 @@ function syncControls(focusId?: string): void {
   buttons = getButtons();
   const heading = document.createElement('h1');
   heading.className = 'sr-only'; heading.id = 'screen-heading';
-  heading.textContent = screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
+  heading.textContent = screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'break-room' ? t().breakRoomTitle : screen === 'restart' ? t().restartTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
   const description = document.createElement('p');
   description.className = 'sr-only'; description.id = 'screen-description';
   description.textContent = screen === 'credits'
     ? `${t().creator}: Robert Chaba. ${t().programming}: ${t().programmingName}. ${t().audio}: ${t().musicSource}. ${t().creditsFooter}`
     : screen === 'intro' ? t().intro[gameState.introStep].body
     : screen === 'cabinet' ? `${shiftDescription(gameState, locale)} ${manualOpen ? manualPageDescription(locale, manualPage) : ''} ${feedback}`
-    : screen === 'saves' ? `${t().savesBody.join(' ')} ${t().sample}. ${t().day}: ${gameState.day}. ${t().patients}: ${gameState.patientsProcessed}. ${t().money}: ${gameState.money}.`
+    : screen === 'saves' ? `${t().savesDescription} ${t().savesBody.join(' ')} ${t().sample}. ${t().day}: ${gameState.day}. ${t().patients}: ${gameState.patientsProcessed}. ${t().money}: ${gameState.money}.`
+    : screen === 'break-room' ? t().breakRoomDescription
+    : screen === 'restart' ? t().restartBody.join(' ')
     : `${t().subtitle} ${t().tagline} ${t().description}`;
   controls.append(heading, description);
   controls.dataset.screen = screen; controls.dataset.introStep = String(gameState.introStep);
-  const modal = screen === 'credits' || screen === 'saves';
+  const modal = screen === 'credits' || screen === 'saves' || screen === 'restart';
   controls.setAttribute('role', modal ? 'dialog' : 'group');
   controls.setAttribute('aria-labelledby', 'screen-heading');
   controls.setAttribute('aria-describedby', 'screen-description');
@@ -476,7 +515,7 @@ function syncControls(focusId?: string): void {
 function drawButton(button: Button): void {
   const active = hovered === button.id || focused === button.id;
   const { x, y, w, h } = button;
-  const onPaper = screen === 'credits' || screen === 'saves';
+  const onPaper = screen === 'credits';
   const ink = onPaper ? colors.ink : colors.bone;
   if (button.kind === 'hotspot') {
     // Objects keep their artwork on hover. Keyboard focus is the DOM indicator.
@@ -513,6 +552,26 @@ function paper(x: number, y: number, w: number, h: number, title: string, refere
   rect(x + 18, y + 45, w - 36, 1, '#7b8069');
 }
 
+function renderSessionScreen(kind: 'saves' | 'break-room' | 'restart'): void {
+  drawPanelIllustration(ctx, kind === 'saves' ? 'saves' : 'break-room');
+  const title = kind === 'saves' ? t().savesTitle : kind === 'restart' ? t().restartTitle : t().breakRoomTitle;
+  text(title, 32, 42, colors.bone, 2);
+  rect(32, 74, 30, 2, colors.red);
+  const lines = kind === 'saves' ? t().savesBody : kind === 'restart' ? t().restartBody : t().breakRoomNote;
+  lines.forEach((line, index) => text(line, 32, 94 + index * 14, colors.muted));
+  if (kind === 'saves') {
+    text(`${t().day}: ${gameState.day}`, 32, 146);
+    text(`${t().patients}: ${gameState.patientsProcessed}`, 32, 160);
+    text(`${t().money}: ${gameState.money}`, 32, 174);
+    if (status || busy) {
+      rect(10, 291, 550, 22, '#131b16f2');
+      text(busy ? t().loading : status, 285, 297, colors.bone, 1, 'center');
+    }
+  }
+  buttons.forEach(drawButton);
+  drawToast();
+}
+
 function render(): void {
   ctx.imageSmoothingEnabled = false;
   const speech = screen === 'cabinet' ? visiblePatientSpeech() : undefined;
@@ -532,6 +591,9 @@ function render(): void {
     controls.dataset.clockDisplay = String(clockMinutes);
     controls.dataset.clockMoving = String(clockTransition !== undefined);
     buttons.forEach(drawButton); drawToast(); return;
+  }
+  if (screen === 'saves' || screen === 'break-room' || screen === 'restart') {
+    renderSessionScreen(screen); return;
   }
   rect(0, 0, WIDTH, HEIGHT, colors.ink);
   if (art.complete && art.naturalWidth) ctx.drawImage(art, 0, 0, WIDTH, HEIGHT);
@@ -564,14 +626,6 @@ function render(): void {
     text(t().audio, 104, 197, '#6a705d');
     text(t().musicSource, 104, 212, colors.ink);
     text(t().creditsFooter, 285, 259, '#6a705d', 1, 'center');
-  } else if (screen === 'saves') {
-    paper(78, 44, 414, 235, t().savesTitle, 'NP / 003');
-    t().savesBody.forEach((line, index) => text(line, 103, 101 + index * 14, colors.ink));
-    text(t().sample, 103, 139, colors.darkRed);
-    text(`${t().day}: ${gameState.day}`, 105, 164, colors.ink);
-    text(`${t().patients}: ${gameState.patientsProcessed}`, 209, 164, colors.ink);
-    text(`${t().money}: ${gameState.money}`, 461, 164, colors.ink, 1, 'right');
-    if (status || busy) text(busy ? t().loading : status, 285, 225, colors.darkRed, 1, 'center');
   }
   buttons.forEach(drawButton);
   drawToast();
@@ -588,11 +642,13 @@ fileInput.addEventListener('change', async () => {
   const file = fileInput.files?.[0];
   fileInput.value = '';
   if (!file || busy) return;
+  const readId = ++saveReadId;
   busy = true; status = '';
   document.querySelector('#announcement')!.textContent = t().loading;
   render();
   try {
     const loadedState = await importSave(file);
+    if (readId !== saveReadId) return;
     deskInput.cancel(); clearPatientMotion(); deskState = createDeskState();
     gameState = loadedState; shiftStarted = true; selectedStamp = null; feedback = '';
     manualOpen = false; manualPage = 0; clockMinutes = gameState.clockMinutes; clockTransition = undefined;
@@ -605,15 +661,18 @@ fileInput.addEventListener('change', async () => {
     }
     status = t().imported;
   } catch (error) {
+    if (readId !== saveReadId) return;
     status = error instanceof SaveError ? t().errors[error.code] : t().errors['read-failed'];
   } finally {
-    busy = false;
-    if (screen === 'saves') {
-      syncControls('import');
-      document.querySelector('#announcement')!.textContent = status;
-    } else {
-      syncControls(screen === 'intro' ? 'intro-next' : screen === 'cabinet' ? 'call-patient' : undefined);
-      notify(status);
+    if (readId === saveReadId) {
+      busy = false;
+      if (screen === 'saves') {
+        syncControls('import');
+        document.querySelector('#announcement')!.textContent = status;
+      } else {
+        syncControls(screen === 'intro' ? 'intro-next' : screen === 'cabinet' ? 'call-patient' : undefined);
+        notify(status);
+      }
     }
   }
 });
@@ -651,10 +710,8 @@ const deskInput = installDeskInput(stage, {
     manualBeforePickup = manualOpen;
     heldItem = id;
     if (id === 'manual') manualOpen = false;
-    const origin = id === 'document' && gameState.visit?.document === 'tray' ? TRAY_DOCUMENT : deskState.positions[id];
-    deskState = moveDeskItem(deskState, id, origin, true);
+    deskState = pickUpDeskItem(deskState, id, gameState.visit?.document === 'tray');
     if (id === 'stamp-fit' || id === 'stamp-unfit') selectedStamp = id === 'stamp-fit' ? 'fit' : 'unfit';
-    deskState = raiseDeskItem(deskState, id);
     spendTime('handle-item');
     startMusic(); playEffect('paper');
     document.querySelector('#announcement')!.textContent = t().itemPickedUp;
@@ -663,7 +720,7 @@ const deskInput = installDeskInput(stage, {
   move: (id, point) => { deskState = moveDeskItem(deskState, id, point, true); updateDeskControls(); },
   drop: (id, point) => {
     const position = deskState.positions[id];
-    const anchor = itemAnchor(id);
+    const anchor = itemAnchor(id, deskRect(id));
     const target = point ?? { x: position.x + anchor.x, y: position.y + anchor.y };
     const rest = restRect(id);
     if (rest) {
@@ -713,8 +770,8 @@ const deskInput = installDeskInput(stage, {
         deskState = deskBeforePickup;
       } else {
         const placed = target.x >= RIGHT_DESK_X
-          ? { x: Math.max(RIGHT_DESK_X, position.x), y: position.y }
-          : { x: Math.max(5, Math.min(RIGHT_DESK_X - 66, target.x - 30)), y: position.y };
+          ? { x: Math.max(RIGHT_DESK_X, target.x - itemAnchor(id).x), y: target.y - itemAnchor(id).y }
+          : { x: Math.max(5, Math.min(RIGHT_DESK_X - 66, target.x - 30)), y: target.y - 40 };
         if (gameState.visit.document === 'tray') {
           handleShiftAction('take-document');
           acted = true;
@@ -751,7 +808,7 @@ setInterval(() => {
     else if (patientMotion.frame < PATIENT_MOTION_FRAMES - 1) patientMotion = { ...patientMotion, frame: patientMotion.frame + 1 };
     else {
       patientMotion = motionQueue.shift();
-      patientExitHold = patientMotion?.direction === 'exit' ? 1320 : 0;
+      patientExitHold = patientMotion?.direction === 'exit' ? farewellHold(patientMotion.patientId) : 0;
     }
   }
   if (patientSpeech && !patientMotion && !gameState.visit && !departingPatientId()) patientSpeech = undefined;
@@ -780,7 +837,7 @@ document.addEventListener('keydown', event => {
     else closeScreen();
   }
   if (event.key.toLowerCase() === 'f' && !event.repeat) { event.preventDefault(); void fullscreen(); }
-  if (event.key === 'Tab' && (screen === 'credits' || screen === 'saves')) {
+  if (event.key === 'Tab' && (screen === 'credits' || screen === 'saves' || screen === 'restart')) {
     const elements = [...controls.querySelectorAll<HTMLElement>('.hit-target')];
     const index = elements.indexOf(document.activeElement as HTMLElement);
     if ((event.shiftKey && index <= 0) || (!event.shiftKey && index === elements.length - 1)) {
