@@ -20,13 +20,13 @@ export interface DeskState {
 export const LEFT_WIDTH = 204;
 export const RIGHT_DESK_X = 210;
 export const CABINET_HOTSPOTS = {
-  callPatient: { x: 174, y: 92, w: 27, h: 30 },
+  callPatient: { x: 127, y: 170, w: 44, h: 40 },
   vision: { x: 249, y: 16, w: 73, h: 60 },
   pressure: { x: 341, y: 58, w: 43, h: 46 },
-  lamp: { x: 111, y: 14, w: 61, h: 13 },
+  lamp: { x: 357, y: 10, w: 43, h: 31 },
   decoration: { x: 490, y: 4, w: 57, h: 42 },
 } as const satisfies Record<string, Rect>;
-export const PATIENT_HANDOFF: Rect = { x: 38, y: 22, w: 94, h: 96 };
+export const PATIENT_HANDOFF: Rect = { x: 38, y: 32, w: 94, h: 96 };
 export const MANUAL_OPEN_SIZE = { w: 276, h: 164 } as const;
 export const MANUAL_OPEN_POSITION: Point = { x: 222, y: 144 };
 
@@ -35,10 +35,10 @@ export const ITEM_SIZES: Record<DeskItemId, Pick<Rect, 'w' | 'h'>> = {
   document: { w: 188, h: 144 },
   'stamp-fit': { w: 48, h: 48 },
   'stamp-unfit': { w: 48, h: 48 },
-  manual: { w: 100, h: 50 },
+  manual: { w: 138, h: 164 },
 };
 const SMALL_DOCUMENT = { w: 60, h: 80 };
-const SMALL_MANUAL = { w: 88, h: 48 };
+export const MANUAL_SHELF_SIZE = { w: 88, h: 48 } as const;
 const RESTING_STAMP = { w: 36, h: 36 };
 
 /** Stamps return to compact fixed holders at the far edge of the desk. */
@@ -81,7 +81,7 @@ function itemSize(id: DeskItemId, x: number, held: boolean, manualOpen: boolean)
   if (held) return ITEM_SIZES[id];
   if (id === 'stamp-fit' || id === 'stamp-unfit') return RESTING_STAMP;
   if (id === 'manual' && manualOpen) return MANUAL_OPEN_SIZE;
-  if (x < RIGHT_DESK_X) return id === 'document' ? SMALL_DOCUMENT : SMALL_MANUAL;
+  if (x < RIGHT_DESK_X) return id === 'document' ? SMALL_DOCUMENT : MANUAL_SHELF_SIZE;
   return ITEM_SIZES[id];
 }
 

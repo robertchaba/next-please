@@ -53,3 +53,6 @@ for (const [name, left, top, width, height, w, h] of sprites) {
   const trimmed = await sharp(cropped).extract({ left: x1, top: y1, width: x2 - x1 + 1, height: y2 - y1 + 1 }).png().toBuffer();
   await sharp(trimmed).resize(w, h, resize).png().toFile(`${art}sprites/${name}.png`);
 }
+
+// Current cabinet revision and mechanical stamps supersede the original pair.
+await import('./prepare-corridor-art.mjs');

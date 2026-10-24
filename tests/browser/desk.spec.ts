@@ -126,13 +126,28 @@ test('documents change size between the left shelf, the hand, and the main desk 
   expect(await page.evaluate(point => document.elementFromPoint(point.x, point.y)?.id, target)).toBe('control-apply-stamp');
 });
 
-test('the rulebook opens on the desk and its corner controls turn all five spreads without a modal', async ({ page }) => {
+test('the rulebook keeps its cover on placement and its physical corners open and turn all five spreads', async ({ page }) => {
   await enterCabinet(page);
-  expect(await logicalRect(page, 'manual')).toMatchObject({ w: 88, h: 48 });
-  await page.locator('#control-manual').click();
-  expect(await logicalRect(page, 'manual')).toMatchObject({ w: 100, h: 50 });
+  const shelfBook = await logicalRect(page, 'manual');
+  expect(shelfBook).toMatchObject({ w: 88, h: 48 });
+  await expect(page.locator('#control-manual-next, #control-manual-prev')).toHaveCount(0);
+  // The shelf book's lower-right corner picks up the book like the rest of its cover.
+  await clickAt(page, { x: shelfBook.x + shelfBook.w - 12, y: shelfBook.y + shelfBook.h - 12 });
+  await expect(page.locator('#control-manual')).toHaveAttribute('data-held', 'true');
+  await expect(page.locator('#control-manual-next, #control-manual-prev')).toHaveCount(0);
+  expect(await logicalRect(page, 'manual')).toMatchObject({ w: 138, h: 164 });
   await clickAt(page, { x: 350, y: 228 });
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
+  const cover = await logicalRect(page, 'manual');
+  expect(cover).toMatchObject({ w: 138, h: 164 });
+  const openingCorner = await logicalRect(page, 'manual-next');
+  expect(openingCorner.x).toBeGreaterThan(cover.x + cover.w / 2);
+  expect(openingCorner.y).toBeGreaterThan(cover.y + cover.h / 3);
+  expect(openingCorner.x + openingCorner.w).toBeLessThanOrEqual(cover.x + cover.w);
+  expect(openingCorner.y + openingCorner.h).toBeLessThanOrEqual(cover.y + cover.h);
+  await expect(page.locator('#control-manual-next')).toHaveAccessibleName('Otwórz okładkę regulaminu');
+  await page.locator('#control-manual-next').click();
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'true');
   expect(await logicalRect(page, 'manual')).toMatchObject({ w: 276, h: 164 });
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', '0');
@@ -151,7 +166,7 @@ test('the rulebook opens on the desk and its corner controls turn all five sprea
   await activate(page, 'manual-prev');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', '3');
   await expect(page.locator('#screen-description')).toContainText('Koniec wizyty');
-  await activate(page, 'manual-close');
+  await page.keyboard.press('Escape');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
   await expect(page.locator('#control-manual')).toBeFocused();
   await activate(page, 'manual');
@@ -159,6 +174,9 @@ test('the rulebook opens on the desk and its corner controls turn all five sprea
   await page.keyboard.press('Escape');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
+  await carryTo(page, 'manual', center(shelfBook));
+  expect(await logicalRect(page, 'manual')).toMatchObject({ w: 88, h: 48 });
+  await expect(page.locator('#control-manual-next, #control-manual-prev')).toHaveCount(0);
 });
 
 test('keyboard pickup moves documents and Escape restores the previous position', async ({ page }) => {
@@ -223,7 +241,7 @@ test('leaving the stage cancels carrying, and an open book can be carried back t
   expect(await logicalRect(page, 'manual')).toEqual(shelved);
 });
 
-test('two touch taps pick up and open the rulebook with fractional mobile scaling', async ({ page, context }) => {
+test('touch taps place the closed rulebook then open its cover corner with fractional mobile scaling', async ({ page, context }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await enterCabinet(page);
   const start = await screenPoint(page, center(await logicalRect(page, 'manual')));
@@ -235,12 +253,17 @@ test('two touch taps pick up and open the rulebook with fractional mobile scalin
   await expect(page.locator('#control-manual')).toHaveAttribute('data-held', 'true');
   await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...target, id: 2 }] });
   await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  await client.detach();
   const after = await logicalRect(page, 'manual');
-  expect(after).toMatchObject({ w: 276, h: 164 });
+  expect(after).toMatchObject({ w: 138, h: 164 });
   expect(Number.isInteger(after.x) && Number.isInteger(after.y)).toBe(true);
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+  await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
+  const corner = await screenPoint(page, center(await logicalRect(page, 'manual-next')));
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...corner, id: 3 }] });
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await client.detach();
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'true');
+  expect(await logicalRect(page, 'manual')).toMatchObject({ w: 276, h: 164 });
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
 });
 
@@ -303,10 +326,16 @@ test('rulebook page boundaries keep keyboard focus on a page control', async ({ 
     await activate(page, 'manual-prev');
     await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(pageIndex));
   }
+  await expect(page.locator('#control-manual-prev')).toHaveAccessibleName('Zamknij regulamin');
+  await expect(page.locator('#control-manual-prev')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
   await expect(page.locator('#control-manual-prev')).toHaveCount(0);
   await expect(page.locator('#control-manual-next')).toBeFocused();
+  await expect(page.locator('#control-manual-next')).toHaveAccessibleName('Otwórz okładkę regulaminu');
   await page.keyboard.press('Enter');
-  await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', '1');
+  await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'true');
+  await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', '0');
   await expect(page.locator('#control-take-document')).toHaveCount(0);
   await expect(page.locator('#screen-description')).toContainText('NA RAZIE CISZA.');
 });
@@ -324,7 +353,7 @@ test('a covering rulebook shields the document from a carried stamp when open or
   await expect(page.locator('#screen-description')).toContainText('PODBIJ TUTAJ');
   await expect(page.locator('#control-stamp-fit')).toHaveAttribute('data-held', 'true');
   await clickAt(page, center(stampHome));
-  await activate(page, 'manual-close');
+  await page.keyboard.press('Escape');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
 
   // The closed cover still overlaps the upper-left part of the certificate.
@@ -340,7 +369,7 @@ test('a covering rulebook shields the document from a carried stamp when open or
   await expect(page.locator('#control-stamp-fit')).toHaveAttribute('data-held', 'true');
 
   // The exposed paper remains usable without putting the held stamp down.
-  await clickAt(page, { x: paper.x + 100, y: paper.y + 90 });
+  await clickAt(page, { x: paper.x + paper.w - 10, y: paper.y + 90 });
   await expect(page.locator('#screen-description')).toContainText('Podbito: ZDOLNY.');
   await expect(page.locator('#control-stamp-fit')).toHaveAttribute('data-held', 'true');
 });

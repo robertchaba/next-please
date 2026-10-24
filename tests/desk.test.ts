@@ -24,7 +24,7 @@ describe('temporary desktop layout', () => {
       expect(rect.x + rect.w).toBeLessThanOrEqual(DESK_BOUNDS.x + DESK_BOUNDS.w);
       expect(rect.y + rect.h).toBeLessThanOrEqual(DESK_BOUNDS.y + DESK_BOUNDS.h);
     }
-    expect(moveDeskItem(state, id, { x: 250.4, y: 155.6 }).positions[id]).toEqual({ x: 250, y: 156 });
+    expect(moveDeskItem(state, id, { x: 250.4, y: 145.6 }).positions[id]).toEqual({ x: 250, y: 146 });
   });
 
   it('moves and raises an item without mutating the existing layout or other objects', () => {
@@ -113,6 +113,18 @@ describe('temporary desktop layout', () => {
     expect(bounds.x).toBeGreaterThanOrEqual(RIGHT_DESK_X);
     expect(bounds.y + bounds.h).toBeLessThanOrEqual(DESK_BOUNDS.y + DESK_BOUNDS.h);
     expect(itemRect(moved, 'manual', false, true, true)).toMatchObject(ITEM_SIZES.manual);
+  });
+
+  it('shows a compact shelf book and a single upright cover before the book is opened', () => {
+    const shelf = createDeskState();
+    expect(itemRect(shelf, 'manual')).toMatchObject({ w: 88, h: 48 });
+    const carried = moveDeskItem(shelf, 'manual', { x: 280, y: 140 }, true);
+    expect(itemRect(carried, 'manual', false, true)).toEqual({ x: 280, y: 140, w: 138, h: 164 });
+    expect(itemAnchor('manual')).toEqual({ x: 69, y: 82 });
+    const closed = moveDeskItem(carried, 'manual', { x: 280, y: 140 });
+    expect(itemRect(closed, 'manual')).toEqual({ x: 280, y: 143, w: 138, h: 164 });
+    const opened = moveDeskItem(closed, 'manual', closed.positions.manual, false, true);
+    expect(itemRect(opened, 'manual', false, false, true)).toMatchObject({ w: 276, h: 164 });
   });
 
   it('matches each canvas rectangle without overlapping the adjacent right or bottom pixel', () => {

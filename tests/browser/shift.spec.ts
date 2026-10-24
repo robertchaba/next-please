@@ -81,7 +81,7 @@ test('examinations, two-step stamping and the rulebook support a complete keyboa
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'true');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.locator('#screen-description')).toContainText('INSTRUKCJA OBSŁUGI DYŻURU');
-  await expect(page.locator('#control-manual-prev')).toHaveCount(0);
+  await expect(page.locator('#control-manual-prev')).toHaveAccessibleName('Zamknij regulamin');
   await useKeyboard(page, 'manual-next');
   await expect(page.locator('#screen-description')).toContainText('Choć jedna KONTROLA: wybierz NIEZDOLNY.');
   await page.screenshot({ path: testInfo.outputPath('rulebook-tests-pl.png') });
@@ -93,7 +93,7 @@ test('examinations, two-step stamping and the rulebook support a complete keyboa
   await expect(page.locator('#screen-description')).toContainText('Każda czynność zabiera trochę czasu.');
   await useKeyboard(page, 'manual-prev');
   await expect(page.locator('#screen-description')).toContainText('Przenieś nad pacjenta po lewej i kliknij');
-  await useKeyboard(page, 'manual-close');
+  await page.keyboard.press('Escape');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
   await expect(page.locator('#control-manual')).toBeFocused();
 

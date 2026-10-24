@@ -1,6 +1,6 @@
 # Music and sound effects
 
-Ten supplied MP3s are bundled in [music/](music/README.md) and registered in `src/core/music.ts`. Four original effects are registered in `src/core/effects.ts`. The Howler manager in `src/core/audio.ts` provides lazy loading, separate music/effect volumes, mute, playlists, previous/next controls, and user-gesture unlocking.
+Fourteen supplied MP3s are bundled in [music/](music/README.md) and registered in `src/core/music.ts`. Five original effects are registered in `src/core/effects.ts`. The Howler manager in `src/core/audio.ts` provides lazy loading, separate music/effect volumes, mute, playlists, previous/next controls, and user-gesture unlocking.
 
 ## Original effects
 
@@ -8,10 +8,11 @@ Ten supplied MP3s are bundled in [music/](music/README.md) and registered in `sr
 | --- | --- | --- |
 | `typewriter` / `typewriter.wav` | Mechanical key strike and release during text reveal | 85 ms |
 | `carriage` / `carriage.wav` | Short carriage slide and stop between introduction cards | 360 ms |
-| `stamp` / `stamp.wav` | Rubber stamp hitting a document | 160 ms |
+| `stamp` / `stamp.wav` | Mechanical stamp: dry latch, solid rubber-on-paper impact and short return click | 190 ms |
 | `paper` / `paper.wav` | Handling a document or manual | 250 ms |
+| `bell` / `bell.wav` | Small brass desk bell calling the next patient | 680 ms |
 
-Created specifically for Next, Please! on 2026-10-23 with the original deterministic synthesis code in [`scripts/generate-effects.mjs`](../../../scripts/generate-effects.mjs). No samples, external recordings, downloaded assets, voices, or third-party material are used. The sounds combine seeded filtered noise with damped mechanical resonances; each is mono 44.1 kHz, 16-bit PCM WAV with quiet peaks, clean endpoints and no added silence. Reproduce the committed files with `node scripts/generate-effects.mjs`; no dependencies or network access are needed.
+Created specifically for Next, Please! on 2026-10-23 with the original deterministic synthesis code in [`scripts/generate-effects.mjs`](../../../scripts/generate-effects.mjs); the mechanical stamp was revised and the desk bell added on 2026-10-24. No samples, external recordings, downloaded assets, voices, or third-party material are used. The sounds combine seeded filtered noise with damped mechanical resonances; each is mono 44.1 kHz, 16-bit PCM WAV with clean endpoints and no added silence. The stamp layers a dry latch with a dense, softly saturated rubber-and-desk impact and a quieter return click at 76 ms. Its short body resonances avoid a pitched spring tail. Its 84% peak is deliberately stronger than the paper and typewriter effects (27–38%), with further headroom from Howler's independent 70% effect volume. The bell has a brief plunger tick and independently decaying inharmonic brass-dome resonances, peaking at 48%; its short ring has no echo or loop. Reproduce all committed files with `node scripts/generate-effects.mjs`, or just these two with `node scripts/generate-effects.mjs stamp bell`; no dependencies or network access are needed.
 
 Provenance: project-original computer-synthesized audio, prepared with Codex for Robert Chaba. Source: the linked repository script. Redistribution terms: the same terms as this project's original source and assets; no separate third-party license, license URL, or attribution requirement applies. The repository does not currently declare an open-source license; these notes do not grant a separate public license.
 

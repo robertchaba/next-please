@@ -9,9 +9,10 @@ const patientShadows = new Map<string, HTMLCanvasElement>();
 const introNames = ['scalpel', 'catheter', 'pen', 'stamp'] as const;
 const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate', 'clock',
   'patient-0', 'patient-1', 'patient-2', 'paper'] as const;
+export const PATIENT_MOTION_FRAMES = 12;
 
 export async function loadClinicArt(): Promise<void> {
-  const files = ['cabinet-clinic', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
+  const files = ['cabinet-corridor', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
   await Promise.all(files.map(name => new Promise<void>((resolve, reject) => {
     const image = new Image();
     images.set(name, image);
@@ -77,49 +78,58 @@ function wallClock(ctx: CanvasRenderingContext2D, clockMinutes: number): void {
 function roomNumber(ctx: CanvasRenderingContext2D): void {
   const digits = ['0111010001', '1000110001', '1000110001', '1000111111', '1000100001', '1000100001', '0111000001'];
   digits.forEach((row, y) => [...row].forEach((pixel, x) => {
-    if (pixel === '1') rect(ctx, 91 + x + (x >= 5 ? 1 : 0), 36 + y, 1, 1, '#292f23');
+    if (pixel === '1') rect(ctx, 174 + x + (x >= 5 ? 1 : 0), 20 + y, 1, 1, '#292f23');
   }));
 }
 
 /** Generated environment and portraits with only supplied simulation state. */
 export function drawCabinet(ctx: CanvasRenderingContext2D, options: CabinetArtOptions): void {
   rect(ctx, 0, 0, 570, 320, '#171e18');
-  const background = images.get('cabinet-clinic');
-  if (background?.complete && background.naturalWidth) {
-    // Recompose the original artwork; physical joinery stays six pixels wide.
-    ctx.drawImage(background, 0, 0, 282, 320, 0, 0, LEFT_WIDTH, 320);
-    ctx.drawImage(background, 282, 0, 6, 320, LEFT_WIDTH, 0, 6, 320);
-    ctx.drawImage(background, 288, 0, 282, 320, RIGHT_DESK_X, 0, 570 - RIGHT_DESK_X, 320);
-  }
+  asset(ctx, 'cabinet-corridor', 0, 0, 570, 320);
   roomNumber(ctx);
   wallClock(ctx, options.clockMinutes);
   const decoration = CABINET_HOTSPOTS.decoration;
   if (options.decoration === 'plant') asset(ctx, 'sprites/plant', decoration.x + 6, decoration.y, 45, 42);
   else asset(ctx, 'sprites/certificate', decoration.x + 11, decoration.y + 2, 36, 40);
   const motion = options.patientMotion;
-  const frame = motion ? Math.max(0, Math.min(5, Math.floor(motion.frame))) : 5;
-  const pose = motion?.direction === 'exit' ? 5 - frame : frame;
+  const lastFrame = PATIENT_MOTION_FRAMES - 1;
+  const frame = motion ? Math.max(0, Math.min(lastFrame, Math.floor(motion.frame))) : lastFrame;
+  // Entry reveals a nearby standing figure, then lowers it into the chair.
+  // The face and width retain their native scale, with no perspective zoom.
+  const progress = motion?.direction === 'exit' ? 1 - frame / lastFrame : frame / lastFrame;
   const patientId = motion?.patientId ?? options.patientId;
-  if (patientId !== null) {
+  if (patientId !== null && progress > 0) {
     const { x, y, w, h } = PATIENT_HANDOFF;
-    const exposure = pose / 5;
+    const approach = Math.min(1, progress / 0.64);
+    const lit = approach * approach * (3 - 2 * approach);
+    const sitting = Math.max(0, (progress - 0.64) / 0.36);
+    const settle = sitting * sitting * (3 - 2 * sitting);
+    const left = x - Math.round(24 * (1 - lit));
+    const top = y - 18 + Math.round(18 * settle);
     const name = `sprites/patient-${patientId}`;
     ctx.save();
-    ctx.beginPath(); ctx.rect(0, 3, LEFT_WIDTH, 114); ctx.clip();
-    // The portrait stays still: its shadow resolves into the lit face and back.
-    ctx.globalAlpha = exposure === 0 ? 0 : 0.45 + exposure * 0.55;
-    asset(ctx, name, x, y, w, h);
+    ctx.beginPath(); ctx.rect(0, 0, LEFT_WIDTH, 128); ctx.clip();
+    const drawPortrait = (source: HTMLImageElement | HTMLCanvasElement): void => {
+      // Keep the head at native scale. The lower jacket/forearms reach the
+      // desk throughout sitting, without a floating gap below the figure.
+      const upper = 64;
+      ctx.drawImage(source, 0, 0, w, upper, left, top, w, upper);
+      ctx.drawImage(source, 0, upper, w, h - upper, left, top + upper, w, y + h - top - upper);
+    };
+    const portrait = images.get(name);
+    if (portrait?.complete && portrait.naturalWidth) drawPortrait(portrait);
     const shadow = patientShadows.get(name);
-    if (shadow && exposure < 1) {
-      ctx.globalAlpha *= (1 - exposure) * 0.95;
-      ctx.drawImage(shadow, x, y, w, h);
+    if (shadow && lit < 1) {
+      ctx.globalAlpha = (1 - lit) * 0.98;
+      drawPortrait(shadow);
     }
     ctx.restore();
   }
   // Extinguish the lamp's lens and dim only the room, keeping paperwork legible.
   if (!options.lampOn) {
-    rect(ctx, 113, 24, 58, 2, '#343729');
-    rect(ctx, 0, 0, LEFT_WIDTH, 128, '#111b17a3');
+    rect(ctx, 359, 35, 39, 3, '#343729');
+    rect(ctx, 374, 38, 9, 2, '#343729');
+    rect(ctx, 0, 0, LEFT_WIDTH, 128, '#111b1740');
     rect(ctx, RIGHT_DESK_X, 0, 570 - RIGHT_DESK_X, 128, '#111b1759');
   }
 }

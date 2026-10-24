@@ -1,19 +1,22 @@
 import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, type CabinetArtOptions } from '../render/clinic';
-import { drawDocumentText, drawText } from '../render/font';
-import { drawManual, manualControls, MANUAL_PAGE_COUNT } from '../render/manual';
+import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
+import { drawManual, drawManualCover, manualControls, MANUAL_PAGE_COUNT } from '../render/manual';
 import { INTRO_SLIDES, PATIENTS, SHIFT_LENGTH, type GameAction, type GameState } from '../core/game';
 import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
-import { CABINET_HOTSPOTS, PATIENT_HANDOFF, itemRect, restRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
+import { CABINET_HOTSPOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
 export { MANUAL_PAGE_COUNT, manualPageDescription } from '../render/manual';
 
 export type ShiftAction = GameAction | 'select-fit' | 'select-unfit' | 'apply-stamp' | 'manual'
   | 'manual-prev' | 'manual-next' | 'manual-close' | 'put-away-fit' | 'put-away-unfit';
 export type SelectedStamp = 'fit' | 'unfit' | null;
+export type PatientSpeech = { patientId: number; line: keyof typeof translations.pl.patientSpeech };
 export type DeskPresentation = {
   desk: DeskState; held: DeskItemId | null;
   manualOpen: boolean; manualPage: number; clockMinutes?: number;
   patientMotion?: CabinetArtOptions['patientMotion'];
+  patientSpeech?: PatientSpeech;
+  departingPatientId?: number;
 };
 const c = { ink: '#293226', paper: '#ded4ae', muted: '#a6ac8e', red: '#aa5d48', green: '#4e674e' };
 
@@ -29,7 +32,7 @@ export function shiftDescription(state: GameState, locale: Locale): string {
   const t = translations[locale]; const visit = state.visit;
   const patient = visit ? PATIENTS[visit.patientId] : null;
   return [t.cabinetHelp, `${t.clock}: ${clockTime(state)}.`, `${t.day}: ${state.day}.`, `${t.queue}: ${state.shiftCompleted}/${SHIFT_LENGTH}.`, `${t.points}: ${state.money}.`,
-    visit && patient ? `${t.patientNames[visit.patientId]}. ${t.patientJobs[visit.patientId]}. ${t.patientLines[visit.patientId]}. ${visit.document === 'tray' ? t.awaitingDocument : t.document}. ${t.visionResult}: ${visit.visionTested ? t[patient.vision] : t.untested}. ${t.pressureResult}: ${visit.pressureTested ? t[patient.pressure] : t.untested}. ${visit.decision ? t[visit.decision] : t.stampHere}.`
+    visit && patient ? `${t.patientNames[visit.patientId]}. ${t.patientJobs[visit.patientId]}. ${visit.document === 'tray' ? t.awaitingDocument : t.document}. ${t.visionResult}: ${visit.visionTested ? t[patient.vision] : t.untested}. ${t.pressureResult}: ${visit.pressureTested ? t[patient.pressure] : t.untested}. ${visit.decision ? t[visit.decision] : t.stampHere}.`
       : state.shiftCompleted === SHIFT_LENGTH ? t.shiftDone : t.emptyChair,
   ].join(' ');
 }
@@ -50,7 +53,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
   const rest = view.held ? restRect(view.held) : undefined;
   const restAction = view.held === 'stamp-fit' ? 'put-away-fit' : 'put-away-unfit';
   const restLabel = view.held === 'stamp-fit' ? t.putAwayFit : t.putAwayUnfit;
-  const pageCorners = manualControls(itemRect(view.desk, 'manual', false, false, true));
+  const pageCorners = manualControls(itemRect(view.desk, 'manual', false, false, view.manualOpen));
   return [
     ...(rest ? [button(restAction, restLabel, rest.x, rest.y, rest.w, rest.h, restAction)] : []),
     ...(state.shiftCompleted === SHIFT_LENGTH ? [hotspot('next-day', t.nextDay, CABINET_HOTSPOTS.callPatient, 'next-day')]
@@ -63,10 +66,10 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     { ...item('stamp-fit', t.stampFit, 'stamp-fit', 'select-fit'), pressed: selected === 'fit' },
     { ...item('stamp-unfit', t.stampUnfit, 'stamp-unfit', 'select-unfit'), pressed: selected === 'unfit' },
     item('manual', t.manual, 'manual', 'manual'),
-    ...(view.manualOpen && view.held !== 'manual' ? [
-      ...(view.manualPage > 0 ? [hotspot('manual-prev', t.manualPrevious, pageCorners.previous, 'manual-prev')] : []),
-      ...(view.manualPage < MANUAL_PAGE_COUNT - 1 ? [hotspot('manual-next', t.manualNext, pageCorners.next, 'manual-next')] : []),
-      hotspot('manual-close', t.manualClose, pageCorners.close, 'manual-close'),
+    ...(view.held !== 'manual' && view.desk.positions.manual.x >= RIGHT_DESK_X ? [
+      ...(view.manualOpen ? [hotspot('manual-prev', view.manualPage === 0 ? t.manualClose : t.manualPrevious, pageCorners.previous, 'manual-prev')] : []),
+      ...(!view.manualOpen || view.manualPage < MANUAL_PAGE_COUNT - 1
+        ? [hotspot('manual-next', view.manualOpen ? t.manualNext : t.manualOpenCover, pageCorners.next, 'manual-next')] : []),
     ] : []),
     hotspot('lamp', t.lamp, CABINET_HOTSPOTS.lamp, 'toggle-lamp'),
     hotspot('decoration', t.decoration, CABINET_HOTSPOTS.decoration, 'change-decoration'),
@@ -82,8 +85,9 @@ export function renderIntro(ctx: CanvasRenderingContext2D, state: GameState, loc
 export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, locale: Locale, _selected: SelectedStamp, view: DeskPresentation): void {
   const t = translations[locale], visit = state.visit;
   const patient = visit ? PATIENTS[visit.patientId] : null;
-  drawCabinet(ctx, { patientId: visit?.patientId ?? null, lampOn: state.lampOn, decoration: state.decoration,
+  drawCabinet(ctx, { patientId: visit?.patientId ?? view.departingPatientId ?? null, lampOn: state.lampOn, decoration: state.decoration,
     clockMinutes: view.clockMinutes ?? state.clockMinutes, patientMotion: view.patientMotion });
+  if (view.patientSpeech) drawPatientSpeech(ctx, t.patientSpeech[view.patientSpeech.line]);
   // Only lettering intrinsic to the examination chart and actual paperwork.
   const chart = CABINET_HOTSPOTS.vision, chartCenter = chart.x + Math.floor(chart.w / 2);
   drawText(ctx, t.eyeChart[0], chartCenter, chart.y + 7, { color: c.ink, align: 'center', scale: 2 });
@@ -95,8 +99,10 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     const bounds = itemRect(view.desk, id, visit?.document === 'tray' && !lifted, lifted, view.manualOpen);
     const { x, y, w, h } = bounds;
     if (id !== 'document') {
-      if (id === 'manual' && view.manualOpen && !lifted) drawManual(ctx, bounds, locale, view.manualPage);
-      else drawDeskItem(ctx, id, x, y, lifted, w, h);
+      if (id === 'manual') {
+        if (view.manualOpen && !lifted) drawManual(ctx, bounds, locale, view.manualPage);
+        else drawManualCover(ctx, bounds, lifted);
+      } else drawDeskItem(ctx, id, x, y, lifted, w, h);
       continue;
     }
     if (!visit || !patient) continue;
@@ -134,4 +140,19 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
       box(ctx, sx + 16, sy, 3, 1, c.paper); box(ctx, sx + 63, sy + 20, 2, 1, c.paper);
     } else for (let dx = 44; dx < 152; dx += 4) box(ctx, x + dx, y + 128, 2, 1, '#b3a984');
   }
+}
+
+/** A little paper-colored comic balloon, sized to the actual short utterance. */
+function drawPatientSpeech(ctx: CanvasRenderingContext2D, value: string): void {
+  const x = 111, y = 49, w = measureDocumentText(value) + 14, h = 22;
+  box(ctx, x + 3, y, w - 6, h, '#30372a');
+  box(ctx, x, y + 3, w, h - 6, '#30372a');
+  box(ctx, x + 3, y + 1, w - 6, h - 2, '#e4dcbb');
+  box(ctx, x + 1, y + 3, w - 2, h - 6, '#e4dcbb');
+  // The tapered tail points left toward the patient, staying clear of the face.
+  for (let row = 0; row < 7; row++) {
+    box(ctx, x + 6 - row, y + h - 1 + row, 8 - row, 1, '#30372a');
+    if (row < 5) box(ctx, x + 7 - row, y + h - 1 + row, 5 - row, 1, '#e4dcbb');
+  }
+  drawDocumentText(ctx, value, x + 7, y + 6, { color: '#30372a' });
 }

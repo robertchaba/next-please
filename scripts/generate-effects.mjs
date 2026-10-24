@@ -1,6 +1,6 @@
 /**
  * Original, deterministic Foley-style synthesis for Next, Please!
- * Run with `node scripts/generate-effects.mjs`. No recordings or dependencies.
+ * Run with `node scripts/generate-effects.mjs [stamp bell]`. No recordings or dependencies.
  * Each key has a body strike, a damped metal click and a quieter release;
  * the other effects layer similar mechanical resonances and filtered noise.
  */
@@ -75,10 +75,33 @@ const effects = {
       + decay(time, 0.246, 0.012) * (low * 1.3 + mid * 0.7 + tone(time, 210) * 0.18)
       + decay(time, 0.255, 0.035) * (tone(time, 2080) * 0.055 + tone(time, 3112) * 0.02);
   }),
-  'stamp.wav': synthesize(0.16, 0.44, 1637, (time, low, mid) => {
-    const hit = decay(time, 0.008, 0.018);
-    return hit * (low * 2.1 + mid * 0.45 + tone(time, 105) * 0.45 + tone(time, 233) * 0.12)
-      + decay(time, 0.056, 0.011) * (mid * 0.22 + tone(time, 370) * 0.06);
+  'stamp.wav': synthesize(0.19, 0.84, 1637, (time, low, mid, high) => {
+    // Dry metal latch, a broad rubber-on-paper impact and a restrained release.
+    // Brief, differently damped body modes avoid a pitched or springy tail.
+    const impactTime = time - 0.009;
+    const latch = decay(time, 0.002, 0.004) * (mid * 0.7 + high * 0.18);
+    const impact = decay(time, 0.009, 0.019) * (low * 3.2 + mid * 1.7 + high * 0.08);
+    const body = decay(time, 0.009, 0.018) * tone(impactTime, 132) * 0.62
+      + decay(time, 0.009, 0.010) * tone(impactTime, 317) * 0.34
+      + decay(time, 0.009, 0.006) * tone(impactTime, 873) * 0.14;
+    const returnClick = decay(time, 0.076, 0.006) * (mid * 0.52 + high * 0.12)
+      + decay(time, 0.088, 0.005) * (low * 0.3 + mid * 0.17);
+    // Soft saturation gives the short impact body without digital clipping.
+    return Math.tanh((latch + impact + body) * 1.7) + returnClick;
+  }),
+  'bell.wav': synthesize(0.68, 0.48, 7403, (time, low, mid, high) => {
+    const strikeTime = time - 0.004;
+    const attack = Math.max(0, Math.min(1, strikeTime / 0.001));
+    // Inharmonic dome modes and a quiet adjacent mode give a small brass bell.
+    // Each mode decays independently; there is no looping or synthetic echo.
+    const ring = decay(time, 0.004, 0.18) * tone(strikeTime, 1850)
+      + decay(time, 0.004, 0.16) * tone(strikeTime, 1857) * 0.16
+      + decay(time, 0.004, 0.12) * tone(strikeTime, 2974) * 0.42
+      + decay(time, 0.004, 0.075) * tone(strikeTime, 4916) * 0.21
+      + decay(time, 0.004, 0.042) * tone(strikeTime, 6621) * 0.08;
+    return ring * attack
+      + decay(time, 0.002, 0.003) * (mid * 0.18 + high * 0.08)
+      + decay(time, 0.028, 0.004) * low * 0.05;
   }),
   'paper.wav': synthesize(0.25, 0.27, 8137, (time, low, mid, high) => {
     const sweep = Math.sin(Math.PI * time / 0.25) ** 2;
@@ -88,8 +111,13 @@ const effects = {
   }),
 };
 
+const requested = process.argv.slice(2).map(name => name.endsWith('.wav') ? name : `${name}.wav`);
+for (const name of requested) {
+  if (!(name in effects)) throw new Error(`Unknown effect: ${name}`);
+}
 await mkdir(output, { recursive: true });
 for (const [filename, wav] of Object.entries(effects)) {
+  if (requested.length && !requested.includes(filename)) continue;
   await writeFile(new URL(filename, output), wav);
   process.stdout.write(`${filename}: ${wav.length} bytes\n`);
 }

@@ -27,13 +27,16 @@ it('registers every bundled effect with a portable local URL and no looping', as
     expect(wav.readUInt32LE(40)).toBe(wav.length - 44);
     const duration = (wav.length - 44) / (44100 * 2);
     expect(duration).toBeGreaterThan(0.04);
-    expect(duration).toBeLessThan(0.5);
+    expect(duration).toBeLessThan(file === 'bell.wav' ? 0.8 : 0.5);
     expect(wav.readInt16LE(44)).toBe(0);
     expect(wav.readInt16LE(wav.length - 2)).toBe(0);
     let peak = 0;
     for (let index = 44; index < wav.length; index += 2) peak = Math.max(peak, Math.abs(wav.readInt16LE(index)));
     expect(peak).toBeGreaterThan(1000);
-    expect(peak).toBeLessThan(16000); // Leave headroom for overlapping keys and music.
+    if (file === 'stamp.wav') {
+      expect(peak).toBeGreaterThan(23000); // The mechanical strike must stand out.
+      expect(peak).toBeLessThan(29000); // Retain headroom before Howler's effect gain.
+    } else expect(peak).toBeLessThan(16000); // Quieter paper and overlapping typing.
     if (file === 'typewriter.wav') expect(duration).toBeLessThan(0.1);
   }
 });
