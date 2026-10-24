@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  containsPoint, createDeskState, DEFAULT_DOCUMENT, DESK_BOUNDS, CARRY_BOUNDS, ITEM_SIZES, restRect, itemAnchor,
+  containsPoint, createDeskState, DEFAULT_DOCUMENT, DESK_BOUNDS, CARRY_BOUNDS, ITEM_SIZES, CARRIED_ITEM_SIZES, restRect, itemAnchor,
   itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, TRAY_DOCUMENT, MANUAL_OPEN_POSITION, MANUAL_OPEN_SIZE, RIGHT_DESK_X, type DeskItemId,
 } from '../src/core/desk';
 
@@ -80,14 +80,14 @@ describe('temporary desktop layout', () => {
     expect(itemAnchor('stamp-fit')).toEqual({ x: 24, y: 42 });
   });
 
-  it('keeps the shelf paper compact throughout carrying and expands it only when placed on the main desktop', () => {
+  it('shrinks shelf paper throughout carrying and expands it only when placed on the main desktop', () => {
     const left = moveDeskItem(createDeskState(), 'document', { x: 120, y: 220 });
     expect(itemRect(left, 'document')).toMatchObject({ w: 60, h: 80 });
     const carried = moveDeskItem(pickUpDeskItem(left, 'document'), 'document', { x: 38, y: 22 }, true);
-    expect(itemRect(carried, 'document', false, true)).toEqual({ x: 38, y: 22, w: 60, h: 80 });
+    expect(itemRect(carried, 'document', false, true)).toEqual({ x: 38, y: 22, w: 48, h: 64 });
     const across = moveDeskItem(carried, 'document', { x: 500, y: 22 }, true);
-    expect(itemRect(across, 'document', false, true)).toEqual({ x: 500, y: 22, w: 60, h: 80 });
-    expect(itemAnchor('document', itemRect(across, 'document', false, true))).toEqual({ x: 30, y: 40 });
+    expect(itemRect(across, 'document', false, true)).toEqual({ x: 500, y: 22, w: 48, h: 64 });
+    expect(itemAnchor('document', itemRect(across, 'document', false, true))).toEqual({ x: 24, y: 32 });
     const right = moveDeskItem(carried, 'document', { x: 300, y: 220 });
     const bounds = itemRect(right, 'document');
     expect(bounds.w).toBe(ITEM_SIZES.document.w);
@@ -96,19 +96,19 @@ describe('temporary desktop layout', () => {
     expect(right.documentCarrySize).toBeUndefined();
   });
 
-  it('preserves the incoming folded sheet in hand and keeps a large desk document large over the left side', () => {
+  it('shrinks the incoming folded sheet and a large desk document before they cross the divider', () => {
     const initial = createDeskState();
     const carried = pickUpDeskItem(initial, 'document', true);
-    expect(itemRect(carried, 'document', false, true)).toEqual(TRAY_DOCUMENT);
+    expect(itemRect(carried, 'document', false, true)).toEqual({ x: 20, y: 173, w: 28, h: 88 });
     const across = moveDeskItem(carried, 'document', { x: Infinity, y: Infinity }, true);
-    expect(itemRect(across, 'document', false, true)).toEqual({ x: 535, y: 209, w: 35, h: 111 });
+    expect(itemRect(across, 'document', false, true)).toEqual({ x: 542, y: 232, w: 28, h: 88 });
     expect(initial.documentCarrySize).toBeUndefined();
     const right = moveDeskItem(across, 'document', DEFAULT_DOCUMENT);
     const backLeft = moveDeskItem(pickUpDeskItem(right, 'document'), 'document', { x: 10, y: 30 }, true);
-    expect(itemRect(backLeft, 'document', false, true)).toEqual({ x: 10, y: 30, ...ITEM_SIZES.document });
+    expect(itemRect(backLeft, 'document', false, true)).toEqual({ x: 10, y: 30, ...CARRIED_ITEM_SIZES.document });
   });
 
-  it.each(Object.keys(ITEM_SIZES) as DeskItemId[])('lets a carried %s reach the upper room while retaining its full footprint', id => {
+  it.each(Object.keys(ITEM_SIZES) as DeskItemId[])('lets a carried %s reach the upper room while retaining its carried footprint', id => {
     const state = createDeskState();
     for (const point of [{ x: -Infinity, y: -Infinity }, { x: Infinity, y: Infinity }]) {
       const carried = moveDeskItem(state, id, point, true);
@@ -117,7 +117,7 @@ describe('temporary desktop layout', () => {
       expect(bounds.y).toBeGreaterThanOrEqual(CARRY_BOUNDS.y);
       expect(bounds.x + bounds.w).toBeLessThanOrEqual(CARRY_BOUNDS.w);
       expect(bounds.y + bounds.h).toBeLessThanOrEqual(CARRY_BOUNDS.h);
-      expect({ w: bounds.w, h: bounds.h }).toEqual(ITEM_SIZES[id]);
+      expect({ w: bounds.w, h: bounds.h }).toEqual(CARRIED_ITEM_SIZES[id]);
     }
   });
 
@@ -128,19 +128,40 @@ describe('temporary desktop layout', () => {
     const bounds = itemRect(moved, 'manual', false, false, true);
     expect(bounds.x).toBeGreaterThanOrEqual(RIGHT_DESK_X);
     expect(bounds.y + bounds.h).toBeLessThanOrEqual(DESK_BOUNDS.y + DESK_BOUNDS.h);
-    expect(itemRect(moved, 'manual', false, true, true)).toMatchObject(ITEM_SIZES.manual);
+    expect(itemRect(moved, 'manual', false, true, true)).toMatchObject(CARRIED_ITEM_SIZES.manual);
   });
 
   it('shows a compact shelf book and a single upright cover before the book is opened', () => {
     const shelf = createDeskState();
     expect(itemRect(shelf, 'manual')).toMatchObject({ w: 88, h: 48 });
     const carried = moveDeskItem(shelf, 'manual', { x: 280, y: 140 }, true);
-    expect(itemRect(carried, 'manual', false, true)).toEqual({ x: 280, y: 140, w: 138, h: 164 });
+    expect(itemRect(carried, 'manual', false, true)).toEqual({ x: 280, y: 140, w: 64, h: 36 });
     expect(itemAnchor('manual')).toEqual({ x: 69, y: 82 });
     const closed = moveDeskItem(carried, 'manual', { x: 280, y: 140 });
     expect(itemRect(closed, 'manual')).toEqual({ x: 280, y: 143, w: 138, h: 164 });
     const opened = moveDeskItem(closed, 'manual', closed.positions.manual, false, true);
     expect(itemRect(opened, 'manual', false, false, true)).toMatchObject({ w: 276, h: 164 });
+  });
+
+  it('keeps paper and book centers steady when keyboard pickup shrinks either desktop size', () => {
+    for (const id of ['document', 'manual'] as const) {
+      for (const point of [{ x: 90, y: 160 }, { x: 270, y: 150 }]) {
+        const state = moveDeskItem(createDeskState(), id, point);
+        const before = itemRect(state, id);
+        const pickedUp = pickUpDeskItem(state, id);
+        const after = itemRect(pickedUp, id, false, true);
+        expect(after.w).toBeLessThan(before.w);
+        expect(after.h).toBeLessThan(before.h);
+        expect(after.x + Math.floor(after.w / 2)).toBe(before.x + Math.floor(before.w / 2));
+        expect(after.y + Math.floor(after.h / 2)).toBe(before.y + Math.floor(before.h / 2));
+        expect(itemRect(state, id)).toEqual(before);
+      }
+    }
+    const open = moveDeskItem(createDeskState(), 'manual', MANUAL_OPEN_POSITION, false, true);
+    const before = itemRect(open, 'manual', false, false, true);
+    const after = itemRect(pickUpDeskItem(open, 'manual', false, true), 'manual', false, true);
+    expect(after.x + after.w / 2).toBe(before.x + before.w / 2);
+    expect(after.y + after.h / 2).toBe(before.y + before.h / 2);
   });
 
   it('matches each canvas rectangle without overlapping the adjacent right or bottom pixel', () => {

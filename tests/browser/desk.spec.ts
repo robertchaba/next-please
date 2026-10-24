@@ -104,27 +104,35 @@ test('an unstamped handoff preserves the visit and restores the document positio
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
 });
 
-test('documents retain their pickup size until placed, with aligned hit areas and cancellation', async ({ page }) => {
+test('documents shrink from the tray and both desktops, with aligned hit areas and cancellation', async ({ page }) => {
   await enterCabinet(page);
   await expect(page.locator('#control-cup, #control-pencil')).toHaveCount(0);
   await activate(page, 'call-patient');
   const tray = await logicalRect(page, 'take-document');
   await page.locator('#control-take-document').click();
-  expect(await logicalRect(page, 'take-document')).toMatchObject({ w: tray.w, h: tray.h });
+  expect(await logicalRect(page, 'take-document')).toMatchObject({ w: 28, h: 88 });
   const firstTarget = await screenPoint(page, { x: 350, y: 220 });
   await page.mouse.move(firstTarget.x, firstTarget.y);
-  expect(await logicalRect(page, 'take-document')).toMatchObject({ w: 35, h: 111 });
+  expect(await logicalRect(page, 'take-document')).toMatchObject({ w: 28, h: 88 });
   await page.keyboard.press('Escape');
   expect(await logicalRect(page, 'take-document')).toEqual(tray);
   await carryTo(page, 'take-document', { x: 350, y: 220 });
   expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ w: 188, h: 144 });
+  const rightDesk = await logicalRect(page, 'apply-stamp');
+  await page.locator('#control-apply-stamp').click();
+  expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ w: 48, h: 64 });
+  const patientTarget = await screenPoint(page, center(PATIENT_HANDOFF));
+  await page.mouse.move(patientTarget.x, patientTarget.y);
+  expect(await logicalRect(page, 'apply-stamp')).toEqual({ x: 61, y: 48, w: 48, h: 64 });
+  await page.keyboard.press('Escape');
+  expect(await logicalRect(page, 'apply-stamp')).toEqual(rightDesk);
   await carryTo(page, 'apply-stamp', { x: 110, y: 205 });
   expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ w: 60, h: 80 });
   await page.locator('#control-apply-stamp').click();
   const target = await screenPoint(page, { x: 358, y: 227 });
   await page.mouse.move(target.x, target.y);
   const held = await logicalRect(page, 'apply-stamp');
-  expect(held).toEqual({ x: 328, y: 187, w: 60, h: 80 });
+  expect(held).toEqual({ x: 334, y: 195, w: 48, h: 64 });
   const actual = (await page.locator('#control-apply-stamp').boundingBox())!;
   const expected = await screenPoint(page, held);
   expect(actual.x).toBeCloseTo(expected.x, 3);
@@ -137,8 +145,10 @@ test('documents retain their pickup size until placed, with aligned hit areas an
   const shelf = await logicalRect(page, 'apply-stamp');
   await page.locator('#control-apply-stamp').focus();
   await page.keyboard.press('Space');
+  const lifted = await logicalRect(page, 'apply-stamp');
+  expect(lifted).toMatchObject({ w: 48, h: 64 });
   for (let step = 0; step < 20; step++) await page.keyboard.press('Shift+ArrowRight');
-  expect(await logicalRect(page, 'apply-stamp')).toEqual({ ...shelf, x: shelf.x + 240 });
+  expect(await logicalRect(page, 'apply-stamp')).toEqual({ ...lifted, x: lifted.x + 240 });
   await page.keyboard.press('Escape');
   expect(await logicalRect(page, 'apply-stamp')).toEqual(shelf);
 });
@@ -152,12 +162,18 @@ test('the rulebook keeps its cover on placement and its physical corners open an
   await clickAt(page, { x: shelfBook.x + shelfBook.w - 12, y: shelfBook.y + shelfBook.h - 12 });
   await expect(page.locator('#control-manual')).toHaveAttribute('data-held', 'true');
   await expect(page.locator('#control-manual-next, #control-manual-prev')).toHaveCount(0);
-  expect(await logicalRect(page, 'manual')).toMatchObject({ w: 138, h: 164 });
+  expect(await logicalRect(page, 'manual')).toMatchObject({ w: 64, h: 36 });
   await clickAt(page, { x: 350, y: 228 });
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
   const cover = await logicalRect(page, 'manual');
   expect(cover).toMatchObject({ w: 138, h: 164 });
+  await page.locator('#control-manual').focus();
+  await page.keyboard.press('Space');
+  expect(await logicalRect(page, 'manual')).toMatchObject({ w: 64, h: 36 });
+  await page.keyboard.press('Shift+ArrowLeft');
+  await page.keyboard.press('Escape');
+  expect(await logicalRect(page, 'manual')).toEqual(cover);
   const openingCorner = await logicalRect(page, 'manual-next');
   expect(openingCorner.x).toBeGreaterThan(cover.x + cover.w / 2);
   expect(openingCorner.y).toBeGreaterThan(cover.y + cover.h / 3);
@@ -170,6 +186,14 @@ test('the rulebook keeps its cover on placement and its physical corners open an
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', '0');
   await expect(page.locator('#screen-description')).toContainText('Przyjęcie');
   const book = await logicalRect(page, 'manual');
+  await page.locator('#control-manual').focus();
+  await page.keyboard.press('Space');
+  expect(await logicalRect(page, 'manual')).toMatchObject({ w: 64, h: 36 });
+  await expect(page.locator('#control-manual-next, #control-manual-prev')).toHaveCount(0);
+  await page.keyboard.press('Shift+ArrowLeft');
+  await page.keyboard.press('Escape');
+  expect(await logicalRect(page, 'manual')).toEqual(book);
+  await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'true');
   for (let pageIndex = 1; pageIndex < 5; pageIndex++) {
     const next = await logicalRect(page, 'manual-next');
     expect(next.x).toBeGreaterThan(book.x + book.w / 2);
@@ -210,8 +234,10 @@ test('keyboard pickup moves documents and Escape restores the previous position'
   expect(await logicalRect(page, 'apply-stamp')).toEqual(moved);
   await expect(page.locator('#control-apply-stamp')).toBeFocused();
   await page.keyboard.press('Space');
+  const lifted = await logicalRect(page, 'apply-stamp');
+  expect(lifted).toMatchObject({ w: 48, h: 64 });
   await page.keyboard.press('Shift+ArrowLeft');
-  expect((await logicalRect(page, 'apply-stamp')).x).toBe(moved.x - 12);
+  expect((await logicalRect(page, 'apply-stamp')).x).toBe(lifted.x - 12);
   await page.keyboard.press('Escape');
   expect(await logicalRect(page, 'apply-stamp')).toEqual(moved);
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');

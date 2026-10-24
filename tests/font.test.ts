@@ -60,8 +60,9 @@ describe('compact original document font', () => {
 
   it('fits the archive, staff room and restart copy into their quiet left wall', () => {
     for (const t of Object.values(translations)) {
-      for (const title of [t.savesTitle, t.breakRoomTitle, t.restartTitle]) expect(measureText(title) * 2).toBeLessThanOrEqual(208);
-      for (const line of [...t.savesBody, ...t.breakRoomNote, ...t.restartBody]) expect(measureText(line), line).toBeLessThanOrEqual(208);
+      for (const title of [t.savesTitle, t.restartTitle]) expect(measureText(title) * 2).toBeLessThanOrEqual(208);
+      for (const line of t.gameTitleLines) expect(measureText(line) * 5).toBeLessThanOrEqual(208);
+      for (const line of [...t.savesBody, ...t.restartBody]) expect(measureText(line), line).toBeLessThanOrEqual(208);
       for (const label of [t.resume, t.restart, t.restartConfirm, t.restartCancel, t.saves]) expect(measureText(label)).toBeLessThanOrEqual(178);
     }
   });

@@ -6,7 +6,7 @@ import { renderCabinet, renderIntro, shiftButtons, shiftDescription, manualPageD
 import type { Button } from './ui';
 import { createDeskState, itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, containsPoint, restRect, itemAnchor, TRAY, DEFAULT_DOCUMENT, PATIENT_HANDOFF, MANUAL_SHELF_SIZE, RIGHT_DESK_X, type DeskItemId } from './core/desk';
 import { installDeskInput } from './core/desk-input';
-import { drawPaper, drawPanelIllustration, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
+import { drawCreatorPortrait, drawPaper, drawPanelIllustration, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
 import { drawText } from './render/font';
 import { installCursor, installDisplay, WIDTH, HEIGHT } from './core/display';
 import { translations, readPreferences, savePreferences, type Locale } from './i18n';
@@ -454,7 +454,7 @@ function syncControls(focusId?: string): void {
   const description = document.createElement('p');
   description.className = 'sr-only'; description.id = 'screen-description';
   description.textContent = screen === 'credits'
-    ? `${t().creator}: Robert Chaba. ${t().programming}: ${t().programmingName}. ${t().audio}: ${t().musicSource}. ${t().creditsFooter}`
+    ? `${t().creator}: Robert Chaba. ${t().creatorPortrait} ${t().programming}: ${t().programmingName}. ${t().audio}: ${t().musicSource}. ${t().creditsFooter}`
     : screen === 'intro' ? t().intro[gameState.introStep].body
     : screen === 'cabinet' ? `${shiftDescription(gameState, locale)} ${manualOpen ? manualPageDescription(locale, manualPage) : ''} ${feedback}`
     : screen === 'saves' ? `${t().savesDescription} ${t().savesBody.join(' ')} ${t().sample}. ${t().day}: ${gameState.day}. ${t().patients}: ${gameState.patientsProcessed}. ${t().money}: ${gameState.money}.`
@@ -552,13 +552,23 @@ function paper(x: number, y: number, w: number, h: number, title: string, refere
   rect(x + 18, y + 45, w - 36, 1, '#7b8069');
 }
 
+function drawGameTitle(): void {
+  t().gameTitleLines.forEach((line, index) => {
+    const y = 55 + index * 42;
+    text(line, 34, y + 3, '#0a100c', 5);
+    text(line, 31, y, index === 0 ? colors.bone : colors.red, 5);
+  });
+}
+
 function renderSessionScreen(kind: 'saves' | 'break-room' | 'restart'): void {
   drawPanelIllustration(ctx, kind === 'saves' ? 'saves' : 'break-room');
-  const title = kind === 'saves' ? t().savesTitle : kind === 'restart' ? t().restartTitle : t().breakRoomTitle;
-  text(title, 32, 42, colors.bone, 2);
-  rect(32, 74, 30, 2, colors.red);
-  const lines = kind === 'saves' ? t().savesBody : kind === 'restart' ? t().restartBody : t().breakRoomNote;
-  lines.forEach((line, index) => text(line, 32, 94 + index * 14, colors.muted));
+  if (kind === 'break-room') drawGameTitle();
+  else {
+    text(kind === 'saves' ? t().savesTitle : t().restartTitle, 32, 42, colors.bone, 2);
+    rect(32, 74, 30, 2, colors.red);
+    const lines = kind === 'saves' ? t().savesBody : t().restartBody;
+    lines.forEach((line, index) => text(line, 32, 94 + index * 14, colors.muted));
+  }
   if (kind === 'saves') {
     text(`${t().day}: ${gameState.day}`, 32, 146);
     text(`${t().patients}: ${gameState.patientsProcessed}`, 32, 160);
@@ -605,8 +615,7 @@ function render(): void {
   rect(0, 289, WIDTH, 1, '#485140');
   rect(21, 17, 11, 3, colors.red); rect(25, 13, 3, 11, colors.red);
   text(t().clinic, 40, 15, colors.muted);
-  text('NEXT,', 34, 58, '#0a100c', 5); text('NEXT,', 31, 55, colors.bone, 5);
-  text('PLEASE!', 34, 100, '#0a100c', 5); text('PLEASE!', 31, 97, colors.red, 5);
+  drawGameTitle();
   rect(33, 151, 29, 2, colors.red);
   text(t().subtitle, 33, 160, '#bdc1a6');
   text(t().tagline, 33, 177, '#8e9b84');
@@ -619,6 +628,7 @@ function render(): void {
 
   if (screen === 'credits') {
     paper(78, 15, 414, 298, t().creditsTitle, 'NP / 002');
+    drawCreatorPortrait(ctx, 350, 13);
     text(t().creator, 104, 65, '#6a705d');
     text('ROBERT CHABA', 104, 78, colors.ink);
     text(t().programming, 104, 136, '#6a705d');
@@ -710,7 +720,7 @@ const deskInput = installDeskInput(stage, {
     manualBeforePickup = manualOpen;
     heldItem = id;
     if (id === 'manual') manualOpen = false;
-    deskState = pickUpDeskItem(deskState, id, gameState.visit?.document === 'tray');
+    deskState = pickUpDeskItem(deskState, id, gameState.visit?.document === 'tray', manualBeforePickup);
     if (id === 'stamp-fit' || id === 'stamp-unfit') selectedStamp = id === 'stamp-fit' ? 'fit' : 'unfit';
     spendTime('handle-item');
     startMusic(); playEffect('paper');
@@ -752,7 +762,7 @@ const deskInput = installDeskInput(stage, {
     if (id === 'manual') {
       manualOpen = false;
       deskState = moveDeskItem(deskState, id, target.x >= RIGHT_DESK_X
-        ? { x: Math.max(RIGHT_DESK_X, position.x), y: position.y }
+        ? { x: Math.max(RIGHT_DESK_X, target.x - itemAnchor(id).x), y: target.y - itemAnchor(id).y }
         : { x: target.x - MANUAL_SHELF_SIZE.w / 2, y: target.y - MANUAL_SHELF_SIZE.h / 2 });
       spendTime('handle-item');
       feedback = t().manualClosed;

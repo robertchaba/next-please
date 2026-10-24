@@ -7,7 +7,7 @@
 - The doctor calls the next patient with a bell on the left side of the desk.
 - The working day runs from 08:00 to 14:00. The player arrives shortly before 08:00.
 - A single click picks up an item, which follows the cursor; the next click puts it down or attempts to use it. Stamps can only be put away in their dedicated places.
-- A document keeps its size while carried; placing it on the right desktop enlarges it for reading.
+- Documents and books shrink when picked up from either desktop, then keep their compact size while carried; placing them on the right desktop enlarges them for reading. Stamps are the exception and grow slightly when picked up.
 - The player may stamp documents before conducting examinations and can make mistakes in handling a patient's case.
 - A visit ends when the doctor hands the stamped certificate to the patient. Leaving it in the tray does not end the visit.
 - Actions take a small amount of time; thinking and moving the pointer do not advance the clock.

@@ -46,7 +46,7 @@ test('MENU and Escape open the staff room, pausing and preserving the visit and 
   }));
 
   await page.getByRole('button', { name: 'MENU', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'POKÓJ SOCJALNY' })).toBeAttached();
+  await expect(page.getByRole('heading', { name: 'Next, Please!', exact: true })).toBeAttached();
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'break-room');
   await expect(page.getByRole('button', { name: 'WRÓĆ DO DYŻURU' })).toBeFocused();
   await page.clock.runFor(5000);

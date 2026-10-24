@@ -6,17 +6,19 @@ import { CABINET_HOTSPOTS, ITEM_RESTS, ITEM_SIZES, LEFT_WIDTH, PATIENT_HANDOFF, 
 
 const images = new Map<string, HTMLImageElement>();
 const patientShadows = new Map<string, HTMLCanvasElement>();
+let creatorPhotograph: { image: HTMLCanvasElement; shadow: HTMLCanvasElement } | undefined;
 const introNames = ['scalpel', 'catheter', 'pen', 'stamp'] as const;
 const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate', 'clock',
   'patient-0', 'patient-1', 'patient-2', 'paper'] as const;
 export const PATIENT_MOTION_FRAMES = 12;
 
 export async function loadClinicArt(): Promise<void> {
-  const files = ['cabinet-corridor', 'archives-clinic', 'break-room', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
+  const files = ['cabinet-corridor', 'archives-clinic', 'break-room', 'creator-robert', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
   await Promise.all(files.map(name => new Promise<void>((resolve, reject) => {
     const image = new Image();
     images.set(name, image);
     image.onload = () => {
+      if (name === 'creator-robert') creatorPhotograph = prepareCreatorPhotograph(image);
       if (name.startsWith('sprites/patient-')) {
         const shadow = document.createElement('canvas');
         shadow.width = image.naturalWidth; shadow.height = image.naturalHeight;
@@ -53,6 +55,63 @@ function line(ctx: CanvasRenderingContext2D, x: number, y: number, endX: number,
     if (twice >= dy) { error += dy; x += sx; }
     if (twice <= dx) { error += dx; y += sy; }
   }
+}
+
+/** Prepare the slight tilt once on load; inverse sampling keeps every edge pixel crisp. */
+function prepareCreatorPhotograph(portrait: HTMLImageElement): NonNullable<typeof creatorPhotograph> {
+  const mount = document.createElement('canvas');
+  mount.width = 110; mount.height = 140;
+  const mountContext = mount.getContext('2d')!;
+  mountContext.imageSmoothingEnabled = false;
+  rect(mountContext, 0, 0, 110, 140, '#eee9d2');
+  rect(mountContext, 0, 0, 110, 1, '#f8f3df');
+  mountContext.drawImage(portrait, 5, 5, 100, 124);
+  rect(mountContext, 5, 134, 100, 1, '#d5d1b9');
+
+  const image = document.createElement('canvas');
+  image.width = 120; image.height = 148;
+  const context = image.getContext('2d')!;
+  const source = mountContext.getImageData(0, 0, mount.width, mount.height);
+  const tilted = context.createImageData(image.width, image.height);
+  const angle = 4 * Math.PI / 180;
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  for (let y = 0; y < image.height; y++) for (let x = 0; x < image.width; x++) {
+    const dx = x + 0.5 - image.width / 2, dy = y + 0.5 - image.height / 2;
+    const sx = Math.floor(dx * cos + dy * sin + mount.width / 2);
+    const sy = Math.floor(-dx * sin + dy * cos + mount.height / 2);
+    if (sx < 0 || sx >= mount.width || sy < 0 || sy >= mount.height) continue;
+    const from = (sy * mount.width + sx) * 4;
+    tilted.data.set(source.data.subarray(from, from + 4), (y * image.width + x) * 4);
+  }
+  context.putImageData(tilted, 0, 0);
+  const shadow = document.createElement('canvas');
+  shadow.width = image.width; shadow.height = image.height;
+  const shadowContext = shadow.getContext('2d')!;
+  shadowContext.drawImage(image, 0, 0);
+  shadowContext.globalCompositeOperation = 'source-in';
+  rect(shadowContext, 0, 0, shadow.width, shadow.height, '#62634e');
+  return { image, shadow };
+}
+
+/** The clip crosses the sheet's top edge; its rear leg disappears behind the photo. */
+export function drawCreatorPortrait(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  if (!creatorPhotograph) return;
+  const clipX = x + 34, clipY = y - 8;
+  const wire = (points: readonly (readonly [number, number])[], color: string, offset = 0, size = 1): void => {
+    for (let i = 1; i < points.length; i++) {
+      const [a, b] = points[i - 1], [c, d] = points[i];
+      line(ctx, clipX + a + offset, clipY + b + offset, clipX + c + offset, clipY + d + offset, color, size);
+    }
+  };
+  const rear = [[0, 23], [0, 4], [1, 2], [3, 0], [8, 0], [10, 2], [11, 4]] as const;
+  const front = [[11, 4], [11, 27], [10, 29], [8, 31], [5, 31], [3, 29],
+    [3, 9], [4, 7], [6, 6], [8, 8], [8, 24]] as const;
+  wire(rear, '#42483e', 1);
+  wire(rear, '#a1a79c');
+  ctx.drawImage(creatorPhotograph.shadow, x + 3, y + 4);
+  ctx.drawImage(creatorPhotograph.image, x, y);
+  wire(front, '#42483e', 1, 2);
+  wire(front, '#c2c6b9');
 }
 
 export type CabinetArtOptions = {

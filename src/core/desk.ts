@@ -15,7 +15,7 @@ export interface DeskState {
   positions: Record<DeskItemId, Point>;
   /** Back-to-front drawing and hit-test order. */
   order: DeskItemId[];
-  /** Paper keeps its pickup footprint until it is placed on a desktop. */
+  /** Compact paper footprint remains stable until it is placed on a desktop. */
   documentCarrySize?: Pick<Rect, 'w' | 'h'>;
 }
 
@@ -42,6 +42,14 @@ export const ITEM_SIZES: Record<DeskItemId, Pick<Rect, 'w' | 'h'>> = {
 const SMALL_DOCUMENT = { w: 60, h: 80 };
 export const MANUAL_SHELF_SIZE = { w: 88, h: 48 } as const;
 const RESTING_STAMP = { w: 36, h: 36 };
+/** Papers and books shrink in hand; stamps retain their larger printing size. */
+export const CARRIED_ITEM_SIZES: Record<DeskItemId, Pick<Rect, 'w' | 'h'>> = {
+  document: { w: 48, h: 64 },
+  'stamp-fit': ITEM_SIZES['stamp-fit'],
+  'stamp-unfit': ITEM_SIZES['stamp-unfit'],
+  manual: { w: 64, h: 36 },
+};
+const CARRIED_TRAY_DOCUMENT = { w: 28, h: 88 };
 
 /** Stamps return to compact fixed holders at the far edge of the desk. */
 export const ITEM_RESTS: Partial<Record<DeskItemId, Rect>> = {
@@ -80,7 +88,7 @@ export function createDeskState(): DeskState {
 }
 
 function itemSize(id: DeskItemId, x: number, held: boolean, manualOpen: boolean, documentCarrySize?: Pick<Rect, 'w' | 'h'>): Pick<Rect, 'w' | 'h'> {
-  if (held) return id === 'document' && documentCarrySize ? documentCarrySize : ITEM_SIZES[id];
+  if (held) return id === 'document' && documentCarrySize ? documentCarrySize : CARRIED_ITEM_SIZES[id];
   if (id === 'stamp-fit' || id === 'stamp-unfit') return RESTING_STAMP;
   if (id === 'manual' && manualOpen) return MANUAL_OPEN_SIZE;
   if (x < RIGHT_DESK_X) return id === 'document' ? SMALL_DOCUMENT : MANUAL_SHELF_SIZE;
@@ -93,11 +101,16 @@ export function itemRect(state: DeskState, id: DeskItemId, documentInTray = fals
   return { ...point, ...itemSize(id, point.x, held, manualOpen, state.documentCarrySize) };
 }
 
-/** Capture paper size before moving it, so crossing the divider never resizes it. */
-export function pickUpDeskItem(state: DeskState, id: DeskItemId, documentInTray = false): DeskState {
-  const origin = itemRect(state, id, documentInTray);
-  const pickedUp = id === 'document' ? { ...state, documentCarrySize: { w: origin.w, h: origin.h } } : state;
-  return raiseDeskItem(moveDeskItem(pickedUp, id, origin, true), id);
+/** Shrink around the item's center; crossing the divider never resizes it again. */
+export function pickUpDeskItem(state: DeskState, id: DeskItemId, documentInTray = false, manualOpen = false): DeskState {
+  const origin = itemRect(state, id, documentInTray, false, manualOpen);
+  const size = id === 'document' && documentInTray ? CARRIED_TRAY_DOCUMENT : CARRIED_ITEM_SIZES[id];
+  const pickedUp = id === 'document' ? { ...state, documentCarrySize: { ...size } } : state;
+  const point = id === 'document' || id === 'manual'
+    ? { x: origin.x + Math.floor(origin.w / 2) - Math.floor(size.w / 2),
+      y: origin.y + Math.floor(origin.h / 2) - Math.floor(size.h / 2) }
+    : origin;
+  return raiseDeskItem(moveDeskItem(pickedUp, id, point, true), id);
 }
 
 /** Placed items stay on either desktop. Carried items can reach the patient. */
