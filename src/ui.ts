@@ -5,5 +5,6 @@ export type Button = {
   action?: () => void; href?: string;
   kind?: 'primary' | 'text' | 'lang' | 'sound' | 'volume' | 'previous' | 'next' | 'fullscreen' | 'hotspot' | 'fit' | 'unfit';
   pressed?: boolean;
+  disabled?: boolean;
   item?: DeskItemId;
 };

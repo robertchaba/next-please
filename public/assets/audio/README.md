@@ -1,6 +1,6 @@
 # Music and sound effects
 
-Fourteen supplied MP3s are bundled in [music/](music/README.md) and registered in `src/core/music.ts`. Five original effects are registered in `src/core/effects.ts`. The Howler manager in `src/core/audio.ts` provides lazy loading, separate music/effect volumes, mute, playlists, previous/next controls, and user-gesture unlocking.
+Fourteen supplied MP3s are bundled in [music/](music/README.md) and registered in `src/core/music.ts`. Six original effects are registered in `src/core/effects.ts`. The Howler manager in `src/core/audio.ts` provides lazy loading, separate music/effect volumes, mute, playlists, previous/next controls, and user-gesture unlocking.
 
 ## Original effects
 
@@ -11,10 +11,13 @@ Fourteen supplied MP3s are bundled in [music/](music/README.md) and registered i
 | `stamp` / `stamp.wav` | Mechanical stamp: rubber-on-paper press, wooden desk knock and separate return clack | 260 ms |
 | `paper` / `paper.wav` | Handling a document or manual | 250 ms |
 | `bell` / `bell.wav` | Small brass desk bell calling the next patient | 680 ms |
+| `telephone` / `telephone.wav` | Receiver switch click followed by a steady exchange tone | 2000 ms |
 
 Created specifically for Next, Please! on 2026-10-23 with the original deterministic synthesis code in [`scripts/generate-effects.mjs`](../../../scripts/generate-effects.mjs); the mechanical stamp was revised and the desk bell added on 2026-10-24. No samples, external recordings, downloaded assets, voices, or third-party material are used. The sounds combine seeded filtered noise with damped mechanical resonances; each is mono 44.1 kHz, 16-bit PCM WAV with clean endpoints and no added silence. The revised stamp is a full press/release stroke: a softened rubber-on-paper impact with a low wooden desk knock, a faint mechanism slide, and a separate quieter return clack at 142 ms. Gently saturated, independently damped resonances give the impact a dry body without a pitched spring tail or a sharp noise burst. Its 79% peak remains stronger than the paper and typewriter effects (27–38%), with further headroom from Howler's independent 70% effect volume. The bell has a brief plunger tick and independently decaying inharmonic brass-dome resonances, peaking at 48%; its short ring has no echo or loop. Reproduce all committed files with `node scripts/generate-effects.mjs`, or just these two with `node scripts/generate-effects.mjs stamp bell`; no dependencies or network access are needed.
 
 Provenance: project-original computer-synthesized audio, prepared with Codex for Robert Chaba. Source: the linked repository script. Redistribution terms: the same terms as this project's original source and assets; no separate third-party license, license URL, or attribution requirement applies. The repository does not currently declare an open-source license; these notes do not grant a separate public license.
+
+The telephone effect was added on 2026-10-24 for version 0.5. It combines an original synthesized receiver click, a sustained 425 Hz tone, a faint harmonic and seeded low-level line noise. Its 29% peak and short fade protect the subdued mix; it ends after two seconds and does not loop. It is atmosphere for a telephone that cannot place calls yet. Generate just this asset with `node scripts/generate-effects.mjs telephone`; the provenance and redistribution terms above apply.
 
 Register `effectsManifest` once with `audio.register(effectsManifest)`, then call `audio.playSound('typewriter')` (or another ID) after a user gesture has unlocked audio. For frequent text reveals, skip whitespace and limit keys to around one every 60 ms; finishing or skipping a card should not queue a burst of all remaining keys. Check `audio.isMuted()` before requesting an effect to avoid loading inaudible effects. No drawing function should request playback.
 

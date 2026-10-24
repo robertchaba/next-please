@@ -5,6 +5,16 @@ import { createInitialState, decodeSave, encodeSave, type GameState } from '../.
 async function activate(page: Page, id: string): Promise<void> {
   await page.locator(`#control-${id}`).focus();
   await page.keyboard.press('Enter');
+  // These regression suites exercise later visit behavior. Put each newly
+  // supplied form on the right desk before continuing through the controls.
+  if (id === 'take-document' || id === 'take-certificate') {
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'true');
+    const fromRack = id === 'take-certificate';
+    for (let step = 0; step < (fromRack ? 16 : 20); step++) await page.keyboard.press(fromRack ? 'Shift+ArrowLeft' : 'Shift+ArrowRight');
+    for (let step = 0; step < (fromRack ? 4 : 3); step++) await page.keyboard.press(fromRack ? 'Shift+ArrowDown' : 'Shift+ArrowUp');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+  }
 }
 
 async function enterCabinet(page: Page): Promise<void> {
@@ -33,6 +43,7 @@ test('MENU and Escape open the staff room, pausing and preserving the visit and 
   await activate(page, 'call-patient');
   await page.clock.runFor(180);
   await activate(page, 'take-document');
+  await activate(page, 'take-certificate');
   await page.locator('#control-apply-stamp').focus();
   await page.keyboard.press('Space');
   for (let step = 0; step < 6; step++) await page.keyboard.press('ArrowRight');

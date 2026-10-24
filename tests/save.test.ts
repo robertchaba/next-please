@@ -14,11 +14,21 @@ import {
 function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
   return gzipSync(strToU8(JSON.stringify({
     game: 'next-please',
-    version: 4,
+    version: 6,
     savedAt: '2026-10-23T12:00:00.000Z',
     state: createInitialState(),
     ...overrides,
   })));
+}
+
+function legacyState(state: object): Record<string, unknown> {
+  const legacy = { ...state } as Record<string, unknown>;
+  delete legacy.papers; delete legacy.nextPaperId;
+  if (legacy.visit && typeof legacy.visit === 'object') {
+    const visit = { ...legacy.visit } as Record<string, unknown>;
+    delete visit.measurementsTaken; delete visit.certificateTaken; legacy.visit = visit;
+  }
+  return legacy;
 }
 
 function expectCode(action: () => unknown, code: SaveError['code']): void {
@@ -34,7 +44,7 @@ describe('portable saves', () => {
   });
 
   it('rejects unsupported versions without interpreting their state', () => {
-    expectCode(() => decodeSave(envelope({ version: 5, state: {} })), 'unsupported-version');
+    expectCode(() => decodeSave(envelope({ version: 7, state: {} })), 'unsupported-version');
   });
 
   it('rejects a save for another game', () => {
@@ -120,7 +130,7 @@ describe('portable saves', () => {
   it('accepts gzip metadata produced by standard encoders', () => {
     const bytes = gzipSync(strToU8(JSON.stringify({
       game: 'next-please',
-      version: 4,
+      version: 6,
       savedAt: '2026-10-23T12:00:00.000Z',
       state: createInitialState(),
     })), { filename: 'save.json' });
@@ -142,27 +152,27 @@ describe('portable saves', () => {
 
   it.each([0, 1, 2, 3])('keeps v2 introduction card %i at the same place', (introStep) => {
     const state = { ...createInitialState(), introStep };
-    expect(decodeSave(envelope({ version: 2, state }))).toEqual(state);
+    expect(decodeSave(envelope({ version: 2, state: legacyState(state) }))).toEqual(state);
   });
 
   it.each([4, 5])('migrates removed v2 card %i directly into the empty cabinet', (introStep) => {
     const legacy = { ...createInitialState(), introStep, day: 7, money: -20, patientsProcessed: 16, lampOn: false, decoration: 'certificate' };
-    expect(decodeSave(envelope({ version: 2, state: legacy }))).toEqual({
+    expect(decodeSave(envelope({ version: 2, state: legacyState(legacy) }))).toEqual({
       ...legacy, phase: 'cabinet', introStep: 3,
     });
   });
 
   it('migrates a stamped v2 visit without changing its work, clock, or decoration', () => {
     let state = createInitialState();
-    for (const action of ['skip-intro', 'toggle-lamp', 'change-decoration', 'call-patient', 'take-document', 'run-pressure', 'run-vision', 'stamp-fit'] as const) {
+    for (const action of ['skip-intro', 'toggle-lamp', 'change-decoration', 'call-patient', 'take-document', 'take-certificate', 'run-pressure', 'run-vision', 'stamp-fit'] as const) {
       state = applyAction(state, action).state;
     }
     const legacy = { ...state, clockMinutes: 570 };
-    const decoded = decodeSave(envelope({ version: 2, state: { ...legacy, introStep: 5 } }));
+    const decoded = decodeSave(envelope({ version: 2, state: legacyState({ ...legacy, introStep: 5 }) }));
     expect(decoded).toEqual(legacy);
     expect(decoded.visit).not.toBe(state.visit);
-    expect(applyAction(decoded, 'return-document').state).toMatchObject({
-      patientsProcessed: 1, shiftCompleted: 1, money: 10, clockMinutes: 571,
+    expect(applyAction(applyAction(decoded, 'run-measurements').state, 'return-document').state).toMatchObject({
+      patientsProcessed: 1, shiftCompleted: 1, money: 10, clockMinutes: 573,
     });
   });
 
@@ -174,26 +184,26 @@ describe('portable saves', () => {
     { introStep: 4, shiftCompleted: 1, patientsProcessed: 1 },
     { unexpected: true },
   ])('keeps the original v2 validation before migration: %j', (patch) => {
-    expectCode(() => decodeSave(envelope({ version: 2, state: { ...createInitialState(), ...patch } })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), ...patch }) })), 'invalid-state');
   });
 
-  it('exports version 4 after migrating an older save', () => {
-    const migrated = decodeSave(envelope({ version: 2, state: { ...createInitialState(), introStep: 5 } }));
+  it('exports version 6 after migrating an older save', () => {
+    const migrated = decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), introStep: 5 }) }));
     const bytes = encodeSave(migrated);
     const exported = JSON.parse(new TextDecoder().decode(gunzipSync(bytes)));
-    expect(exported).toMatchObject({ version: 4, state: { phase: 'cabinet', introStep: 3 } });
+    expect(exported).toMatchObject({ version: 6, state: { phase: 'cabinet', introStep: 3 } });
     expect(decodeSave(bytes)).toEqual(migrated);
   });
 
   it('round-trips a mid-visit state and preserves the decision awaiting return', () => {
     let state = createInitialState();
-    for (const action of ['skip-intro', 'toggle-lamp', 'change-decoration', 'call-patient', 'take-document', 'run-pressure', 'run-vision', 'stamp-unfit'] as const) {
+    for (const action of ['skip-intro', 'toggle-lamp', 'change-decoration', 'call-patient', 'take-document', 'take-certificate', 'run-pressure', 'run-vision', 'stamp-unfit'] as const) {
       state = applyAction(state, action).state;
     }
     const decoded = decodeSave(encodeSave(state));
     expect(decoded).toEqual(state);
     expect(decoded.visit).not.toBe(state.visit);
-    expect(decoded.clockMinutes).toBe(489);
+    expect(decoded.clockMinutes).toBe(490);
     expect(applyAction(decoded, 'return-document').feedback).toBe('patient-error');
   });
 
@@ -201,7 +211,7 @@ describe('portable saves', () => {
     [], ['run-vision'], ['run-pressure'],
   ] as const)('round-trips an early stamp with incomplete examinations %j', (...tests) => {
     let state = createInitialState();
-    for (const action of ['skip-intro', 'call-patient', 'take-document', ...tests, 'stamp-fit'] as const) {
+    for (const action of ['skip-intro', 'call-patient', 'take-document', 'take-certificate', ...tests, 'stamp-fit'] as const) {
       state = applyAction(state, action).state;
     }
     const decoded = decodeSave(encodeSave(state));
@@ -209,11 +219,11 @@ describe('portable saves', () => {
     expect(decoded.visit).toMatchObject({ decision: 'fit' });
     expect(decoded.visit).not.toBe(state.visit);
     expect(applyAction(decoded, 'return-document').feedback).toBe('patient-error');
-    const examined = applyAction(applyAction(decoded, 'run-vision').state, 'run-pressure').state;
+    const examined = applyAction(applyAction(applyAction(decoded, 'run-vision').state, 'run-pressure').state, 'run-measurements').state;
     expect(decodeSave(encodeSave(examined))).toEqual(examined);
     expect(applyAction(examined, 'return-document').feedback).toBe('patient-cleared');
     expectCode(() => decodeSave(envelope({ state: { ...state, clockMinutes: state.clockMinutes - 10 } })), 'invalid-state');
-    expectCode(() => decodeSave(envelope({ version: 2, state: { ...state, introStep: 5 } })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ version: 2, state: legacyState({ ...state, introStep: 5 }) })), 'invalid-state');
   });
 
   it.each([
@@ -254,7 +264,7 @@ describe('portable saves', () => {
     }
     let state = applyAction(initial, 'skip-intro').state;
     for (let appointment = 0; appointment < 3; appointment += 1) {
-      for (const action of ['handle-item', 'read-manual', 'call-patient', 'take-document', 'run-vision', 'run-pressure', 'stamp-fit', 'return-document'] as const) {
+      for (const action of ['handle-item', 'read-manual', 'call-patient', 'take-document', 'take-certificate', 'run-vision', 'run-pressure', 'stamp-fit', 'return-document'] as const) {
         state = applyAction(state, action).state;
         expect(decodeSave(encodeSave(state))).toEqual(state);
         // Additional time can come from earlier item handling or examinations.
@@ -262,26 +272,26 @@ describe('portable saves', () => {
         expectCode(() => decodeSave(envelope({ state: { ...state, clockMinutes: 841 } })), 'invalid-state');
       }
     }
-    expect(state.clockMinutes).toBe(516);
+    expect(state.clockMinutes).toBe(519);
     const nextDay = applyAction(state, 'next-day').state;
     expect(decodeSave(encodeSave(nextDay)).clockMinutes).toBe(477);
     expectCode(() => decodeSave(envelope({ state: { ...state, clockMinutes: 482 } })), 'invalid-state');
   });
 
-  it('preserves v3 clocks after strict legacy validation and exports subsequent short actions as v4', () => {
+  it('preserves v3 clocks after strict legacy validation and exports subsequent short actions as v6', () => {
     const legacy = {
       ...createInitialState(), phase: 'cabinet', introStep: 3, clockMinutes: 500,
       visit: { patientId: 0, document: 'desk', visionTested: false, pressureTested: false, decision: 'fit' },
     };
-    const migrated = decodeSave(envelope({ version: 3, state: legacy }));
-    expect(migrated).toEqual(legacy);
+    const migrated = decodeSave(envelope({ version: 3, state: legacyState(legacy) }));
+    expect(migrated).toEqual({ ...legacy, visit: { ...legacy.visit, measurementsTaken: false, certificateTaken: true }, papers: [{ id: 1, kind: 'referral', patientId: 0, day: 1, location: 'desk', clipped: false }], nextPaperId: 2 });
     const updated = applyAction(migrated, 'run-vision').state;
     expect(updated.clockMinutes).toBe(503);
     expect(decodeSave(encodeSave(updated))).toEqual(updated);
     for (const clockMinutes of [499, 501, 477]) {
-      expectCode(() => decodeSave(envelope({ version: 3, state: { ...legacy, clockMinutes } })), 'invalid-state');
+      expectCode(() => decodeSave(envelope({ version: 3, state: legacyState({ ...legacy, clockMinutes }) })), 'invalid-state');
     }
-    expectCode(() => decodeSave(envelope({ version: 3, state: { ...legacy, introStep: 4 } })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ version: 3, state: legacyState({ ...legacy, introStep: 4 }) })), 'invalid-state');
   });
 
   it('leaves live progress untouched when an import fails validation', async () => {
@@ -309,5 +319,123 @@ describe('portable saves', () => {
     } as File;
     await expect(importSave(file)).rejects.toMatchObject({ code: 'file-too-large' });
     expect(read).toBe(false);
+  });
+});
+
+describe('version 6 paperwork saves', () => {
+  const run = (state: GameState, ...actions: Parameters<typeof applyAction>[1][]): GameState => actions.reduce((current, action) => applyAction(current, action).state, state);
+  const paperwork = (): GameState => run(createInitialState(), 'skip-intro', 'call-patient', 'take-document', 'take-certificate', 'run-vision', 'run-pressure', 'run-measurements', 'take-paper', { type: 'write-note', paperId: 2 }, { type: 'clip-paper', paperId: 2 }, { type: 'store-paper', paperId: 2 }, 'stamp-unfit', 'return-document', { type: 'open-letter', paperId: 3 });
+
+  it('round-trips drawer contents, complete notes, clips and opened complaint letters without sharing references', () => {
+    const state = paperwork();
+    const decoded = decodeSave(encodeSave(state));
+    expect(decoded).toEqual(state);
+    expect(decoded.papers).not.toBe(state.papers);
+    expect(decoded.papers[1]).not.toBe(state.papers[1]);
+    const decodedNote = decoded.papers[1]; const originalNote = state.papers[1];
+    if (decodedNote?.kind !== 'note' || originalNote?.kind !== 'note') throw new Error('Missing note fixture');
+    expect(decodedNote.results).not.toBe(originalNote.results);
+    decodedNote.results.vision = null;
+    expect(originalNote.results.vision).toBe('pass');
+    expect(state.papers[2]).toMatchObject({ kind: 'letter', sender: 'employer', opened: true });
+  });
+
+  it('migrates v4 intake into a referral with measurements still pending and preserves its clock', () => {
+    const current = run(createInitialState(), 'skip-intro', 'call-patient', 'take-document', 'take-certificate', 'run-vision', 'stamp-fit');
+    const old = legacyState(current);
+    const migrated = decodeSave(envelope({ version: 4, state: old }));
+    expect(migrated).toEqual(current);
+    expect(migrated.visit?.measurementsTaken).toBe(false);
+    expect(migrated.papers[0]).toMatchObject({ kind: 'referral', patientId: 0 });
+    expect(migrated.nextPaperId).toBe(2);
+    expectCode(() => decodeSave(envelope({ version: 4, state: current })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ version: 4, state: { ...old, clockMinutes: 480 } })), 'invalid-state');
+  });
+
+  it('migrates an empty v4 cabinet without inventing paperwork or spent minutes', () => {
+    const current = run(createInitialState(), 'skip-intro');
+    expect(decodeSave(envelope({ version: 4, state: legacyState(current) }))).toEqual(current);
+  });
+
+  it('rejects malformed, forged, duplicate or future paperwork', () => {
+    const state = paperwork();
+    const note = state.papers[1]!;
+    const letter = state.papers[2]!;
+    const malformed: unknown[] = [
+      null, {}, { ...note, id: 0 }, { ...note, id: state.nextPaperId }, { ...note, day: 2 },
+      { ...note, patientId: 3 }, { ...note, location: 'bin' }, { ...note, clipped: 'yes' },
+      { ...note, unexpected: true }, { ...note, results: { vision: 'refer', pressure: 'pass', weight: 62, height: 164 } },
+      { ...note, results: { vision: 'pass', pressure: 'pass', weight: 62, height: null } },
+      { ...note, patientId: null }, { ...note, results: { vision: null, pressure: null, weight: null, height: null } },
+      { ...letter, opened: 1 }, { ...letter, sender: 'zus' }, { ...letter, kind: 'memo' },
+      { ...letter, patientId: 1, sender: 'zus' },
+    ];
+    for (const paper of malformed) expectCode(() => decodeSave(envelope({ state: { ...state, papers: [paper] } })), 'invalid-state');
+    for (const papers of [[note, note], [letter, { ...letter, id: 4 }], Array.from({ length: 4097 }, () => note)]) {
+      expectCode(() => decodeSave(envelope({ state: { ...state, nextPaperId: 5, papers } })), 'invalid-state');
+    }
+    expectCode(() => decodeSave(envelope({ state: { ...state, nextPaperId: 3 } })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ state: { ...state, nextPaperId: 1.5 } })), 'invalid-state');
+  });
+
+  it('rejects measurement flags without intake, necessary time, or corresponding note results', () => {
+    const active = run(createInitialState(), 'skip-intro', 'call-patient');
+    expectCode(() => decodeSave(envelope({ state: { ...active, visit: { ...active.visit, measurementsTaken: true } } })), 'invalid-state');
+    const measured = run(active, 'take-document', 'run-measurements', 'take-paper', { type: 'write-note', paperId: 2 });
+    expectCode(() => decodeSave(envelope({ state: { ...measured, clockMinutes: 481 } })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ state: { ...measured, visit: { ...measured.visit, measurementsTaken: false } } })), 'invalid-state');
+    expectCode(() => encodeSave({ ...measured, papers: measured.papers.map(paper => paper.kind === 'note' ? { ...paper, results: { ...paper.results, weight: undefined as unknown as number } } : paper) }), 'invalid-state');
+  });
+});
+
+describe('version 6 certificate availability', () => {
+  const act = (state: GameState, ...actions: Parameters<typeof applyAction>[1][]): GameState => actions.reduce((current, action) => applyAction(current, action).state, state);
+  const asV5 = (state: GameState): Record<string, unknown> => {
+    if (!state.visit) return { ...state };
+    const { certificateTaken: _taken, ...visit } = state.visit;
+    return { ...state, visit };
+  };
+
+  it('round-trips a taken referral with no certificate and a separately fetched blank certificate', () => {
+    const intake = act(createInitialState(), 'skip-intro', 'call-patient', 'take-document', 'run-vision');
+    expect(decodeSave(encodeSave(intake))).toEqual(intake);
+    expect(decodeSave(encodeSave(intake)).visit?.certificateTaken).toBe(false);
+    const certificate = act(intake, 'take-certificate');
+    expect(decodeSave(encodeSave(certificate))).toEqual(certificate);
+    expect(decodeSave(encodeSave(certificate)).visit?.certificateTaken).toBe(true);
+  });
+
+  it('migrates v5 desk visits with their available certificate and stamp without adding time', () => {
+    const stamped = act(createInitialState(), 'skip-intro', 'call-patient', 'take-document', 'take-certificate', 'stamp-fit');
+    const old = { ...asV5(stamped), clockMinutes: 482 };
+    const migrated = decodeSave(envelope({ version: 5, state: old }));
+    expect(migrated).toEqual({ ...stamped, clockMinutes: 482 });
+    expect(migrated.visit).toMatchObject({ certificateTaken: true, decision: 'fit' });
+    expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(6);
+    const intake = act(createInitialState(), 'skip-intro', 'call-patient', 'take-document');
+    expect(decodeSave(envelope({ version: 5, state: asV5(intake) }))).toEqual({ ...intake, visit: { ...intake.visit, certificateTaken: true } });
+    const waiting = act(createInitialState(), 'skip-intro', 'call-patient');
+    expect(decodeSave(envelope({ version: 5, state: asV5(waiting) }))).toEqual(waiting);
+  });
+
+  it('keeps the original exact v5 keys and clock rules during migration', () => {
+    const intake = act(createInitialState(), 'skip-intro', 'call-patient', 'take-document');
+    const old = asV5(intake);
+    expectCode(() => decodeSave(envelope({ version: 5, state: intake })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ version: 5, state: { ...old, clockMinutes: 480 } })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ version: 5, state: { ...old, visit: { ...old.visit as object, measurementsTaken: 'yes' } } })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ version: 5, state: { ...old, unexpected: true } })), 'invalid-state');
+  });
+
+  it('rejects missing, mistyped or impossible certificate flags without allowing stamps on absent forms', () => {
+    const waiting = act(createInitialState(), 'skip-intro', 'call-patient');
+    const intake = act(waiting, 'take-document');
+    for (const certificateTaken of [undefined, null, 1, 'true']) {
+      expectCode(() => decodeSave(envelope({ state: { ...intake, visit: { ...intake.visit, certificateTaken } } })), 'invalid-state');
+    }
+    expectCode(() => decodeSave(envelope({ state: { ...waiting, visit: { ...waiting.visit, certificateTaken: true } } })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ state: { ...intake, clockMinutes: 482, visit: { ...intake.visit, decision: 'fit' } } })), 'invalid-state');
+    expectCode(() => encodeSave({ ...intake, clockMinutes: 482, visit: { ...intake.visit!, decision: 'fit' } }), 'invalid-state');
   });
 });

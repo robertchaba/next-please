@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
-  containsPoint, createDeskState, DEFAULT_DOCUMENT, DESK_BOUNDS, CARRY_BOUNDS, ITEM_SIZES, CARRIED_ITEM_SIZES, restRect, itemAnchor,
+  addDeskItem, containsPoint, createDeskState, DEFAULT_DOCUMENT, DESK_BOUNDS, CARRY_BOUNDS, ITEM_SIZES, CARRIED_ITEM_SIZES, restRect, itemAnchor,
   itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, TRAY_DOCUMENT, MANUAL_OPEN_POSITION, MANUAL_OPEN_SIZE, RIGHT_DESK_X, type DeskItemId,
 } from '../src/core/desk';
 
 describe('temporary desktop layout', () => {
-  it.each(Object.keys(ITEM_SIZES) as DeskItemId[])('keeps all of %s on the desk at integer coordinates', (id) => {
+  it.each((Object.keys(ITEM_SIZES) as DeskItemId[]).filter(id => id !== 'incoming-referral'))('keeps all of %s on the desk at integer coordinates', (id) => {
     const state = createDeskState();
     for (const point of [
       { x: -10000.6, y: -10000.6 },
@@ -58,11 +58,16 @@ describe('temporary desktop layout', () => {
     expect(second.positions.document).toEqual(DEFAULT_DOCUMENT);
   });
 
-  it('uses the smaller tray paper only for the document before pickup', () => {
-    const state = moveDeskItem(createDeskState(), 'document', { x: 250, y: 150 });
-    expect(itemRect(state, 'document', true)).toEqual(TRAY_DOCUMENT);
+  it('keeps the incoming referral separate from the certificate supplied by the rack', () => {
+    const initial = createDeskState();
+    expect(itemRect(initial, 'incoming-referral')).toEqual(TRAY_DOCUMENT);
+    expect(itemRect(initial, 'document')).toEqual({ ...DEFAULT_DOCUMENT, ...ITEM_SIZES.document });
+    expect(DEFAULT_DOCUMENT.x).toBeGreaterThanOrEqual(RIGHT_DESK_X);
+    const state = moveDeskItem(initial, 'document', { x: 250, y: 150 });
+    expect(itemRect(state, 'incoming-referral')).toEqual(TRAY_DOCUMENT);
     expect(itemRect(state, 'document')).toEqual({ x: 250, y: 150, ...ITEM_SIZES.document });
-    expect(itemRect(state, 'stamp-fit', true)).toEqual(itemRect(state, 'stamp-fit'));
+    // Legacy tray flags must never turn the distinct certificate into a referral.
+    expect(itemRect(state, 'document', true)).toEqual(itemRect(state, 'document'));
   });
 
   it('keeps tool holders fixed and separate from freely placed belongings', () => {
@@ -76,7 +81,7 @@ describe('temporary desktop layout', () => {
       holder.x = 999;
       expect(restRect(id)!.x).not.toBe(999);
     }
-    for (const id of ['manual', 'document'] as const) expect(restRect(id)).toBeUndefined();
+    for (const id of ['manual', 'document', 'incoming-referral'] as const) expect(restRect(id)).toBeUndefined();
     expect(itemAnchor('stamp-fit')).toEqual({ x: 24, y: 42 });
   });
 
@@ -96,16 +101,41 @@ describe('temporary desktop layout', () => {
     expect(right.documentCarrySize).toBeUndefined();
   });
 
-  it('shrinks the incoming folded sheet and a large desk document before they cross the divider', () => {
+  it('shrinks the incoming referral around its center and keeps that size while carried', () => {
     const initial = createDeskState();
-    const carried = pickUpDeskItem(initial, 'document', true);
-    expect(itemRect(carried, 'document', false, true)).toEqual({ x: 20, y: 173, w: 28, h: 88 });
-    const across = moveDeskItem(carried, 'document', { x: Infinity, y: Infinity }, true);
-    expect(itemRect(across, 'document', false, true)).toEqual({ x: 542, y: 232, w: 28, h: 88 });
+    const before = itemRect(initial, 'incoming-referral');
+    expect(before).toEqual({ x: 17, y: 190, w: 35, h: 83 });
+    const carried = pickUpDeskItem(initial, 'incoming-referral');
+    const held = itemRect(carried, 'incoming-referral', false, true);
+    expect(held).toEqual({ x: 20, y: 198, w: 28, h: 66 });
+    expect(held.x + Math.floor(held.w / 2)).toBe(before.x + Math.floor(before.w / 2));
+    expect(held.y + Math.floor(held.h / 2)).toBe(before.y + Math.floor(before.h / 2));
+    for (const point of [{ x: 300, y: 180 }, { x: Infinity, y: Infinity }]) {
+      const moved = moveDeskItem(carried, 'incoming-referral', point, true);
+      const rect = itemRect(moved, 'incoming-referral', false, true);
+      expect({ w: rect.w, h: rect.h }).toEqual({ w: 28, h: 66 });
+      expect(rect.x + rect.w).toBeLessThanOrEqual(CARRY_BOUNDS.w);
+      expect(rect.y + rect.h).toBeLessThanOrEqual(CARRY_BOUNDS.h);
+      expect(itemRect(moved, 'document')).toEqual(itemRect(initial, 'document'));
+    }
+    expect(itemRect(initial, 'incoming-referral')).toEqual(before);
     expect(initial.documentCarrySize).toBeUndefined();
-    const right = moveDeskItem(across, 'document', DEFAULT_DOCUMENT);
-    const backLeft = moveDeskItem(pickUpDeskItem(right, 'document'), 'document', { x: 10, y: 30 }, true);
-    expect(itemRect(backLeft, 'document', false, true)).toEqual({ x: 10, y: 30, ...CARRIED_ITEM_SIZES.document });
+  });
+
+  it('retains an untouched pickup snapshot for canceling a referral, certificate or loose record', () => {
+    const initial = addDeskItem(createDeskState(), 'paper-1', { x: 270, y: 150 });
+    const snapshot = structuredClone(initial);
+    for (const id of ['incoming-referral', 'document', 'paper-1'] as const) {
+      const picked = pickUpDeskItem(initial, id);
+      const moved = moveDeskItem(picked, id, { x: 400, y: 20 }, true);
+      expect(moved.order.at(-1)).toBe(id);
+      expect(moved.positions[id]).not.toEqual(initial.positions[id]);
+      // Escape restores this exact snapshot; pickup and movement must not alter it.
+      expect(initial).toEqual(snapshot);
+      expect(itemRect(initial, 'incoming-referral')).toEqual(TRAY_DOCUMENT);
+      expect(itemRect(initial, 'document')).toEqual({ ...DEFAULT_DOCUMENT, ...ITEM_SIZES.document });
+      expect(itemRect(initial, 'paper-1')).toEqual({ x: 270, y: 150, ...ITEM_SIZES.document });
+    }
   });
 
   it.each(Object.keys(ITEM_SIZES) as DeskItemId[])('lets a carried %s reach the upper room while retaining its carried footprint', id => {

@@ -27,7 +27,7 @@ it('registers every bundled effect with a portable local URL and no looping', as
     expect(wav.readUInt32LE(40)).toBe(wav.length - 44);
     const duration = (wav.length - 44) / (44100 * 2);
     expect(duration).toBeGreaterThan(0.04);
-    expect(duration).toBeLessThan(file === 'bell.wav' ? 0.8 : 0.5);
+    expect(duration).toBeLessThan(file === 'telephone.wav' ? 2.1 : file === 'bell.wav' ? 0.8 : 0.5);
     expect(wav.readInt16LE(44)).toBe(0);
     expect(wav.readInt16LE(wav.length - 2)).toBe(0);
     let peak = 0;
@@ -38,5 +38,15 @@ it('registers every bundled effect with a portable local URL and no looping', as
       expect(peak).toBeLessThan(29000); // Retain headroom before Howler's effect gain.
     } else expect(peak).toBeLessThan(16000); // Quieter paper and overlapping typing.
     if (file === 'typewriter.wav') expect(duration).toBeLessThan(0.1);
+    if (file === 'telephone.wav') {
+      expect(duration).toBe(2);
+      // Dial tone remains audible well after the receiver's initial click.
+      for (const seconds of [0.25, 1, 1.75]) {
+        const start = 44 + Math.round(seconds * 44100) * 2;
+        let power = 0;
+        for (let index = start; index < start + 4410; index += 2) power += (wav.readInt16LE(index) / 32768) ** 2;
+        expect(Math.sqrt(power / 2205)).toBeGreaterThan(0.12);
+      }
+    }
   }
 });

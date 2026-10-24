@@ -4,6 +4,16 @@ import { PATIENT_HANDOFF, TRAY, type Point, type Rect } from '../../src/core/des
 async function activate(page: Page, id: string): Promise<void> {
   await page.locator(`#control-${id}`).focus();
   await page.keyboard.press('Enter');
+  // These regression suites exercise later visit behavior. Put each newly
+  // supplied form on the right desk before continuing through the controls.
+  if (id === 'take-document' || id === 'take-certificate') {
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'true');
+    const fromRack = id === 'take-certificate';
+    for (let step = 0; step < (fromRack ? 16 : 20); step++) await page.keyboard.press(fromRack ? 'Shift+ArrowLeft' : 'Shift+ArrowRight');
+    for (let step = 0; step < (fromRack ? 4 : 3); step++) await page.keyboard.press(fromRack ? 'Shift+ArrowDown' : 'Shift+ArrowUp');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+  }
 }
 
 async function enterCabinet(page: Page): Promise<void> {
@@ -54,6 +64,9 @@ test('carried stamps stay in hand, rest at the side, and only handing the certif
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
 
   await carryTo(page, 'take-document', { x: 352, y: 228 });
+  await expect(page.locator('#control-paper-1')).toBeVisible();
+  await expect(page.locator('#control-apply-stamp')).toHaveCount(0);
+  await activate(page, 'take-certificate');
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
   await expect(page.locator('#control-take-document')).toHaveCount(0);
   const paper = await logicalRect(page, 'apply-stamp');
@@ -95,6 +108,7 @@ test('an unstamped handoff preserves the visit and restores the document positio
   await enterCabinet(page);
   await activate(page, 'call-patient');
   await activate(page, 'take-document');
+  await activate(page, 'take-certificate');
   const before = await logicalRect(page, 'apply-stamp');
   expect(await logicalRect(page, 'return-document')).toEqual(PATIENT_HANDOFF);
   await carryTo(page, 'apply-stamp', center(PATIENT_HANDOFF));
@@ -110,13 +124,16 @@ test('documents shrink from the tray and both desktops, with aligned hit areas a
   await activate(page, 'call-patient');
   const tray = await logicalRect(page, 'take-document');
   await page.locator('#control-take-document').click();
-  expect(await logicalRect(page, 'take-document')).toMatchObject({ w: 28, h: 88 });
+  expect(await logicalRect(page, 'take-document')).toMatchObject({ w: 28, h: 66 });
   const firstTarget = await screenPoint(page, { x: 350, y: 220 });
   await page.mouse.move(firstTarget.x, firstTarget.y);
-  expect(await logicalRect(page, 'take-document')).toMatchObject({ w: 28, h: 88 });
+  expect(await logicalRect(page, 'take-document')).toMatchObject({ w: 28, h: 66 });
   await page.keyboard.press('Escape');
   expect(await logicalRect(page, 'take-document')).toEqual(tray);
   await carryTo(page, 'take-document', { x: 350, y: 220 });
+  expect(await logicalRect(page, 'paper-1')).toMatchObject({ w: 188, h: 144 });
+  await expect(page.locator('#control-apply-stamp')).toHaveCount(0);
+  await activate(page, 'take-certificate');
   expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ w: 188, h: 144 });
   const rightDesk = await logicalRect(page, 'apply-stamp');
   await page.locator('#control-apply-stamp').click();
@@ -206,7 +223,7 @@ test('the rulebook keeps its cover on placement and its physical corners open an
   await expect(page.locator('#screen-description')).toContainText('Czas');
   await activate(page, 'manual-prev');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', '3');
-  await expect(page.locator('#screen-description')).toContainText('Koniec wizyty');
+  await expect(page.locator('#screen-description')).toContainText('Dokumentacja');
   await page.keyboard.press('Escape');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
   await expect(page.locator('#control-manual')).toBeFocused();
@@ -224,6 +241,7 @@ test('keyboard pickup moves documents and Escape restores the previous position'
   await enterCabinet(page);
   await activate(page, 'call-patient');
   await activate(page, 'take-document');
+  await activate(page, 'take-certificate');
   const before = await logicalRect(page, 'apply-stamp');
   await page.locator('#control-apply-stamp').focus();
   await page.keyboard.press('Space');
@@ -248,6 +266,7 @@ test('a keyboard-carried stamp can be used and returned through its semantic hol
   await enterCabinet(page);
   await activate(page, 'call-patient');
   await activate(page, 'take-document');
+  await activate(page, 'take-certificate');
   const home = await logicalRect(page, 'stamp-fit');
   await page.locator('#control-stamp-fit').focus();
   await page.keyboard.press('Space');
@@ -320,14 +339,15 @@ test('clock hands animate short action costs and pointer movement consumes no ad
   await expect.poll(async () => Number(await controls.getAttribute('data-clock-display'))).toBeGreaterThan(477);
   await expect(controls).toHaveAttribute('data-clock-moving', 'false');
   await activate(page, 'take-document');
-  expect(await clockMinutes(page)).toBe(481);
-  await activate(page, 'run-vision');
+  await activate(page, 'take-certificate');
   expect(await clockMinutes(page)).toBe(484);
   await activate(page, 'run-vision');
   expect(await clockMinutes(page)).toBe(487);
+  await activate(page, 'run-vision');
+  expect(await clockMinutes(page)).toBe(490);
   await page.locator('#control-stamp-fit').click();
   const pickedUp = await clockMinutes(page);
-  expect(pickedUp).toBe(488);
+  expect(pickedUp).toBe(491);
   for (const position of [{ x: 470, y: 285 }, { x: 475, y: 270 }, { x: 490, y: 280 }]) {
     const target = await screenPoint(page, position);
     await page.mouse.move(target.x, target.y);
@@ -346,7 +366,7 @@ test('reduced motion skips patient and clock transitions while preserving the co
   await activate(page, 'call-patient');
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
   await expect(page.locator('#controls')).toHaveAttribute('data-clock-moving', 'false');
-  for (const id of ['take-document', 'run-vision', 'run-pressure', 'stamp-fit', 'apply-stamp', 'return-document']) {
+  for (const id of ['take-document', 'take-certificate', 'run-vision', 'run-pressure', 'run-measurements', 'stamp-fit', 'apply-stamp', 'return-document']) {
     await activate(page, id);
   }
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
@@ -387,6 +407,7 @@ test('a covering rulebook shields the document from a carried stamp when open or
   await enterCabinet(page);
   await activate(page, 'call-patient');
   await activate(page, 'take-document');
+  await activate(page, 'take-certificate');
   await activate(page, 'manual');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'true');
   const stampHome = await logicalRect(page, 'stamp-fit');

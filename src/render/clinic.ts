@@ -2,18 +2,18 @@
  * Sources, exact prompts and preparation are documented in docs/art-direction.md.
  * Loading and simulation updates happen outside all drawing functions.
  */
-import { CABINET_HOTSPOTS, ITEM_RESTS, ITEM_SIZES, LEFT_WIDTH, PATIENT_HANDOFF, RIGHT_DESK_X, type DeskItemId } from '../core/desk';
+import { CABINET_HOTSPOTS, DOCUMENT_RACK, ITEM_RESTS, ITEM_SIZES, LEFT_WIDTH, PATIENT_HANDOFF, RIGHT_DESK_X } from '../core/desk';
 
 const images = new Map<string, HTMLImageElement>();
 const patientShadows = new Map<string, HTMLCanvasElement>();
 let creatorPhotograph: { image: HTMLCanvasElement; shadow: HTMLCanvasElement } | undefined;
 const introNames = ['scalpel', 'catheter', 'pen', 'stamp'] as const;
 const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate', 'clock',
-  'patient-0', 'patient-1', 'patient-2', 'paper'] as const;
+  'patient-0', 'patient-1', 'patient-2', 'workstation-phone', 'workstation-clips', 'workstation-clip', 'workstation-rack', 'workstation-paper'] as const;
 export const PATIENT_MOTION_FRAMES = 12;
 
 export async function loadClinicArt(): Promise<void> {
-  const files = ['cabinet-corridor', 'archives-clinic', 'break-room', 'creator-robert', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
+  const files = ['cabinet-workstation', 'archives-clinic', 'break-room', 'creator-robert', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
   await Promise.all(files.map(name => new Promise<void>((resolve, reject) => {
     const image = new Image();
     images.set(name, image);
@@ -142,7 +142,7 @@ function roomNumber(ctx: CanvasRenderingContext2D): void {
 /** Generated environment and portraits with only supplied simulation state. */
 export function drawCabinet(ctx: CanvasRenderingContext2D, options: CabinetArtOptions): void {
   rect(ctx, 0, 0, 570, 320, '#171e18');
-  asset(ctx, 'cabinet-corridor', 0, 0, 570, 320);
+  asset(ctx, 'cabinet-workstation', 0, 0, 570, 320);
   roomNumber(ctx);
   wallClock(ctx, options.clockMinutes);
   const decoration = CABINET_HOTSPOTS.decoration;
@@ -194,6 +194,7 @@ export function drawCabinet(ctx: CanvasRenderingContext2D, options: CabinetArtOp
 /** The physical holders stay visible while their tools are in hand. */
 export function drawDeskRests(ctx: CanvasRenderingContext2D): void {
   for (const [id, rest] of Object.entries(ITEM_RESTS)) {
+    if (!rest) continue;
     const { x, y, w, h } = rest;
     rect(ctx, x, y + h - 9, w, 9, '#171c15');
     rect(ctx, x + 1, y + h - 8, w - 2, 1, '#9c8455');
@@ -203,15 +204,27 @@ export function drawDeskRests(ctx: CanvasRenderingContext2D): void {
   }
 }
 
-export function drawDeskItem(ctx: CanvasRenderingContext2D, kind: Exclude<DeskItemId, 'document'>, x: number, y: number, lifted = false,
+export function drawDeskItem(ctx: CanvasRenderingContext2D, kind: 'stamp-fit' | 'stamp-unfit' | 'manual', x: number, y: number, lifted = false,
   w = ITEM_SIZES[kind].w, h = ITEM_SIZES[kind].h): void {
   if (lifted) rect(ctx, x + 7, y + h - 4, w - 4, 5, '#11160fb3');
   asset(ctx, `sprites/${kind}`, x, y, w, h);
 }
 
+/** Generated transparent steel clip, shared by carried and attached paperwork. */
+export function drawPaperclip(ctx: CanvasRenderingContext2D, x: number, y: number, _lifted = false): void {
+  asset(ctx, 'sprites/workstation-clip', x, y, 10, 19);
+}
+
+/** Every illustrated object comes from a generated local bitmap. */
+export function drawWorkstationObjects(ctx: CanvasRenderingContext2D, _drawerCount: number): void {
+  for (const [name, bounds] of [
+    ['phone', CABINET_HOTSPOTS.phone],
+    ['clips', CABINET_HOTSPOTS.clipSupply], ['rack', DOCUMENT_RACK],
+  ] as const) asset(ctx, `sprites/workstation-${name}`, bounds.x, bounds.y, bounds.w, bounds.h);
+}
+
 export function drawPaper(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
-  rect(ctx, x, y, w, h, '#ded4ae');
-  asset(ctx, 'sprites/paper', x, y, w, h);
+  asset(ctx, 'sprites/workstation-paper', x, y, w, h);
 }
 
 export function drawIntroIllustration(ctx: CanvasRenderingContext2D, slide: number): void {

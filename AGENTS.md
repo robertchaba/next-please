@@ -9,6 +9,7 @@ Read [FACTS.md](FACTS.md) for established facts about the game world, characters
 - Keep gameplay state separate from rendering. Do not mutate state or generate time/random values inside drawing code.
 - Persist only preferences in `localStorage`. Gameplay saves go through the validated, versioned gzip JSON import/export code in `src/core/save.ts`; preserve live state when an import fails.
 - Keep artwork, font, cursor, and game identity original. Record provenance and redistribution terms for acquired assets. Register local audio with Howler, respect mute settings, and unlock playback from a user gesture.
+- Generate every new graphical element with the built-in image generator, matching the approved clinic artwork. Do not substitute Canvas/SVG/CSS drawings or geometric placeholders for new objects, furniture, tools, paper, or decorative assets. Keep generated source images, prompts, and preparation recipes. Rendering code may composite local generated assets and draw localized text, focus indicators, and state-driven marks such as clock hands or stamp impressions; these are not substitutes for illustrated assets.
 - Keep the current start action a clearly labeled prototype placeholder until gameplay is implemented.
 - Use the lockfile and focused dependencies. Run `npm run build` plus the relevant Vitest/Playwright checks for each meaningful change. Update the corresponding documentation when a contract changes.
 - Preserve Robert Chaba's creator credit and link to https://github.com/robertchaba.

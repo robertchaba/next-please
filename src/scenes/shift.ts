@@ -1,14 +1,17 @@
-import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, type CabinetArtOptions } from '../render/clinic';
+import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, type CabinetArtOptions } from '../render/clinic';
+import { drawPaperwork, paperDescription, paperActionRect } from '../render/paperwork';
+export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
 import { drawManual, drawManualCover, manualControls, MANUAL_PAGE_COUNT } from '../render/manual';
 import { INTRO_SLIDES, PATIENTS, SHIFT_LENGTH, type GameAction, type GameState } from '../core/game';
 import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
-import { CABINET_HOTSPOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
+import { CABINET_HOTSPOTS, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
 export { MANUAL_PAGE_COUNT, manualPageDescription } from '../render/manual';
 
 export type ShiftAction = GameAction | 'select-fit' | 'select-unfit' | 'apply-stamp' | 'manual'
-  | 'manual-prev' | 'manual-next' | 'manual-close' | 'put-away-fit' | 'put-away-unfit';
+  | 'manual-prev' | 'manual-next' | 'manual-close' | 'put-away-fit' | 'put-away-unfit'
+  | 'take-clip' | 'drawer' | 'trash' | 'reserved-form' | { type: 'read-paper'; paperId: number };
 export type SelectedStamp = 'fit' | 'unfit' | null;
 export type PatientSpeech = { patientId: number; line: keyof typeof translations.pl.patientSpeech };
 export type DeskPresentation = {
@@ -32,8 +35,9 @@ export function shiftDescription(state: GameState, locale: Locale): string {
   const t = translations[locale]; const visit = state.visit;
   const patient = visit ? PATIENTS[visit.patientId] : null;
   return [t.cabinetHelp, `${t.clock}: ${clockTime(state)}.`, `${t.day}: ${state.day}.`, `${t.queue}: ${state.shiftCompleted}/${SHIFT_LENGTH}.`, `${t.points}: ${state.money}.`,
-    visit && patient ? `${t.patientNames[visit.patientId]}. ${t.patientJobs[visit.patientId]}. ${visit.document === 'tray' ? t.awaitingDocument : t.document}. ${t.visionResult}: ${visit.visionTested ? t[patient.vision] : t.untested}. ${t.pressureResult}: ${visit.pressureTested ? t[patient.pressure] : t.untested}. ${visit.decision ? t[visit.decision] : t.stampHere}.`
+    visit && patient ? `${t.patientNames[visit.patientId]}. ${t.patientJobs[visit.patientId]}. ${visit.document === 'tray' ? t.awaitingDocument : t.document}. ${t.visionResult}: ${visit.visionTested ? t[patient.vision] : t.untested}. ${t.pressureResult}: ${visit.pressureTested ? t[patient.pressure] : t.untested}. ${t.paperwork.weight}: ${visit.measurementsTaken ? `${patient.weight} ${t.paperwork.kg}` : t.untested}. ${t.paperwork.height}: ${visit.measurementsTaken ? `${patient.height} ${t.paperwork.cm}` : t.untested}. ${visit.decision ? t[visit.decision] : t.stampHere}.`
       : state.shiftCompleted === SHIFT_LENGTH ? t.shiftDone : t.emptyChair,
+    ...state.papers.filter(paper => paper.location === 'desk').map(paper => paperDescription(paper, locale)),
   ].join(' ');
 }
 
@@ -43,8 +47,8 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     ({ id, label, x, y, w, h, kind, action: () => onAction(action) });
   const hotspot = (id: string, label: string, bounds: Rect, action: ShiftAction): Button =>
     button(id, label, bounds.x, bounds.y, bounds.w, bounds.h, action);
-  const item = (id: string, label: string, itemId: DeskItemId, action: ShiftAction): Button => ({
-    ...button(id, label, 0, 0, 0, 0, action),
+  const item = (id: string, label: string, itemId: DeskItemId, action?: ShiftAction): Button => ({
+    id, label, kind: 'hotspot', action: action === undefined ? undefined : () => onAction(action),
     ...itemRect(view.desk, itemId, state.visit?.document === 'tray' && view.held !== 'document', view.held === itemId, view.manualOpen), item: itemId,
   });
   if (state.phase === 'intro') return [
@@ -58,11 +62,31 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     ...(rest ? [button(restAction, restLabel, rest.x, rest.y, rest.w, rest.h, restAction)] : []),
     ...(state.shiftCompleted === SHIFT_LENGTH ? [hotspot('next-day', t.nextDay, CABINET_HOTSPOTS.callPatient, 'next-day')]
       : [hotspot('call-patient', t.callPatient, CABINET_HOTSPOTS.callPatient, 'call-patient')]),
-    ...(state.visit?.document === 'tray' ? [item('take-document', t.takeDocument, 'document', 'take-document')]
-      : state.visit ? [hotspot('return-document', t.returnDocument, PATIENT_HANDOFF, 'return-document'),
-        item('apply-stamp', t.applyStamp, 'document', 'apply-stamp')] : []),
+    ...(state.visit?.document === 'tray' ? [item('take-document', t.takeDocument, 'incoming-referral', 'take-document')] : []),
+    ...(state.visit?.certificateTaken ? [hotspot('return-document', t.returnDocument, PATIENT_HANDOFF, 'return-document'),
+      item('apply-stamp', t.applyStamp, 'document', 'apply-stamp')] : []),
     hotspot('run-vision', t.vision, CABINET_HOTSPOTS.vision, 'run-vision'),
     hotspot('run-pressure', t.pressure, CABINET_HOTSPOTS.pressure, 'run-pressure'),
+    hotspot('run-measurements', t.measurements, CABINET_HOTSPOTS.measurements, 'run-measurements'),
+    hotspot('use-phone', t.phone, CABINET_HOTSPOTS.phone, 'use-phone'),
+    hotspot('take-paper', t.takePaper, CABINET_HOTSPOTS.paperSupply, 'take-paper'),
+    hotspot('take-certificate', t.takeCertificate, CABINET_HOTSPOTS.certificateSupply, 'take-certificate'),
+    ...DOCUMENT_RACK_SLOTS.slice(2).map((bounds, index) => ({ ...hotspot(`reserved-form-${index + 3}`, `${t.reservedForm} ${index + 3}`, bounds, 'reserved-form'), disabled: true })),
+    hotspot('take-clip', t.takeClip, CABINET_HOTSPOTS.clipSupply, 'take-clip'),
+    hotspot('drawer', `${t.drawer}: ${state.papers.filter(paper => paper.location === 'drawer').length}. ${t.drawerHelp}`, CABINET_HOTSPOTS.drawer, 'drawer'),
+    hotspot('trash', t.trash, CABINET_HOTSPOTS.trash, 'trash'),
+    ...state.papers.filter(paper => paper.location === 'desk').flatMap(paper => {
+      const id: DeskItemId = `paper-${paper.id}`;
+      const action: ShiftAction = paper.kind === 'note' ? { type: 'write-note', paperId: paper.id }
+        : paper.kind === 'letter' && !paper.opened ? { type: 'open-letter', paperId: paper.id }
+        : { type: 'read-paper', paperId: paper.id };
+      const bounds = itemRect(view.desk, id, false, view.held === id);
+      const canAct = view.held !== id && bounds.x >= RIGHT_DESK_X
+        && (paper.kind === 'note' || (paper.kind === 'letter' && !paper.opened));
+      return [item(id, paperDescription(paper, locale), id, action),
+        ...(canAct ? [hotspot(`paper-action-${paper.id}`, paper.kind === 'note' ? t.paperwork.write : t.paperwork.open, paperActionRect(bounds), action)] : [])];
+    }),
+    ...view.desk.order.filter(id => id.startsWith('clip-')).map(id => item(id, t.paperwork.paperclip, id)),
     { ...item('stamp-fit', t.stampFit, 'stamp-fit', 'select-fit'), pressed: selected === 'fit' },
     { ...item('stamp-unfit', t.stampUnfit, 'stamp-unfit', 'select-unfit'), pressed: selected === 'unfit' },
     item('manual', t.manual, 'manual', 'manual'),
@@ -94,18 +118,32 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
   drawText(ctx, t.eyeChart[1], chartCenter, chart.y + 31, { color: c.ink, align: 'center' });
   drawText(ctx, t.eyeChart[2], chartCenter, chart.y + 45, { color: c.ink, align: 'center' });
   drawDeskRests(ctx);
+  drawWorkstationObjects(ctx, state.papers.filter(paper => paper.location === 'drawer').length);
   for (const id of view.desk.order) {
     const lifted = view.held === id;
     const bounds = itemRect(view.desk, id, visit?.document === 'tray' && !lifted, lifted, view.manualOpen);
     const { x, y, w, h } = bounds;
+    if (id === 'incoming-referral') {
+      if (visit?.document === 'tray') drawPaper(ctx, x, y, w, h);
+      continue;
+    }
+    if (id.startsWith('paper-')) {
+      const paper = state.papers.find(entry => `paper-${entry.id}` === id && entry.location === 'desk');
+      if (paper) drawPaperwork(ctx, paper, bounds, locale, lifted);
+      continue;
+    }
+    if (id.startsWith('clip-')) {
+      drawPaperclip(ctx, x, y, lifted);
+      continue;
+    }
     if (id !== 'document') {
       if (id === 'manual') {
         if (view.manualOpen && !lifted) drawManual(ctx, bounds, locale, view.manualPage);
         else drawManualCover(ctx, bounds, lifted);
-      } else drawDeskItem(ctx, id, x, y, lifted, w, h);
+      } else if (id === 'stamp-fit' || id === 'stamp-unfit') drawDeskItem(ctx, id, x, y, lifted, w, h);
       continue;
     }
-    if (!visit || !patient) continue;
+    if (!visit?.certificateTaken || !patient) continue;
     box(ctx, x + (lifted ? 6 : 3), y + (lifted ? 6 : 3), w, h, '#293126');
     drawPaper(ctx, x, y, w, h);
     const write = (value: string, dx: number, dy: number, color = c.ink): void => drawDocumentText(ctx, value, x + dx, y + dy, { color });
@@ -126,11 +164,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     drawDocumentText(ctx, `${state.shiftCompleted + 1}/${SHIFT_LENGTH}`, x + w - 12, y + 10, { color: '#8a8668', align: 'right' });
     box(ctx, x + 12, y + 24, 164, 1, '#a59e79');
     write(t.patientNames[visit.patientId], 12, 31);
-    write(t.patientJobs[visit.patientId], 12, 44, '#687056');
-    write(t.documentVision, 12, 64, '#73765b');
-    write(t.documentPressure, 12, 78, '#73765b');
-    write(visit.visionTested ? t[patient.vision] : t.documentPending, 94, 64, visit.visionTested && patient.vision === 'refer' ? '#884d3a' : c.ink);
-    write(visit.pressureTested ? t[patient.pressure] : t.documentPending, 94, 78, visit.pressureTested && patient.pressure === 'refer' ? '#884d3a' : c.ink);
+    // Clinical results belong only to the doctor's separate notes.
     if (visit.decision) {
       const ink = visit.decision === 'fit' ? c.green : '#914c3c';
       const sx = x + 43, sy = y + 108, sw = 108;

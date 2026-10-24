@@ -1,6 +1,6 @@
 /**
  * Original, deterministic Foley-style synthesis for Next, Please!
- * Run with `node scripts/generate-effects.mjs [stamp bell]`. No recordings or dependencies.
+ * Run with `node scripts/generate-effects.mjs [stamp bell telephone]`. No recordings or dependencies.
  * Each key has a body strike, a damped metal click and a quieter release;
  * the other effects layer similar mechanical resonances and filtered noise.
  */
@@ -114,6 +114,15 @@ const effects = {
     const flutter = 0.35 + 0.65 * Math.sin(time * 67) ** 2;
     return sweep * flutter * (mid * 0.38 + high * 0.11)
       + decay(time, 0.174, 0.015) * (low * 0.45 + mid * 0.12);
+  }),
+  'telephone.wav': synthesize(2, 0.29, 5049, (time, low, mid) => {
+    // A receiver switch click followed by a steady, narrow-band exchange tone.
+    // Its gentle harmonics suggest an old earpiece, without recorded samples.
+    const connection = Math.max(0, Math.min(1, (time - 0.07) / 0.045));
+    const hangup = Math.max(0, Math.min(1, (1.96 - time) / 0.045));
+    const steady = tone(time, 425) * 0.65 + tone(time, 850) * 0.035 + low * 0.018;
+    return connection * hangup * steady
+      + decay(time, 0.008, 0.005) * (mid * 0.28 + low * 0.24);
   }),
 };
 

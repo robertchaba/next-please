@@ -37,3 +37,5 @@ await import('./prepare-stamp-art.mjs');
 // current matching mechanical illustration after the original resize recipe.
 await sharp(`${art}intro-stamp-mechanical-source.png`).resize(570, 320, resize)
   .png().toFile(`${art}intro-stamp.png`);
+
+await import('./prepare-workstation-polish.mjs');

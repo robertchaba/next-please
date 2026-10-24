@@ -3,15 +3,15 @@ import { itemAnchor, restRect, type DeskItemId, type Point, type Rect } from './
 type DeskInputOptions = {
   enabled: () => boolean;
   rect: (id: DeskItemId) => Rect;
-  begin: (id: DeskItemId) => void;
+  begin: (id: DeskItemId, chargeHandling: boolean) => void;
   move: (id: DeskItemId, point: Point) => void;
   /** Return true when the item was put down; false keeps the tool in hand. */
-  drop: (id: DeskItemId, point?: Point) => boolean;
+  drop: (id: DeskItemId, point?: Point, targetItem?: DeskItemId) => boolean;
   cancel: () => void;
 };
 
 /** Click to carry, click again to place or use. No mouse button needs to stay down. */
-export function installDeskInput(stage: HTMLElement, options: DeskInputOptions): { cancel: () => void; putAway: (id: DeskItemId) => void } {
+export function installDeskInput(stage: HTMLElement, options: DeskInputOptions): { cancel: () => void; putAway: (id: DeskItemId) => void; pickUp: (id: DeskItemId, chargeHandling?: boolean) => void } {
   let held: DeskItemId | null = null;
   let activating = false;
   const point = (event: MouseEvent): Point => {
@@ -28,18 +28,18 @@ export function installDeskInput(stage: HTMLElement, options: DeskInputOptions):
     const anchor = itemAnchor(held, options.rect(held));
     options.move(held, { x: current.x - anchor.x, y: current.y - anchor.y });
   };
-  const activate = (current?: Point): void => {
+  const activate = (current?: Point, targetItem?: DeskItemId): void => {
     if (!held) return;
     const item = held;
     activating = true;
     try {
-      if (options.drop(item, current)) held = null;
+      if (options.drop(item, current, targetItem)) held = null;
     } finally { activating = false; }
   };
-  const pickUp = (id: DeskItemId): void => {
+  const pickUp = (id: DeskItemId, chargeHandling = true): void => {
     held = id;
     activating = true;
-    try { options.begin(id); }
+    try { options.begin(id, chargeHandling); }
     finally { activating = false; }
   };
   const putAway = (id: DeskItemId): void => {
@@ -87,9 +87,11 @@ export function installDeskInput(stage: HTMLElement, options: DeskInputOptions):
       if ((event.target as HTMLElement).id.startsWith('control-put-away-')) return;
       event.preventDefault(); event.stopPropagation();
       const control = event.target as HTMLElement;
-      if (held === 'document' && control.id === 'control-return-document') {
+      if ((held === 'document' && control.id === 'control-return-document')
+        || ((held.startsWith('paper-') || held.startsWith('clip-')) && ['control-drawer', 'control-trash'].includes(control.id))
+        || (held.startsWith('clip-') && control.dataset.item?.startsWith('paper-'))) {
         activate({ x: parseFloat(control.style.left) + parseFloat(control.style.width) / 2,
-          y: parseFloat(control.style.top) + parseFloat(control.style.height) / 2 });
+          y: parseFloat(control.style.top) + parseFloat(control.style.height) / 2 }, control.dataset.item as DeskItemId | undefined);
         return;
       }
       activate(); return;
@@ -110,5 +112,5 @@ export function installDeskInput(stage: HTMLElement, options: DeskInputOptions):
   });
   window.addEventListener('blur', cancel);
   document.addEventListener('visibilitychange', () => { if (document.hidden) cancel(); });
-  return { cancel, putAway };
+  return { cancel, putAway, pickUp };
 }

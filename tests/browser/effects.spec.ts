@@ -3,6 +3,16 @@ import { expect, test, type Page } from '@playwright/test';
 async function useKeyboard(page: Page, id: string): Promise<void> {
   await page.locator(`#control-${id}`).focus();
   await page.keyboard.press('Enter');
+  // These regression suites exercise later visit behavior. Put each newly
+  // supplied form on the right desk before continuing through the controls.
+  if (id === 'take-document' || id === 'take-certificate') {
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'true');
+    const fromRack = id === 'take-certificate';
+    for (let step = 0; step < (fromRack ? 16 : 20); step++) await page.keyboard.press(fromRack ? 'Shift+ArrowLeft' : 'Shift+ArrowRight');
+    for (let step = 0; step < (fromRack ? 4 : 3); step++) await page.keyboard.press(fromRack ? 'Shift+ArrowDown' : 'Shift+ArrowUp');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+  }
 }
 
 test('mechanical stamping plays a decoded local effect after a gesture and stays silent while muted', async ({ page }) => {
@@ -14,7 +24,7 @@ test('mechanical stamping plays a decoded local effect after a gesture and stays
   await page.goto('/');
   await page.locator('#control-start').click();
   for (let step = 0; step < 4; step++) await page.locator('#control-intro-next').click();
-  for (const id of ['call-patient', 'take-document', 'stamp-fit', 'apply-stamp']) await useKeyboard(page, id);
+  for (const id of ['call-patient', 'take-document', 'take-certificate', 'stamp-fit', 'apply-stamp']) await useKeyboard(page, id);
   expect(requested).toEqual([]);
 
   await page.getByRole('button', { name: 'Włącz dźwięk' }).click();
@@ -44,7 +54,7 @@ test('the desk bell loads on an unmuted patient call and uses the shared effect 
   for (let step = 0; step < 4; step++) await page.locator('#control-intro-next').click();
   await page.locator('#control-call-patient').click();
   expect(requested).toEqual([]);
-  for (const id of ['take-document', 'stamp-fit', 'apply-stamp', 'return-document']) await useKeyboard(page, id);
+  for (const id of ['take-document', 'take-certificate', 'stamp-fit', 'apply-stamp', 'return-document']) await useKeyboard(page, id);
 
   await page.getByRole('button', { name: 'Włącz dźwięk' }).click();
   expect(requested).toEqual([]);

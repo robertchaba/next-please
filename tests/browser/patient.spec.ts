@@ -3,6 +3,16 @@ import { expect, test, type Page } from '@playwright/test';
 async function activate(page: Page, id: string): Promise<void> {
   await page.locator(`#control-${id}`).focus();
   await page.keyboard.press('Enter');
+  // These regression suites exercise later visit behavior. Put each newly
+  // supplied form on the right desk before continuing through the controls.
+  if (id === 'take-document' || id === 'take-certificate') {
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'true');
+    const fromRack = id === 'take-certificate';
+    for (let step = 0; step < (fromRack ? 16 : 20); step++) await page.keyboard.press(fromRack ? 'Shift+ArrowLeft' : 'Shift+ArrowRight');
+    for (let step = 0; step < (fromRack ? 4 : 3); step++) await page.keyboard.press(fromRack ? 'Shift+ArrowDown' : 'Shift+ArrowUp');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+  }
 }
 
 async function enterCabinet(page: Page): Promise<void> {
@@ -61,6 +71,7 @@ test('patients speak sparingly, hesitate at failed vision tests and leave refusa
   await activate(page, 'call-patient');
   await page.clock.runFor(720);
   await activate(page, 'take-document');
+  await activate(page, 'take-certificate');
   await activate(page, 'run-vision');
   await expect(page.locator('#patient-speech')).toBeEmpty();
   for (const id of ['stamp-fit', 'apply-stamp', 'return-document']) await activate(page, id);
@@ -76,6 +87,7 @@ test('patients speak sparingly, hesitate at failed vision tests and leave refusa
   await expect(page.locator('#patient-speech')).toBeEmpty();
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
   await activate(page, 'take-document');
+  await activate(page, 'take-certificate');
   await activate(page, 'run-vision');
   await expect(page.locator('#patient-speech')).toHaveText('Leon Burek: Yyy...');
   await activate(page, 'run-vision');
@@ -92,7 +104,7 @@ test('calling again finishes the previous farewell and pauses the new entrance u
   await enterCabinet(page);
   await activate(page, 'call-patient');
   await page.clock.runFor(720);
-  for (const id of ['take-document', 'stamp-fit', 'apply-stamp', 'return-document']) await activate(page, id);
+  for (const id of ['take-document', 'take-certificate', 'stamp-fit', 'apply-stamp', 'return-document']) await activate(page, id);
   await expect(page.locator('#patient-speech')).toContainText('Dziękuję.');
   await activate(page, 'call-patient');
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'enter');
@@ -113,7 +125,7 @@ test('a silent refusal starts the exit immediately, without a farewell pause', a
   await enterCabinet(page);
   await activate(page, 'call-patient');
   await page.clock.runFor(720);
-  for (const id of ['take-document', 'stamp-unfit', 'apply-stamp', 'return-document']) await activate(page, id);
+  for (const id of ['take-document', 'take-certificate', 'stamp-unfit', 'apply-stamp', 'return-document']) await activate(page, id);
   await expect(page.locator('#patient-speech')).toBeEmpty();
   await page.clock.runFor(180);
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'exit');
