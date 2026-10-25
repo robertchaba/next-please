@@ -1,4 +1,7 @@
-import { loadKnownQueue } from './fixtures';
+import { loadKnownQueue, knownQueueState } from './fixtures';
+import { applyAction, type GameAction } from '../../src/core/game';
+import { encodeSave } from '../../src/core/save';
+import { PATIENT_HANDOFF } from '../../src/core/desk';
 import { expect, test, type Page } from '@playwright/test';
 
 async function activate(page: Page, id: string): Promise<void> {
@@ -135,4 +138,89 @@ test('a silent refusal starts the exit immediately, without a farewell pause', a
   await page.clock.runFor(540);
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
   await expect(page.locator('#patient-speech')).toBeEmpty();
+});
+
+
+test('clicking the patient with empty hands examines them, while carrying the certificate hands it back', async ({ page }) => {
+  await enterCabinet(page);
+  await activate(page, 'call-patient');
+  await page.clock.runFor(720);
+  for (const id of ['take-document', 'take-certificate', 'stamp-fit', 'apply-stamp', 'write-certificate']) await activate(page, id);
+  const canvas = (await page.locator('#game').boundingBox())!;
+  const patient = {
+    x: canvas.x + (PATIENT_HANDOFF.x + PATIENT_HANDOFF.w / 2) * canvas.width / 570,
+    y: canvas.y + (PATIENT_HANDOFF.y + PATIENT_HANDOFF.h / 2) * canvas.height / 320,
+  };
+  const before = Number(await page.locator('#controls').getAttribute('data-clock-minutes'));
+  await page.mouse.click(patient.x, patient.y);
+  await expect(page.locator('#screen-description')).toContainText('bez uwag');
+  await expect(page.locator('#screen-description')).toContainText('Irena Wolska');
+  await expect(page.locator('#control-apply-stamp')).toBeVisible();
+  expect(Number(await page.locator('#controls').getAttribute('data-clock-minutes'))).toBe(before + 3);
+  // Keyboard users have the same examination and retain an explicit handoff.
+  await activate(page, 'run-general');
+  expect(Number(await page.locator('#controls').getAttribute('data-clock-minutes'))).toBe(before + 6);
+  await page.locator('#control-apply-stamp').click();
+  await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'true');
+  await page.mouse.move(patient.x, patient.y);
+  await page.mouse.click(patient.x, patient.y);
+  await expect(page.locator('#control-apply-stamp, #control-run-general')).toHaveCount(0);
+  await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+  await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'exit');
+});
+
+for (const reduceDuringExit of [false, true]) test(`the patient leaving after 14:00 opens home without a bell call (reduce during exit: ${reduceDuringExit})`, async ({ page }) => {
+  await enterCabinet(page);
+  const actions: GameAction[] = ['call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-unfit'];
+  const visit = actions.reduce((state, action) => applyAction(state, action).state, knownQueueState());
+  await activate(page, 'saves');
+  await page.locator('#save-input').setInputFiles({
+    name: 'closing-visit.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave({ ...visit, clockMinutes: 840 })),
+  });
+  await expect(page.locator('#announcement')).toContainText('Zapis wczytany');
+  await activate(page, 'back');
+  await activate(page, 'return-document');
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
+  await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'exit');
+  if (reduceDuringExit) {
+    await page.clock.runFor(180);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.clock.runFor(120);
+  } else {
+    await page.clock.runFor(600);
+    await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
+    await page.clock.runFor(180);
+  }
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'home');
+  await expect(page.locator('#control-home-next')).toBeFocused();
+  await expect(page.locator('#control-call-patient')).toHaveCount(0);
+});
+
+for (const decision of ['unfit', 'fit'] as const) test(`a held stamp cannot examine and assistive closing handoff clears carrying (${decision})`, async ({ page }) => {
+  await enterCabinet(page);
+  if (decision === 'fit') await page.emulateMedia({ reducedMotion: 'reduce' });
+  const actions: GameAction[] = ['call-patient', 'take-document', 'take-certificate', 'write-certificate', decision === 'fit' ? 'stamp-fit' : 'stamp-unfit'];
+  const visit = actions.reduce((state, action) => applyAction(state, action).state, knownQueueState());
+  await activate(page, 'saves');
+  await page.locator('#save-input').setInputFiles({
+    name: 'closing-stamp.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave({ ...visit, clockMinutes: 840 })),
+  });
+  await expect(page.locator('#announcement')).toContainText('Zapis wczytany');
+  await activate(page, 'back');
+  await page.locator(`#control-stamp-${decision}`).click();
+  await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'true');
+  await expect(page.locator('#control-run-general')).toHaveCount(0);
+  const canvas = (await page.locator('#game').boundingBox())!;
+  await page.mouse.click(
+    canvas.x + (PATIENT_HANDOFF.x + PATIENT_HANDOFF.w / 2) * canvas.width / 570,
+    canvas.y + (PATIENT_HANDOFF.y + PATIENT_HANDOFF.h / 2) * canvas.height / 320,
+  );
+  await expect(page.locator('#screen-description')).toContainText('Badanie ogólne: BRAK');
+  await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'true');
+  // Assistive activation is distinct from the physical carry/drop keyboard path.
+  await page.locator('#control-return-document').evaluate(element => (element as HTMLElement).click());
+  await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+  await page.clock.runFor(decision === 'fit' ? 1620 : 780);
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'home');
+  await expect(page.locator('#stage')).not.toHaveCSS('cursor', 'none');
 });

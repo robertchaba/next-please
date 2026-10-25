@@ -36,16 +36,14 @@ function closingVisit(): GameState {
   return state;
 }
 
-test('last patient completes at closing; five-row budget, saves and work departure preserve settlement', async ({ page }, info) => {
+test('last patient leaves at closing; automatic home and six-row budget preserve settlement', async ({ page }, info) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await load(page, closingVisit());
   await expect(page.locator('#control-call-patient')).toBeDisabled();
   await expect(page.locator('#control-end-day')).toHaveCount(0);
-  for (const id of ['run-vision', 'run-pressure', 'run-measurements', 'write-certificate', 'stamp-fit', 'apply-stamp', 'return-document']) await key(page, id);
-  await expect(page.locator('#control-end-day')).toBeVisible();
-  await key(page, 'end-day-home');
+  for (const id of ['run-general', 'run-vision', 'run-pressure', 'run-measurements', 'write-certificate', 'stamp-fit', 'apply-stamp', 'return-document']) await key(page, id);
   await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'arrival');
   await expect(page.locator('#screen-description')).toContainText('Na dziś wystarczy pieczątek.');
   await page.screenshot({ path: info.outputPath('home-arrival-pl.png') });
@@ -54,11 +52,14 @@ test('last patient completes at closing; five-row budget, saves and work departu
   await expect(page.locator('#screen-description')).toContainText('Dochód podst.: 1000 zł');
   await expect(page.locator('#screen-description')).toContainText('Premia za pacjentów: 50 zł');
   await expect(page.locator('#screen-description')).toContainText('Z poprzedniego miesiąca: 0 zł');
+  await expect(page.locator('#screen-description')).toContainText('Koszty życia:');
   await expect(page.locator('#screen-description')).not.toContainText('x 50');
   await page.screenshot({ path: info.outputPath('home-budget-pl.png') });
   const saved = await exportState(page, info);
   expect(saved.state.phase).toBe('home');
   expect(saved.state.settlement).toMatchObject({ income: 1050, patientBonus: 50, patients: 1 });
+  expect(saved.state.settlement!.livingCost).toBeGreaterThanOrEqual(400);
+  expect(saved.state.settlement!.livingCost).toBeLessThanOrEqual(800);
   expect(saved.state.money).toBe(saved.state.settlement!.closingBalance);
   await page.locator('#save-input').setInputFiles({ name: 'bad.npsave', mimeType: 'application/gzip', buffer: Buffer.from('bad') });
   await expect(page.getByRole('status')).toContainText('Nieprawidłowy');
@@ -72,6 +73,7 @@ test('last patient completes at closing; five-row budget, saves and work departu
   await key(page, 'language-en');
   await key(page, 'home-next');
   await expect(page.locator('#screen-description')).toContainText('Base income: 1,000 zł');
+  await expect(page.locator('#screen-description')).toContainText('Living costs:');
   await page.screenshot({ path: info.outputPath('home-budget-en.png') });
   await key(page, 'home-next');
   await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'work');

@@ -1,5 +1,5 @@
 import { gameDate, isWeekend } from './calendar';
-import { PATIENTS, CHARACTER_COUNT, createRoster, randomStep, hasRequiredExaminations } from './patients';
+import { PATIENTS, CHARACTER_COUNT, createRoster, randomStep, hasRequiredExaminations, type ExaminationId, type VisionValues, type PressureValues } from './patients';
 import { BASE_INSURANCE, emptyConsequences, settleDay, type DailyConsequences, type DaySettlement } from './economy';
 export type { DaySettlement, DailyConsequences } from './economy';
 
@@ -9,7 +9,7 @@ export const ARRIVAL_MINUTES = 477;
 export const SHIFT_START_MINUTES = 480;
 export const SHIFT_END_MINUTES = 840;
 // Minutes of simulated work. Pointer movement and rendering never spend time.
-export const ACTION_MINUTES = { handling: 1, reading: 1, vision: 3, pressure: 4, measurements: 2 } as const;
+export const ACTION_MINUTES = { handling: 1, reading: 1, general: 3, vision: 3, pressure: 4, measurements: 2 } as const;
 export const GAME_LIMITS = { day: 1_000_000, money: 1_000_000_000, patients: 1_000_000_000, papers: 4096, paperId: 1_000_000_000, drawerClips: 4096 } as const;
 
 export type Decision = 'fit' | 'unfit';
@@ -19,8 +19,9 @@ export type DocumentId = number | 'certificate';
 export { PATIENTS } from './patients';
 
 export interface NoteResults {
-  vision: TestResult | null;
-  pressure: TestResult | null;
+  general: TestResult | null;
+  vision: VisionValues | null;
+  pressure: PressureValues | null;
   weight: number | null;
   height: number | null;
 }
@@ -31,7 +32,7 @@ interface PaperBase {
   location: 'desk' | 'drawer';
 }
 export type Paper =
-  | (PaperBase & { kind: 'note'; patientId: number | null; results: NoteResults; additionalWritten: boolean })
+  | (PaperBase & { kind: 'note'; patientId: number | null; results: NoteResults; examinationOrder: ExaminationId[]; additionalWritten: boolean })
   | (PaperBase & { kind: 'referral'; patientId: number })
   | (PaperBase & { kind: 'letter'; patientId: number; sender: 'zus' | 'employer'; opened: boolean });
 
@@ -40,6 +41,8 @@ export interface Visit {
   document: 'tray' | 'desk';
   certificateTaken: boolean;
   certificateNamed: boolean;
+  generalTested: boolean;
+  examinationOrder: ExaminationId[];
   visionTested: boolean;
   pressureTested: boolean;
   measurementsTaken: boolean;
@@ -73,7 +76,7 @@ export interface GameState {
 
 export type GameAction =
   | 'advance-intro' | 'skip-intro' | 'call-patient' | 'take-document' | 'take-certificate' | 'write-certificate'
-  | 'run-vision' | 'run-pressure' | 'run-measurements' | 'stamp-fit' | 'stamp-unfit'
+  | 'run-general' | 'run-vision' | 'run-pressure' | 'run-measurements' | 'stamp-fit' | 'stamp-unfit'
   | 'end-day' | 'return-document' | 'toggle-lamp' | 'change-decoration' | 'next-day'
   | 'handle-item' | 'read-manual' | 'take-paper' | 'use-phone'
   | { type: 'store-drawer-item' | 'retrieve-drawer-item'; item: 'manual' | 'clip' }
@@ -85,6 +88,7 @@ export type GameAction =
 export type GameFeedback =
   | 'none' | 'cabinet-ready' | 'patient-called' | 'patient-waiting' | 'shift-finished'
   | 'document-taken' | 'document-needed' | 'certificate-taken' | 'certificate-needed' | 'no-patient' | 'vision-pass' | 'vision-refer'
+  | 'general-pass' | 'general-refer'
   | 'pressure-pass' | 'pressure-refer' | 'stamped-fit' | 'stamped-unfit'
   | 'stamp-needed' | 'patient-cleared' | 'patient-completed' | 'patient-error' | 'lamp-on' | 'lamp-off'
   | 'decoration-changed' | 'next-day' | 'shift-unfinished' | 'limit-reached'
@@ -128,8 +132,9 @@ export function isDocumentClipped(state: GameState, documentId: DocumentId): boo
 function noteResults(visit: Visit): NoteResults {
   const patient = PATIENTS[visit.patientId]!;
   return {
-    vision: visit.visionTested ? patient.vision : null,
-    pressure: visit.pressureTested ? patient.pressure : null,
+    general: visit.generalTested ? patient.general : null,
+    vision: visit.visionTested ? { ...patient.visionValues } : null,
+    pressure: visit.pressureTested ? { ...patient.pressureValues } : null,
     weight: visit.measurementsTaken ? patient.weight : null,
     height: visit.measurementsTaken ? patient.height : null,
   };
@@ -137,10 +142,10 @@ function noteResults(visit: Visit): NoteResults {
 
 /** Examination transitions record findings, including notes kept in the drawer. */
 function recordResults(papers: Paper[], visit: Visit | null, day: number): Paper[] {
-  if (!visit || visit.document !== 'desk' || (!visit.visionTested && !visit.pressureTested && !visit.measurementsTaken)) return papers;
+  if (!visit || visit.document !== 'desk' || (!visit.generalTested && !visit.visionTested && !visit.pressureTested && !visit.measurementsTaken)) return papers;
   return papers.map(paper => paper.kind === 'note'
     && ((paper.patientId === null && paper.location === 'desk') || (paper.patientId === visit.patientId && paper.day === day))
-    ? { ...paper, patientId: visit.patientId, day, results: noteResults(visit) } : paper);
+    ? { ...paper, patientId: visit.patientId, day, results: noteResults(visit), examinationOrder: [...visit.examinationOrder] } : paper);
 }
 
 /** Pure transitions: all results and rewards are reproducible from saved state. */
@@ -199,7 +204,7 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
   if (action === 'take-paper') {
     if (!canAddPaper()) return unchanged('limit-reached');
     return addPaper({ id: state.nextPaperId, kind: 'note', day: state.day, patientId: null, location: 'desk', additionalWritten: false,
-      results: { vision: null, pressure: null, weight: null, height: null } },
+      examinationOrder: [], results: { general: null, vision: null, pressure: null, weight: null, height: null } },
     { clockMinutes: spend(ACTION_MINUTES.handling) }, 'paper-taken');
   }
   if (typeof action === 'object' && 'documentId' in action) {
@@ -265,7 +270,7 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
     if (visit.document !== 'desk') return unchanged('document-needed');
     if (paper.patientId !== null && (paper.patientId !== visit.patientId || paper.day !== state.day)) return unchanged('paper-wrong-patient');
     if (paper.additionalWritten) return unchanged('paper-written');
-    return updatePaper({ ...paper, patientId: visit.patientId, day: state.day, additionalWritten: true, results: noteResults(visit) }, 'paper-written');
+    return updatePaper({ ...paper, patientId: visit.patientId, day: state.day, additionalWritten: true, results: noteResults(visit), examinationOrder: [...visit.examinationOrder] }, 'paper-written');
   }
   if (action === 'handle-item' || action === 'read-manual') {
     return changed({ clockMinutes: spend(action === 'read-manual' ? ACTION_MINUTES.reading : ACTION_MINUTES.handling) }, 'none');
@@ -279,7 +284,7 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
     if (isShiftFinished(state)) return unchanged('shift-finished');
     if (state.patientsProcessed === GAME_LIMITS.patients) return unchanged('limit-reached');
     return changed({ clockMinutes: Math.max(SHIFT_START_MINUTES, spend(ACTION_MINUTES.handling)), visit: {
-      patientId: state.roster[state.shiftCompleted]!, document: 'tray', certificateTaken: false, certificateNamed: false, visionTested: false, pressureTested: false, measurementsTaken: false, decision: null,
+      patientId: state.roster[state.shiftCompleted]!, document: 'tray', certificateTaken: false, certificateNamed: false, generalTested: false, examinationOrder: [], visionTested: false, pressureTested: false, measurementsTaken: false, decision: null,
     } }, 'patient-called');
   }
 
@@ -297,20 +302,23 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
     return changed({ clockMinutes: spend(ACTION_MINUTES.handling), visit: { ...visit, certificateTaken: true } }, 'certificate-taken');
   }
   const patient = PATIENTS[visit.patientId]!;
-  const examination = (changes: Partial<Visit>, minutes: number, feedback: GameFeedback): ActionResult => {
-    const updated = { ...visit, ...changes };
+  const examination = (id: ExaminationId, changes: Partial<Visit>, minutes: number, feedback: GameFeedback): ActionResult => {
+    const updated = { ...visit, ...changes, examinationOrder: visit.examinationOrder.includes(id) ? [...visit.examinationOrder] : [...visit.examinationOrder, id] };
     return changed({ clockMinutes: spend(minutes), visit: updated, papers: recordResults(state.papers, updated, state.day) }, feedback);
   };
+  if (action === 'run-general') {
+    return examination('general', { generalTested: true }, ACTION_MINUTES.general, patient.general === 'pass' ? 'general-pass' : 'general-refer');
+  }
   if (action === 'run-vision') {
     const feedback = patient.vision === 'pass' ? 'vision-pass' : 'vision-refer';
-    return examination({ visionTested: true }, ACTION_MINUTES.vision, feedback);
+    return examination('vision', { visionTested: true }, ACTION_MINUTES.vision, feedback);
   }
   if (action === 'run-pressure') {
     const feedback = patient.pressure === 'pass' ? 'pressure-pass' : 'pressure-refer';
-    return examination({ pressureTested: true }, ACTION_MINUTES.pressure, feedback);
+    return examination('pressure', { pressureTested: true }, ACTION_MINUTES.pressure, feedback);
   }
   if (action === 'run-measurements') {
-    return examination({ measurementsTaken: true }, ACTION_MINUTES.measurements, 'measurements-taken');
+    return examination('measurements', { measurementsTaken: true }, ACTION_MINUTES.measurements, 'measurements-taken');
   }
   if (!visit.certificateTaken) return unchanged('certificate-needed');
   if (action === 'write-certificate') {
@@ -346,7 +354,15 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
     rngState: draw?.seed ?? state.rngState, daily, insuranceRate,
     paperClips: state.paperClips.map(group => group.filter(id => id !== 'certificate')).filter(group => group.length > 0),
   };
-  if (detected) return addPaper({ id: state.nextPaperId, kind: 'letter', patientId: visit.patientId, day: state.day,
-    location: 'desk', sender: visit.decision === 'fit' ? 'zus' : 'employer', opened: false }, completion, 'patient-error');
-  return changed(completion, correct ? 'patient-cleared' : 'patient-completed');
+  const completed = detected ? addPaper({ id: state.nextPaperId, kind: 'letter', patientId: visit.patientId, day: state.day,
+    location: 'desk', sender: visit.decision === 'fit' ? 'zus' : 'employer', opened: false }, completion, 'patient-error')
+    : changed(completion, correct ? 'patient-cleared' : 'patient-completed');
+  // Finishing the last visit closes the shift immediately; the view can still
+  // animate the departing patient before presenting this settled home state.
+  if (canEndDay(completed.state)) {
+    const home = applyAction(completed.state, 'end-day');
+    if (home.feedback === 'limit-reached') return unchanged('limit-reached');
+    return { state: home.state, feedback: completed.feedback };
+  }
+  return completed;
 }

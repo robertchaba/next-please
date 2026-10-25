@@ -1,5 +1,5 @@
 import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, drawDeskCalendar, type CabinetArtOptions } from '../render/clinic';
-import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, drawCertificate, certificateDescription } from '../render/paperwork';
+import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, drawCertificate, certificateDescription, visionReading, pressureReading } from '../render/paperwork';
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
 import { drawManual, drawManualCover, manualControls, MANUAL_PAGE_COUNT } from '../render/manual';
@@ -47,7 +47,7 @@ export function shiftDescription(state: GameState, locale: Locale): string {
   const patient = visit ? PATIENTS[visit.patientId] : null;
   const date = calendarText(state.day, locale);
   return [t.cabinetHelp, `${t.clock}: ${clockTime(state)}.`, `${t.day}: ${state.day}.`, `${t.calendar.label}: ${date.day} ${date.month}.`, `${t.queue}: ${state.shiftCompleted}/${state.roster.length}.`, `${t.points}: ${state.money}.`,
-    visit && patient ? `${t.patientNames[visit.patientId]}. ${t.patientJobs[visit.patientId]}. ${visit.document === 'tray' ? t.awaitingDocument : t.document}. ${t.visionResult}: ${visit.visionTested ? t[patient.vision] : t.untested}. ${t.pressureResult}: ${visit.pressureTested ? t[patient.pressure] : t.untested}. ${t.paperwork.weight}: ${visit.measurementsTaken ? `${patient.weight} ${t.paperwork.kg}` : t.untested}. ${t.paperwork.height}: ${visit.measurementsTaken ? `${patient.height} ${t.paperwork.cm}` : t.untested}. ${visit.decision ? t[visit.decision] : t.stampHere}.`
+    visit && patient ? `${t.patientNames[visit.patientId]}. ${t.patientJobs[visit.patientId]}. ${visit.document === 'tray' ? t.awaitingDocument : t.document}. ${t.generalResult}: ${visit.generalTested ? (patient.general === 'pass' ? t.generalClear : t.generalConcern) : t.untested}. ${t.visionResult}: ${visit.visionTested ? visionReading(patient.visionValues, locale) : t.untested}. ${t.pressureResult}: ${visit.pressureTested ? pressureReading(patient.pressureValues) : t.untested}. ${t.paperwork.weight}: ${visit.measurementsTaken ? `${patient.weight} ${t.paperwork.kg}` : t.untested}. ${t.paperwork.height}: ${visit.measurementsTaken ? `${patient.height} ${t.paperwork.cm}` : t.untested}. ${visit.decision ? t[visit.decision] : t.stampHere}.`
       : isShiftFinished(state) ? t.shiftDone : t.emptyChair,
     ...(visit?.certificateTaken ? [certificateDescription(state, locale)] : []),
     ...state.papers.filter(paper => paper.location === 'desk').map(paper => paperDescription(paper, locale, isDocumentClipped(state, paper.id))),
@@ -84,6 +84,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
       ...(!isLifted(view, 'document') && visibleDocumentClip(state, 'certificate', view)
         ? [{ ...hotspot('certificate-clip', t.paperwork.unclip, paperClipRect(certificateBounds), { type: 'unclip-document', documentId: 'certificate' }), owner: 'document' as const }] : []),
     ] : []),
+    ...(state.visit && view.held === null ? [hotspot('run-general', t.general, PATIENT_HANDOFF, 'run-general')] : []),
     hotspot('run-vision', t.vision, CABINET_HOTSPOTS.vision, 'run-vision'),
     hotspot('run-pressure', t.pressure, CABINET_HOTSPOTS.pressure, 'run-pressure'),
     hotspot('run-measurements', t.measurements, CABINET_HOTSPOTS.measurements, 'run-measurements'),

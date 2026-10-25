@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyAction, createInitialState, PATIENTS, type GameAction } from '../src/core/game';
 import { translations, type Locale } from '../src/i18n';
-import { paperDescription, certificateDescription, referralLines, wrapDocumentLines, drawPaperwork, drawCertificate, HANDWRITING_INK, DOCUMENT_INK } from '../src/render/paperwork';
+import { paperDescription, certificateDescription, referralLines, wrapDocumentLines, drawPaperwork, drawCertificate, HANDWRITING_INK, DOCUMENT_INK, ALERT_INK, noteEntries, letterContent, visionReading, pressureReading } from '../src/render/paperwork';
 import { measureDocumentText } from '../src/render/font';
 import { createDeskState, addDeskItem } from '../src/core/desk';
 import { shiftButtons, visibleDocumentClip } from '../src/scenes/shift';
@@ -25,12 +25,12 @@ describe('separate localized paperwork', () => {
         expect(lines.join(' ')).toContain(t.patientReferrals[patient.id]!.employer);
         expect(lines.join(' ')).toContain(`${p.requirements}: ${p.requirementCodes[patient.requirementId]}`);
       }
-      for (const body of [p.zusBody, p.employerBody]) {
-        const lines = wrapDocumentLines(body, 166);
+      for (const letter of [...p.letters.zus, ...p.letters.employer]) {
+        const lines = wrapDocumentLines([letter.body], 166);
         expect(lines.length).toBeLessThanOrEqual(6);
         for (const line of lines) expect(measureDocumentText(line), line).toBeLessThanOrEqual(166);
       }
-      for (const label of [p.referral, p.occupational, p.note, p.letter, p.zusSubject, p.employerSubject]) {
+      for (const label of [p.referral, p.occupational, p.note, p.letter]) {
         expect(measureDocumentText(label), label).toBeLessThanOrEqual(166);
       }
     }
@@ -46,20 +46,21 @@ describe('separate localized paperwork', () => {
     expect(description).toContain(translations.pl.patientNames[0]);
     expect(description).toContain(`${PATIENTS[0].weight} kg`);
     expect(description).toContain(`${PATIENTS[0].height} cm`);
-    expect(description).toContain(translations.pl.pass);
+    expect(description).toContain(pressureReading(PATIENTS[0].pressureValues));
     expect(description).toContain(translations.pl.patientNotes[0].join(' '));
     const translated = paperDescription(written, 'en');
     expect(translated).toContain(translations.en.paperwork.note);
-    expect(translated).toContain(translations.en.pass);
+    expect(translated).toContain(visionReading(PATIENTS[0].visionValues, 'en'));
   });
 
   it('does not expose letter contents before the envelope is opened', () => {
     const state = stateAfter('skip-intro', 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-unfit', 'return-document');
     const letter = state.papers.find(paper => paper.kind === 'letter')!;
     expect(paperDescription(letter, 'pl')).toContain(translations.pl.paperwork.envelope);
-    expect(paperDescription(letter, 'pl')).not.toContain(translations.pl.paperwork.employerBody[1]);
+    if (letter.kind !== 'letter') throw new Error('Expected correspondence');
+    expect(paperDescription(letter, 'pl')).not.toContain(letterContent(letter, 'pl').body);
     const opened = applyAction(state, { type: 'open-letter', paperId: letter.id }).state.papers.find(paper => paper.id === letter.id)!;
-    expect(paperDescription(opened, 'pl')).toContain(translations.pl.paperwork.employerBody.join(' '));
+    expect(paperDescription(opened, 'pl')).toContain(letterContent(letter, 'pl').body);
   });
   it('keeps additional details and certificate fields inside their native paper columns', () => {
     for (const t of Object.values(translations)) {
@@ -90,16 +91,15 @@ describe('separate localized paperwork', () => {
     };
     drawPaperwork(recorder as unknown as CanvasRenderingContext2D, note, { x: 0, y: 0, w: 188, h: 144 }, 'pl', false);
     expect(HANDWRITING_INK).not.toBe(DOCUMENT_INK);
-    expect(marks.some(mark => mark.y >= 87 && mark.y < 94 && mark.x >= 45 && mark.x < 85 && mark.color === HANDWRITING_INK)).toBe(true);
-    expect(marks.some(mark => mark.y >= 111 && mark.y < 126 && mark.x < 157 && mark.color === HANDWRITING_INK)).toBe(true);
-    expect(marks.filter(mark => mark.y >= 111 && mark.y < 126 && mark.x < 157).every(mark => mark.color === HANDWRITING_INK)).toBe(true);
-    expect(marks.some(mark => mark.y >= 63 && mark.y < 70 && mark.x < 80 && mark.color === DOCUMENT_INK)).toBe(true);
+    expect(marks.some(mark => mark.y >= 24 && mark.y < 31 && mark.color === HANDWRITING_INK)).toBe(true);
+    expect(marks.some(mark => mark.y >= 33 && mark.y < 49 && mark.color === HANDWRITING_INK)).toBe(true);
+    expect(marks.filter(mark => mark.y >= 12 && mark.y < 49).every(mark => mark.color === HANDWRITING_INK)).toBe(true);
     expect(marks.every(mark => mark.x >= 0 && mark.x < 188 && mark.y >= 0 && mark.y < 144)).toBe(true);
   });
 
   it('retains the issue date and authentication when old paperwork is stored', () => {
     const state = stateAfter('skip-intro', 'call-patient', 'take-document', 'run-vision', 'take-paper');
-    for (const paper of state.papers) {
+    for (const paper of state.papers.filter(paper => paper.kind !== 'note')) {
       const stored = { ...paper, day: 1, location: 'drawer' as const };
       for (const locale of ['pl', 'en'] as const) {
         const p = translations[locale].paperwork, description = paperDescription(stored, locale);
@@ -154,6 +154,36 @@ describe('separate localized paperwork', () => {
     expect(buttons.find(button => button.id === 'apply-stamp')?.label).toContain(translations.pl.paperwork.nameMissing);
     state = applyAction(state, 'write-certificate').state;
     expect(shiftButtons(state, 'pl', null, () => {}, view).find(button => button.id === 'apply-stamp')?.label).toContain(translations.pl.patientNames[0]);
+  });
+
+  it('leaves a blank sheet empty and adds compact chronological findings with no pending slots', () => {
+    let state = stateAfter('skip-intro', 'call-patient', 'take-document', 'take-paper');
+    const blank = state.papers.find(paper => paper.kind === 'note')!;
+    if (blank.kind !== 'note') throw new Error('Expected note');
+    expect(noteEntries(blank, 'pl')).toEqual([]);
+    expect(paperDescription(blank, 'pl')).toBe(translations.pl.paperwork.blank);
+    for (const action of ['run-measurements', 'run-general', 'run-vision', 'run-pressure', 'run-vision'] as const) state = applyAction(state, action).state;
+    const note = state.papers.find(paper => paper.kind === 'note')!;
+    if (note.kind !== 'note') throw new Error('Expected note');
+    expect(noteEntries(note, 'pl').map(row => row.text)).toEqual([
+      'Waga 62 kg   Wzrost 164 cm', 'Badanie ogólne: bez uwag', 'Wzrok: OL: 0, OP: 0', 'Ciśnienie: 108/62',
+    ]);
+    expect(paperDescription(note, 'pl')).not.toContain(translations.pl.untested);
+  });
+
+  it('writes very high pressure in red and keeps all case findings within the paper', () => {
+    for (const locale of ['pl', 'en'] as const) for (const patient of PATIENTS) {
+      const note = { id: 1, day: 1, location: 'desk' as const, kind: 'note' as const, patientId: patient.id,
+        examinationOrder: ['general', 'vision', 'pressure', 'measurements'] as const,
+        results: { general: patient.general, vision: patient.visionValues, pressure: patient.pressureValues, weight: patient.weight, height: patient.height }, additionalWritten: true };
+      const entries = noteEntries({ ...note, examinationOrder: [...note.examinationOrder] }, locale);
+      const pressure = entries[2]!;
+      const high = patient.pressureValues.systolic >= 180 || patient.pressureValues.diastolic >= 110;
+      expect(pressure.color).toBe(high ? ALERT_INK : HANDWRITING_INK);
+      const lines = entries.flatMap(entry => wrapDocumentLines([entry.text], 166));
+      expect(lines.length).toBeLessThanOrEqual(10);
+      for (const line of lines) expect(measureDocumentText(line)).toBeLessThanOrEqual(166);
+    }
   });
 
 });

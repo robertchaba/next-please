@@ -19,7 +19,7 @@ function submit(patientId: number, decision: 'fit' | 'unfit', fraction: number, 
 
 describe('patient catalog and deterministic queues', () => {
   it('preserves the original 103 case fixtures while expanding to 53 identities', () => {
-    expect(PATIENTS).toHaveLength(303);
+    expect(PATIENTS).toHaveLength(328);
     expect(new Set(PATIENTS.map(patient => patient.characterId)).size).toBe(53);
     for (let character = 3; character < 28; character += 1) {
       const cases = PATIENTS.filter(patient => patient.characterId === character);
@@ -101,9 +101,10 @@ describe('closing and the household budget', () => {
     expect(state.clockMinutes).toBe(840);
     expect(canEndDay(state)).toBe(false);
     expect(applyAction(state, 'end-day').state).toBe(state);
-    state = act(state, 'take-document', 'run-vision', 'run-pressure', 'run-measurements', 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document');
+    state = act(state, 'take-document', 'run-general', 'run-vision', 'run-pressure', 'run-measurements', 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document');
     expect(state.visit).toBeNull();
-    expect(canEndDay(state)).toBe(true);
+    expect(state.phase).toBe('home');
+    expect(canEndDay(state)).toBe(false);
     expect(applyAction(state, 'call-patient').state).toBe(state);
     expect(applyAction({ ...cabinet(), clockMinutes: 840 }, 'call-patient').feedback).toBe('shift-finished');
   });
@@ -173,8 +174,8 @@ describe('multi-day case and save integration', () => {
     let state = act(createInitialState(614), 'skip-intro');
     const seen = new Set<number>();
     for (let day = 0; day < 3; day++) {
-      while (!canEndDay(state)) {
-        state = act(state, 'call-patient', 'take-document', 'take-paper', 'run-vision', 'run-pressure', 'run-measurements', 'take-certificate', 'write-certificate');
+      while (state.phase === 'cabinet' && !canEndDay(state)) {
+        state = act(state, 'call-patient', 'take-document', 'take-paper', 'run-general', 'run-vision', 'run-pressure', 'run-measurements', 'take-certificate', 'write-certificate');
         const patient = PATIENTS[state.visit!.patientId]!;
         seen.add(patient.characterId);
         // Mix correct and incorrect certificates so archived letters coexist

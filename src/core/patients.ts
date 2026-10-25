@@ -1,15 +1,15 @@
 /** Stable fictional case catalog: no real diagnostic thresholds or medical advice. */
-export type PatientCondition = 'healthy' | 'vision' | 'pressure' | 'combined';
-export type ExaminationId = 'vision' | 'pressure' | 'measurements';
+export type PatientCondition = 'healthy' | 'vision' | 'pressure' | 'combined' | 'general';
+export type ExaminationId = 'general' | 'vision' | 'pressure' | 'measurements';
 export type RequirementId = 'full' | 'vision' | 'pressure';
 export type ExposureId = 'paper-dust' | 'noise' | 'heights' | 'traffic' | 'textile-dust' | 'oil' | 'lifting' | 'stress' | 'fine-detail' | 'heat' | 'chemicals' | 'outdoors' | 'night-work' | 'standing' | 'food';
 export type WorkPatternId = 'day' | 'early' | 'shifts' | 'night' | 'split' | 'seasonal';
 
 /** Fictional game profiles, not clinical thresholds. The referral prints their code. */
 export const REQUIREMENTS: Record<RequirementId, { code: string; examinations: readonly ExaminationId[]; disqualifying: readonly ('vision' | 'pressure')[] }> = {
-  full: { code: 'WC', examinations: ['vision', 'pressure', 'measurements'], disqualifying: ['vision', 'pressure'] },
-  vision: { code: 'W', examinations: ['vision', 'measurements'], disqualifying: ['vision'] },
-  pressure: { code: 'C', examinations: ['pressure', 'measurements'], disqualifying: ['pressure'] },
+  full: { code: 'WC', examinations: ['general', 'vision', 'pressure', 'measurements'], disqualifying: ['vision', 'pressure'] },
+  vision: { code: 'W', examinations: ['general', 'vision', 'measurements'], disqualifying: ['vision'] },
+  pressure: { code: 'C', examinations: ['general', 'pressure', 'measurements'], disqualifying: ['pressure'] },
 };
 
 export interface JobDefinition {
@@ -60,6 +60,17 @@ export const JOBS: readonly JobDefinition[] = [
   job(31, 'survey-assistant', 'full', ['outdoors', 'fine-detail'], [13, 15]),
 ];
 
+export interface VisionValues { left: number; right: number }
+export interface PressureValues { systolic: number; diastolic: number }
+
+// Deliberately simplified game rules, not clinical diagnostic criteria.
+export const VISION_LIMIT = 6;
+export const PRESSURE_LIMIT = { systolic: 160, diastolic: 100 } as const;
+export const VERY_HIGH_PRESSURE = { systolic: 180, diastolic: 110 } as const;
+export const significantVisionDefect = (values: VisionValues): boolean => Math.abs(values.left) >= VISION_LIMIT || Math.abs(values.right) >= VISION_LIMIT;
+export const disqualifyingPressure = (values: PressureValues): boolean => values.systolic >= PRESSURE_LIMIT.systolic || values.diastolic >= PRESSURE_LIMIT.diastolic;
+export const veryHighPressure = (values: PressureValues): boolean => values.systolic >= VERY_HIGH_PRESSURE.systolic || values.diastolic >= VERY_HIGH_PRESSURE.diastolic;
+
 export interface PatientCase {
   id: number;
   characterId: number;
@@ -68,6 +79,9 @@ export interface PatientCase {
   jobId: number;
   caseVariant: number;
   conditionId: PatientCondition;
+  general: 'pass' | 'refer';
+  visionValues: VisionValues;
+  pressureValues: PressureValues;
   vision: 'pass' | 'refer';
   pressure: 'pass' | 'refer';
   expectedDecision: 'fit' | 'unfit';
@@ -83,7 +97,8 @@ export interface PatientCase {
 
 export const CHARACTER_COUNT = 53;
 export const LEGACY_CASE_COUNT = 103;
-const original: PatientCase[] = [
+type OriginalCase = Omit<PatientCase, 'general' | 'visionValues' | 'pressureValues'>;
+const original: OriginalCase[] = [
   { id: 0, characterId: 0, portraitId: 'patient-0', employerId: 0, jobId: 0, caseVariant: 0, conditionId: 'healthy', vision: 'pass', pressure: 'pass', expectedDecision: 'fit', birthDate: '1952-04-18', sex: 'female', examination: 'periodic', managerial: false, weight: 62, height: 164, requirementId: 'full', workPatternId: 'day' },
   { id: 1, characterId: 1, portraitId: 'patient-1', employerId: 1, jobId: 1, caseVariant: 1, conditionId: 'vision', vision: 'refer', pressure: 'pass', expectedDecision: 'unfit', birthDate: '1947-11-06', sex: 'male', examination: 'initial', managerial: true, weight: 86, height: 178, requirementId: 'full', workPatternId: 'shifts' },
   { id: 2, characterId: 2, portraitId: 'patient-2', employerId: 2, jobId: 2, caseVariant: 2, conditionId: 'pressure', vision: 'pass', pressure: 'refer', expectedDecision: 'unfit', birthDate: '1958-08-23', sex: 'female', examination: 'periodic', managerial: false, weight: 71, height: 169, requirementId: 'full', workPatternId: 'shifts' },
@@ -93,22 +108,22 @@ const newAges = [32, 46, 60, 27, 39, 54, 23, 64, 48, 35, 56, 29, 42, 58, 25, 51,
 const conditions: PatientCondition[] = ['healthy', 'vision', 'pressure', 'combined'];
 const patterns: WorkPatternId[] = ['day', 'early', 'shifts', 'night', 'split', 'seasonal'];
 
-export function decisionForFindings(requirementId: RequirementId, findings: Pick<PatientCase, 'vision' | 'pressure'>): 'fit' | 'unfit' {
-  return REQUIREMENTS[requirementId].disqualifying.some(examination => findings[examination] === 'refer') ? 'unfit' : 'fit';
+export function decisionForFindings(requirementId: RequirementId, findings: Pick<PatientCase, 'vision' | 'pressure'> & Partial<Pick<PatientCase, 'general'>>): 'fit' | 'unfit' {
+  return findings.general === 'refer' || REQUIREMENTS[requirementId].disqualifying.some(examination => findings[examination] === 'refer') ? 'unfit' : 'fit';
 }
 
 export function requiredExaminations(patient: PatientCase): readonly ExaminationId[] {
   return REQUIREMENTS[patient.requirementId].examinations;
 }
 
-export function hasRequiredExaminations(patient: PatientCase, visit: { visionTested: boolean; pressureTested: boolean; measurementsTaken: boolean }): boolean {
-  const completed = { vision: visit.visionTested, pressure: visit.pressureTested, measurements: visit.measurementsTaken };
+export function hasRequiredExaminations(patient: PatientCase, visit: { generalTested: boolean; visionTested: boolean; pressureTested: boolean; measurementsTaken: boolean }): boolean {
+  const completed = { general: visit.generalTested, vision: visit.visionTested, pressure: visit.pressureTested, measurements: visit.measurementsTaken };
   return requiredExaminations(patient).every(examination => completed[examination]);
 }
 
-export const PATIENTS: readonly PatientCase[] = [
+const establishedCases: readonly OriginalCase[] = [
   ...original,
-  ...Array.from({ length: 25 * 4 }, (_, index): PatientCase => {
+  ...Array.from({ length: 25 * 4 }, (_, index): OriginalCase => {
     const person = Math.floor(index / 4), variant = index % 4;
     return {
       id: 3 + index, characterId: 3 + person, portraitId: `patient-${String(person + 1).padStart(2, '0')}`,
@@ -123,7 +138,7 @@ export const PATIENTS: readonly PatientCase[] = [
       requirementId: 'full', workPatternId: patterns[(person + variant) % patterns.length]!,
     };
   }),
-  ...Array.from({ length: 25 * 8 }, (_, index): PatientCase => {
+  ...Array.from({ length: 25 * 8 }, (_, index): OriginalCase => {
     const person = Math.floor(index / 8), variant = index % 8, condition = variant % 4;
     const job = JOBS[8 + (person * 7 + Math.floor(variant / 4) * 11) % 24]!;
     const vision = condition === 1 || condition === 3 ? 'refer' : 'pass';
@@ -139,6 +154,28 @@ export const PATIENTS: readonly PatientCase[] = [
       managerial: job.managerial, weight: 52 + (person * 11) % 49, height: 154 + (person * 7) % 37,
       requirementId: job.requirementId, workPatternId: patterns[(person + Math.floor(variant / 4)) % patterns.length]!,
     };
+  }),
+];
+
+/** Stable measurements attach to case IDs without altering legacy case decisions. */
+function withMeasurements(patient: OriginalCase, general: 'pass' | 'refer' = 'pass'): PatientCase {
+  const id = patient.id;
+  const visionValues: VisionValues = patient.vision === 'refer'
+    ? { left: -(6 + id % 4), right: -(2 + id % 6) }
+    : { left: -(id % 6) / 2 || 0, right: -((id * 3) % 6) / 2 || 0 };
+  const pressureValues: PressureValues = patient.pressure === 'refer'
+    ? { systolic: 160 + (id % 8) * 8, diastolic: 100 + (id % 7) * 4 }
+    : { systolic: 108 + (id % 20) * 2, diastolic: 62 + (id % 14) * 2 };
+  return { ...patient, general, visionValues, pressureValues };
+}
+
+export const PATIENTS: readonly PatientCase[] = [
+  ...establishedCases.map(patient => withMeasurements(patient)),
+  // Append-only general-examination cases preserve every older save's identity.
+  ...Array.from({ length: 25 }, (_, person): PatientCase => {
+    const original = establishedCases[LEGACY_CASE_COUNT + person * 8]!;
+    return withMeasurements({ ...original, id: establishedCases.length + person,
+      caseVariant: 8, conditionId: 'general', vision: 'pass', pressure: 'pass', expectedDecision: 'unfit' }, 'refer');
   }),
 ];
 

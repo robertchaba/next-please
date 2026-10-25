@@ -1,10 +1,10 @@
 # Patient and occupation catalog
 
-The client-side catalog in `src/core/patients.ts` contains 53 identities and 303 cases. Three original patients have one fixed case each; the next 25 identities retain four cases each; the latest 25 have eight cases each. A case combines an identity, employer, occupation, examination type, work pattern and findings. It is not an additional portrait. New portraits are `patient-26.png` through `patient-50.png`; their character IDs are 28–52.
+The client-side catalog in `src/core/patients.ts` contains 53 identities and 328 cases. Three original patients have one fixed case each; the next 25 identities retain four cases each; the latest 25 have nine cases each. A case combines an identity, employer, occupation, examination type, work pattern and findings. It is not an additional portrait. New portraits are `patient-26.png` through `patient-50.png`; their character IDs are 28–52.
 
 ## Stable records and saved paperwork
 
-Patient case IDs are array indices and are append-only. IDs 0–102 preserve their existing employer, job, demographic details, measurements, findings and expected decision. The new profiles do not reinterpret those historical cases. New cases occupy IDs 103–302. A character's birth date, sex and portrait remain consistent across its cases; the latest identities also keep fixed measurements. Names, occupations, employers, duty descriptions, exposure descriptions and supplementary notes are localized in both dictionaries in `src/i18n.ts` and indexed by the saved case ID.
+Patient case IDs are array indices and are append-only. IDs 0–102 preserve their existing employer, job, demographic details, measurements, findings and expected decision. The new profiles do not reinterpret those historical cases. IDs 103–302 supply the first eight variants of the newest identities. IDs 303–327 append a general-examination concern for each of those 25 identities. Existing cases retain their prior expected decisions; numeric vision and pressure values are deterministic representations consistent with their original pass/refer outcomes. A character's birth date, sex and portrait remain consistent across its cases; the latest identities also keep fixed measurements. Names, occupations, employers, duty descriptions, exposure descriptions and supplementary notes are localized in both dictionaries in `src/i18n.ts` and indexed by the saved case ID.
 
 Do not reorder or remove a case, character, occupation or employer already used by a save. Append records instead. If historical case facts must change, introduce a new case and an explicit versioned migration with evidence that stored findings and decisions remain meaningful.
 
@@ -14,17 +14,17 @@ There are 32 occupations and 20 employers. The new occupations include typesetti
 
 `JOBS` supplies stable IDs and machine-readable keys, a requirement profile, exposure tags, suitable employers and managerial responsibility. The 15 exposure tags describe paper/textile dust, noise, heights, traffic, oil, lifting, stress, fine detail, heat, chemicals, outdoor work, night work, standing and food work. Six work patterns describe daytime, early, shift, night, split and seasonal work. These are structured authoring data for future rules and story. Exposure tags and work patterns do not themselves impose hidden penalties or unlock unimplemented examinations.
 
-The three implemented profiles are intentionally fictional game rules, without medical thresholds:
+The three implemented profiles use intentionally simplified fictional game rules:
 
 | Referral code | Required examinations | Findings that affect the decision |
 | --- | --- | --- |
-| WC | Vision, pressure, weight and height | Vision and pressure |
-| W | Vision, weight and height | Vision |
-| C | Pressure, weight and height | Pressure |
+| WC | General, vision, pressure, weight and height | General concerns, significant vision defect and pressure |
+| W | General, vision, weight and height | General concerns and significant vision defect |
+| C | General, pressure, weight and height | General concerns and pressure |
 
-The codes are identical in both interface languages. Their meanings and the common requirement to record weight and height are explained in the rulebook. A `refer` result in a required decision-making test yields `unfit`; all required results passing yields `fit`. An optional test outside the profile does not change the decision. Body measurements are required documentation, without a numerical fitness threshold. Completing the required examinations is distinct from having made the correct decision; the doctor can still stamp and hand over a certificate early under the existing gameplay rules.
+The codes are identical in both interface languages. Their meanings and the common requirement for general examination, weight and height are explained in the rulebook. Any general-examination concern requires refusal, regardless of occupation. No pilots or specialist consultations are currently implemented. A `refer` result in a required decision-making test yields `unfit`; all required results passing yields `fit`. Optional vision/pressure tests outside the profile do not change the decision. Body measurements are required documentation, without a numerical fitness threshold. Completing the required examinations is distinct from having made the correct decision; the doctor can still stamp and hand over a certificate early under the existing gameplay rules.
 
-`decisionForFindings` derives the expected decision for a new case. `requiredExaminations` and `hasRequiredExaminations` expose the same profile to game transitions. Rendering reads the catalog and draws the localized profile code; it does not assess cases or mutate state. Original cases retain the WC profile and their prior decisions.
+`decisionForFindings` derives the expected decision for a new case. `requiredExaminations` and `hasRequiredExaminations` expose the same profile to game transitions. Numeric vision uses left/right diopters; absolute values of at least 6 in either eye are significant. Numeric blood pressure requires refusal for relevant profiles at systolic 160 or diastolic 100. Values at systolic 180 or diastolic 110 are highlighted red. These tuning values are fictional game parameters, not clinical diagnostic criteria; changing them requires keeping case outcomes, save migration and both rulebooks consistent. Rendering reads the catalog and draws the localized profile code and recorded numeric findings; it does not assess cases or mutate state. Original cases retain the WC profile and their prior decisions.
 
 ## Queue construction
 

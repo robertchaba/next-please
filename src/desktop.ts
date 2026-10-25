@@ -9,7 +9,7 @@ import { createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, p
 import { installDeskInput } from './core/desk-input';
 import { drawCreatorPortrait, drawPaper, drawPanelIllustration, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
 import { drawText } from './render/font';
-import { paperClipRect } from './render/paperwork';
+import { paperClipRect, visionReading, pressureReading } from './render/paperwork';
 import { drawerButtons, drawerDescription, renderDrawer, type DrawerAction } from './render/drawer';
 import { installCursor, installDisplay, WIDTH, HEIGHT } from './core/display';
 import { translations, readPreferences, savePreferences, type Locale } from './i18n';
@@ -359,7 +359,7 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     animatePatient(gameState.visit!.patientId, 'enter');
     say(gameState.visit!.patientId, choosePatientSpeech('arrival', { day: gameState.day, patientId: gameState.visit!.patientId }));
   } else if (actual === 'take-document' && result.feedback === 'document-taken') {
-    playEffect('paper'); focusId = 'run-vision';
+    playEffect('paper'); focusId = 'run-general';
     if (gameState !== previousState) newSheet = `paper-${gameState.nextPaperId - 1}`;
   } else if (actual === 'take-certificate' && result.feedback === 'certificate-taken') {
     playEffect('paper'); focusId = 'apply-stamp';
@@ -368,15 +368,21 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
       newSheet = 'document';
       sheetSupply = CABINET_HOTSPOTS.certificateSupply;
     }
+  } else if (actual === 'run-general') {
+    focusId = 'run-vision';
   } else if (actual === 'run-vision') {
     focusId = 'run-pressure';
     if (gameState !== previousState && gameState.visit) {
+      feedback += ` ${visionReading(PATIENTS[gameState.visit.patientId]!.visionValues, locale)}.`;
       say(gameState.visit.patientId, choosePatientSpeech(result.feedback === 'vision-pass' ? 'vision-pass' : 'vision-refer', {
         day: gameState.day, patientId: gameState.visit.patientId, visionAttempt: visionSpeechAttempt++,
       }));
     }
   }
-  else if (actual === 'run-pressure') focusId = 'run-measurements';
+  else if (actual === 'run-pressure') {
+    focusId = 'run-measurements';
+    if (gameState !== previousState && gameState.visit) feedback += ` ${pressureReading(PATIENTS[gameState.visit.patientId]!.pressureValues)} ${t().pressureUnit}.`;
+  }
   else if (actual === 'run-measurements') {
     focusId = 'take-paper';
     if (gameState.visit?.measurementsTaken) {
@@ -402,6 +408,12 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
       animatePatient(previousState.visit.patientId, 'exit');
     }
     selectedStamp = null; playEffect('paper'); focusId = canEndDay(gameState) ? 'end-day' : 'call-patient';
+    if (gameState.phase === 'home') {
+      deskInput.cancel(); reconcileDeskPapers();
+      homePageIndex = 0; typingKey = '';
+      if (patientMotion || departingPatientId() !== undefined) screen = 'cabinet';
+      else { clearPatientMotion(); startTyping(); focusId = 'home-next'; }
+    }
   } else if (actual === 'end-day' && screen === 'home') {
     clearPatientMotion(); homePageIndex = 0; typingKey = ''; startTyping(); focusId = 'home-next';
   } else if (actual === 'next-day') {
@@ -510,6 +522,7 @@ function updateMusicMeter(): void {
 }
 
 function getButtons(): Button[] {
+  if (screen === 'cabinet' && gameState.phase === 'home') return [];
   if (screen === 'home') return [{ id: 'home-next', label: introCharacters < typedContent().length ? t().home.reveal : homePage(gameState, locale, homePageIndex).action,
     ...HOME_ACTION, kind: 'text', action: advanceHome }];
   if (screen === 'drawer') return drawerButtons(gameState, locale, drawerPage, handleDrawerAction);
@@ -922,7 +935,7 @@ function updateDeskControls(): void {
 }
 
 const deskInput = installDeskInput(stage, {
-  enabled: () => desktopActive && screen === 'cabinet',
+  enabled: () => desktopActive && screen === 'cabinet' && gameState.phase === 'cabinet',
   rect: deskRect,
   begin: (id, chargeHandling) => {
     deskBeforePickup = deskState;
@@ -1143,7 +1156,7 @@ const deskInput = installDeskInput(stage, {
 
 // Patient movement and brief speech advance only while the room is visible.
 setInterval(() => {
-  if (!desktopActive || screen !== 'cabinet' || document.hidden || (!patientMotion && !patientSpeech)) return;
+  if (!desktopActive || screen !== 'cabinet' || document.hidden || (!patientMotion && !patientSpeech && gameState.phase !== 'home')) return;
   if (patientSpeech && visiblePatientSpeech()) {
     patientSpeech.remaining -= 60;
     if (patientSpeech.remaining <= 0) patientSpeech = undefined;
@@ -1158,6 +1171,9 @@ setInterval(() => {
     }
   }
   if (patientSpeech && !patientMotion && !gameState.visit && !departingPatientId()) patientSpeech = undefined;
+  if (gameState.phase === 'home' && !patientMotion && departingPatientId() === undefined) {
+    clearPatientMotion(); screen = 'home'; homePageIndex = 0; typingKey = ''; startTyping(); syncControls('home-next'); return;
+  }
   render();
 }, 60);
 setInterval(() => {

@@ -1,4 +1,5 @@
 import { PATIENTS, type GameState, type Paper } from '../core/game';
+import { veryHighPressure, type PressureValues, type VisionValues } from '../core/patients';
 import type { Rect } from '../core/desk';
 import { formatGameDate } from '../core/calendar';
 import { translations, type Locale } from '../i18n';
@@ -7,7 +8,39 @@ import { drawDocumentText, measureDocumentText } from './font';
 
 export const DOCUMENT_INK = '#333b2b';
 export const HANDWRITING_INK = '#385b78';
+export const ALERT_INK = '#a33128';
 const ink = DOCUMENT_INK, muted = '#79785c';
+
+/** Stable archived correspondence: reading, language changes and imports never reroll it. */
+export function letterContent(paper: Extract<Paper, { kind: 'letter' }>, locale: Locale) {
+  const variants = translations[locale].paperwork.letters[paper.sender];
+  return variants[((paper.day - 1) * 7 + paper.patientId * 5 + paper.id) % variants.length]!;
+}
+
+export function visionReading(values: VisionValues, locale: Locale): string {
+  const t = translations[locale];
+  const value = (number: number) => (number > 0 ? '+' : '') + String(number).replace('.', locale === 'pl' ? ',' : '.');
+  return `${t.leftEye}: ${value(values.left)}, ${t.rightEye}: ${value(values.right)}`;
+}
+
+export function pressureReading(values: PressureValues): string {
+  return `${values.systolic}/${values.diastolic}`;
+}
+
+/** Completed entries only, in the order retained by the examination transitions. */
+export function noteEntries(paper: Extract<Paper, { kind: 'note' }>, locale: Locale): { text: string; color: string }[] {
+  if (paper.patientId === null) return [];
+  const t = translations[locale], p = t.paperwork, r = paper.results;
+  const rows: { text: string; color: string }[] = [];
+  for (const examination of paper.examinationOrder) {
+    if (examination === 'general' && r.general !== null) rows.push({ text: `${t.generalResult}: ${r.general === 'pass' ? t.generalClear : t.generalConcern}`, color: HANDWRITING_INK });
+    if (examination === 'vision' && r.vision !== null) rows.push({ text: `${t.documentVision}: ${visionReading(r.vision, locale)}`, color: HANDWRITING_INK });
+    if (examination === 'pressure' && r.pressure !== null) rows.push({ text: `${t.documentPressure}: ${pressureReading(r.pressure)}`, color: veryHighPressure(r.pressure) ? ALERT_INK : HANDWRITING_INK });
+    if (examination === 'measurements' && r.weight !== null && r.height !== null) rows.push({ text: `${p.weight} ${r.weight} ${p.kg}   ${p.height} ${r.height} ${p.cm}`, color: HANDWRITING_INK });
+  }
+  if (paper.additionalWritten) for (const text of t.patientNotes[paper.patientId]!) rows.push({ text, color: HANDWRITING_INK });
+  return rows;
+}
 
 export function referralLines(patientId: number, locale: Locale): string[] {
   const t = translations[locale], p = t.paperwork, patient = PATIENTS[patientId]!;
@@ -33,14 +66,15 @@ export function paperDescription(paper: Paper, locale: Locale, clipped = false):
     const sender = paper.sender === 'zus' ? p.zus : t.patientReferrals[paper.patientId]!.employer;
     text = `${paper.opened ? p.letter : p.envelope}. ${p.sender}: ${sender}.`;
     text += ` ${paper.sender === 'zus' ? p.zusSeal : p.employerSeal}.`;
-    if (paper.opened) text += ` ${name}. ${(paper.sender === 'zus' ? p.zusBody : p.employerBody).join(' ')} ${p.signed}.`;
+    if (paper.opened) {
+      const letter = letterContent(paper, locale);
+      text += ` ${name}. ${letter.subject}. ${letter.body} ${letter.role}: ${letter.signature}. ${p.signed}.`;
+    }
   } else {
-    const r = paper.results;
-    text = paper.patientId === null ? p.blank : `${p.note}. ${name}. ${t.documentVision}: ${r.vision ? t[r.vision] : t.untested}. ${t.documentPressure}: ${r.pressure ? t[r.pressure] : t.untested}. ${p.weight}: ${r.weight === null ? t.untested : `${r.weight} ${p.kg}`}. ${p.height}: ${r.height === null ? t.untested : `${r.height} ${p.cm}`}.`;
+    text = paper.patientId === null ? p.blank : `${p.note}. ${name}. ${noteEntries(paper, locale).map(row => row.text.replace(/\.$/, '')).join('. ')}.`;
+    if (paper.results.pressure && veryHighPressure(paper.results.pressure)) text += ` ${t.documentPressure}: ${t.veryHigh}.`;
   }
-  if (paper.kind === 'note' && paper.additionalWritten && paper.patientId !== null) text += ` ${p.additionalHeading}: ${t.patientNotes[paper.patientId]!.join(' ')}`;
-  if (paper.kind !== 'note' || paper.patientId !== null) text += ` ${p.issued}: ${formatGameDate(paper.day, locale)}. ${p.reference}: ${paper.id}.`;
-  if (paper.kind === 'note' && paper.patientId !== null) text += ` ${p.clinicSeal}. ${p.signed}.`;
+  if (paper.kind !== 'note') text += ` ${p.issued}: ${formatGameDate(paper.day, locale)}. ${p.reference}: ${paper.id}.`;
   if (clipped) text += ` ${p.clipped}.`;
   if (paper.location === 'drawer') text += ` ${p.stored}.`;
   return text;
@@ -144,25 +178,14 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     authentication();
   } else if (paper.kind === 'note') {
     if (paper.patientId !== null) {
-      write(p.note, 11, 10);
-      dateAndReference();
-      write(t.patientNames[paper.patientId]!, 11, 34, HANDWRITING_INK);
-      drawDocumentSeal(ctx, x + w - 35, y + 28, 17);
-      fill(ctx, x + 11, y + 46, w - 22, 1, '#b0a47e');
-      write(p.resultsHeading, 11, 51, muted);
-      const r = paper.results;
-      const rows = [
-        [t.documentVision, r.vision === null ? t.documentPending : t[r.vision]],
-        [t.documentPressure, r.pressure === null ? t.documentPending : t[r.pressure]],
-      ];
-      rows.forEach(([label, value], index) => { write(`${label}:`, 11, 63 + index * 12); write(value!, 91, 63 + index * 12, HANDWRITING_INK); });
-      write(`${p.weight}:`, 11, 87);
-      write(r.weight === null ? t.documentPending : `${r.weight} ${p.kg}`, 45, 87, HANDWRITING_INK);
-      write(`${p.height}:`, 91, 87);
-      write(r.height === null ? t.documentPending : `${r.height} ${p.cm}`, 131, 87, HANDWRITING_INK);
-      write(p.additionalHeading, 11, 100, muted);
-      if (paper.additionalWritten) t.patientNotes[paper.patientId]!.forEach((line, index) => write(line, 11, 111 + index * 8, HANDWRITING_INK));
-      drawDocumentSignature(ctx, x + 88, y + 129, 50, 10);
+      write(t.patientNames[paper.patientId]!, 11, 12, HANDWRITING_INK);
+      let rowY = 24;
+      for (const entry of noteEntries(paper, locale)) {
+        for (const line of wrapDocumentLines([entry.text], w - 22)) {
+          write(line, 11, rowY, entry.color);
+          rowY += 9;
+        }
+      }
     }
     if (!lifted && showActions) drawActionCorner(ctx, bounds, true);
   } else {
@@ -171,10 +194,14 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     write(paper.sender === 'zus' ? p.zus : t.patientReferrals[paper.patientId]!.employer, 11, 32, muted);
     fill(ctx, x + 11, y + 42, w - 22, 1, '#b0a47e');
     write(t.patientNames[paper.patientId]!, 11, 46);
-    write(paper.sender === 'zus' ? p.zusSubject : p.employerSubject, 11, 57, '#78503a');
-    const lines = wrapDocumentLines(paper.sender === 'zus' ? p.zusBody : p.employerBody, w - 22);
-    lines.forEach((line, index) => write(line, 11, 71 + index * 8));
-    authentication();
+    const letter = letterContent(paper, locale);
+    write(letter.subject, 11, 57, '#78503a');
+    const lines = wrapDocumentLines([letter.body], w - 22);
+    lines.forEach((line, index) => write(line, 11, 68 + index * 8));
+    write(letter.role, 11, 113, muted);
+    write(letter.signature, 11, 122, HANDWRITING_INK);
+    drawDocumentSignature(ctx, x + 79, y + 130, 49, 10);
+    drawDocumentSeal(ctx, x + w - (seal === 'zus' ? 49 : 38), y + 115, 22, seal);
   }
   if (clipped) { const clip = paperClipRect(bounds); drawPaperclip(ctx, clip.x, clip.y); }
 }

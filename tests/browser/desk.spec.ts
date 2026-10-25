@@ -191,7 +191,7 @@ test('right-side papers overlap the room while keeping half on the desk and cove
   expect(await page.evaluate(point => document.elementFromPoint(point.x, point.y)?.id, coveredInstrument)).toBe('control-apply-stamp');
   await expect(page.locator('#screen-description')).toContainText('CIŚNIENIE: BRAK');
   await activate(page, 'run-pressure');
-  await expect(page.locator('#screen-description')).toContainText('Ciśnienie: NORMA.');
+  await expect(page.locator('#screen-description')).toContainText('108/62');
   await carryTo(page, 'apply-stamp', { x: 394, y: 172 });
   expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ x: 300, y: 100 });
 });
@@ -408,7 +408,7 @@ test('reduced motion skips patient and clock transitions while preserving the co
   await activate(page, 'call-patient');
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
   await expect(page.locator('#controls')).toHaveAttribute('data-clock-moving', 'false');
-  for (const id of ['take-document', 'take-certificate', 'run-vision', 'run-pressure', 'run-measurements', 'stamp-fit', 'apply-stamp', 'write-certificate', 'return-document']) {
+  for (const id of ['take-document', 'take-certificate', 'run-general', 'run-vision', 'run-pressure', 'run-measurements', 'stamp-fit', 'apply-stamp', 'write-certificate', 'return-document']) {
     await activate(page, id);
   }
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');

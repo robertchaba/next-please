@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyAction, createInitialState, type GameState } from '../src/core/game';
 import { homePage, homePages } from '../src/scenes/home';
-import { measureDocumentText, measureText } from '../src/render/font';
+import { measureText } from '../src/render/font';
 import { translations } from '../src/i18n';
 import type { ExpenseKind } from '../src/core/economy';
 
@@ -13,15 +13,18 @@ function homeState(day = 1, money = 0): GameState {
 const eventKinds: ExpenseKind[] = ['medicine', 'car-repair', 'home-repair', 'fur-coat', 'mountain-trip', 'seaside-trip'];
 
 describe('localized home sequence', () => {
-  it('shows only five requested budget rows, without explanations or event prices', () => {
+  it('shows living costs in the first day budget, without explanations or event prices', () => {
     const state = homeState(), before = structuredClone(state);
     for (const locale of ['pl', 'en'] as const) {
       const content = homePage(state, locale, homePages(state).indexOf('budget'));
       const h = translations[locale].home;
-      expect(content.rows.map(row => row.label)).toEqual([h.base, h.bonus, h.previousMonth, h.fines, h.insurance]);
-      expect(content.rows.map(row => row.value)).toEqual([locale === 'pl' ? '1000 zł' : '1,000 zł', '0 zł', '0 zł', '0 zł', '300 zł']);
+      expect(content.rows.map(row => row.label)).toEqual([h.base, h.bonus, h.previousMonth, h.living, h.fines, h.insurance]);
+      expect(content.rows.map(row => row.value)).toEqual([locale === 'pl' ? '1000 zł' : '1,000 zł', '0 zł', '0 zł', `${state.settlement!.livingCost} zł`, '0 zł', '300 zł']);
       expect(content.text).not.toMatch(/%|x 50|400–800|minimum|Minimum|ZUS/);
     }
+    expect(state.settlement!.livingCost).toBeGreaterThanOrEqual(400);
+    expect(state.settlement!.livingCost).toBeLessThanOrEqual(800);
+    expect(state.money).toBe(1000 - state.settlement!.livingCost - 300);
     expect(state).toEqual(before);
   });
 
@@ -32,10 +35,10 @@ describe('localized home sequence', () => {
       for (let page = 0; page < homePages(state).length; page++) {
         const content = homePage(state, locale, page);
         expect(measureText(content.title, 2), content.title).toBeLessThanOrEqual(314);
-        expect(measureDocumentText(content.action) * 2, content.action).toBeLessThanOrEqual(314);
+        expect(measureText(content.action), content.action).toBeLessThanOrEqual(314);
         expect(content.body.split('\n').length).toBeLessThanOrEqual(5);
-        for (const line of content.body.split('\n')) expect(measureDocumentText(line) * 2, line).toBeLessThanOrEqual(312);
-        for (const row of content.rows) expect((measureDocumentText(row.label) + measureDocumentText(row.value)) * 2 + 12).toBeLessThanOrEqual(312);
+        for (const line of content.body.split('\n')) expect(measureText(line, content.bodyScale), line).toBeLessThanOrEqual(312);
+        for (const row of content.rows) expect(measureText(row.label) + measureText(row.value) + 12).toBeLessThanOrEqual(312);
         expect(content.text).not.toContain('undefined');
       }
     }
@@ -45,7 +48,7 @@ describe('localized home sequence', () => {
     for (const locale of ['pl', 'en'] as const) for (const previousMonthBalance of [-999999999, 999999999]) {
       const state = { ...homeState(), previousMonthBalance };
       const content = homePage(state, locale, homePages(state).indexOf('budget'));
-      for (const row of content.rows) expect((measureDocumentText(row.label) + measureDocumentText(row.value)) * 2 + 12, row.label).toBeLessThanOrEqual(312);
+      for (const row of content.rows) expect(measureText(row.label) + measureText(row.value) + 12, row.label).toBeLessThanOrEqual(312);
     }
   });
 

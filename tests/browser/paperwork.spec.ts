@@ -1,7 +1,7 @@
 import { loadKnownQueue, knownQueueState } from './fixtures';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { isDocumentClipped } from '../../src/core/game';
+import { isDocumentClipped, PATIENTS } from '../../src/core/game';
 import { decodeSave, encodeSave } from '../../src/core/save';
 import { CABINET_HOTSPOTS } from '../../src/core/desk';
 
@@ -53,9 +53,10 @@ test('referrals, measurements and written notes remain separate from the certifi
   await expect(page.locator('#control-paper-1')).toHaveAccessibleName(/Irena Wolska/);
   await activate(page, 'paper-1');
   await expect(page.locator('#announcement')).toContainText('1952-04-18');
-  for (const id of ['run-vision', 'run-pressure', 'run-measurements', 'take-paper']) await activate(page, id);
+  for (const id of ['run-general', 'run-vision', 'run-pressure', 'run-measurements', 'take-paper']) await activate(page, id);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/62 kg/);
   await expect(page.locator('#control-paper-2')).not.toHaveAccessibleName(/Pozycja siedząca/);
+  await expect(page.locator('#control-paper-2')).not.toHaveAccessibleName(/BRAK|NORMA|KONTROLA/);
   await page.locator('#control-paper-action-2').click();
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Pozycja siedząca/);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/62 kg/);
@@ -68,7 +69,8 @@ test('referrals, measurements and written notes remain separate from the certifi
   const saved = await exportState(page, testInfo, 'records.npsave');
   expect(saved.state.papers.find(paper => paper.id === 2)).toMatchObject({
     kind: 'note', location: 'drawer', additionalWritten: true, patientId: 0,
-    results: { vision: 'pass', pressure: 'pass', weight: 62, height: 164 },
+    examinationOrder: ['general', 'vision', 'pressure', 'measurements'],
+    results: { vision: { left: 0, right: 0 }, pressure: { systolic: 108, diastolic: 62 }, weight: 62, height: 164 },
   });
   await activate(page, 'drawer');
   await activate(page, 'drawer-paper-2');
@@ -252,8 +254,9 @@ test('findings update notes without the pen and preserve supplementary writing i
   for (const id of ['call-patient', 'take-document', 'take-paper']) await activate(page, id);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName('Czysta kartka');
   await activate(page, 'run-vision');
-  await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Wzrok: NORMA/);
+  await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Wzrok: OL: 0, OP: 0/);
   await expect(page.locator('#control-paper-2')).not.toHaveAccessibleName(/Pozycja siedząca/);
+  await expect(page.locator('#control-paper-2')).not.toHaveAccessibleName(/BRAK|NORMA|KONTROLA/);
   await page.locator('#control-paper-action-2').click();
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Pozycja siedząca/);
   await sendPaper(page, 2, 'drawer');
@@ -262,6 +265,36 @@ test('findings update notes without the pen and preserve supplementary writing i
   const { state } = await exportState(page, testInfo, 'auto-notes.npsave');
   expect(state.papers.find(paper => paper.id === 2)).toMatchObject({
     location: 'drawer', additionalWritten: true,
-    results: { vision: 'pass', pressure: 'pass', weight: 62, height: 164 },
+    results: { vision: { left: 0, right: 0 }, pressure: { systolic: 108, diastolic: 62 }, weight: 62, height: 164 },
   });
+});
+
+test('notes append completed tests in order and show very high numeric pressure in red in both languages', async ({ page }, testInfo) => {
+  await enter(page);
+  const fixture = knownQueueState();
+  fixture.roster = [5, ...fixture.roster.filter(id => PATIENTS[id]!.characterId !== PATIENTS[5]!.characterId)];
+  await activate(page, 'saves');
+  await page.locator('#save-input').setInputFiles({ name: 'pressure.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(fixture)) });
+  await expect(page.locator('#announcement')).toContainText('Zapis wczytany');
+  await activate(page, 'back');
+  for (const id of ['call-patient', 'take-document', 'take-paper']) await activate(page, id);
+  await expect(page.locator('#control-paper-2')).toHaveAccessibleName('Czysta kartka');
+  for (const id of ['run-measurements', 'run-general', 'run-pressure', 'run-vision']) await activate(page, id);
+  const note = page.locator('#control-paper-2');
+  await expect(note).toHaveAccessibleName(/Waga 55 kg.*Badanie ogólne: bez uwag.*Ciśnienie: 200\/120.*Wzrok: OL:/);
+  await expect(note).toHaveAccessibleName(/bardzo wysokie/);
+  await expect(note).not.toHaveAccessibleName(/BRAK|NORMA|KONTROLA/);
+  const redPixels = await page.locator('#game').evaluate((element) => {
+    const pixels = (element as HTMLCanvasElement).getContext('2d')!.getImageData(0, 0, 570, 320).data;
+    let matches = 0;
+    for (let offset = 0; offset < pixels.length; offset += 4) if (pixels[offset] === 163 && pixels[offset + 1] === 49 && pixels[offset + 2] === 40) matches++;
+    return matches;
+  });
+  expect(redPixels).toBeGreaterThan(40);
+  await page.locator('#stage').screenshot({ path: testInfo.outputPath('numeric-pressure-pl.png') });
+  await activate(page, 'language-en');
+  await expect(note).toHaveAccessibleName(/Weight 55 kg.*General examination: no concerns.*Pressure: 200\/120.*Vision: LE:/);
+  await page.locator('#stage').screenshot({ path: testInfo.outputPath('numeric-pressure-en.png') });
+  const { state } = await exportState(page, testInfo, 'numeric-notes.npsave');
+  expect(state.papers.find(paper => paper.id === 2)).toMatchObject({ examinationOrder: ['measurements', 'general', 'pressure', 'vision'] });
 });

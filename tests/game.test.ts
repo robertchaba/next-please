@@ -11,7 +11,7 @@ function cabinet(): GameState {
 }
 
 function readyToStamp(state = cabinet()): GameState {
-  return act(state, 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-vision', 'run-pressure', 'run-measurements');
+  return act(state, 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-general', 'run-vision', 'run-pressure', 'run-measurements');
 }
 
 describe('separate drawer objects', () => {
@@ -45,7 +45,7 @@ describe('separate drawer objects', () => {
     for (let patient = 0; patient < state.roster.length; patient++) {
       state = act(state, 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document');
     }
-    const closed = { ...state, clockMinutes: 840 };
+    const closed = { ...state, phase: 'cabinet' as const, settlement: null, clockMinutes: 840 };
     expect(applyAction(closed, { type: 'retrieve-drawer-item', item: 'clip' }).state).toMatchObject({ clockMinutes: 840, drawerItems: { manual: true, clips: 0 } });
     expect(act(closed, 'end-day', 'next-day').drawerItems).toEqual({ manual: true, clips: 1 });
   });
@@ -113,9 +113,9 @@ describe('cabinet work', () => {
     expect(state.visit?.decision).toBe('fit');
     state = act(state, 'run-vision', 'run-vision', 'run-measurements');
     expect(state.clockMinutes).toBe(497);
-    state = act(state, 'write-certificate');
+    state = act(state, 'run-general', 'write-certificate');
     expect(applyAction(state, 'return-document')).toMatchObject({
-      feedback: 'patient-cleared', state: { money: 0, patientsProcessed: 1, clockMinutes: 499 },
+      feedback: 'patient-cleared', state: { money: 0, patientsProcessed: 1, clockMinutes: 502 },
     });
   });
 
@@ -145,10 +145,10 @@ describe('cabinet work', () => {
       expect(vision.feedback).toBe(`vision-${patient.vision}`);
       const pressure = applyAction(vision.state, 'run-pressure');
       expect(pressure.feedback).toBe(`pressure-${patient.pressure}`);
-      state = act(pressure.state, 'run-measurements', 'write-certificate', patient.expectedDecision === 'fit' ? 'stamp-fit' : 'stamp-unfit', 'return-document');
+      state = act(pressure.state, 'run-general', 'run-measurements', 'write-certificate', patient.expectedDecision === 'fit' ? 'stamp-fit' : 'stamp-unfit', 'return-document');
     }
-    expect(state).toMatchObject({ day: 1, money: 0, clockMinutes: 840, visit: null });
-    expect(applyAction(state, 'call-patient')).toEqual({ state, feedback: 'shift-finished' });
+    expect(state).toMatchObject({ day: 1, phase: 'home', clockMinutes: 840, visit: null });
+    expect(applyAction(state, 'call-patient')).toEqual({ state, feedback: 'none' });
     state = act(state, 'end-day');
     expect(state.settlement).toMatchObject({ income: 1000 + state.shiftCompleted * 50, insuranceCost: 300, fines: 0 });
     const next = applyAction(state, 'next-day');
@@ -227,12 +227,12 @@ describe('paperwork and the new instruments', () => {
       'call-patient', 'take-document', 'run-vision');
     expect(stored.papers.find(paper => paper.id === 1)).toMatchObject({ patientId: null, location: 'drawer', results: { vision: null } });
     const retrieved = act(stored, { type: 'retrieve-paper', paperId: 1 });
-    expect(retrieved.papers.find(paper => paper.id === 1)).toMatchObject({ patientId: 0, location: 'desk', additionalWritten: false, results: { vision: 'pass' } });
+    expect(retrieved.papers.find(paper => paper.id === 1)).toMatchObject({ patientId: 0, location: 'desk', additionalWritten: false, results: { vision: PATIENTS[0]!.visionValues } });
     expect(retrieved.clockMinutes).toBe(stored.clockMinutes + 1);
   });
 
   it('requires measurements for a complete examination and returns reproducible weight and height', () => {
-    const state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-vision', 'run-pressure', 'stamp-fit');
+    const state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-general', 'run-vision', 'run-pressure', 'stamp-fit');
     expect(applyAction(state, 'return-document').feedback).toBe('patient-completed');
     const measured = applyAction(state, 'run-measurements');
     expect(measured.feedback).toBe('measurements-taken');
@@ -251,13 +251,13 @@ describe('paperwork and the new instruments', () => {
     expect(state.papers).toHaveLength(2);
     expect(state.papers[0]).toMatchObject({ id: 1, kind: 'referral', patientId: 0 });
     expect(state.papers[1]).toMatchObject({ patientId: 0, additionalWritten: false,
-      results: { vision: 'pass', pressure: null, weight: 62, height: 164 } });
+      results: { vision: PATIENTS[0]!.visionValues, pressure: null, weight: 62, height: 164 } });
     expect(blank).toMatchObject({ patientId: null, results: { vision: null } });
     state = act(state, { type: 'write-note', paperId: 2 });
     expect(state.papers[1]).toMatchObject({ additionalWritten: true });
     expect(applyAction(state, { type: 'write-note', paperId: 2 }).state).toBe(state);
     state = act(state, { type: 'clip-document', documentId: 2 }, { type: 'store-paper', paperId: 2 }, 'run-pressure');
-    expect(state.papers[1]).toMatchObject({ location: 'drawer', results: { pressure: 'pass' } });
+    expect(state.papers[1]).toMatchObject({ location: 'drawer', results: { pressure: PATIENTS[0]!.pressureValues } });
     expect(isDocumentClipped(state, 2)).toBe(true);
     const stored = state;
     expect(applyAction(state, { type: 'write-note', paperId: 2 })).toEqual({ state, feedback: 'paper-missing' });
@@ -274,14 +274,14 @@ describe('paperwork and the new instruments', () => {
   it('backfills newly fetched notes while protecting previous patients and stored blank supplies', () => {
     let state = act(readyToStamp(), 'take-paper');
     expect(state.papers[1]).toMatchObject({ patientId: 0, additionalWritten: false,
-      results: { vision: 'pass', pressure: 'pass', weight: 62, height: 164 } });
+      results: { vision: PATIENTS[0]!.visionValues, pressure: PATIENTS[0]!.pressureValues, weight: 62, height: 164 } });
     state = act(state, 'stamp-fit', 'return-document', 'take-paper', { type: 'store-paper', paperId: 3 },
       'call-patient', 'take-document', 'take-certificate', 'run-vision');
     expect(applyAction(state, { type: 'write-note', paperId: 2 })).toEqual({ state, feedback: 'paper-wrong-patient' });
-    expect(state.papers.find(paper => paper.id === 2)).toMatchObject({ patientId: 0, results: { vision: 'pass' } });
+    expect(state.papers.find(paper => paper.id === 2)).toMatchObject({ patientId: 0, results: { vision: PATIENTS[0]!.visionValues } });
     expect(state.papers.find(paper => paper.id === 3)).toMatchObject({ patientId: null, results: { vision: null } });
     state = act(state, { type: 'retrieve-paper', paperId: 3 }, 'run-pressure');
-    expect(state.papers.find(paper => paper.id === 3)).toMatchObject({ patientId: 1, results: { vision: 'refer', pressure: 'pass' } });
+    expect(state.papers.find(paper => paper.id === 3)).toMatchObject({ patientId: 1, results: { vision: PATIENTS[1]!.visionValues, pressure: PATIENTS[1]!.pressureValues } });
   });
 
   it('files documents in last-stored order, including older papers filed again', () => {
@@ -369,7 +369,7 @@ describe('separate referral and certificate intake', () => {
     }
     state = act(state, 'run-vision', 'run-pressure', 'run-measurements', 'take-paper', { type: 'write-note', paperId: 2 });
     expect(state.visit?.certificateTaken).toBe(false);
-    expect(state.papers[1]).toMatchObject({ kind: 'note', results: { vision: 'pass', pressure: 'pass', weight: 62, height: 164 } });
+    expect(state.papers[1]).toMatchObject({ kind: 'note', results: { vision: PATIENTS[0]!.visionValues, pressure: PATIENTS[0]!.pressureValues, weight: 62, height: 164 } });
     const fetched = applyAction(state, 'take-certificate');
     expect(fetched.feedback).toBe('certificate-taken');
     expect(fetched.state.visit?.certificateTaken).toBe(true);
@@ -437,5 +437,47 @@ describe('paperclip bundles', () => {
     expect(state.papers).toHaveLength(2);
     expect(state.paperClips).toEqual([[1, 2]]);
     expect(applyAction(state, { type: 'clip-document', documentId: 'certificate' })).toEqual({ state, feedback: 'paper-missing' });
+  });
+});
+
+
+describe('general examination and chronological findings', () => {
+  it('requires a general examination for every profile, and records findings in action order only once', () => {
+    let state = act(cabinet(), 'call-patient', 'take-document', 'take-paper');
+    expect(state.papers[1]).toMatchObject({ patientId: null, examinationOrder: [], results: { general: null } });
+    state = act(state, 'run-pressure', 'run-general', 'run-measurements', 'run-vision', 'run-general');
+    const order = ['pressure', 'general', 'measurements', 'vision'];
+    expect(state.visit).toMatchObject({ generalTested: true, examinationOrder: order });
+    expect(state.papers[1]).toMatchObject({ examinationOrder: order, results: {
+      general: 'pass', vision: PATIENTS[0]!.visionValues, pressure: PATIENTS[0]!.pressureValues, weight: 62, height: 164,
+    } });
+    const later = act(state, 'take-paper');
+    expect(later.papers[2]).toMatchObject({ examinationOrder: order });
+    expect(later.papers[2]!.kind === 'note' && later.papers[2].examinationOrder).not.toBe(state.visit!.examinationOrder);
+  });
+
+  it('treats general concerns alone as a reason to refuse regardless of the job profile', () => {
+    const patient = PATIENTS.find(patient => patient.general === 'refer')!;
+    const initial = cabinet();
+    const roster = [patient.id, ...initial.roster.filter(id => PATIENTS[id]!.characterId !== patient.characterId)];
+    const examined = act({ ...initial, roster, rngState: 1234 }, 'call-patient', 'take-document', 'run-general', 'take-paper');
+    expect(examined.papers[1]).toMatchObject({ results: { general: 'refer' } });
+    expect(patient.vision).toBe('pass');
+    expect(patient.pressure).toBe('pass');
+    const approved = act(examined, 'take-certificate', 'write-certificate', 'stamp-fit');
+    expect(applyAction(approved, 'return-document').state.daily.zusCases).toBe(1);
+    const refused = act(examined, 'take-certificate', 'write-certificate', 'stamp-unfit', 'return-document');
+    expect(refused.daily.refusals).toBe(0);
+    expect(refused.papers.some(paper => paper.kind === 'letter')).toBe(false);
+  });
+
+  it('settles once as the final patient leaves at closing, including the first day living costs', () => {
+    const active = { ...act(readyToStamp(), 'stamp-fit'), clockMinutes: 839 };
+    const departure = applyAction(active, 'return-document');
+    expect(departure.state).toMatchObject({ phase: 'home', visit: null, clockMinutes: 840, shiftCompleted: 1 });
+    expect(departure.state.settlement!.livingCost).toBeGreaterThanOrEqual(400);
+    expect(departure.state.settlement!.livingCost).toBeLessThanOrEqual(800);
+    expect(applyAction(departure.state, 'call-patient').state).toBe(departure.state);
+    expect(applyAction(departure.state, 'end-day').state).toBe(departure.state);
   });
 });

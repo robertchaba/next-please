@@ -11,8 +11,8 @@ await sharp(`${art}drawer-interior-source.png`)
 
 for (const [name, width, height, sourceName = name] of [
   ['workstation-calendar', 48, 40, 'workstation-calendar-muted'],
-  ['imprint-fit-pl', 116, 32], ['imprint-unfit-pl', 116, 32],
-  ['imprint-fit-en', 116, 32], ['imprint-unfit-en', 116, 32],
+  ['imprint-fit-pl', 116, 32], ['imprint-unfit-pl', 116, 32, 'imprint-refusal-pl'],
+  ['imprint-fit-en', 116, 32], ['imprint-unfit-en', 116, 32, 'imprint-refusal-en'],
   ['document-seal', 24, 24], ['document-signature', 46, 12],
   ['document-seal-zus', 36, 24], ['document-seal-employer', 24, 24],
 ]) {

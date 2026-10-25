@@ -1,7 +1,7 @@
 import { createInitialState } from './fixtures/game';
 import { gunzipSync, gzipSync, strToU8 } from 'fflate';
 import { describe, expect, it } from 'vitest';
-import { applyAction, type GameState } from '../src/core/game';
+import { applyAction, PATIENTS, type GameState } from '../src/core/game';
 import {
   decodeSave,
   encodeSave,
@@ -12,6 +12,23 @@ import {
 } from '../src/core/save';
 
 function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
+  if (typeof overrides.version === 'number' && overrides.version <= 10 && overrides.state && typeof overrides.state === 'object') {
+    const old = structuredClone(overrides.state) as Record<string, unknown>;
+    if (old.visit && typeof old.visit === 'object') {
+      const visit = old.visit as Record<string, unknown>;
+      delete visit.generalTested; delete visit.examinationOrder;
+    }
+    if (Array.isArray(old.papers)) for (const paper of old.papers as Record<string, unknown>[]) {
+      if (paper.kind !== 'note') continue;
+      delete paper.examinationOrder;
+      const results = paper.results as Record<string, unknown>;
+      delete results.general;
+      const patient = typeof paper.patientId === 'number' ? PATIENTS[paper.patientId] : null;
+      if (results.vision && typeof results.vision === 'object') results.vision = patient?.vision;
+      if (results.pressure && typeof results.pressure === 'object') results.pressure = patient?.pressure;
+    }
+    overrides = { ...overrides, state: old };
+  }
   // Current fixture builders contain v9 fields; explicit old-version fixtures
   // retain exactly their historical schema before testing the old validators.
   if (typeof overrides.version === 'number' && overrides.version <= 8 && overrides.state && typeof overrides.state === 'object' && !Array.isArray(overrides.state)) {
@@ -21,7 +38,7 @@ function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
   }
   return gzipSync(strToU8(JSON.stringify({
     game: 'next-please',
-    version: 10,
+    version: 11,
     savedAt: '2026-10-23T12:00:00.000Z',
     state: createInitialState(),
     ...overrides,
@@ -51,7 +68,7 @@ describe('portable saves', () => {
   });
 
   it('rejects unsupported versions without interpreting their state', () => {
-    expectCode(() => decodeSave(envelope({ version: 11, state: {} })), 'unsupported-version');
+    expectCode(() => decodeSave(envelope({ version: 12, state: {} })), 'unsupported-version');
   });
 
   it('rejects a save for another game', () => {
@@ -137,7 +154,7 @@ describe('portable saves', () => {
   it('accepts gzip metadata produced by standard encoders', () => {
     const bytes = gzipSync(strToU8(JSON.stringify({
       game: 'next-please',
-      version: 10,
+      version: 11,
       savedAt: '2026-10-23T12:00:00.000Z',
       state: createInitialState(),
     })), { filename: 'save.json' });
@@ -176,7 +193,7 @@ describe('portable saves', () => {
     }
     const legacy = { ...state, clockMinutes: 570 };
     const decoded = decodeSave(envelope({ version: 2, state: legacyState({ ...legacy, introStep: 5 }) }));
-    expect(decoded).toEqual(legacy);
+    expect(decoded).toEqual({ ...legacy, visit: { ...legacy.visit, examinationOrder: ['vision', 'pressure'] } });
     expect(decoded.visit).not.toBe(state.visit);
     expect(applyAction(applyAction(decoded, 'run-measurements').state, 'return-document').state).toMatchObject({
       patientsProcessed: 1, shiftCompleted: 1, money: 0, clockMinutes: 573,
@@ -198,7 +215,7 @@ describe('portable saves', () => {
     const migrated = decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), introStep: 5 }) }));
     const bytes = encodeSave(migrated);
     const exported = JSON.parse(new TextDecoder().decode(gunzipSync(bytes)));
-    expect(exported).toMatchObject({ version: 10, state: { phase: 'cabinet', introStep: 3 } });
+    expect(exported).toMatchObject({ version: 11, state: { phase: 'cabinet', introStep: 3 } });
     expect(decodeSave(bytes)).toEqual(migrated);
   });
 
@@ -226,7 +243,7 @@ describe('portable saves', () => {
     expect(decoded.visit).toMatchObject({ decision: 'fit' });
     expect(decoded.visit).not.toBe(state.visit);
     expect(applyAction(decoded, 'return-document').feedback).toBe('patient-completed');
-    const examined = applyAction(applyAction(applyAction(decoded, 'run-vision').state, 'run-pressure').state, 'run-measurements').state;
+    const examined = applyAction(applyAction(applyAction(applyAction(decoded, 'run-general').state, 'run-vision').state, 'run-pressure').state, 'run-measurements').state;
     expect(decodeSave(encodeSave(examined))).toEqual(examined);
     expect(applyAction(examined, 'return-document').feedback).toBe('patient-cleared');
     expectCode(() => decodeSave(envelope({ state: { ...state, clockMinutes: state.clockMinutes - 10 } })), 'invalid-state');
@@ -291,7 +308,7 @@ describe('portable saves', () => {
       visit: { patientId: 0, document: 'desk', visionTested: false, pressureTested: false, decision: 'fit' },
     };
     const migrated = decodeSave(envelope({ version: 3, state: legacyState(legacy) }));
-    expect(migrated).toEqual({ ...legacy, visit: { ...legacy.visit, measurementsTaken: false, certificateTaken: true, certificateNamed: true }, papers: [{ id: 1, kind: 'referral', patientId: 0, day: 1, location: 'desk' }], nextPaperId: 2 });
+    expect(migrated).toEqual({ ...legacy, visit: { ...legacy.visit, generalTested: false, examinationOrder: [], measurementsTaken: false, certificateTaken: true, certificateNamed: true }, papers: [{ id: 1, kind: 'referral', patientId: 0, day: 1, location: 'desk' }], nextPaperId: 2 });
     const updated = applyAction(migrated, 'run-vision').state;
     expect(updated.clockMinutes).toBe(503);
     expect(decodeSave(encodeSave(updated))).toEqual(updated);
@@ -343,7 +360,7 @@ describe('version 7 paperwork saves', () => {
     if (decodedNote?.kind !== 'note' || originalNote?.kind !== 'note') throw new Error('Missing note fixture');
     expect(decodedNote.results).not.toBe(originalNote.results);
     decodedNote.results.vision = null;
-    expect(originalNote.results.vision).toBe('pass');
+    expect(originalNote.results.vision).toEqual(PATIENTS[0]!.visionValues);
     expect(state.papers[2]).toMatchObject({ kind: 'letter', sender: 'employer', opened: true });
   });
 
@@ -424,7 +441,7 @@ describe('version 6 certificate availability', () => {
     expect(migrated).toEqual({ ...stamped, clockMinutes: 482, visit: { ...stamped.visit, certificateNamed: true } });
     expect(migrated.visit).toMatchObject({ certificateTaken: true, decision: 'fit' });
     expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(10);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(11);
     const intake = act(createInitialState(), 'skip-intro', 'call-patient', 'take-document');
     expect(decodeSave(envelope({ version: 5, state: asV5(intake) }))).toEqual({ ...intake, visit: { ...intake.visit, certificateTaken: true, certificateNamed: true } });
     const waiting = act(createInitialState(), 'skip-intro', 'call-patient');
@@ -490,8 +507,8 @@ describe('version 7 document writing and bundles', () => {
     };
     const state = decodeSave(envelope({ version: 6, state: old }));
     expect(state.clockMinutes).toBe(495);
-    expect(state.visit).toEqual({ ...old.visit, certificateNamed: true });
-    expect(state.papers[1]).toMatchObject({ additionalWritten: false, results: { vision: 'pass', pressure: null } });
+    expect(state.visit).toEqual({ ...old.visit, certificateNamed: true, generalTested: false, examinationOrder: ['vision', 'pressure'] });
+    expect(state.papers[1]).toMatchObject({ additionalWritten: false, results: { vision: PATIENTS[0]!.visionValues, pressure: null } });
     expect(state.paperClips).toEqual([[1], [2]]);
     expect(state.papers.every(paper => !Object.hasOwn(paper, 'clipped'))).toBe(true);
     expect(decodeSave(encodeSave(state))).toEqual(state);
@@ -541,7 +558,7 @@ describe('version 8 drawer inventory', () => {
     expect(decoded.drawerItems).not.toBe(state.drawerItems);
     decoded.drawerItems.clips = 0;
     expect(state.drawerItems.clips).toBe(2);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(state)))).version).toBe(10);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(state)))).version).toBe(11);
   });
 
   it('migrates strictly validated v7 papers in filing order without inventing stored objects', () => {
@@ -674,5 +691,102 @@ describe('version 10 compatibility and rest-day invariants', () => {
       { shiftCompleted: 1, patientsProcessed: 1 },
       { settlement: { ...saturday.settlement, basePay: 1000, income: 1000, closingBalance: saturday.money + 1000 }, money: saturday.money + 1000 },
     ]) expectCode(() => decodeSave(envelope({ state: { ...saturday, ...patch } })), 'invalid-state');
+  });
+});
+
+describe('version 11 clinical records', () => {
+  const run = (state: GameState, ...actions: Parameters<typeof applyAction>[1][]): GameState => actions.reduce((current, action) => applyAction(current, action).state, state);
+  const examined = (): GameState => run(createInitialState(), 'skip-intro', 'call-patient', 'take-document', 'take-paper',
+    'run-pressure', 'run-general', 'run-measurements', 'run-vision', 'run-pressure');
+
+  it('round-trips numerical readings and first-examination order with independent nested copies', () => {
+    const state = examined(), loaded = decodeSave(encodeSave(state));
+    expect(loaded).toEqual(state);
+    expect(loaded.visit?.examinationOrder).toEqual(['pressure', 'general', 'measurements', 'vision']);
+    const note = loaded.papers.find(paper => paper.kind === 'note');
+    const original = state.papers.find(paper => paper.kind === 'note');
+    if (note?.kind !== 'note' || original?.kind !== 'note') throw new Error('Missing notes');
+    expect(note.results).toEqual({ general: 'pass', vision: PATIENTS[0]!.visionValues,
+      pressure: PATIENTS[0]!.pressureValues, weight: 62, height: 164 });
+    note.examinationOrder.reverse();
+    loaded.visit!.examinationOrder.reverse();
+    note.results.vision!.left = 99;
+    note.results.pressure!.systolic = 99;
+    expect(original.examinationOrder).toEqual(['pressure', 'general', 'measurements', 'vision']);
+    expect(state.visit!.examinationOrder).toEqual(original.examinationOrder);
+    expect(original.results.vision).toEqual(PATIENTS[0]!.visionValues);
+    expect(original.results.pressure).toEqual(PATIENTS[0]!.pressureValues);
+  });
+
+  it('rejects forged readings, absent results, invalid order and a different order on current notes', () => {
+    const state = examined(), note = state.papers[1]!;
+    if (note.kind !== 'note') throw new Error('Missing note');
+    for (const patch of [
+      { examinationOrder: ['pressure', 'general', 'vision', 'measurements'] },
+      { examinationOrder: ['pressure', 'general', 'measurements', 'vision', 'vision'] },
+      { examinationOrder: ['pressure', 'general', 'measurements'] },
+      { results: { ...note.results, general: 'refer' } },
+      { results: { ...note.results, pressure: { systolic: 999, diastolic: note.results.pressure!.diastolic } } },
+      { results: { ...note.results, vision: { ...note.results.vision, right: -99 } } },
+      { results: { ...note.results, vision: { ...note.results.vision, extra: 1 } } },
+      { results: { ...note.results, general: undefined } },
+    ]) expectCode(() => decodeSave(envelope({ state: { ...state, papers: [state.papers[0], { ...note, ...patch }] } })), 'invalid-state');
+    for (const patch of [
+      { generalTested: false }, { generalTested: 'yes' }, { examinationOrder: [] },
+      { examinationOrder: ['pressure', 'general', 'measurements', 'general'] },
+      { examinationOrder: ['pressure', 'general', 'measurements', 'unknown'] },
+    ]) expectCode(() => decodeSave(envelope({ state: { ...state, visit: { ...state.visit, ...patch } } })), 'invalid-state');
+  });
+
+  it('requires intake and enough elapsed action time for a general examination', () => {
+    const state = run(createInitialState(), 'skip-intro', 'call-patient', 'take-document', 'run-general');
+    expect(state.clockMinutes).toBe(484);
+    expect(decodeSave(encodeSave(state))).toEqual(state);
+    expectCode(() => decodeSave(envelope({ state: { ...state, clockMinutes: 483 } })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ state: { ...state, visit: { ...state.visit, document: 'tray' } } })), 'invalid-state');
+  });
+
+  it('migrates v10 snapshots to numbers without inventing general examinations or historical ordering', () => {
+    const state = run(createInitialState(), 'skip-intro', 'call-patient', 'take-document', 'take-paper', 'run-pressure', 'run-vision');
+    const loaded = decodeSave(envelope({ version: 10, state }));
+    expect(loaded.clockMinutes).toBe(state.clockMinutes);
+    expect(loaded.visit).toMatchObject({ generalTested: false, examinationOrder: ['vision', 'pressure'] });
+    expect(loaded.papers[1]).toMatchObject({ examinationOrder: ['vision', 'pressure'], results: {
+      general: null, vision: PATIENTS[0]!.visionValues, pressure: PATIENTS[0]!.pressureValues,
+    } });
+    expect(decodeSave(encodeSave(loaded))).toEqual(loaded);
+    const raw = JSON.parse(new TextDecoder().decode(gunzipSync(envelope({ version: 10, state }))));
+    raw.state.visit.generalTested = false;
+    expectCode(() => decodeSave(gzipSync(strToU8(JSON.stringify(raw)))), 'invalid-state');
+    delete raw.state.visit.generalTested;
+    raw.state.papers[1].results.vision = { left: 0, right: 0 };
+    expectCode(() => decodeSave(gzipSync(strToU8(JSON.stringify(raw)))), 'invalid-state');
+  });
+
+  it('rejects a partial closing transaction when the household ledger would exceed the money limit', () => {
+    const state = { ...run(examined(), 'take-certificate', 'write-certificate', 'stamp-fit'),
+      clockMinutes: 839, money: 1_000_000_000, rngState: 7 };
+    const before = decodeSave(encodeSave(state));
+    const result = applyAction(state, 'return-document');
+    expect(result.feedback).toBe('limit-reached');
+    expect(result.state).toBe(state);
+    expect(state).toEqual(before);
+    expect(state.visit?.decision).toBe('fit');
+    expect(state.settlement).toBeNull();
+  });
+
+  it('preserves general-only findings and their consequences while v10 retains its original case bound', () => {
+    const initial = createInitialState(16), patient = PATIENTS[303]!;
+    initial.roster = [patient.id, ...initial.roster.filter(id => PATIENTS[id]!.characterId !== patient.characterId)];
+    const state = run(initial, 'skip-intro', 'call-patient', 'take-document', 'take-paper', 'run-general');
+    expect(state.papers[1]).toMatchObject({ additionalWritten: false, examinationOrder: ['general'], results: {
+      general: 'refer', vision: null, pressure: null, weight: null, height: null,
+    } });
+    expect(decodeSave(encodeSave(state))).toEqual(state);
+    expectCode(() => decodeSave(envelope({ version: 10, state: initial })), 'invalid-state');
+    const closed = run({ ...state, clockMinutes: 840, rngState: 1000 }, 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document');
+    expect(closed.phase).toBe('home');
+    expect(decodeSave(encodeSave(closed))).toEqual(closed);
+    expect(applyAction(closed, 'end-day').state).toBe(closed);
   });
 });

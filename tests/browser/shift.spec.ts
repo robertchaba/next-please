@@ -99,12 +99,12 @@ test('examinations, stamping and the rulebook support keyboard visits with defer
   await expect(page.locator('#screen-description')).toContainText('INSTRUKCJA OBSŁUGI DYŻURU');
   await expect(page.locator('#control-manual-prev')).toHaveAccessibleName('Zamknij regulamin');
   await useKeyboard(page, 'manual-next');
-  await expect(page.locator('#screen-description')).toContainText('Sprawdź kod wymogów na skierowaniu.');
+  await expect(page.locator('#screen-description')).toContainText('Kliknij pacjenta: to badanie ogólne.');
   await page.screenshot({ path: testInfo.outputPath('rulebook-tests-pl.png') });
   for (let index = 2; index < MANUAL_PAGE_COUNT; index++) {
     await useKeyboard(page, 'manual-next');
     await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(index));
-    if (index === 2) await expect(page.locator('#screen-description')).toContainText('WC: wzrok i ciśnienie. W: tylko wzrok. C: tylko ciśnienie.');
+    if (index === 2) await expect(page.locator('#screen-description')).toContainText('WC: wzrok i ciśnienie. W: wzrok. C: ciśnienie.');
   }
   await expect(page.locator('#control-manual-next')).toHaveCount(0);
   await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[MANUAL_PAGE_COUNT - 1]!.lines.join(' '));
@@ -119,9 +119,9 @@ test('examinations, stamping and the rulebook support keyboard visits with defer
   await expect(page.locator('#control-manual')).toBeFocused();
 
   const patients = [
-    { name: 'Irena Wolska', decision: 'fit', vision: 'NORMA', pressure: 'NORMA' },
-    { name: 'Leon Burek', decision: 'unfit', vision: 'KONTROLA', pressure: 'NORMA' },
-    { name: 'Marta Lis', decision: 'unfit', vision: 'NORMA', pressure: 'KONTROLA' },
+    { name: 'Irena Wolska', decision: 'fit', vision: 'OL: 0', pressure: '108/62' },
+    { name: 'Leon Burek', decision: 'unfit', vision: 'OL: -7', pressure: '110/64' },
+    { name: 'Marta Lis', decision: 'unfit', vision: 'OL: -1', pressure: '176/108' },
   ];
   for (const [index, patient] of patients.entries()) {
     await useKeyboard(page, 'call-patient');
@@ -134,15 +134,16 @@ test('examinations, stamping and the rulebook support keyboard visits with defer
       await useKeyboard(page, 'apply-stamp');
       await expect(page.locator('#screen-description')).toContainText('Podbito: ZDOLNY.');
     }
+    await useKeyboard(page, 'run-general');
     await useKeyboard(page, 'run-vision');
-    await expect(page.locator('#screen-description')).toContainText(`Wzrok: ${patient.vision}.`);
+    await expect(page.locator('#screen-description')).toContainText(patient.vision);
     await useKeyboard(page, 'run-pressure');
-    await expect(page.locator('#screen-description')).toContainText(`Ciśnienie: ${patient.pressure}.`);
+    await expect(page.locator('#screen-description')).toContainText(patient.pressure);
     await useKeyboard(page, 'run-measurements');
     await useKeyboard(page, `stamp-${patient.decision}`);
     await expect(page.locator(`#control-stamp-${patient.decision}`)).toHaveAttribute('aria-pressed', 'true');
     await useKeyboard(page, 'apply-stamp');
-    await expect(page.locator('#screen-description')).toContainText(`Podbito: ${patient.decision === 'fit' ? 'ZDOLNY' : 'NIEZDOLNY'}.`);
+    await expect(page.locator('#screen-description')).toContainText(`Podbito: ${patient.decision === 'fit' ? translations.pl.fit : translations.pl.unfit}.`);
     if (index === 1) await page.screenshot({ path: testInfo.outputPath('cabinet-stamped-pl.png') });
     await useKeyboard(page, 'return-document');
     await expect(page.locator('#screen-description')).toContainText(translations.pl.feedback['patient-cleared']);
@@ -192,18 +193,18 @@ test('examinations, stamping and the rulebook support keyboard visits with defer
 
 test('mid-visit saves retain examinations, stamped papers and cabinet decor; bad imports retain the live visit', async ({ page }, testInfo) => {
   await enterCabinet(page);
-  for (const id of ['call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-vision', 'run-pressure', 'run-measurements', 'stamp-fit', 'apply-stamp', 'lamp', 'decoration', 'saves']) {
+  for (const id of ['call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-general', 'run-vision', 'run-pressure', 'run-measurements', 'stamp-fit', 'apply-stamp', 'lamp', 'decoration', 'saves']) {
     await useKeyboard(page, id);
   }
   const saved = await exportFromArchive(page, testInfo, 'mid-visit.npsave');
   const expected = decodeSave(saved);
   expect(expected).toMatchObject({
     phase: 'cabinet', lampOn: false, decoration: 'certificate',
-    visit: { patientId: 0, document: 'desk', visionTested: true, pressureTested: true, decision: 'fit' },
+    visit: { patientId: 0, document: 'desk', generalTested: true, visionTested: true, pressureTested: true, decision: 'fit' },
   });
   await page.locator('#control-back').click();
   await expect(page.locator('#control-saves')).toBeFocused();
-  await page.locator('#control-return-document').click();
+  await useKeyboard(page, 'return-document');
   await page.locator('#control-saves').click();
   await page.locator('#save-input').setInputFiles({ name: 'mid-visit.npsave', mimeType: 'application/gzip', buffer: saved });
   await expect(page.getByRole('status')).toContainText('Zapis wczytany');
@@ -217,7 +218,7 @@ test('mid-visit saves retain examinations, stamped papers and cabinet decor; bad
   await expect(page.getByRole('status')).toContainText('Nieprawidłowy lub uszkodzony');
   expect(decodeSave(await exportFromArchive(page, testInfo, 'after-failed-import.npsave'))).toEqual(expected);
   await page.locator('#control-back').click();
-  await page.locator('#control-return-document').click();
+  await useKeyboard(page, 'return-document');
   await expect(page.locator('#screen-description')).toContainText(translations.pl.feedback['patient-cleared']);
   const storageKeys = await page.evaluate(() => Object.keys(localStorage));
   expect(storageKeys.every(key => key === 'next-please.preferences')).toBe(true);
@@ -305,7 +306,7 @@ test('English introduction, cabinet and rulebook remain usable on a small screen
   await useKeyboard(page, 'take-document');
   await useKeyboard(page, 'take-certificate');
   await page.getByRole('button', { name: 'EYE CHART', exact: true }).click();
-  await expect(page.locator('#screen-description')).toContainText('Vision: NORMAL.');
+  await expect(page.locator('#screen-description')).toContainText('LE: 0');
   const canvas = (await page.locator('#game').boundingBox())!;
   expect(canvas.width).toBeLessThanOrEqual(524);
   expect(canvas.height / canvas.width).toBeCloseTo(320 / 570, 3);
@@ -322,7 +323,7 @@ test('English introduction, cabinet and rulebook remain usable on a small screen
   await expect(page.locator('#screen-description')).toContainText('SHIFT OPERATING INSTRUCTIONS');
   await expect(page.locator('#control-manual-next')).toHaveAccessibleName('Next rulebook page');
   await page.locator('#control-manual-next').click();
-  await expect(page.locator('#screen-description')).toContainText('Check the profile code on the referral.');
+  await expect(page.locator('#screen-description')).toContainText('Click the patient for a general exam.');
   await page.screenshot({ path: testInfo.outputPath('rulebook-mobile-en.png') });
   await page.keyboard.press('Escape');
   await expect(page.locator('#control-manual')).toBeFocused();

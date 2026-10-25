@@ -2,11 +2,23 @@ import type { GameState } from '../core/game';
 import { formatGameDate, isWeekend } from '../core/calendar';
 import { translations, type Locale } from '../i18n';
 import { drawHomeIllustration, type HomeIllustration } from '../render/clinic';
-import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
-import { wrapDocumentLines } from '../render/paperwork';
+import { drawText, measureText } from '../render/font';
 
 export const HOME_ACTION = { x: 23, y: 272, w: 318, h: 30 } as const;
 export type HomePageKind = 'arrival' | 'event' | 'budget' | 'work';
+
+/** The same original face as the welcome screen, wrapped at its rendered size. */
+function homeLines(value: string, scale: number): string[] {
+  const lines: string[] = [];
+  let line = '';
+  for (const word of value.split(' ')) {
+    const next = line ? `${line} ${word}` : word;
+    if (line && measureText(next, scale) > 312) { lines.push(line); line = word; }
+    else line = next;
+  }
+  lines.push(line);
+  return lines;
+}
 
 /** Pages describe an already settled day. Reading or replaying them never rolls events. */
 export function homePages(state: GameState): HomePageKind[] {
@@ -23,6 +35,7 @@ export function homePage(state: GameState, locale: Locale, page: number) {
     { label: h.base, value: amount(s.basePay) },
     { label: h.bonus, value: amount(s.patientBonus) },
     { label: h.previousMonth, value: amount(state.previousMonthBalance) },
+    { label: h.living, value: amount(s.livingCost) },
     { label: h.fines, value: amount(s.fines) },
     { label: h.insurance, value: amount(s.insuranceCost) },
   ] : [];
@@ -38,14 +51,15 @@ export function homePage(state: GameState, locale: Locale, page: number) {
     : kind === 'event' && event === 'seaside-trip' ? 'seaside-resort'
     : rest ? 'weekend-budget' : kind === 'arrival' ? 'homecoming' : 'home-evening';
   const date = formatGameDate(state.day + Number(kind === 'work'), locale);
-  const body = wrapDocumentLines([comment], 156).join('\n');
+  const bodyScale = kind === 'budget' ? 1 : 2;
+  const body = homeLines(comment, bodyScale).join('\n');
   const next = pages[page + 1];
   const action = kind === 'work' ? h.enter : next === 'budget' ? h.budget : next === 'work' ? h.work : next ? h.onward : h.tomorrow;
   const text = [title, date, body, ...rows.map(row => `${row.label}: ${row.value}`), action].join('\n');
-  return { kind, title, date, body, rows, action, text, illustration, description: h.illustrations[illustration] };
+  return { kind, title, date, body, bodyScale, rows, action, text, illustration, description: h.illustrations[illustration] };
 }
 
-/** Larger, integer-scaled lettering; the cursor is supplied by presentation updates. */
+/** Welcome-screen lettering; the cursor is supplied by presentation updates. */
 export function renderHome(ctx: CanvasRenderingContext2D, state: GameState, locale: Locale, page: number, characters: number): void {
   const content = homePage(state, locale, page);
   drawHomeIllustration(ctx, content.illustration);
@@ -56,16 +70,13 @@ export function renderHome(ctx: CanvasRenderingContext2D, state: GameState, loca
     return visible;
   };
   drawText(ctx, reveal(content.title), 24, 25, { color: '#e3d6b3', scale: 2 });
-  const large = (value: string, x: number, y: number, color = '#ded4b4'): void => {
-    ctx.save(); ctx.translate(x, y); ctx.scale(2, 2);
-    drawDocumentText(ctx, value, 0, 0, { color }); ctx.restore();
-  };
-  large(reveal(content.date), 25, 55, '#aaa88d');
-  reveal(content.body).split('\n').forEach((line, index) => large(line, 25, (content.kind === 'budget' ? 79 : 105) + index * 22));
+  drawText(ctx, reveal(content.date), 25, 55, { color: '#aaa88d' });
+  reveal(content.body).split('\n').forEach((line, index) => drawText(ctx, line, 25,
+    (content.kind === 'budget' ? 79 : 99) + index * 24, { color: '#ded4b4', scale: content.bodyScale }));
   content.rows.forEach((row, index) => {
-    large(reveal(row.label, 2), 25, 111 + index * 30);
+    drawText(ctx, reveal(row.label, 2), 25, 112 + index * 23, { color: '#ded4b4' });
     // Align to the full amount so its left edge stays fixed during typing.
-    large(reveal(row.value), 337 - measureDocumentText(row.value) * 2, 111 + index * 30, '#e3d6b3');
+    drawText(ctx, reveal(row.value), 337 - measureText(row.value), 112 + index * 23, { color: '#e3d6b3' });
   });
-  large(reveal(content.action), HOME_ACTION.x + 2, HOME_ACTION.y + 7, '#d39a70');
+  drawText(ctx, reveal(content.action), HOME_ACTION.x + 2, HOME_ACTION.y + 9, { color: '#d39a70' });
 }
