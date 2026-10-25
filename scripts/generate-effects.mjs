@@ -1,6 +1,7 @@
 /**
  * Original, deterministic Foley-style synthesis for Next, Please!
- * Run with `node scripts/generate-effects.mjs [stamp bell telephone]`. No recordings or dependencies.
+ * Run with `node scripts/generate-effects.mjs [stamp bell telephone phone-tone phone-dial]`.
+ * No recordings or dependencies.
  * Each key has a body strike, a damped metal click and a quieter release;
  * the other effects layer similar mechanical resonances and filtered noise.
  */
@@ -19,7 +20,7 @@ function random(seed) {
   };
 }
 
-function synthesize(duration, peak, seed, components) {
+function synthesize(duration, peak, seed, components, loop = false) {
   const samples = new Float64Array(Math.round(duration * sampleRate));
   const noise = random(seed);
   let low = 0;
@@ -32,11 +33,11 @@ function synthesize(duration, peak, seed, components) {
     mid += (white - mid) * 0.37;
     samples[index] = components(time, low, mid, white - mid);
   }
-  const maximum = Math.max(...samples.map(Math.abs));
+  const maximum = samples.reduce((value, sample) => Math.max(value, Math.abs(sample)), 0);
   const pcm = Buffer.alloc(samples.length * 2);
   for (let index = 0; index < samples.length; index++) {
     const time = index / sampleRate;
-    const edge = Math.min(1, time / 0.0005, (samples.length - 1 - index) / (sampleRate * 0.009));
+    const edge = loop ? 1 : Math.min(1, time / 0.0005, (samples.length - 1 - index) / (sampleRate * 0.009));
     pcm.writeInt16LE(Math.round(samples[index] / maximum * peak * edge * 32767), index * 2);
   }
 
@@ -58,6 +59,13 @@ function synthesize(duration, peak, seed, components) {
 
 const decay = (time, start, length) => time < start ? 0 : Math.exp(-(time - start) / length);
 const tone = (time, frequency) => Math.sin(time * frequency * Math.PI * 2);
+const dialPulses = [4, 2, 6, 3];
+let dialStart = 0.1;
+const dialDigits = dialPulses.map(pulses => {
+  const start = dialStart;
+  dialStart += 0.28 + 0.06 + pulses * 0.1 + 0.2;
+  return { start, pulses };
+});
 
 const effects = {
   'typewriter.wav': synthesize(0.085, 0.38, 4319, (time, low, mid, high) => {
@@ -123,6 +131,35 @@ const effects = {
     const steady = tone(time, 425) * 0.65 + tone(time, 850) * 0.035 + low * 0.018;
     return connection * hangup * steady
       + decay(time, 0.008, 0.005) * (mid * 0.28 + low * 0.24);
+  }),
+  'phone-tone.wav': synthesize(1, 0.29, 5049, time => {
+    // Integer cycles over exactly one second join seamlessly in Howler's loop.
+    // No fade, connection click or random noise repeats at the seam.
+    return tone(time, 425) * 0.65 + tone(time, 850) * 0.035;
+  }, true),
+  'phone-dial.wav': synthesize(3.9, 0.34, 1983, (time, low, mid, high) => {
+    // Four original rotary turns: finger wind-up, spring return and ten pulses
+    // per second, with a pause between digits. No touch-tone keypad or samples.
+    let sound = decay(time, 0.012, 0.006) * (low * 0.26 + mid * 0.2);
+    for (const { start, pulses } of dialDigits) {
+      const wind = (time - start) / 0.28;
+      if (wind >= 0 && wind < 1) {
+        sound += Math.sin(wind * Math.PI) ** 2 * (mid * 0.12 + low * 0.18)
+          * (0.4 + 0.6 * Math.max(0, tone(time, 36)));
+      }
+      const returning = time - start - 0.34;
+      if (returning >= 0 && returning < pulses * 0.1) {
+        sound += (mid * 0.055 + tone(returning, 138) * 0.035)
+          * Math.min(1, returning / 0.012, (pulses * 0.1 - returning) / 0.02);
+      }
+      for (let pulse = 0; pulse < pulses; pulse++) {
+        const tick = start + 0.34 + pulse * 0.1;
+        sound += decay(time, tick, 0.005) * (mid * 0.55 + low * 0.38 + high * 0.08)
+          + decay(time, tick + 0.06, 0.0035) * (mid * 0.26 + tone(time, 1140) * 0.055);
+      }
+      sound += decay(time, start + 0.34 + pulses * 0.1, 0.009) * (low * 0.34 + mid * 0.12);
+    }
+    return sound;
   }),
 };
 

@@ -7,9 +7,10 @@ export function getScale(width: number, height: number): number {
   return fit >= 1 ? Math.floor(fit) : Math.max(0.1, fit);
 }
 
-export function installDisplay(app: HTMLElement, viewport: HTMLElement, stage: HTMLElement): void {
+export function installDisplay(app: HTMLElement, viewport: HTMLElement, stage: HTMLElement): () => void {
   const surrounds = [...app.querySelectorAll<HTMLElement>('.surround-bottom')];
   const resize = () => {
+    if (app.hidden) return;
     const style = getComputedStyle(app);
     const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
     const paddingY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
@@ -37,6 +38,7 @@ export function installDisplay(app: HTMLElement, viewport: HTMLElement, stage: H
   const observer = new ResizeObserver(resize);
   surrounds.forEach(element => observer.observe(element));
   resize();
+  return resize;
 }
 
 /** Original 12×16 arrow, drawn at 2× for a legible native OS cursor. */

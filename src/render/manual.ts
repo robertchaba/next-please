@@ -4,6 +4,7 @@ import { translations, type Locale } from '../i18n';
 import { RIGHT_DESK_X, type Rect } from '../core/desk';
 
 export const MANUAL_PAGE_COUNT = translations.pl.manualPages.length;
+const CORNER_SIZE = 9;
 
 export function manualPageDescription(locale: Locale, page: number): string {
   const t = translations[locale];
@@ -16,8 +17,8 @@ export function manualPageDescription(locale: Locale, page: number): string {
 export function manualControls(bounds: Rect): { previous: Rect; next: Rect } {
   const { x, y, w, h } = bounds;
   return {
-    previous: { x: x + 3, y: y + h - 26, w: 24, h: 23 },
-    next: { x: x + w - 27, y: y + h - 26, w: 24, h: 23 },
+    previous: { x: x + 3, y: y + h - CORNER_SIZE - 6, w: CORNER_SIZE + 4, h: CORNER_SIZE + 3 },
+    next: { x: x + w - CORNER_SIZE - 7, y: y + h - CORNER_SIZE - 6, w: CORNER_SIZE + 4, h: CORNER_SIZE + 3 },
   };
 }
 
@@ -25,13 +26,13 @@ export function manualControls(bounds: Rect): { previous: Rect; next: Rect } {
 function drawCorner(ctx: CanvasRenderingContext2D, bounds: Rect, right: boolean, cover = false): void {
   const { x, y, w, h } = bounds;
   const edge = right ? x + w - 4 : x + 3;
-  for (let row = 0; row < 20; row++) {
+  for (let row = 0; row < CORNER_SIZE; row++) {
     const start = right ? edge - row : edge;
     ctx.fillStyle = cover ? '#292d21' : '#827b5c';
-    ctx.fillRect(start, y + h - 23 + row, row + 1, 1);
+    ctx.fillRect(start, y + h - CORNER_SIZE - 3 + row, row + 1, 1);
     if (row > 1) {
       ctx.fillStyle = cover ? '#a18d5b' : '#d8cba3';
-      ctx.fillRect(start + 1, y + h - 23 + row, row - 1, 1);
+      ctx.fillRect(start + 1, y + h - CORNER_SIZE - 3 + row, row - 1, 1);
     }
   }
 }

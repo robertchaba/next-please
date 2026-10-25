@@ -1,5 +1,18 @@
 export const translations = {
   pl: {
+    mobile: {
+      title: 'Next, Please!', reception: 'Telefon do przychodni',
+      languagePolish: 'PL', languageEnglish: 'EN',
+      phoneLabel: 'Słuchawka telefonu — posłuchaj sygnału',
+      phoneDescription: 'Duża oliwkowa słuchawka starego telefonu z kręconym przewodem.',
+      tone: 'Sygnał centrali', dialing: 'Wybieranie numeru…',
+      greeting: 'Przychodnia słucham!',
+      reply: 'Praca zdalna? Doktor raczy żartować. Czekamy w placówce',
+      note: 'Gra działa tylko na prawdziwym desktopie.',
+      noteHelp: 'Wróć na komputerze z klawiaturą i myszą.',
+      noteLines: ['Gra działa tylko', 'na prawdziwym', 'desktopie.', '', 'Wróć na komputerze', 'z klawiaturą', 'i myszą.'],
+      noteLabel: 'Odręczna notatka z przychodni',
+    },
     takeCertificate: 'Weź formularz orzeczenia ze stojaka', reservedForm: 'Miejsce na przyszły formularz — nieaktywne', rackBlank: 'Kartki', rackCertificate: 'Orzeczenia',
     phone: 'Telefon — posłuchaj sygnału centrali', measurements: 'Waga ze wzrostomierzem — zmierz wagę i wzrost',
     takePaper: 'Weź czystą kartkę ze stojaka', takeClip: 'Weź spinacz z pojemnika',
@@ -174,6 +187,19 @@ export const translations = {
     description: 'Czarna komedia o medycynie pracy, papierologii i wątpliwych decyzjach.',
   },
   en: {
+    mobile: {
+      title: 'Next, Please!', reception: 'Calling the clinic',
+      languagePolish: 'PL', languageEnglish: 'EN',
+      phoneLabel: 'Telephone receiver — listen to the dial tone',
+      phoneDescription: 'A large olive receiver from an old telephone, with a coiled cord.',
+      tone: 'Dial tone', dialing: 'Dialing…',
+      greeting: 'Clinic speaking!',
+      reply: 'Remote work? You must be joking, Doctor. We expect you at the clinic.',
+      note: 'The game only works on a real desktop.',
+      noteHelp: 'Use a computer with a keyboard and mouse.',
+      noteLines: ['The game only', 'works on a', 'real desktop.', '', 'Use a computer', 'with a keyboard', 'and mouse.'],
+      noteLabel: 'A handwritten note from the clinic',
+    },
     takeCertificate: 'Take a certificate form from the document rack', reservedForm: 'Reserved form slot — inactive', rackBlank: 'Paper', rackCertificate: 'Certificates',
     phone: 'Telephone — listen to the exchange tone', measurements: 'Scale and stadiometer — measure weight and height',
     takePaper: 'Take a blank sheet from the document rack', takeClip: 'Take a paperclip from the holder',

@@ -11,6 +11,7 @@ vi.mock('howler', () => ({
     play = vi.fn();
     playing = vi.fn(() => false);
     stop = vi.fn();
+    pause = vi.fn();
     unload = vi.fn();
     loop = vi.fn();
     mute = vi.fn();
@@ -29,6 +30,33 @@ beforeEach(() => {
 });
 
 describe('music playback', () => {
+  it('pauses loaded music without changing tracks and resumes only when playback is requested', () => {
+    audio.unlock();
+    audio.playPlaylist(playlist);
+    const [first, second] = sounds();
+    vi.mocked(first.state).mockReturnValue('loaded');
+    audio.pauseMusic();
+    audio.pauseMusic();
+    expect(first.pause).toHaveBeenCalledOnce();
+    expect(first.stop).not.toHaveBeenCalled();
+    first.options.onend!(1);
+    expect(second.play).not.toHaveBeenCalled();
+    audio.playPlaylist(playlist);
+    expect(first.play).toHaveBeenCalledTimes(2);
+    expect(first.stop).not.toHaveBeenCalled();
+  });
+
+  it('cancels a pending music load when the desktop is suspended', () => {
+    audio.unlock();
+    audio.playPlaylist(playlist);
+    const [first] = sounds();
+    audio.pauseMusic();
+    expect(first.unload).toHaveBeenCalledOnce();
+    first.options.onloaderror!(1, 'late cancelled load');
+    audio.playPlaylist(playlist);
+    expect(sounds()[2].options.src).toEqual(['/first.mp3']);
+    expect(sounds()[2].play).toHaveBeenCalledOnce();
+  });
   it('reports audible playback only after loading, with nonzero volume and mute off', () => {
     expect(audio.isMusicAudible()).toBe(false);
     expect(audio.getMusicLevels()).toEqual([0, 0, 0]);
@@ -210,5 +238,69 @@ describe('music playback', () => {
     expect(sounds()[0].stop).toHaveBeenCalledTimes(2);
     expect(sounds()[0].play).toHaveBeenCalledTimes(3);
     expect(sounds()[1].play).not.toHaveBeenCalled();
+  });
+});
+
+describe('telephone effects', () => {
+  beforeEach(() => {
+    audio.register({
+      'phone-tone': { kind: 'sfx', src: ['/phone-tone.wav'], loop: true },
+      'phone-dial': { kind: 'sfx', src: ['/phone-dial.wav'] },
+    });
+  });
+
+  it('requires an unmuted gesture and keeps only one pending exchange loop', () => {
+    expect(audio.playSound('phone-tone')).toBe(false);
+    expect(Howl).not.toHaveBeenCalled();
+    audio.setMuted(true);
+    audio.unlock();
+    expect(audio.playSound('phone-tone')).toBe(false);
+    const tone = sounds()[2];
+    expect(tone.load).not.toHaveBeenCalled();
+    audio.setMuted(false);
+    expect(audio.playSound('phone-tone')).toBe(true);
+    expect(audio.playSound('phone-tone')).toBe(true);
+    expect(tone.options.loop).toBe(true);
+    expect(tone.load).toHaveBeenCalledOnce();
+    expect(tone.play).toHaveBeenCalledOnce();
+  });
+
+  it('unloads an abandoned effect and ignores its late failure after a restart', () => {
+    audio.stopSound('phone-tone');
+    audio.stopSound('missing');
+    expect(Howl).not.toHaveBeenCalled();
+    audio.unlock();
+    audio.playSound('phone-tone');
+    const oldTone = sounds()[2];
+    audio.stopSound('phone-tone');
+    expect(oldTone.unload).toHaveBeenCalledOnce();
+    audio.playSound('phone-dial');
+    const dial = sounds()[3];
+    expect(dial.options.loop).toBe(false);
+    expect(dial.play).toHaveBeenCalledOnce();
+    audio.stopSound('phone-dial');
+    expect(dial.unload).toHaveBeenCalledOnce();
+    audio.playSound('phone-tone');
+    const replacement = sounds()[4];
+    oldTone.options.onloaderror!(1, 'late aborted request');
+    oldTone.options.onplayerror!(1, 'late rejected request');
+    audio.playSound('phone-tone');
+    expect(replacement.play).toHaveBeenCalledOnce();
+    expect(replacement.unload).not.toHaveBeenCalled();
+  });
+
+  it('can retry a failed loop after a later gesture and preserves music when stopping effects', () => {
+    audio.unlock();
+    audio.playPlaylist(playlist);
+    audio.playSound('phone-tone');
+    const firstTone = sounds()[2];
+    firstTone.options.onloaderror!(1, 'missing');
+    expect(firstTone.unload).toHaveBeenCalledOnce();
+    audio.playSound('phone-tone');
+    expect(sounds()[4].play).toHaveBeenCalledOnce();
+    audio.stopSound('first');
+    audio.stopSound('phone-tone');
+    expect(sounds()[0].stop).not.toHaveBeenCalled();
+    expect(sounds()[0].unload).not.toHaveBeenCalled();
   });
 });

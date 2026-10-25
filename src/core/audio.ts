@@ -12,11 +12,13 @@ export type AudioManifest = Record<string, AudioAsset>;
 export class AudioManager {
   private readonly assets = new Map<string, AudioAsset>();
   private readonly sounds = new Map<string, Howl>();
+  private readonly playingLoops = new Set<string>();
   private unlocked = false;
   private muted = false;
   private musicVolume = 0.4;
   private soundVolume = 0.7;
   private currentMusic: string | null = null;
+  private musicPaused = false;
   private playlist: string[] = [];
   private playlistIndex = 0;
   private readonly failedMusic = new Set<string>();
@@ -29,6 +31,7 @@ export class AudioManager {
     for (const [id, asset] of Object.entries(manifest)) {
       this.sounds.get(id)?.unload();
       this.sounds.delete(id);
+      this.playingLoops.delete(id);
       if (this.currentMusic === id) this.currentMusic = null;
       this.assets.set(id, { ...asset, src: [...asset.src] });
     }
@@ -97,12 +100,26 @@ export class AudioManager {
 
   /** False means no matching asset, no user gesture yet, or audio unavailable. */
   playSound(id: string): boolean {
-    if (!this.unlocked || this.assets.get(id)?.kind !== 'sfx') return false;
+    if (!this.unlocked || this.muted || this.assets.get(id)?.kind !== 'sfx') return false;
+    // A looping effect may still be loading; repeated gestures must not queue
+    // several copies of the exchange tone before that load finishes.
+    if (this.playingLoops.has(id)) return true;
     const sound = this.getSound(id);
     if (!sound) return false;
+    if (this.assets.get(id)?.loop) this.playingLoops.add(id);
     if (sound.state() === 'unloaded') sound.load();
     sound.play();
     return true;
+  }
+
+  /** Cancels playback and pending loads. Safe before unlock or for an unknown ID. */
+  stopSound(id: string): void {
+    if (this.assets.get(id)?.kind !== 'sfx') return;
+    // Howler's stop() can itself queue while loading. Unloading removes pending
+    // play requests as well, so an old scene cannot start sounding later.
+    this.sounds.get(id)?.unload();
+    this.sounds.delete(id);
+    this.playingLoops.delete(id);
   }
 
   playMusic(id: string): boolean {
@@ -111,8 +128,9 @@ export class AudioManager {
     if (!sound) return false;
     // A pending load/play request also counts: repeated gestures must not queue
     // additional instances or restart the current track.
-    if (this.currentMusic === id) return true;
-    if (this.currentMusic) this.sounds.get(this.currentMusic)?.stop();
+    if (this.currentMusic === id && !this.musicPaused) return true;
+    this.musicPaused = false;
+    if (this.currentMusic && this.currentMusic !== id) this.sounds.get(this.currentMusic)?.stop();
     this.currentMusic = id;
     const index = this.playlist.indexOf(id);
     if (index >= 0) this.playlistIndex = index;
@@ -122,8 +140,8 @@ export class AudioManager {
     return true;
   }
 
-  /** Prepares the sequence without loading; starts only after an unmuted gesture. */
-  playPlaylist(ids: readonly string[], onError: () => void = () => {}): boolean {
+  /** Prepare controls without loading or resuming playback during a view change. */
+  preparePlaylist(ids: readonly string[], onError: () => void = () => {}): boolean {
     if (!ids.length || ids.some(id => this.assets.get(id)?.kind !== 'music')) return false;
     this.onMusicError = onError;
     const unchanged = ids.length === this.playlist.length && ids.every((id, index) => id === this.playlist[index]);
@@ -131,8 +149,14 @@ export class AudioManager {
       this.stopMusic();
       this.playlist = [...ids];
     }
+    return true;
+  }
+
+  /** Prepares the sequence without loading; starts only after an unmuted gesture. */
+  playPlaylist(ids: readonly string[], onError: () => void = () => {}): boolean {
+    if (!this.preparePlaylist(ids, onError)) return false;
     if (!this.unlocked || this.muted) return false;
-    if (this.currentMusic) return true;
+    if (this.currentMusic) return this.playMusic(this.currentMusic);
     this.failedMusic.clear();
     return this.playMusic(this.playlist[this.playlistIndex]);
   }
@@ -141,16 +165,30 @@ export class AudioManager {
   nextTrack(): boolean { return this.movePlaylist(1); }
   previousTrack(): boolean { return this.movePlaylist(-1); }
 
+  /** Suspend the desk while the telephone is visible, keeping the track position. */
+  pauseMusic(): void {
+    if (!this.currentMusic || this.musicPaused) return;
+    const sound = this.sounds.get(this.currentMusic);
+    this.musicPaused = true;
+    if (sound?.state() === 'loaded') sound.pause();
+    else {
+      // Cancel queued playback rather than queueing a pause behind a pending play.
+      sound?.unload();
+      this.sounds.delete(this.currentMusic);
+    }
+  }
+
   stopMusic(): void {
     if (this.currentMusic) this.sounds.get(this.currentMusic)?.stop();
     this.currentMusic = null;
+    this.musicPaused = false;
     this.playlist = [];
     this.playlistIndex = 0;
     this.failedMusic.clear();
   }
 
   private advancePlaylist(id: string): void {
-    if (this.currentMusic !== id || !this.playlist.includes(id)) return;
+    if (this.musicPaused || this.currentMusic !== id || !this.playlist.includes(id)) return;
     this.movePlaylist(1);
   }
 
@@ -188,6 +226,7 @@ export class AudioManager {
         if (this.sounds.get(id) !== sound) return;
         sound.unload();
         this.sounds.delete(id);
+        this.playingLoops.delete(id);
         this.failedMusic.add(id);
         this.advancePlaylist(id);
       },
@@ -195,6 +234,7 @@ export class AudioManager {
         if (this.sounds.get(id) !== sound) return;
         sound.unload();
         this.sounds.delete(id);
+        this.playingLoops.delete(id);
         if (this.currentMusic === id) {
           this.currentMusic = null;
           this.onMusicError();

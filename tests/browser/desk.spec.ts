@@ -340,8 +340,8 @@ test('leaving the stage cancels carrying, and an open book can be carried back t
   expect(await logicalRect(page, 'manual')).toEqual(shelved);
 });
 
-test('touch taps place the closed rulebook then open its cover corner with fractional mobile scaling', async ({ page, context }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+test('touch taps place the closed rulebook then open its cover corner with fractional scaling in a small landscape desktop window', async ({ page, context }) => {
+  await page.setViewportSize({ width: 540, height: 480 });
   await enterCabinet(page);
   const start = await screenPoint(page, center(await logicalRect(page, 'manual')));
   const target = await screenPoint(page, { x: 350, y: 228 });

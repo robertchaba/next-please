@@ -254,7 +254,7 @@ test('finishing an import after leaving the archive opens the restored scene', a
 });
 
 test('English introduction, cabinet and rulebook remain usable on a small screen', async ({ page }, testInfo) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 540, height: 480 });
   await page.goto('/');
   await page.getByRole('button', { name: 'English', exact: true }).click();
   await page.locator('#control-start').click();
@@ -268,7 +268,7 @@ test('English introduction, cabinet and rulebook remain usable on a small screen
   await page.getByRole('button', { name: 'EYE CHART', exact: true }).click();
   await expect(page.locator('#screen-description')).toContainText('Vision: NORMAL.');
   const canvas = (await page.locator('#game').boundingBox())!;
-  expect(canvas.width).toBeLessThanOrEqual(374);
+  expect(canvas.width).toBeLessThanOrEqual(524);
   expect(canvas.height / canvas.width).toBeCloseTo(320 / 570, 3);
   for (const id of ['manual', 'stamp-fit', 'stamp-unfit', 'lamp', 'decoration']) {
     const bounds = (await page.locator(`#control-${id}`).boundingBox())!;

@@ -2,12 +2,12 @@ import { readFile, readdir } from 'node:fs/promises';
 import { expect, it } from 'vitest';
 import { effectsManifest } from '../src/core/effects';
 
-it('registers every bundled effect with a portable local URL and no looping', async () => {
+it('registers every bundled effect locally, looping only the mobile exchange tone', async () => {
   const directory = new URL('../public/assets/audio/', import.meta.url);
   const files = (await readdir(directory)).filter(file => file.endsWith('.wav')).sort();
   const registered = Object.entries(effectsManifest).map(([id, asset]) => {
     expect(asset.kind).toBe('sfx');
-    expect(asset.loop).not.toBe(true);
+    expect(asset.loop).toBe(id === 'phone-tone');
     expect(asset.src).toEqual([`${import.meta.env.BASE_URL}assets/audio/${id}.wav`]);
     return `${id}.wav`;
   }).sort();
@@ -27,9 +27,12 @@ it('registers every bundled effect with a portable local URL and no looping', as
     expect(wav.readUInt32LE(40)).toBe(wav.length - 44);
     const duration = (wav.length - 44) / (44100 * 2);
     expect(duration).toBeGreaterThan(0.04);
-    expect(duration).toBeLessThan(file === 'telephone.wav' ? 2.1 : file === 'bell.wav' ? 0.8 : 0.5);
+    const maximumDuration: Record<string, number> = {
+      'telephone.wav': 2.1, 'bell.wav': 0.8, 'phone-tone.wav': 1.1, 'phone-dial.wav': 4,
+    };
+    expect(duration).toBeLessThan(maximumDuration[file] ?? 0.5);
     expect(wav.readInt16LE(44)).toBe(0);
-    expect(wav.readInt16LE(wav.length - 2)).toBe(0);
+    if (file !== 'phone-tone.wav') expect(wav.readInt16LE(wav.length - 2)).toBe(0);
     let peak = 0;
     for (let index = 44; index < wav.length; index += 2) peak = Math.max(peak, Math.abs(wav.readInt16LE(index)));
     expect(peak).toBeGreaterThan(1000);
@@ -48,5 +51,23 @@ it('registers every bundled effect with a portable local URL and no looping', as
         expect(Math.sqrt(power / 2205)).toBeGreaterThan(0.12);
       }
     }
+    if (file === 'phone-tone.wav') {
+      expect(duration).toBe(1);
+      // Adjacent sample differences at the join match the waveform's normal
+      // slope; a fade or click must not recur once per second.
+      const firstStep = wav.readInt16LE(46) - wav.readInt16LE(44);
+      const seamStep = wav.readInt16LE(44) - wav.readInt16LE(wav.length - 2);
+      expect(Math.abs(firstStep - seamStep)).toBeLessThanOrEqual(1);
+      const rms = (start: number, length: number) => {
+        let power = 0;
+        for (let index = start; index < start + length; index++) {
+          power += (wav.readInt16LE(44 + index * 2) / 32768) ** 2;
+        }
+        return Math.sqrt(power / length);
+      };
+      expect(rms(0, 1764)).toBeCloseTo(rms(44100 - 1764, 1764), 5);
+      expect(rms(0, 1764)).toBeGreaterThan(0.15);
+    }
+    if (file === 'phone-dial.wav') expect(duration).toBe(3.9);
   }
 });

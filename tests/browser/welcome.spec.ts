@@ -108,10 +108,10 @@ test('native resolution, integer scaling, fullscreen and small-screen fit', asyn
   await page.keyboard.press('f');
   await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(false);
   await page.keyboard.press('Escape');
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect.poll(async () => (await page.locator('#game').boundingBox())!.width).toBeLessThanOrEqual(374);
+  await page.setViewportSize({ width: 540, height: 480 });
+  await expect.poll(async () => (await page.locator('#game').boundingBox())!.width).toBeLessThanOrEqual(524);
   const bounds = await page.locator('#game').boundingBox();
-  expect(bounds!.width).toBeLessThanOrEqual(374);
+  expect(bounds!.width).toBeLessThanOrEqual(524);
   expect(bounds!.x).toBeGreaterThanOrEqual(0);
   expect(bounds!.height / bounds!.width).toBeCloseTo(320 / 570, 3);
   await expectExternalUtilities(page);
@@ -122,7 +122,7 @@ test('native resolution, integer scaling, fullscreen and small-screen fit', asyn
 
 test('external controls fit both languages, including short landscape screens', async ({ page }) => {
   await page.goto('/');
-  for (const size of [{ width: 1200, height: 720 }, { width: 800, height: 500 }, { width: 844, height: 390 }, { width: 390, height: 844 }, { width: 240, height: 640 }]) {
+  for (const size of [{ width: 1200, height: 720 }, { width: 800, height: 500 }, { width: 844, height: 390 }, { width: 540, height: 480 }, { width: 540, height: 400 }]) {
     await page.setViewportSize(size);
     for (const language of ['English', 'Polski']) {
       await page.getByRole('button', { name: language, exact: true }).click();

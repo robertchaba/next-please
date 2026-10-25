@@ -1,19 +1,48 @@
 import { describe, expect, it } from 'vitest';
-import { drawDocumentText, measureDocumentText, measureText } from '../src/render/font';
+import { drawDocumentText, drawText, measureDocumentText, measureText } from '../src/render/font';
 import { translations } from '../src/i18n';
+import { mobileDialogueLines, mobileStatusLines } from '../src/render/mobile';
 
 type Pixel = [number, number, number, number];
-function pixels(value: string, x = 0, y = 0): Pixel[] {
+function pixels(value: string, x = 0, y = 0, draw = drawDocumentText): Pixel[] {
   const marks: Pixel[] = [];
   const context = {
     save() {}, restore() {}, fillStyle: '',
     fillRect(a: number, b: number, w: number, h: number) { marks.push([a, b, w, h]); },
   } as unknown as CanvasRenderingContext2D;
-  drawDocumentText(context, value, x, y);
+  draw(context, value, x, y);
   return marks;
 }
 
 describe('compact original document font', () => {
+  it('keeps the mobile dialogue and handwritten note within the generated paper in both languages', () => {
+    for (const { mobile } of Object.values(translations)) {
+      for (const value of [mobile.greeting, mobile.reply]) {
+        const lines = mobileDialogueLines(value);
+        expect(lines.join(' ')).toBe(value);
+        expect(lines.length).toBeLessThanOrEqual(4);
+        for (const line of lines) expect(measureDocumentText(line)).toBeLessThanOrEqual(108);
+      }
+      expect(measureDocumentText(mobile.title) * 4 + 2).toBeLessThanOrEqual(224);
+      for (const line of mobile.noteLines) expect(measureDocumentText(line) * 3 + 2, line).toBeLessThanOrEqual(224);
+      expect(mobile.noteLines.length).toBeLessThanOrEqual(7);
+      expect(mobile.noteLines.filter(Boolean).join(' ')).toBe(`${mobile.note} ${mobile.noteHelp}`);
+    }
+  });
+  it('fits enlarged mobile sound captions and retains their ellipsis glyph', () => {
+    for (const { mobile } of Object.values(translations)) {
+      for (const caption of [mobile.tone, mobile.dialing]) {
+        const lines = mobileStatusLines(caption).split('\n');
+        expect(lines.join(' ')).toBe(caption);
+        expect(lines.length).toBeLessThanOrEqual(2);
+        for (const line of lines) expect(measureText(line, 3), line).toBeLessThanOrEqual(276);
+      }
+    }
+    const ellipsis = pixels('…', 0, 0, drawText);
+    expect(ellipsis).not.toEqual(pixels('?', 0, 0, drawText));
+    expect(ellipsis).toHaveLength(3);
+    expect(new Set(ellipsis.map(([, y]) => y)).size).toBe(1);
+  });
   it('renders every Polish diacritic distinctly within a seven-row cell', () => {
     for (const [accented, plain] of Object.entries({ ą: 'a', ć: 'c', ę: 'e', ł: 'l', ń: 'n', ó: 'o', ś: 's', ź: 'z', ż: 'z', Ą: 'A', Ć: 'C', Ę: 'E', Ł: 'L', Ń: 'N', Ó: 'O', Ś: 'S', Ź: 'Z', Ż: 'Z' })) {
       const marks = pixels(accented);
