@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyAction, createInitialState, PATIENTS, type GameAction } from '../src/core/game';
 import { translations, type Locale } from '../src/i18n';
-import { paperDescription, referralLines, wrapDocumentLines, drawPaperwork, HANDWRITING_INK, DOCUMENT_INK } from '../src/render/paperwork';
+import { paperDescription, certificateDescription, referralLines, wrapDocumentLines, drawPaperwork, drawCertificate, HANDWRITING_INK, DOCUMENT_INK } from '../src/render/paperwork';
 import { measureDocumentText } from '../src/render/font';
 import { createDeskState, addDeskItem } from '../src/core/desk';
 import { shiftButtons, visibleDocumentClip } from '../src/scenes/shift';
@@ -16,14 +16,14 @@ describe('separate localized paperwork', () => {
       const t = translations[locale], p = t.paperwork;
       for (const patient of PATIENTS) {
         const lines = wrapDocumentLines(referralLines(patient.id, locale), 166);
-        expect(lines.length).toBeLessThanOrEqual(11);
+        expect(lines.length).toBeLessThanOrEqual(10);
         for (const line of lines) expect(measureDocumentText(line), line).toBeLessThanOrEqual(166);
         expect(lines.join(' ')).toContain(patient.birthDate);
         expect(lines.join(' ')).toContain(t.patientReferrals[patient.id]!.employer);
       }
       for (const body of [p.zusBody, p.employerBody]) {
         const lines = wrapDocumentLines(body, 166);
-        expect(lines.length).toBeLessThanOrEqual(8);
+        expect(lines.length).toBeLessThanOrEqual(6);
         for (const line of lines) expect(measureDocumentText(line), line).toBeLessThanOrEqual(166);
       }
       for (const label of [p.referral, p.occupational, p.note, p.letter, p.zusSubject, p.employerSubject]) {
@@ -87,9 +87,52 @@ describe('separate localized paperwork', () => {
     drawPaperwork(recorder as unknown as CanvasRenderingContext2D, note, { x: 0, y: 0, w: 188, h: 144 }, 'pl', false);
     expect(HANDWRITING_INK).not.toBe(DOCUMENT_INK);
     expect(marks.some(mark => mark.y >= 87 && mark.y < 94 && mark.x >= 45 && mark.x < 85 && mark.color === HANDWRITING_INK)).toBe(true);
-    expect(marks.filter(mark => mark.y >= 114 && mark.x < 157).every(mark => mark.color === HANDWRITING_INK)).toBe(true);
+    expect(marks.some(mark => mark.y >= 111 && mark.y < 126 && mark.x < 157 && mark.color === HANDWRITING_INK)).toBe(true);
+    expect(marks.filter(mark => mark.y >= 111 && mark.y < 126 && mark.x < 157).every(mark => mark.color === HANDWRITING_INK)).toBe(true);
     expect(marks.some(mark => mark.y >= 63 && mark.y < 70 && mark.x < 80 && mark.color === DOCUMENT_INK)).toBe(true);
     expect(marks.every(mark => mark.x >= 0 && mark.x < 188 && mark.y >= 0 && mark.y < 144)).toBe(true);
+  });
+
+  it('retains the issue date and authentication when old paperwork is stored', () => {
+    const state = stateAfter('skip-intro', 'call-patient', 'take-document', 'run-vision', 'take-paper');
+    for (const paper of state.papers) {
+      const stored = { ...paper, day: 1, location: 'drawer' as const };
+      for (const locale of ['pl', 'en'] as const) {
+        const p = translations[locale].paperwork, description = paperDescription(stored, locale);
+        expect(description).toContain(locale === 'pl' ? '03.11.1983' : '03/11/1983');
+        expect(description).toContain(p.signed);
+        expect(description).toContain(p.reference);
+        expect(description).toContain(stored.kind === 'referral' ? p.employerSeal : p.clinicSeal);
+      }
+    }
+  });
+
+  it('describes date and signature consistently with the certificate decision', () => {
+    const blank = stateAfter('skip-intro', 'call-patient', 'take-document', 'take-certificate');
+    const signed = applyAction(applyAction(blank, 'write-certificate').state, 'stamp-unfit').state;
+    for (const locale of ['pl', 'en'] as const) {
+      const t = translations[locale], p = t.paperwork;
+      expect(certificateDescription(blank, locale)).toContain(p.nameMissing);
+      expect(certificateDescription(blank, locale)).not.toContain(p.signed);
+      expect(certificateDescription(signed, locale)).toContain(t.patientNames[0]);
+      expect(certificateDescription(signed, locale)).toContain(t.unfit);
+      expect(certificateDescription(signed, locale)).toContain(p.signed);
+      expect(certificateDescription(signed, locale)).toContain(locale === 'pl' ? '03.11.1983' : '03/11/1983');
+    }
+  });
+
+  it('keeps complete dated forms and certificate lettering inside the native paper', () => {
+    for (const locale of ['pl', 'en'] as const) for (const decision of ['stamp-fit', 'stamp-unfit'] as const) {
+      const state = stateAfter('skip-intro', 'call-patient', 'take-document', 'run-vision', 'take-paper',
+        { type: 'write-note', paperId: 2 }, 'take-certificate', 'write-certificate', decision);
+      const marks: { x: number; y: number }[] = [];
+      const recorder = { fillStyle: '', save() {}, restore() {}, fillRect(x: number, y: number, w: number, h: number) {
+        if (w === 1 && h === 1) marks.push({ x, y });
+      } } as unknown as CanvasRenderingContext2D;
+      for (const paper of state.papers) drawPaperwork(recorder, paper, { x: 0, y: 0, w: 188, h: 144 }, locale, false);
+      drawCertificate(recorder, state, { x: 0, y: 0, w: 188, h: 144 }, locale, false);
+      expect(marks.every(mark => mark.x >= 0 && mark.x < 188 && mark.y >= 0 && mark.y < 144)).toBe(true);
+    }
   });
 
   it('exposes a single clip above its bundle and a separate certificate writing action', () => {

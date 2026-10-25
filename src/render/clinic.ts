@@ -3,17 +3,21 @@
  * Loading and simulation updates happen outside all drawing functions.
  */
 import { CABINET_HOTSPOTS, DOCUMENT_RACK, ITEM_RESTS, ITEM_SIZES, LEFT_WIDTH, PATIENT_HANDOFF, RIGHT_DESK_X } from '../core/desk';
+import { calendarText } from '../core/calendar';
+import { type Locale } from '../i18n';
+import { drawDocumentText, drawText } from './font';
 
 const images = new Map<string, HTMLImageElement>();
 const patientShadows = new Map<string, HTMLCanvasElement>();
 let creatorPhotograph: { image: HTMLCanvasElement; shadow: HTMLCanvasElement } | undefined;
 const introNames = ['scalpel', 'catheter', 'pen', 'stamp'] as const;
 const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate', 'clock',
-  'patient-0', 'patient-1', 'patient-2', 'workstation-phone', 'workstation-clips', 'workstation-clip', 'workstation-rack', 'workstation-paper'] as const;
+  'patient-0', 'patient-1', 'patient-2', 'workstation-phone', 'workstation-clips', 'workstation-clip', 'workstation-rack', 'workstation-paper',
+  'workstation-calendar', 'imprint-fit-pl', 'imprint-unfit-pl', 'imprint-fit-en', 'imprint-unfit-en', 'document-seal', 'document-seal-zus', 'document-seal-employer', 'document-signature'] as const;
 export const PATIENT_MOTION_FRAMES = 12;
 
 export async function loadClinicArt(): Promise<void> {
-  const files = ['cabinet-workstation', 'archives-clinic', 'break-room', 'creator-robert', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
+  const files = ['cabinet-workstation', 'archives-clinic', 'break-room', 'drawer-interior', 'creator-robert', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
   await Promise.all(files.map(name => new Promise<void>((resolve, reject) => {
     const image = new Image();
     images.set(name, image);
@@ -225,6 +229,40 @@ export function drawWorkstationObjects(ctx: CanvasRenderingContext2D, _drawerCou
 
 export function drawPaper(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
   asset(ctx, 'sprites/workstation-paper', x, y, w, h);
+}
+
+export function drawDrawerInterior(ctx: CanvasRenderingContext2D): void {
+  asset(ctx, 'drawer-interior', 0, 0, 570, 320);
+}
+
+/** Generated ink is already distressed and angled; no runtime randomness or rotation. */
+export function drawDecisionImprint(ctx: CanvasRenderingContext2D, decision: 'fit' | 'unfit', locale: Locale,
+  x: number, y: number, w = 116, h = 32): void {
+  asset(ctx, `sprites/imprint-${decision}-${locale}`, x, y, w, h);
+}
+
+export function drawDocumentSeal(ctx: CanvasRenderingContext2D, x: number, y: number, size = 22, kind: 'clinic' | 'employer' | 'zus' = 'clinic'): void {
+  const name = kind === 'clinic' ? 'document-seal' : `document-seal-${kind}`;
+  asset(ctx, `sprites/${name}`, x, y, kind === 'zus' ? Math.round(size * 1.5) : size, size);
+}
+
+export function drawDocumentSignature(ctx: CanvasRenderingContext2D, x: number, y: number, w = 46, h = 12): void {
+  asset(ctx, 'sprites/document-signature', x, y, w, h);
+}
+
+export const CALENDAR_BOUNDS = { x: 349, y: 118, w: 48, h: 40 } as const;
+
+/** All calendar lettering is derived from the saved day, never the real clock. */
+export function drawDeskCalendar(ctx: CanvasRenderingContext2D, day: number, locale: Locale): void {
+  const { x, y, w, h } = CALENDAR_BOUNDS, date = calendarText(day, locale);
+  asset(ctx, 'sprites/workstation-calendar', x, y, w, h);
+  // The compact paper face leaves margins below the binding and above the lower edge.
+  drawDocumentText(ctx, date.monthShort, x + 22, y + 11, { color: '#3d3a31', align: 'center' });
+  ctx.save();
+  ctx.translate(x + 22, y + 18);
+  ctx.scale(2, 2);
+  drawDocumentText(ctx, date.day, 0, 0, { color: '#3d3a31', align: 'center' });
+  ctx.restore();
 }
 
 export function drawIntroIllustration(ctx: CanvasRenderingContext2D, slide: number): void {

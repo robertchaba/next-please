@@ -9,13 +9,14 @@ import { installDeskInput } from './core/desk-input';
 import { drawCreatorPortrait, drawPaper, drawPanelIllustration, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
 import { drawText } from './render/font';
 import { paperClipRect } from './render/paperwork';
+import { drawerButtons, drawerDescription, renderDrawer, type DrawerAction } from './render/drawer';
 import { installCursor, installDisplay, WIDTH, HEIGHT } from './core/display';
 import { translations, readPreferences, savePreferences, type Locale } from './i18n';
 import { audio } from './core/audio';
 import { musicManifest, musicPlaylist } from './core/music';
 import { createInitialState, downloadSave, importSave, SaveError } from './core/save';
 
-type Screen = 'welcome' | 'intro' | 'cabinet' | 'credits' | 'saves' | 'break-room' | 'restart';
+type Screen = 'welcome' | 'intro' | 'cabinet' | 'credits' | 'saves' | 'break-room' | 'restart' | 'drawer';
 const app = document.querySelector<HTMLElement>('#app')!;
 let desktopActive = !app.hidden;
 let desktopFocus: string | undefined;
@@ -46,6 +47,7 @@ let gameState = createInitialState();
 let deskState = createDeskState();
 let heldItem: DeskItemId | null = null;
 let nextClipId = 1;
+let drawerPage = 0;
 let deskBeforePickup = deskState;
 let manualOpen = false;
 let manualPage = 0;
@@ -219,6 +221,8 @@ function arrangeDocumentGroup(active: DeskItemId, held: boolean, raise = false):
 }
 
 function reconcileDeskPapers(): void {
+  if (gameState.drawerItems.manual) deskState = { ...deskState, order: deskState.order.filter(id => id !== 'manual') };
+  else if (!deskState.order.includes('manual')) deskState = raiseDeskItem(deskState, 'manual');
   const visible = new Set(gameState.papers.filter(paper => paper.location === 'desk').map(paper => `paper-${paper.id}` as DeskItemId));
   for (const id of deskState.order) {
     if (id.startsWith('paper-') && !visible.has(id)) deskState = removeDeskItem(deskState, id);
@@ -245,6 +249,7 @@ function announceDesk(message: string, focusId?: string): void {
 function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
   if (action === 'reserved-form') return;
   if (typeof action === 'object') {
+    if (action.type === 'store-drawer-item' || action.type === 'retrieve-drawer-item') return;
     const paper = 'paperId' in action ? gameState.papers.find(record => record.id === action.paperId) : undefined;
     if (action.type === 'read-paper') {
       if (paper) { spendTime('read-manual'); announceDesk(paperDescription(paper, locale, isDocumentClipped(gameState, paper.id)), `paper-${paper.id}`); }
@@ -269,9 +274,9 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     return;
   }
   if (action === 'drawer') {
-    const stored = [...gameState.papers].reverse().find(paper => paper.location === 'drawer');
-    if (stored) handleShiftAction({ type: 'retrieve-paper', paperId: stored.id });
-    else announceDesk(t().drawerEmpty, 'drawer');
+    deskInput.cancel();
+    screen = 'drawer'; drawerPage = 0; toast = '';
+    playEffect('paper'); syncControls('drawer-close');
     return;
   }
   if (action === 'trash') { announceDesk(t().trashHelp, 'trash'); return; }
@@ -392,6 +397,27 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
   document.querySelector('#announcement')!.textContent = feedback;
 }
 
+function handleDrawerAction(action: DrawerAction): void {
+  if (action.type === 'close') { closeScreen(); return; }
+  if (action.type === 'page') {
+    drawerPage = action.page;
+    syncControls('drawer-close');
+    document.querySelector('#announcement')!.textContent = drawerDescription(gameState, locale, drawerPage);
+    return;
+  }
+  const result = applyAction(gameState, action.type === 'paper'
+    ? { type: 'retrieve-paper', paperId: action.id }
+    : { type: 'retrieve-drawer-item', item: action.item });
+  if (result.state === gameState) return;
+  gameState = result.state;
+  updateClock(); reconcileDeskPapers();
+  const id: DeskItemId = action.type === 'paper' ? `paper-${action.id}` : action.item === 'manual' ? 'manual' : `clip-${nextClipId++}`;
+  if (id.startsWith('clip-')) deskState = addDeskItem(deskState, id, { x: 304, y: 155 });
+  screen = 'cabinet';
+  deskInput.pickUp(id, false);
+  document.querySelector('#announcement')!.textContent = t().feedback[result.feedback];
+}
+
 function openScreen(next: Screen, trigger = 'start'): void {
   deskInput.cancel();
   panelReturn = screen; returnFocus = trigger; screen = next; status = ''; toast = '';
@@ -400,6 +426,7 @@ function openScreen(next: Screen, trigger = 'start'): void {
 }
 function closeScreen(): void {
   deskInput.cancel();
+  if (screen === 'drawer') { screen = 'cabinet'; syncControls('drawer'); return; }
   if (screen === 'cabinet') { goToMenu(); return; }
   if (screen === 'break-room') { startShift(); return; }
   if (screen === 'restart') { screen = 'break-room'; syncControls('restart'); return; }
@@ -453,6 +480,7 @@ function updateMusicMeter(): void {
 }
 
 function getButtons(): Button[] {
+  if (screen === 'drawer') return drawerButtons(gameState, locale, drawerPage, handleDrawerAction);
   if (screen === 'intro' || screen === 'cabinet') return shiftButtons(gameState, locale, selectedStamp, handleShiftAction, deskView());
   if (screen === 'credits') return [
     { id: 'github', label: 'github.com/robertchaba', x: 104, y: 93, w: 170, h: 17, href: 'https://github.com/robertchaba', kind: 'text' },
@@ -577,11 +605,12 @@ function syncControls(focusId?: string): void {
   buttons = getButtons();
   const heading = document.createElement('h1');
   heading.className = 'sr-only'; heading.id = 'screen-heading';
-  heading.textContent = screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'break-room' ? t().breakRoomTitle : screen === 'restart' ? t().restartTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
+  heading.textContent = screen === 'drawer' ? t().drawer : screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'break-room' ? t().breakRoomTitle : screen === 'restart' ? t().restartTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
   const description = document.createElement('p');
   description.className = 'sr-only'; description.id = 'screen-description';
   description.textContent = screen === 'credits'
     ? `${t().creator}: Robert Chaba. ${t().creatorPortrait} ${t().programming}: ${t().programmingName}. ${t().audio}: ${t().musicSource}. ${t().creditsFooter}`
+    : screen === 'drawer' ? drawerDescription(gameState, locale, drawerPage)
     : screen === 'intro' ? t().intro[gameState.introStep].body
     : screen === 'cabinet' ? `${shiftDescription(gameState, locale)} ${manualOpen ? manualPageDescription(locale, manualPage) : ''} ${feedback}`
     : screen === 'saves' ? `${t().savesDescription} ${t().savesBody.join(' ')} ${t().sample}. ${t().day}: ${gameState.day}. ${t().patients}: ${gameState.patientsProcessed}. ${t().money}: ${gameState.money}.`
@@ -590,7 +619,7 @@ function syncControls(focusId?: string): void {
     : `${t().subtitle} ${t().tagline} ${t().description}`;
   controls.append(heading, description);
   controls.dataset.screen = screen; controls.dataset.introStep = String(gameState.introStep);
-  const modal = screen === 'credits' || screen === 'saves' || screen === 'restart';
+  const modal = screen === 'credits' || screen === 'saves' || screen === 'restart' || screen === 'drawer';
   controls.setAttribute('role', modal ? 'dialog' : 'group');
   controls.setAttribute('aria-labelledby', 'screen-heading');
   controls.setAttribute('aria-describedby', 'screen-description');
@@ -722,6 +751,9 @@ function render(): void {
   if (screen === 'intro') {
     renderIntro(ctx, gameState, locale, introCharacters); buttons.forEach(drawButton); drawToast(); return;
   }
+  if (screen === 'drawer') {
+    renderDrawer(ctx, gameState, locale, drawerPage); buttons.forEach(drawButton); return;
+  }
   if (screen === 'cabinet') {
     renderCabinet(ctx, gameState, locale, selectedStamp, deskView());
     controls.dataset.patientMotion = patientMotion?.direction ?? 'idle';
@@ -797,8 +829,8 @@ fileInput.addEventListener('change', async () => {
     if (panelReturn === 'intro' || panelReturn === 'cabinet') panelReturn = loadedState.phase;
     // File reads can finish after the player closes the archive. Reconcile the
     // active scene as well as the saved data before rebuilding its controls.
-    if (screen === 'intro' || screen === 'cabinet') {
-      screen = loadedState.phase;
+    if (screen === 'intro' || screen === 'cabinet' || screen === 'drawer') {
+      drawerPage = 0; screen = loadedState.phase;
       if (screen === 'intro') startTyping();
     }
     status = t().imported;
@@ -931,6 +963,15 @@ const deskInput = installDeskInput(stage, {
       deskState = deskBeforePickup;
       handleShiftAction('return-document');
       syncControls(gameState.visit ? itemControlId(id) : gameState.shiftCompleted === 3 ? 'next-day' : 'call-patient');
+      return true;
+    }
+    if ((id === 'manual' || id.startsWith('clip-')) && containsPoint(CABINET_HOTSPOTS.drawer, target)) {
+      const result = applyAction(gameState, { type: 'store-drawer-item', item: id === 'manual' ? 'manual' : 'clip' });
+      if (result.state === gameState) { announceDesk(t().feedback[result.feedback], itemControlId(id)); return false; }
+      gameState = result.state; heldItem = null;
+      if (id === 'manual') { manualOpen = false; deskState = { ...deskBeforePickup, order: deskBeforePickup.order.filter(item => item !== id) }; }
+      else deskState = removeDeskItem(deskState, id);
+      updateClock(); playEffect('paper'); announceDesk(t().feedback[result.feedback], 'drawer');
       return true;
     }
     if (id.startsWith('paper-')) {
@@ -1086,7 +1127,7 @@ document.addEventListener('keydown', event => {
     else closeScreen();
   }
   if (event.key.toLowerCase() === 'f' && !event.repeat) { event.preventDefault(); void fullscreen(); }
-  if (event.key === 'Tab' && (screen === 'credits' || screen === 'saves' || screen === 'restart')) {
+  if (event.key === 'Tab' && (screen === 'credits' || screen === 'saves' || screen === 'restart' || screen === 'drawer')) {
     const elements = [...controls.querySelectorAll<HTMLElement>('.hit-target')];
     const index = elements.indexOf(document.activeElement as HTMLElement);
     if ((event.shiftKey && index <= 0) || (!event.shiftKey && index === elements.length - 1)) {

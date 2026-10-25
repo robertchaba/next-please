@@ -28,7 +28,7 @@ test('generated workstation assets align with two active rack slots and two futu
   page.on('pageerror', error => errors.push(error.message));
   await enter(page);
   expect(new Set(assets)).toEqual(new Set(['workstation-phone.png', 'workstation-clips.png',
-    'workstation-clip.png', 'workstation-rack.png', 'workstation-paper.png']));
+    'workstation-clip.png', 'workstation-rack.png', 'workstation-paper.png', 'workstation-calendar.png']));
   expect(await bounds(page, 'use-phone')).toEqual(CABINET_HOTSPOTS.phone);
   expect(CABINET_HOTSPOTS.phone.x).toBeGreaterThanOrEqual(210);
   expect(CABINET_HOTSPOTS.phone.y).toBeLessThan(128);

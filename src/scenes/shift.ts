@@ -1,11 +1,12 @@
-import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, type CabinetArtOptions } from '../render/clinic';
-import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, drawActionCorner, HANDWRITING_INK } from '../render/paperwork';
+import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, drawDeskCalendar, type CabinetArtOptions } from '../render/clinic';
+import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, drawCertificate, certificateDescription } from '../render/paperwork';
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
 import { drawManual, drawManualCover, manualControls, MANUAL_PAGE_COUNT } from '../render/manual';
 import { INTRO_SLIDES, PATIENTS, SHIFT_LENGTH, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
 import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
+import { calendarText } from '../core/calendar';
 import { CABINET_HOTSPOTS, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
 export { MANUAL_PAGE_COUNT, manualPageDescription } from '../render/manual';
 
@@ -44,10 +45,11 @@ export function clockTime(state: GameState): string {
 export function shiftDescription(state: GameState, locale: Locale): string {
   const t = translations[locale]; const visit = state.visit;
   const patient = visit ? PATIENTS[visit.patientId] : null;
-  return [t.cabinetHelp, `${t.clock}: ${clockTime(state)}.`, `${t.day}: ${state.day}.`, `${t.queue}: ${state.shiftCompleted}/${SHIFT_LENGTH}.`, `${t.points}: ${state.money}.`,
+  const date = calendarText(state.day, locale);
+  return [t.cabinetHelp, `${t.clock}: ${clockTime(state)}.`, `${t.day}: ${state.day}.`, `${t.calendar.label}: ${date.day} ${date.month}.`, `${t.queue}: ${state.shiftCompleted}/${SHIFT_LENGTH}.`, `${t.points}: ${state.money}.`,
     visit && patient ? `${t.patientNames[visit.patientId]}. ${t.patientJobs[visit.patientId]}. ${visit.document === 'tray' ? t.awaitingDocument : t.document}. ${t.visionResult}: ${visit.visionTested ? t[patient.vision] : t.untested}. ${t.pressureResult}: ${visit.pressureTested ? t[patient.pressure] : t.untested}. ${t.paperwork.weight}: ${visit.measurementsTaken ? `${patient.weight} ${t.paperwork.kg}` : t.untested}. ${t.paperwork.height}: ${visit.measurementsTaken ? `${patient.height} ${t.paperwork.cm}` : t.untested}. ${visit.decision ? t[visit.decision] : t.stampHere}.`
       : state.shiftCompleted === SHIFT_LENGTH ? t.shiftDone : t.emptyChair,
-    ...(visit?.certificateTaken ? [`${t.certificate}. ${visit.certificateNamed ? `${t.paperwork.nameWritten}: ${t.patientNames[visit.patientId]}` : t.paperwork.nameMissing}.`] : []),
+    ...(visit?.certificateTaken ? [certificateDescription(state, locale)] : []),
     ...state.papers.filter(paper => paper.location === 'desk').map(paper => paperDescription(paper, locale, isDocumentClipped(state, paper.id))),
   ].join(' ');
 }
@@ -77,7 +79,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
       : [hotspot('call-patient', t.callPatient, CABINET_HOTSPOTS.callPatient, 'call-patient')]),
     ...(state.visit?.document === 'tray' ? [item('take-document', t.takeDocument, 'incoming-referral', 'take-document')] : []),
     ...(state.visit?.certificateTaken ? [hotspot('return-document', t.returnDocument, PATIENT_HANDOFF, 'return-document'),
-      item('apply-stamp', `${t.applyStamp}. ${state.visit.certificateNamed ? `${t.paperwork.nameWritten}: ${t.patientNames[state.visit.patientId]}` : t.paperwork.nameMissing}.`, 'document', 'apply-stamp'),
+      item('apply-stamp', `${t.applyStamp}. ${certificateDescription(state, locale)}`, 'document', 'apply-stamp'),
       ...(certificateOnDesk ? [{ ...hotspot('write-certificate', t.paperwork.writeCertificate, paperActionRect(certificateBounds), 'write-certificate'), owner: 'document' as const }] : []),
       ...(!isLifted(view, 'document') && visibleDocumentClip(state, 'certificate', view)
         ? [{ ...hotspot('certificate-clip', t.paperwork.unclip, paperClipRect(certificateBounds), { type: 'unclip-document', documentId: 'certificate' }), owner: 'document' as const }] : []),
@@ -90,7 +92,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     hotspot('take-certificate', t.takeCertificate, CABINET_HOTSPOTS.certificateSupply, 'take-certificate'),
     ...DOCUMENT_RACK_SLOTS.slice(2).map((bounds, index) => ({ ...hotspot(`reserved-form-${index + 3}`, `${t.reservedForm} ${index + 3}`, bounds, 'reserved-form'), disabled: true })),
     hotspot('take-clip', t.takeClip, CABINET_HOTSPOTS.clipSupply, 'take-clip'),
-    hotspot('drawer', `${t.drawer}: ${state.papers.filter(paper => paper.location === 'drawer').length}. ${t.drawerHelp}`, CABINET_HOTSPOTS.drawer, 'drawer'),
+    hotspot('drawer', `${t.drawer}: ${state.papers.filter(paper => paper.location === 'drawer').length + Number(state.drawerItems.manual) + state.drawerItems.clips}. ${t.drawerHelp}`, CABINET_HOTSPOTS.drawer, 'drawer'),
     hotspot('trash', t.trash, CABINET_HOTSPOTS.trash, 'trash'),
     ...state.papers.filter(paper => paper.location === 'desk').flatMap(paper => {
       const id: DeskItemId = `paper-${paper.id}`;
@@ -108,8 +110,8 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     ...view.desk.order.filter(id => id.startsWith('clip-')).map(id => item(id, t.paperwork.paperclip, id)),
     { ...item('stamp-fit', t.stampFit, 'stamp-fit', 'select-fit'), pressed: selected === 'fit' },
     { ...item('stamp-unfit', t.stampUnfit, 'stamp-unfit', 'select-unfit'), pressed: selected === 'unfit' },
-    item('manual', t.manual, 'manual', 'manual'),
-    ...(view.held !== 'manual' && view.desk.positions.manual.x >= RIGHT_DESK_X ? [
+    ...(!state.drawerItems.manual ? [item('manual', t.manual, 'manual', 'manual')] : []),
+    ...(!state.drawerItems.manual && view.held !== 'manual' && view.desk.positions.manual.x >= RIGHT_DESK_X ? [
       ...(view.manualOpen ? [hotspot('manual-prev', view.manualPage === 0 ? t.manualClose : t.manualPrevious, pageCorners.previous, 'manual-prev')] : []),
       ...(!view.manualOpen || view.manualPage < MANUAL_PAGE_COUNT - 1
         ? [hotspot('manual-next', view.manualOpen ? t.manualNext : t.manualOpenCover, pageCorners.next, 'manual-next')] : []),
@@ -138,6 +140,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
   drawText(ctx, t.eyeChart[2], chartCenter, chart.y + 45, { color: c.ink, align: 'center' });
   drawDeskRests(ctx);
   drawWorkstationObjects(ctx, state.papers.filter(paper => paper.location === 'drawer').length);
+  drawDeskCalendar(ctx, state.day, locale);
   for (const id of view.desk.order) {
     const lifted = isLifted(view, id);
     const bounds = itemRect(view.desk, id, visit?.document === 'tray' && !lifted, lifted, view.manualOpen);
@@ -163,45 +166,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
       continue;
     }
     if (!visit?.certificateTaken || !patient) continue;
-    box(ctx, x + (lifted ? 6 : 3), y + (lifted ? 6 : 3), w, h, '#293126');
-    drawPaper(ctx, x, y, w, h);
-    const write = (value: string, dx: number, dy: number, color = c.ink): void => drawDocumentText(ctx, value, x + dx, y + dy, { color });
-    if (w < 188) {
-      // The exchange shelf holds compact paper; full text is readable on the desk.
-      box(ctx, x + 7, y + 10, w - 14, 1, '#9e9876');
-      box(ctx, x + 7, y + 15, w - 22, 1, '#b0a780');
-      for (let row = 0; row < 4; row++) box(ctx, x + 7, y + 25 + row * 5, w - 15 - row % 3 * 5, 1, '#b0a780');
-      if (visit.decision) {
-        const ink = visit.decision === 'fit' ? c.green : '#914c3c';
-        box(ctx, x + 10, y + h - 22, w - 20, 8, ink);
-        box(ctx, x + 12, y + h - 20, w - 24, 4, '#d4c69d');
-      }
-      drawDocumentText(ctx, String(visit.patientId + 1).padStart(2, '0'), x + 7, y + h - 12, { color: '#82785a' });
-      if (visibleDocumentClip(state, 'certificate', view)) { const clip = paperClipRect(bounds); drawPaperclip(ctx, clip.x, clip.y); }
-      continue;
-    }
-    const p = t.paperwork;
-    write(t.documentTitleLabel, 12, 10);
-    drawDocumentText(ctx, `${p.reference} ${state.shiftCompleted + 1}`, x + w - 12, y + 10, { color: '#8a8668', align: 'right' });
-    write(p.occupational, 12, 21, '#79785c');
-    box(ctx, x + 12, y + 33, 164, 1, '#a59e79');
-    write(p.name, 12, 40, '#79785c');
-    if (visit.certificateNamed) write(t.patientNames[visit.patientId], 12, 52, HANDWRITING_INK);
-    else for (let dx = 12; dx < 150; dx += 4) box(ctx, x + dx, y + 60, 2, 1, '#b3a984');
-    write(`${p.position}: ${t.patientJobs[visit.patientId]}`, 12, 69);
-    write(p.certificatePurpose, 12, 82, '#79785c');
-    write(p.decisionHeading, 12, 96, '#79785c');
-    // Clinical results belong only to the doctor's separate notes.
-    if (visit.decision) {
-      const ink = visit.decision === 'fit' ? c.green : '#914c3c';
-      const sx = x + 43, sy = y + 108, sw = 108;
-      box(ctx, sx, sy, sw, 1, ink); box(ctx, sx, sy + 20, sw, 1, ink);
-      box(ctx, sx, sy, 1, 21, ink); box(ctx, sx + sw - 1, sy, 1, 21, ink);
-      drawText(ctx, t[visit.decision], sx + Math.floor(sw / 2), sy + 5, { align: 'center', color: ink });
-      box(ctx, sx + 16, sy, 3, 1, c.paper); box(ctx, sx + 63, sy + 20, 2, 1, c.paper);
-    } else for (let dx = 44; dx < 152; dx += 4) box(ctx, x + dx, y + 128, 2, 1, '#b3a984');
-    if (!lifted) drawActionCorner(ctx, bounds, true);
-    if (visibleDocumentClip(state, 'certificate', view)) { const clip = paperClipRect(bounds); drawPaperclip(ctx, clip.x, clip.y); }
+    drawCertificate(ctx, state, bounds, locale, lifted, visibleDocumentClip(state, 'certificate', view));
   }
 }
 

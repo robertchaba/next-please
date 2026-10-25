@@ -11,16 +11,17 @@ interface LegacyState {
 }
 
 type LegacyVisit = Omit<Visit, 'measurementsTaken' | 'certificateTaken' | 'certificateNamed'>;
-type AppointmentState = Omit<GameState, 'papers' | 'nextPaperId' | 'paperClips' | 'visit'> & { visit: LegacyVisit | null };
+type AppointmentState = Omit<GameState, 'papers' | 'nextPaperId' | 'paperClips' | 'visit' | 'drawerItems'> & { visit: LegacyVisit | null };
 type LegacyPaper<T> = T extends Paper ? Omit<T, 'additionalWritten'> & { clipped: boolean } : never;
 type PaperV6 = LegacyPaper<Paper>;
 type VisitV5 = Omit<Visit, 'certificateTaken' | 'certificateNamed'>;
-type GameStateV5 = Omit<GameState, 'visit' | 'paperClips' | 'papers'> & { visit: VisitV5 | null; papers: PaperV6[] };
+type GameStateV5 = Omit<GameState, 'visit' | 'paperClips' | 'papers' | 'drawerItems'> & { visit: VisitV5 | null; papers: PaperV6[] };
 type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<Visit, 'certificateNamed'> | null };
+type GameStateV7 = Omit<GameState, 'drawerItems'>;
 
-interface SaveV7 {
+interface SaveV8 {
   game: 'next-please';
-  version: 7;
+  version: 8;
   savedAt: string;
   state: GameState;
 }
@@ -289,7 +290,7 @@ function validateStateV6(value: unknown): GameStateV6 {
   return { ...state, visit: state.visit ? { ...state.visit, certificateTaken } : null };
 }
 
-function migrateStateV6(state: GameStateV6): GameState {
+function migrateStateV6(state: GameStateV6): GameStateV7 {
   return {
     ...state,
     visit: state.visit ? { ...state.visit, certificateNamed: state.visit.certificateTaken } : null,
@@ -325,7 +326,7 @@ function validatePaperV7(value: unknown, day: number): Paper {
       weight: results.weight as number | null, height: results.height as number | null } };
 }
 
-function validateStateV7(value: unknown): GameState {
+function validateStateV7(value: unknown): GameStateV7 {
   if (!isRecord(value) || !hasOnlyKeys(value, ['day', 'money', 'patientsProcessed', 'phase', 'introStep', 'shiftCompleted', 'clockMinutes', 'visit', 'lampOn', 'decoration', 'papers', 'nextPaperId', 'paperClips'])
     || !Array.isArray(value.papers) || value.papers.length > GAME_LIMITS.papers
     || !isIntegerInRange(value.nextPaperId, 1, GAME_LIMITS.paperId + 1)
@@ -379,12 +380,29 @@ function validateStateV7(value: unknown): GameState {
   return { ...previous, visit: previous.visit ? { ...previous.visit, certificateNamed } : null, papers, nextPaperId, paperClips };
 }
 
+function migrateStateV7(state: GameStateV7): GameState {
+  return { ...state, drawerItems: { manual: false, clips: 0 } };
+}
+
+function validateStateV8(value: unknown): GameState {
+  if (!isRecord(value) || !isRecord(value.drawerItems)
+    || !hasOnlyKeys(value.drawerItems, ['manual', 'clips'])
+    || typeof value.drawerItems.manual !== 'boolean'
+    || !isIntegerInRange(value.drawerItems.clips, 0, GAME_LIMITS.drawerClips)) throw new SaveError('invalid-state');
+  const manual = value.drawerItems.manual, clips = value.drawerItems.clips;
+  const { drawerItems: _drawerItems, ...base } = value;
+  // Preserve v7's exact schemas and invariants before validating the new inventory.
+  const state = validateStateV7(base);
+  if (state.phase === 'intro' && (manual || clips !== 0)) throw new SaveError('invalid-state');
+  return { ...state, drawerItems: { manual, clips } };
+}
+
 export function encodeSave(state: GameState): Uint8Array {
-  const envelope: SaveV7 = {
+  const envelope: SaveV8 = {
     game: 'next-please',
-    version: 7,
+    version: 8,
     savedAt: new Date().toISOString(),
-    state: validateStateV7(state),
+    state: validateStateV8(state),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -483,7 +501,7 @@ export function decodeSave(bytes: Uint8Array): GameState {
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7) throw new SaveError('unsupported-version');
+  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -498,12 +516,13 @@ export function decodeSave(bytes: Uint8Array): GameState {
       phase: 'cabinet', introStep: INTRO_SLIDES - 1,
     };
   }
-  if (envelope.version === 2) return migrateStateV6(migrateStateV5(migrateStateV4(migrateStateV3(migrateStateV2(validateStateV2(envelope.state))))));
-  if (envelope.version === 3) return migrateStateV6(migrateStateV5(migrateStateV4(migrateStateV3(validateStateV3(envelope.state)))));
-  if (envelope.version === 4) return migrateStateV6(migrateStateV5(migrateStateV4(validateStateV4(envelope.state))));
-  if (envelope.version === 5) return migrateStateV6(migrateStateV5(validateStateV5(envelope.state)));
-  if (envelope.version === 6) return migrateStateV6(validateStateV6(envelope.state));
-  return validateStateV7(envelope.state);
+  if (envelope.version === 2) return migrateStateV7(migrateStateV6(migrateStateV5(migrateStateV4(migrateStateV3(migrateStateV2(validateStateV2(envelope.state)))))));
+  if (envelope.version === 3) return migrateStateV7(migrateStateV6(migrateStateV5(migrateStateV4(migrateStateV3(validateStateV3(envelope.state))))));
+  if (envelope.version === 4) return migrateStateV7(migrateStateV6(migrateStateV5(migrateStateV4(validateStateV4(envelope.state)))));
+  if (envelope.version === 5) return migrateStateV7(migrateStateV6(migrateStateV5(validateStateV5(envelope.state))));
+  if (envelope.version === 6) return migrateStateV7(migrateStateV6(validateStateV6(envelope.state)));
+  if (envelope.version === 7) return migrateStateV7(validateStateV7(envelope.state));
+  return validateStateV8(envelope.state);
 }
 
 /** Call from a user action. Saves are downloaded; no account or server is used. */

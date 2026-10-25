@@ -69,6 +69,8 @@ test('referrals, measurements and written notes remain separate from the certifi
     results: { vision: 'pass', pressure: 'pass', weight: 62, height: 164 },
   });
   await activate(page, 'drawer');
+  await activate(page, 'drawer-paper-2');
+  await placeCarried(page);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/62 kg/);
   await sendPaper(page, 2, 'trash');
   await activate(page, 'saves');
@@ -76,6 +78,8 @@ test('referrals, measurements and written notes remain separate from the certifi
   await expect(page.locator('#announcement')).toContainText('Zapis wczytany');
   await activate(page, 'back');
   await activate(page, 'drawer');
+  await activate(page, 'drawer-paper-2');
+  await placeCarried(page);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/62 kg/);
   await activate(page, 'language-en');
   await expect(page.locator('#control-run-measurements')).toHaveAccessibleName(/height|scale/i);
@@ -94,6 +98,7 @@ test('both wrong decisions deliver the right sender and envelopes can be opened 
   await enter(page);
   for (const id of ['call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-unfit', 'apply-stamp', 'return-document']) await activate(page, id);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/koperta/i);
+  await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Okrągła fioletowa pieczęć pracodawcy/);
   await movePaperRight(page, 2);
   await page.locator('#control-paper-action-2').click();
   const first = await exportState(page, testInfo, 'employer.npsave');
@@ -103,6 +108,7 @@ test('both wrong decisions deliver the right sender and envelopes can be opened 
   for (const id of ['call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-fit', 'apply-stamp', 'return-document', 'paper-4']) await activate(page, id);
   const second = await exportState(page, testInfo, 'zus.npsave');
   expect(second.state.papers.find(paper => paper.id === 4)).toMatchObject({ kind: 'letter', sender: 'zus', opened: true });
+  await expect(page.locator('#control-paper-4')).toHaveAccessibleName(/Podłużna niebieska pieczęć ZUS/);
   await movePaperRight(page, 4);
   // Mouse pickup and a click on the physical wastebasket use the same transition.
   await page.locator('#control-paper-4').click({ position: { x: 30, y: 30 } });
@@ -190,6 +196,8 @@ test('dropping onto the projecting clip creates a movable bundle, survives saves
   await expect(page.locator('#announcement')).toContainText('Zapis wczytany');
   await activate(page, 'back');
   await activate(page, 'drawer');
+  await activate(page, 'drawer-paper-2');
+  await placeCarried(page);
   await expect(page.locator('#control-paper-1')).toBeAttached();
   await page.locator('#control-paper-clip-2').click();
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');

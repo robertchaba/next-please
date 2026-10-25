@@ -5,7 +5,7 @@ export const SHIFT_START_MINUTES = 480;
 export const SHIFT_END_MINUTES = 840;
 // Minutes of simulated work. Pointer movement and rendering never spend time.
 export const ACTION_MINUTES = { handling: 1, reading: 1, vision: 3, pressure: 4, measurements: 2 } as const;
-export const GAME_LIMITS = { day: 1_000_000, money: 1_000_000_000, patients: 1_000_000_000, papers: 4096, paperId: 1_000_000_000 } as const;
+export const GAME_LIMITS = { day: 1_000_000, money: 1_000_000_000, patients: 1_000_000_000, papers: 4096, paperId: 1_000_000_000, drawerClips: 4096 } as const;
 
 export type Decision = 'fit' | 'unfit';
 export type TestResult = 'pass' | 'refer';
@@ -65,6 +65,8 @@ export interface GameState {
   nextPaperId: number;
   /** Each nonempty group shares one physical clip; singleton clips are valid. */
   paperClips: DocumentId[][];
+  /** Stored objects are separate from papers and survive changing shifts. */
+  drawerItems: { manual: boolean; clips: number };
 }
 
 export type GameAction =
@@ -72,6 +74,7 @@ export type GameAction =
   | 'run-vision' | 'run-pressure' | 'run-measurements' | 'stamp-fit' | 'stamp-unfit'
   | 'return-document' | 'toggle-lamp' | 'change-decoration' | 'next-day'
   | 'handle-item' | 'read-manual' | 'take-paper' | 'use-phone'
+  | { type: 'store-drawer-item' | 'retrieve-drawer-item'; item: 'manual' | 'clip' }
   | { type: 'write-note' | 'store-paper' | 'retrieve-paper' | 'trash-paper' | 'open-letter' | 'clip-paper'; paperId: number }
   | { type: 'clip-document'; documentId: DocumentId }
   | { type: 'unclip-document'; documentId: DocumentId }
@@ -87,13 +90,14 @@ export type GameFeedback =
   | 'paper-stored' | 'paper-retrieved' | 'paper-trashed' | 'paper-missing'
   | 'paper-wrong-patient' | 'results-needed' | 'letter-opened' | 'paper-clipped'
   | 'paper-unclipped' | 'papers-joined' | 'clip-needed' | 'certificate-in-bundle'
-  | 'certificate-written' | 'certificate-name-needed';
+  | 'certificate-written' | 'certificate-name-needed'
+  | 'item-stored' | 'item-retrieved' | 'item-missing';
 
 export function createInitialState(): GameState {
   return {
     day: 1, money: 0, patientsProcessed: 0,
     phase: 'intro', introStep: 0, shiftCompleted: 0, clockMinutes: ARRIVAL_MINUTES, visit: null,
-    lampOn: true, decoration: 'plant', papers: [], nextPaperId: 1, paperClips: [],
+    lampOn: true, decoration: 'plant', papers: [], nextPaperId: 1, paperClips: [], drawerItems: { manual: false, clips: 0 },
   };
 }
 
@@ -147,6 +151,17 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
   const addPaper = (paper: Paper, changes: Partial<GameState>, feedback: GameFeedback): ActionResult => changed({
     ...changes, papers: recordResults([...state.papers, paper], state.visit, state.day), nextPaperId: state.nextPaperId + 1,
   }, feedback);
+  if (typeof action === 'object' && 'item' in action) {
+    const storing = action.type === 'store-drawer-item';
+    const { manual, clips } = state.drawerItems;
+    if (action.item === 'manual') {
+      if (manual === storing) return unchanged(storing ? 'item-stored' : 'item-missing');
+      return changed({ drawerItems: { manual: storing, clips }, clockMinutes: spend(ACTION_MINUTES.handling) }, storing ? 'item-stored' : 'item-retrieved');
+    }
+    if (storing && clips >= GAME_LIMITS.drawerClips) return unchanged('limit-reached');
+    if (!storing && clips === 0) return unchanged('item-missing');
+    return changed({ drawerItems: { manual, clips: clips + (storing ? 1 : -1) }, clockMinutes: spend(ACTION_MINUTES.handling) }, storing ? 'item-stored' : 'item-retrieved');
+  }
   if (action === 'use-phone') return changed({ clockMinutes: spend(ACTION_MINUTES.handling) }, 'phone-unavailable');
   if (action === 'take-paper') {
     if (!canAddPaper()) return unchanged('limit-reached');
@@ -187,8 +202,8 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
     if (action.type === 'store-paper') {
       if (paper.location === 'drawer') return unchanged('paper-stored');
       if (group.includes('certificate')) return unchanged('certificate-in-bundle');
-      // Array order records filing order, so the drawer returns the last paper
-      // actually stored, including an older sheet filed again after retrieval.
+      // Array order records filing order, including an older sheet filed again
+      // after retrieval; browsing the drawer must preserve this order.
       return changed({
         papers: [...state.papers.filter(entry => !group.includes(entry.id)), ...state.papers.filter(entry => group.includes(entry.id)).map(entry => ({ ...entry, location: 'drawer' as const }))],
         clockMinutes: spend(ACTION_MINUTES.handling),

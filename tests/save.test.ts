@@ -14,7 +14,7 @@ import {
 function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
   return gzipSync(strToU8(JSON.stringify({
     game: 'next-please',
-    version: 7,
+    version: 8,
     savedAt: '2026-10-23T12:00:00.000Z',
     state: createInitialState(),
     ...overrides,
@@ -23,7 +23,7 @@ function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
 
 function legacyState(state: object): Record<string, unknown> {
   const legacy = { ...state } as Record<string, unknown>;
-  delete legacy.papers; delete legacy.nextPaperId; delete legacy.paperClips;
+  delete legacy.papers; delete legacy.nextPaperId; delete legacy.paperClips; delete legacy.drawerItems;
   if (legacy.visit && typeof legacy.visit === 'object') {
     const visit = { ...legacy.visit } as Record<string, unknown>;
     delete visit.measurementsTaken; delete visit.certificateTaken; delete visit.certificateNamed; legacy.visit = visit;
@@ -44,7 +44,7 @@ describe('portable saves', () => {
   });
 
   it('rejects unsupported versions without interpreting their state', () => {
-    expectCode(() => decodeSave(envelope({ version: 8, state: {} })), 'unsupported-version');
+    expectCode(() => decodeSave(envelope({ version: 9, state: {} })), 'unsupported-version');
   });
 
   it('rejects a save for another game', () => {
@@ -130,7 +130,7 @@ describe('portable saves', () => {
   it('accepts gzip metadata produced by standard encoders', () => {
     const bytes = gzipSync(strToU8(JSON.stringify({
       game: 'next-please',
-      version: 7,
+      version: 8,
       savedAt: '2026-10-23T12:00:00.000Z',
       state: createInitialState(),
     })), { filename: 'save.json' });
@@ -187,11 +187,11 @@ describe('portable saves', () => {
     expectCode(() => decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), ...patch }) })), 'invalid-state');
   });
 
-  it('exports version 7 after migrating an older save', () => {
+  it('exports version 8 after migrating an older save', () => {
     const migrated = decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), introStep: 5 }) }));
     const bytes = encodeSave(migrated);
     const exported = JSON.parse(new TextDecoder().decode(gunzipSync(bytes)));
-    expect(exported).toMatchObject({ version: 7, state: { phase: 'cabinet', introStep: 3 } });
+    expect(exported).toMatchObject({ version: 8, state: { phase: 'cabinet', introStep: 3 } });
     expect(decodeSave(bytes)).toEqual(migrated);
   });
 
@@ -278,7 +278,7 @@ describe('portable saves', () => {
     expectCode(() => decodeSave(envelope({ state: { ...state, clockMinutes: 482 } })), 'invalid-state');
   });
 
-  it('preserves v3 clocks after strict legacy validation and exports subsequent short actions as v7', () => {
+  it('preserves v3 clocks after strict legacy validation and exports subsequent short actions as v8', () => {
     const legacy = {
       ...createInitialState(), phase: 'cabinet', introStep: 3, clockMinutes: 500,
       visit: { patientId: 0, document: 'desk', visionTested: false, pressureTested: false, decision: 'fit' },
@@ -391,7 +391,7 @@ describe('version 7 paperwork saves', () => {
 describe('version 6 certificate availability', () => {
   const act = (state: GameState, ...actions: Parameters<typeof applyAction>[1][]): GameState => actions.reduce((current, action) => applyAction(current, action).state, state);
   const asV5 = (state: GameState): Record<string, unknown> => {
-    const { paperClips, ...previous } = state;
+    const { paperClips, drawerItems: _drawerItems, ...previous } = state;
     const papers = previous.papers.map(paper => {
       const { additionalWritten: _written, ...old } = paper as typeof paper & { additionalWritten?: boolean };
       return { ...old, clipped: paperClips.some(group => group.includes(paper.id)) };
@@ -417,7 +417,7 @@ describe('version 6 certificate availability', () => {
     expect(migrated).toEqual({ ...stamped, clockMinutes: 482, visit: { ...stamped.visit, certificateNamed: true } });
     expect(migrated.visit).toMatchObject({ certificateTaken: true, decision: 'fit' });
     expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(7);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(8);
     const intake = act(createInitialState(), 'skip-intro', 'call-patient', 'take-document');
     expect(decodeSave(envelope({ version: 5, state: asV5(intake) }))).toEqual({ ...intake, visit: { ...intake.visit, certificateTaken: true, certificateNamed: true } });
     const waiting = act(createInitialState(), 'skip-intro', 'call-patient');
@@ -517,5 +517,46 @@ describe('version 7 document writing and bundles', () => {
       { additionalWritten: undefined }, { additionalWritten: null }, { additionalWritten: true },
       { patientId: 0 }, { clipped: false }, { results: { vision: 'pass', pressure: null, weight: null, height: null } },
     ]) expectCode(() => decodeSave(envelope({ state: { ...state, papers: [state.papers[0], { ...note, ...patch }] } })), 'invalid-state');
+  });
+});
+
+describe('version 8 drawer inventory', () => {
+  const stored = (): GameState => [
+    'skip-intro', 'take-paper', { type: 'store-paper', paperId: 1 },
+    { type: 'store-drawer-item', item: 'manual' },
+    { type: 'store-drawer-item', item: 'clip' }, { type: 'store-drawer-item', item: 'clip' },
+  ].reduce<GameState>((state, action) => applyAction(state, action as Parameters<typeof applyAction>[1]).state, createInitialState());
+
+  it('round-trips separate objects and returns independent inventory data', () => {
+    const state = stored();
+    const decoded = decodeSave(encodeSave(state));
+    expect(decoded).toEqual(state);
+    expect(decoded.drawerItems).not.toBe(state.drawerItems);
+    decoded.drawerItems.clips = 0;
+    expect(state.drawerItems.clips).toBe(2);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(state)))).version).toBe(8);
+  });
+
+  it('migrates strictly validated v7 papers in filing order without inventing stored objects', () => {
+    const current = stored();
+    const { drawerItems: _inventory, ...old } = current;
+    const migrated = decodeSave(envelope({ version: 7, state: old }));
+    expect(migrated).toEqual({ ...old, drawerItems: { manual: false, clips: 0 } });
+    expect(migrated.clockMinutes).toBe(current.clockMinutes);
+    expectCode(() => decodeSave(envelope({ version: 7, state: current })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ version: 7, state: { ...old, paperClips: [[999]] } })), 'invalid-state');
+  });
+
+  it('rejects malformed, missing and excess inventory without weakening legacy validation', () => {
+    const state = stored();
+    for (const drawerItems of [undefined, null, [], {}, { manual: false }, { clips: 0 },
+      { manual: 1, clips: 0 }, { manual: false, clips: '1' }, { manual: false, clips: -1 },
+      { manual: false, clips: 0.5 }, { manual: false, clips: 4097 }, { manual: true, clips: 1, unknown: true }]) {
+      expectCode(() => decodeSave(envelope({ state: { ...state, drawerItems } })), 'invalid-state');
+    }
+    expect(decodeSave(envelope({ state: { ...state, drawerItems: { manual: false, clips: 4096 } } })).drawerItems.clips).toBe(4096);
+    for (const drawerItems of [{ manual: true, clips: 0 }, { manual: false, clips: 1 }]) {
+      expectCode(() => decodeSave(envelope({ state: { ...createInitialState(), drawerItems } })), 'invalid-state');
+    }
   });
 });
