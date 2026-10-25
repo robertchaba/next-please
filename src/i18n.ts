@@ -71,7 +71,8 @@ export const translations = {
     manualPrevious: 'Poprzednia strona regulaminu', manualNext: 'Następna strona regulaminu',
     manualClose: 'Zamknij regulamin', manualOpenCover: 'Otwórz okładkę regulaminu', manualPageLabel: 'Strona',
     itemDropped: 'Przedmiot odłożony.', moveCancelled: 'Przedmiot wrócił na poprzednie miejsce.',
-    clock: 'Zegar', eyeChart: ['E', 'F P', 'T O Z'],
+    // Fixed optotypes embedded in the generated chart, shared by both locales.
+    clock: 'Zegar', eyeChart: ['E', 'F P', 'T O Z', 'L P E D', 'P E C F D', 'E D F C Z P'],
     resume: 'WRÓĆ DO DYŻURU', menu: 'MENU', archive: 'ZAPISY',
     breakRoomTitle: 'Next, Please!', gameTitleLines: ['NEXT,', 'PLEASE!'],
     breakRoomDescription: 'Lekarze i pielęgniarki rozmawiają przy kawie w pokoju socjalnym. Dyżur jest wstrzymany; po powrocie zastaniesz swoje biurko.',
@@ -271,7 +272,8 @@ export const translations = {
     manualPrevious: 'Previous rulebook page', manualNext: 'Next rulebook page',
     manualClose: 'Close the rulebook', manualOpenCover: 'Open the rulebook cover', manualPageLabel: 'Page',
     itemDropped: 'Item put down.', moveCancelled: 'Item returned to its previous position.',
-    clock: 'Clock', eyeChart: ['E', 'F P', 'T O Z'],
+    // Fixed optotypes embedded in the generated chart, shared by both locales.
+    clock: 'Clock', eyeChart: ['E', 'F P', 'T O Z', 'L P E D', 'P E C F D', 'E D F C Z P'],
     resume: 'RESUME YOUR SHIFT', menu: 'MENU', archive: 'SAVES',
     breakRoomTitle: 'Next, Please!', gameTitleLines: ['NEXT,', 'PLEASE!'],
     breakRoomDescription: 'Doctors and nurses talk over coffee in the staff room. Your shift is paused; your desk will be here when you return.',

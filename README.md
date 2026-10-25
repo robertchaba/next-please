@@ -114,6 +114,7 @@ The runtime uses **fflate** and **Howler**. **Vite**, **TypeScript**, **Vitest**
 - [Drawer, calendar, localized ink impressions, seals and signatures](docs/art-drawer-documents-2026-10-25.md)
 - [Separate ZUS and employer seals](docs/art-sender-seals-2026-10-25.md)
 - [Revised tear-off calendar with side printing](docs/art-calendar-revision-2026-10-25.md)
+- [Complete generated eye chart with printed letters](docs/art-eye-chart-2026-10-25.md)
 - [Mobile handset, speech balloon and note: sources, prompts and preparation](docs/art-mobile-2026-10-25.md)
 - [Adding music and sound effects](public/assets/audio/README.md)
 - [Repository instructions](AGENTS.md)

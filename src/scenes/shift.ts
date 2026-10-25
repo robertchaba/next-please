@@ -133,11 +133,6 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
   drawCabinet(ctx, { patientId: visit?.patientId ?? view.departingPatientId ?? null, lampOn: state.lampOn, decoration: state.decoration,
     clockMinutes: view.clockMinutes ?? state.clockMinutes, patientMotion: view.patientMotion });
   if (view.patientSpeech) drawPatientSpeech(ctx, t.patientSpeech[view.patientSpeech.line]);
-  // Only lettering intrinsic to the examination chart and actual paperwork.
-  const chart = CABINET_HOTSPOTS.vision, chartCenter = chart.x + Math.floor(chart.w / 2);
-  drawText(ctx, t.eyeChart[0], chartCenter, chart.y + 7, { color: c.ink, align: 'center', scale: 2 });
-  drawText(ctx, t.eyeChart[1], chartCenter, chart.y + 31, { color: c.ink, align: 'center' });
-  drawText(ctx, t.eyeChart[2], chartCenter, chart.y + 45, { color: c.ink, align: 'center' });
   drawDeskRests(ctx);
   drawWorkstationObjects(ctx, state.papers.filter(paper => paper.location === 'drawer').length);
   drawDeskCalendar(ctx, state.day, locale);
