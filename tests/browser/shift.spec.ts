@@ -1,3 +1,7 @@
+import { CHARACTER_COUNT } from '../../src/core/patients';
+import { translations } from '../../src/i18n';
+import { MANUAL_PAGE_COUNT } from '../../src/render/manual';
+import { loadKnownQueue } from './fixtures';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createInitialState, decodeSave, encodeSave } from '../../src/core/save';
@@ -22,6 +26,7 @@ async function enterCabinet(page: Page): Promise<void> {
   await page.locator('#control-start').click();
   for (let step = 0; step < 4; step++) await page.locator('#control-intro-next').click();
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
+  await loadKnownQueue(page);
 }
 
 async function exportFromArchive(page: Page, testInfo: TestInfo, filename: string): Promise<Buffer> {
@@ -84,7 +89,8 @@ test('typewriting uses the local effect after sound is enabled', async ({ page }
     .filter(sound => typeof sound._src === 'string' && sound._src.endsWith('/typewriter.wav')).every(sound => sound.mute()))).toBe(true);
 });
 
-test('examinations, two-step stamping and the rulebook support a complete keyboard shift', async ({ page }, testInfo) => {
+test('examinations, stamping and the rulebook support keyboard visits with deferred daily pay', async ({ page }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await enterCabinet(page);
   await useKeyboard(page, 'manual');
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
@@ -93,13 +99,18 @@ test('examinations, two-step stamping and the rulebook support a complete keyboa
   await expect(page.locator('#screen-description')).toContainText('INSTRUKCJA OBSŁUGI DYŻURU');
   await expect(page.locator('#control-manual-prev')).toHaveAccessibleName('Zamknij regulamin');
   await useKeyboard(page, 'manual-next');
-  await expect(page.locator('#screen-description')).toContainText('Choć jedna KONTROLA: wybierz NIEZDOLNY.');
+  await expect(page.locator('#screen-description')).toContainText('Sprawdź kod wymogów na skierowaniu.');
   await page.screenshot({ path: testInfo.outputPath('rulebook-tests-pl.png') });
-  for (let index = 2; index < 5; index++) {
+  for (let index = 2; index < MANUAL_PAGE_COUNT; index++) {
     await useKeyboard(page, 'manual-next');
     await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(index));
+    if (index === 2) await expect(page.locator('#screen-description')).toContainText('WC: wzrok i ciśnienie. W: tylko wzrok. C: tylko ciśnienie.');
   }
   await expect(page.locator('#control-manual-next')).toHaveCount(0);
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[MANUAL_PAGE_COUNT - 1]!.lines.join(' '));
+  await useKeyboard(page, 'manual-prev');
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[MANUAL_PAGE_COUNT - 2]!.lines.join(' '));
+  await useKeyboard(page, 'manual-prev');
   await expect(page.locator('#screen-description')).toContainText('Czynności zabierają czas.');
   await useKeyboard(page, 'manual-prev');
   await expect(page.locator('#screen-description')).toContainText('Kliknięcie spinacza rozpina dokumenty.');
@@ -134,22 +145,49 @@ test('examinations, two-step stamping and the rulebook support a complete keyboa
     await expect(page.locator('#screen-description')).toContainText(`Podbito: ${patient.decision === 'fit' ? 'ZDOLNY' : 'NIEZDOLNY'}.`);
     if (index === 1) await page.screenshot({ path: testInfo.outputPath('cabinet-stamped-pl.png') });
     await useKeyboard(page, 'return-document');
-    await expect(page.locator('#screen-description')).toContainText('Decyzja zgodna z regulaminem. +10 punktów.');
+    await expect(page.locator('#screen-description')).toContainText(translations.pl.feedback['patient-cleared']);
   }
-  await expect(page.locator('#control-next-day')).toBeVisible();
+  await expect(page.locator('#control-next-day, #control-end-day')).toHaveCount(0);
+  await expect(page.locator('#control-call-patient')).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('shift-complete-pl.png') });
   await useKeyboard(page, 'saves');
   const completed = decodeSave(await exportFromArchive(page, testInfo, 'completed-shift.npsave'));
-  expect(completed).toMatchObject({ day: 1, money: 30, patientsProcessed: 3, shiftCompleted: 3, visit: null });
+  expect(completed).toMatchObject({ day: 1, money: 0, patientsProcessed: 3, shiftCompleted: 3, visit: null, settlement: null });
   expect(completed.clockMinutes).toBeGreaterThan(480);
-  // Three handwritten names add three handling minutes to this short shift.
-  expect(completed.clockMinutes).toBeLessThanOrEqual(540);
+  // Three visits are only the start of the day; their pay remains deferred.
+  expect(completed.clockMinutes).toBeLessThan(840);
+  expect(completed.roster).toHaveLength(CHARACTER_COUNT);
   await useKeyboard(page, 'back');
-  await useKeyboard(page, 'next-day');
+  await useKeyboard(page, 'call-patient');
+  await expect(page.locator('#control-take-document')).toBeVisible();
+  await useKeyboard(page, 'saves');
+  const fourth = decodeSave(await exportFromArchive(page, testInfo, 'fourth-visit.npsave'));
+  expect(fourth).toMatchObject({ day: 1, money: 0, patientsProcessed: 3, shiftCompleted: 3 });
+  expect(fourth.visit?.patientId).toBe(completed.roster[3]);
+  expect(fourth.visit?.patientId).toBeGreaterThan(2);
+
+  // Closing depends on time, not the old three-patient prototype counter.
+  await page.locator('#save-input').setInputFiles({
+    name: 'closing.npsave', mimeType: 'application/gzip',
+    buffer: Buffer.from(encodeSave({ ...completed, clockMinutes: 840 })),
+  });
+  await expect(page.getByRole('status')).toContainText('Zapis wczytany');
+  await useKeyboard(page, 'back');
+  await useKeyboard(page, 'end-day');
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'home');
+  await expect(page.locator('#controls')).toHaveAttribute('data-home-page', '0');
+  await useKeyboard(page, 'home-next');
+  await expect(page.locator('#controls')).toHaveAttribute('data-home-page', '1');
+  await useKeyboard(page, 'home-next');
+  await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'work');
+  await useKeyboard(page, 'home-next');
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   await expect(page.locator('#screen-description')).toContainText('Nowy dyżur. Te same formularze.');
   await useKeyboard(page, 'saves');
-  const state = decodeSave(await exportFromArchive(page, testInfo, 'next-shift.npsave'));
-  expect(state).toMatchObject({ day: 2, money: 30, patientsProcessed: 3, shiftCompleted: 0, visit: null });
+  const nextDay = decodeSave(await exportFromArchive(page, testInfo, 'next-shift.npsave'));
+  expect(nextDay).toMatchObject({ day: 2, patientsProcessed: 3, shiftCompleted: 0, visit: null, insuranceRate: 300, settlement: null });
+  expect(nextDay.money).toBeGreaterThanOrEqual(50);
+  expect(nextDay.money).toBeLessThanOrEqual(450);
 });
 
 test('mid-visit saves retain examinations, stamped papers and cabinet decor; bad imports retain the live visit', async ({ page }, testInfo) => {
@@ -180,12 +218,12 @@ test('mid-visit saves retain examinations, stamped papers and cabinet decor; bad
   expect(decodeSave(await exportFromArchive(page, testInfo, 'after-failed-import.npsave'))).toEqual(expected);
   await page.locator('#control-back').click();
   await page.locator('#control-return-document').click();
-  await expect(page.locator('#screen-description')).toContainText('Decyzja zgodna z regulaminem. +10 punktów.');
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.feedback['patient-cleared']);
   const storageKeys = await page.evaluate(() => Object.keys(localStorage));
   expect(storageKeys.every(key => key === 'next-please.preferences')).toBe(true);
 });
 
-test('a certificate stamped before examinations survives import and can be returned without a bonus', async ({ page }, testInfo) => {
+test('a certificate stamped before examinations survives import and still counts toward daily pay', async ({ page }, testInfo) => {
   await enterCabinet(page);
   for (const id of ['call-patient', 'take-document', 'take-certificate', 'stamp-fit', 'apply-stamp']) await useKeyboard(page, id);
   await expect(page.locator('#screen-description')).toContainText('Podbito: ZDOLNY.');
@@ -204,7 +242,7 @@ test('a certificate stamped before examinations survives import and can be retur
   await useKeyboard(page, 'back');
   await useKeyboard(page, 'write-certificate');
   await useKeyboard(page, 'return-document');
-  await expect(page.locator('#screen-description')).toContainText('Bez premii.');
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.feedback['patient-completed']);
   await useKeyboard(page, 'saves');
   expect(decodeSave(await exportFromArchive(page, testInfo, 'unexamined-returned.npsave'))).toMatchObject({
     money: 0, patientsProcessed: 1, shiftCompleted: 1, visit: null,
@@ -262,6 +300,7 @@ test('English introduction, cabinet and rulebook remain usable on a small screen
   await page.waitForTimeout(1600);
   await page.screenshot({ path: testInfo.outputPath('intro-mobile-en.png') });
   for (let step = 0; step < 4; step++) await page.locator('#control-intro-next').click();
+  await loadKnownQueue(page);
   await page.getByRole('button', { name: 'NEXT, PLEASE!', exact: true }).click();
   await useKeyboard(page, 'take-document');
   await useKeyboard(page, 'take-certificate');
@@ -283,7 +322,7 @@ test('English introduction, cabinet and rulebook remain usable on a small screen
   await expect(page.locator('#screen-description')).toContainText('SHIFT OPERATING INSTRUCTIONS');
   await expect(page.locator('#control-manual-next')).toHaveAccessibleName('Next rulebook page');
   await page.locator('#control-manual-next').click();
-  await expect(page.locator('#screen-description')).toContainText('Either one REVIEW: choose UNFIT.');
+  await expect(page.locator('#screen-description')).toContainText('Check the profile code on the referral.');
   await page.screenshot({ path: testInfo.outputPath('rulebook-mobile-en.png') });
   await page.keyboard.press('Escape');
   await expect(page.locator('#control-manual')).toBeFocused();

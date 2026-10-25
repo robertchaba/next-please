@@ -1,6 +1,7 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
 import { applyAction, createInitialState, type GameState } from '../../src/core/game';
-import { encodeSave } from '../../src/core/save';
+import { decodeSave, encodeSave } from '../../src/core/save';
 
 async function activate(page: Page, id: string): Promise<void> {
   await page.locator(`#control-${id}`).focus();
@@ -49,7 +50,8 @@ test('empty drawer opens before and during a visit, closes at the bottom or with
   await importState(page, done);
   await activate(page, 'drawer');
   await page.keyboard.press('Escape');
-  await expect(page.locator('#control-next-day')).toBeVisible();
+  await expect(page.locator('#control-end-day')).toBeVisible();
+  await expect(page.locator('#control-next-day')).toHaveCount(0);
 });
 
 test('documents retain filing order, selecting a covered sheet carries it out, and refiling moves it to the end', async ({ page }) => {
@@ -118,4 +120,103 @@ test('large stacks can be browsed in filing order and closing leaves every sheet
   await page.keyboard.press('Escape');
   await expect(page.locator('[id^="control-paper-"]')).toHaveCount(0);
   await expect(page.locator('#control-drawer')).toHaveAccessibleName(/^Szuflada z dokumentacją: 15\./);
+});
+
+async function exportState(page: Page): Promise<GameState> {
+  await activate(page, 'saves');
+  const pending = page.waitForEvent('download');
+  await activate(page, 'export');
+  const download = await pending;
+  const state = decodeSave(await readFile((await download.path())!));
+  await activate(page, 'back');
+  return state;
+}
+
+async function targetRect(page: Page, id: string): Promise<{ x: number; y: number; w: number; h: number }> {
+  return page.locator('#control-' + id).evaluate(element => ({ x: parseFloat((element as HTMLElement).style.left), y: parseFloat((element as HTMLElement).style.top), w: parseFloat((element as HTMLElement).style.width), h: parseFloat((element as HTMLElement).style.height) }));
+}
+
+test('near-corner drops use large targets only while carrying, and saved storage differs from disposal', async ({ page }) => {
+  await enter(page);
+  expect(await targetRect(page, 'drawer')).toEqual({ x: 222, y: 299, w: 110, h: 18 });
+  expect(await targetRect(page, 'trash')).toEqual({ x: 478, y: 297, w: 68, h: 23 });
+  await nativeClick(page, 211, 279);
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
+  for (const [x, y] of [[211, 279], [364, 319]]) {
+    await activate(page, 'take-paper');
+    expect(await targetRect(page, 'drawer')).toEqual({ x: 210, y: 278, w: 155, h: 42 });
+    expect(await targetRect(page, 'trash')).toEqual({ x: 456, y: 282, w: 114, h: 38 });
+    await nativeClick(page, x!, y!);
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+    expect(await targetRect(page, 'drawer')).toEqual({ x: 222, y: 299, w: 110, h: 18 });
+  }
+  for (const [x, y] of [[457, 283], [569, 319]]) {
+    await activate(page, 'take-paper');
+    await nativeClick(page, x!, y!);
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+  }
+  await expect(page.locator('[id^="control-paper-"]')).toHaveCount(0);
+  const saved = await exportState(page);
+  expect(saved.papers.map(paper => [paper.id, paper.location])).toEqual([[1, 'drawer'], [2, 'drawer']]);
+  expect(saved.nextPaperId).toBe(5);
+  await importState(page, saved);
+  await activate(page, 'drawer');
+  await expect(page.locator('[id^="control-drawer-paper-"]')).toHaveCount(2);
+});
+
+test('incoming referrals can go straight to drawer by keyboard or to trash at the enlarged edge', async ({ page }) => {
+  await enter(page);
+  await activate(page, 'call-patient');
+  await page.locator('#control-take-document').focus();
+  await page.keyboard.press('Space');
+  await activate(page, 'drawer');
+  await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+  await expect(page.locator('#control-take-document')).toHaveCount(0);
+  const stored = await exportState(page);
+  expect(stored.visit?.document).toBe('desk');
+  expect(stored.visit?.decision).toBeNull();
+  expect(stored.papers).toHaveLength(1);
+  expect(stored.papers[0]).toMatchObject({ kind: 'referral', location: 'drawer' });
+  const fresh = applyAction(applyAction(createInitialState(12), 'skip-intro').state, 'call-patient').state;
+  await importState(page, fresh);
+  await page.locator('#control-take-document').click();
+  await nativeClick(page, 568, 319);
+  const discarded = await exportState(page);
+  expect(discarded.visit?.document).toBe('desk');
+  expect(discarded.visit?.decision).toBeNull();
+  expect(discarded.papers).toHaveLength(0);
+  expect(discarded.shiftCompleted).toBe(0);
+});
+
+test('clipped sheets store together while certificate bundles and stamps retain their existing restrictions', async ({ page }) => {
+  await enter(page);
+  let bundled = applyAction(createInitialState(23), 'skip-intro').state;
+  for (const action of ['take-paper', 'take-paper', { type: 'clip-document', documentId: 1 }, { type: 'join-documents', documentId: 2, targetId: 1 }] as const) bundled = applyAction(bundled, action).state;
+  await importState(page, bundled);
+  await page.locator('#control-paper-2').focus();
+  await page.keyboard.press('Space');
+  await nativeClick(page, 211, 279);
+  const stored = await exportState(page);
+  expect(stored.papers.every(paper => paper.location === 'drawer')).toBe(true);
+  expect(stored.paperClips).toEqual([[1, 2]]);
+
+  let certificate = applyAction(createInitialState(24), 'skip-intro').state;
+  for (const action of ['call-patient', 'take-document', 'take-certificate', { type: 'clip-document', documentId: 'certificate' }, { type: 'join-documents', documentId: 1, targetId: 'certificate' }] as const) certificate = applyAction(certificate, action).state;
+  await importState(page, certificate);
+  await page.locator('#control-paper-1').focus();
+  await page.keyboard.press('Space');
+  expect(await targetRect(page, 'drawer')).toEqual({ x: 222, y: 299, w: 110, h: 18 });
+  expect(await targetRect(page, 'trash')).toEqual({ x: 478, y: 297, w: 68, h: 23 });
+  await nativeClick(page, 277, 308);
+  const retained = await exportState(page);
+  expect(retained.papers[0]?.location).toBe('desk');
+  expect(retained.visit?.certificateTaken).toBe(true);
+  expect(retained.visit?.decision).toBeNull();
+  expect(retained.paperClips).toEqual(certificate.paperClips);
+  await page.locator('#control-stamp-unfit').focus();
+  await page.keyboard.press('Space');
+  expect(await targetRect(page, 'trash')).toEqual({ x: 478, y: 297, w: 68, h: 23 });
+  await activate(page, 'put-away-unfit');
+  await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+  expect((await exportState(page)).visit?.decision).toBeNull();
 });

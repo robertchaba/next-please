@@ -4,6 +4,7 @@
  */
 import { CABINET_HOTSPOTS, DOCUMENT_RACK, ITEM_RESTS, ITEM_SIZES, LEFT_WIDTH, PATIENT_HANDOFF, RIGHT_DESK_X } from '../core/desk';
 import { calendarText } from '../core/calendar';
+import { PATIENTS } from '../core/patients';
 import { type Locale } from '../i18n';
 import { drawDocumentText, drawText } from './font';
 
@@ -12,12 +13,12 @@ const patientShadows = new Map<string, HTMLCanvasElement>();
 let creatorPhotograph: { image: HTMLCanvasElement; shadow: HTMLCanvasElement } | undefined;
 const introNames = ['scalpel', 'catheter', 'pen', 'stamp'] as const;
 const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate', 'clock',
-  'patient-0', 'patient-1', 'patient-2', 'workstation-phone', 'workstation-clips', 'workstation-clip', 'workstation-rack', 'workstation-paper',
+  'patient-0', 'patient-1', 'patient-2', ...Array.from({ length: 50 }, (_, index) => `patient-${String(index + 1).padStart(2, '0')}`), 'workstation-phone', 'workstation-clips', 'workstation-clip', 'workstation-rack', 'workstation-paper',
   'workstation-calendar', 'imprint-fit-pl', 'imprint-unfit-pl', 'imprint-fit-en', 'imprint-unfit-en', 'document-seal', 'document-seal-zus', 'document-seal-employer', 'document-signature'] as const;
 export const PATIENT_MOTION_FRAMES = 12;
 
 export async function loadClinicArt(): Promise<void> {
-  const files = ['cabinet-workstation', 'archives-clinic', 'break-room', 'drawer-interior', 'creator-robert', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
+  const files = ['home-evening', 'homecoming', 'going-to-work', 'weekend-budget', 'mountain-resort', 'seaside-resort', 'cabinet-workstation', 'archives-clinic', 'break-room', 'drawer-interior', 'creator-robert', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
   await Promise.all(files.map(name => new Promise<void>((resolve, reject) => {
     const image = new Image();
     images.set(name, image);
@@ -167,7 +168,7 @@ export function drawCabinet(ctx: CanvasRenderingContext2D, options: CabinetArtOp
     const settle = sitting * sitting * (3 - 2 * sitting);
     const left = x - Math.round(24 * (1 - lit));
     const top = y - 18 + Math.round(18 * settle);
-    const name = `sprites/patient-${patientId}`;
+    const name = `sprites/${PATIENTS[patientId]!.portraitId}`;
     ctx.save();
     ctx.beginPath(); ctx.rect(0, 0, LEFT_WIDTH, 128); ctx.clip();
     const drawPortrait = (source: HTMLImageElement | HTMLCanvasElement): void => {
@@ -274,4 +275,11 @@ export function drawIntroIllustration(ctx: CanvasRenderingContext2D, slide: numb
 export function drawPanelIllustration(ctx: CanvasRenderingContext2D, panel: 'saves' | 'break-room'): void {
   rect(ctx, 0, 0, 570, 320, '#171e18');
   asset(ctx, panel === 'saves' ? 'archives-clinic' : 'break-room', 0, 0, 570, 320);
+}
+
+export type HomeIllustration = 'home-evening' | 'homecoming' | 'going-to-work' | 'weekend-budget' | 'mountain-resort' | 'seaside-resort';
+
+export function drawHomeIllustration(ctx: CanvasRenderingContext2D, scene: HomeIllustration): void {
+  rect(ctx, 0, 0, 570, 320, '#171e18');
+  asset(ctx, scene, 0, 0, 570, 320);
 }

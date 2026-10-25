@@ -1,3 +1,4 @@
+import { CHARACTER_COUNT, PATIENTS } from '../../src/core/patients';
 import { test, expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createInitialState, decodeSave, encodeSave } from '../../src/core/save';
@@ -72,7 +73,10 @@ test('save files round-trip and reject corrupt imports without replacing state',
   expect(download.suggestedFilename()).toBe('next-please-day-1.npsave');
   const filePath = testInfo.outputPath(download.suggestedFilename());
   await download.saveAs(filePath);
-  expect(decodeSave(await readFile(filePath))).toEqual(createInitialState());
+  const initial = decodeSave(await readFile(filePath));
+  expect(initial).toEqual({ ...createInitialState(), rngState: initial.rngState, roster: initial.roster });
+  expect(initial.roster).toHaveLength(CHARACTER_COUNT);
+  expect(new Set(initial.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(CHARACTER_COUNT);
   const state = { ...createInitialState(), day: 8, money: 1200, patientsProcessed: 43 };
   await page.locator('#save-input').setInputFiles({ name: 'shift.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(state)) });
   await expect(page.getByRole('status')).toContainText('Zapis wczytany');

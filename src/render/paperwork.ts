@@ -18,7 +18,7 @@ export function referralLines(patientId: number, locale: Locale): string[] {
     `${p.birthShort}: ${patient.birthDate}   ${p.sex}: ${p[patient.sex]}`,
     `${p.examination}: ${p[patient.examination]}`,
     `${p.position}: ${t.patientJobs[patientId]}`,
-    `${p.managerial}: ${patient.managerial ? p.yes : p.no}`,
+    `${p.managerial}: ${patient.managerial ? p.yes : p.no}   ${p.requirements}: ${p.requirementCodes[patient.requirementId]}`,
     `${p.work}: ${referral.work}`,
     `${p.hazards}: ${referral.hazards}`,
   ];

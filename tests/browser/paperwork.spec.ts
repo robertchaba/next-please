@@ -1,7 +1,8 @@
+import { loadKnownQueue, knownQueueState } from './fixtures';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { isDocumentClipped } from '../../src/core/game';
-import { decodeSave } from '../../src/core/save';
+import { decodeSave, encodeSave } from '../../src/core/save';
 import { CABINET_HOTSPOTS } from '../../src/core/desk';
 
 async function activate(page: Page, id: string): Promise<void> {
@@ -23,6 +24,7 @@ async function enter(page: Page): Promise<void> {
   await page.goto('/');
   await activate(page, 'start');
   for (let n = 0; n < 4; n++) await activate(page, 'intro-next');
+  await loadKnownQueue(page);
 }
 async function sendPaper(page: Page, id: number, destination: 'drawer' | 'trash'): Promise<void> {
   await page.locator(`#control-paper-${id}`).focus();
@@ -89,13 +91,22 @@ test('referrals, measurements and written notes remain separate from the certifi
   await page.locator('#stage').screenshot({ path: testInfo.outputPath('records-v05-pl.png') });
   for (const id of ['take-certificate', 'write-certificate', 'stamp-fit', 'apply-stamp', 'return-document']) await activate(page, id);
   const completed = await exportState(page, testInfo, 'complete.npsave');
-  expect(completed.state.money).toBe(10);
+  expect(completed.state).toMatchObject({ money: 0, shiftCompleted: 1, patientsProcessed: 1, settlement: null });
   expect(completed.state.papers.filter(paper => paper.kind === 'letter')).toHaveLength(0);
   expect(errors).toEqual([]);
 });
 
-test('both wrong decisions deliver the right sender and envelopes can be opened and discarded', async ({ page }, testInfo) => {
+test('detected wrong decisions deliver the right sender and envelopes can be opened and discarded', async ({ page }, testInfo) => {
   await enter(page);
+  // Two known detection rolls exercise both letters without relying on the
+  // fresh game's entropy. Load through the same validated save UI as a player.
+  const fixture = knownQueueState();
+  await activate(page, 'saves');
+  await page.locator('#save-input').setInputFiles({
+    name: 'reported-cases.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(fixture)),
+  });
+  await expect(page.locator('#announcement')).toContainText('Zapis wczytany');
+  await activate(page, 'back');
   for (const id of ['call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-unfit', 'apply-stamp', 'return-document']) await activate(page, id);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/koperta/i);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Okrągła fioletowa pieczęć pracodawcy/);
@@ -103,11 +114,13 @@ test('both wrong decisions deliver the right sender and envelopes can be opened 
   await page.locator('#control-paper-action-2').click();
   const first = await exportState(page, testInfo, 'employer.npsave');
   expect(first.state.papers.find(paper => paper.id === 2)).toMatchObject({ kind: 'letter', sender: 'employer', opened: true });
+  expect(first.state).toMatchObject({ insuranceRate: 350, daily: { refusals: 1, insuranceIncrease: 50, zusCases: 0, fines: 0 } });
   await page.screenshot({ path: testInfo.outputPath('letter-employer-v05.png') });
   await sendPaper(page, 2, 'trash');
   for (const id of ['call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-fit', 'apply-stamp', 'return-document', 'paper-4']) await activate(page, id);
   const second = await exportState(page, testInfo, 'zus.npsave');
   expect(second.state.papers.find(paper => paper.id === 4)).toMatchObject({ kind: 'letter', sender: 'zus', opened: true });
+  expect(second.state).toMatchObject({ insuranceRate: 350, daily: { refusals: 1, insuranceIncrease: 50, zusCases: 1, fines: 100 } });
   await expect(page.locator('#control-paper-4')).toHaveAccessibleName(/Podłużna niebieska pieczęć ZUS/);
   await movePaperRight(page, 4);
   // Mouse pickup and a click on the physical wastebasket use the same transition.

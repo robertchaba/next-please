@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calendarText, formatGameDate, gameDate } from '../src/core/calendar';
+import { calendarText, formatGameDate, gameDate, isWeekend } from '../src/core/calendar';
 import { GAME_LIMITS } from '../src/core/game';
 import { measureText } from '../src/render/font';
 
@@ -7,6 +7,9 @@ const firstDay = Date.UTC(1983, 10, 3);
 const dayFor = (year: number, month: number, day: number): number => (Date.UTC(year, month - 1, day) - firstDay) / 86_400_000 + 1;
 
 describe('civil game calendar', () => {
+  it('identifies Saturday and Sunday across the seven-day cycle', () => {
+    expect(Array.from({ length: 9 }, (_, i) => isWeekend(i + 1))).toEqual([false, false, true, true, false, false, false, false, false]);
+  });
   it('begins on Thursday 3 November 1983 and advances once per shift', () => {
     expect(gameDate(1)).toEqual({ year: 1983, month: 11, day: 3, weekday: 4 });
     expect(gameDate(2)).toEqual({ year: 1983, month: 11, day: 4, weekday: 5 });

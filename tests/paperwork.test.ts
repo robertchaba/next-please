@@ -7,7 +7,10 @@ import { createDeskState, addDeskItem } from '../src/core/desk';
 import { shiftButtons, visibleDocumentClip } from '../src/scenes/shift';
 
 function stateAfter(...actions: GameAction[]) {
-  return actions.reduce((state, action) => applyAction(state, action).state, createInitialState());
+  const initial = createInitialState(1234);
+  // These document fixtures concern Irena's fixed identity, independently of queue order.
+  const roster = [0, ...initial.roster.filter(id => PATIENTS[id]!.characterId !== 0)];
+  return actions.reduce((state, action) => applyAction(state, action).state, { ...initial, roster, rngState: 1234 });
 }
 
 describe('separate localized paperwork', () => {
@@ -20,6 +23,7 @@ describe('separate localized paperwork', () => {
         for (const line of lines) expect(measureDocumentText(line), line).toBeLessThanOrEqual(166);
         expect(lines.join(' ')).toContain(patient.birthDate);
         expect(lines.join(' ')).toContain(t.patientReferrals[patient.id]!.employer);
+        expect(lines.join(' ')).toContain(`${p.requirements}: ${p.requirementCodes[patient.requirementId]}`);
       }
       for (const body of [p.zusBody, p.employerBody]) {
         const lines = wrapDocumentLines(body, 166);

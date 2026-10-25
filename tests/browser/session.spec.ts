@@ -1,3 +1,5 @@
+import { CHARACTER_COUNT, PATIENTS } from '../../src/core/patients';
+import { loadKnownQueue, knownQueueState } from './fixtures';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createInitialState, decodeSave, encodeSave, type GameState } from '../../src/core/save';
@@ -22,6 +24,7 @@ async function enterCabinet(page: Page): Promise<void> {
   await activate(page, 'start');
   for (let step = 0; step < 4; step++) await activate(page, 'intro-next');
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
+  await loadKnownQueue(page);
 }
 
 async function importState(page: Page, state: GameState, name = 'session.npsave'): Promise<void> {
@@ -87,7 +90,7 @@ test('restart can be canceled and resets progress only after confirmation, retai
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await enterCabinet(page);
   await activate(page, 'saves');
-  await importState(page, { ...createInitialState(), phase: 'cabinet', introStep: 3, day: 8, money: 120, patientsProcessed: 9 });
+  await importState(page, { ...knownQueueState(), phase: 'cabinet', introStep: 3, day: 8, money: 120, patientsProcessed: 9 });
   await expect(page.getByRole('status')).toContainText('Zapis wczytany');
   await activate(page, 'back');
   await activate(page, 'call-patient');
@@ -123,7 +126,10 @@ test('restart can be canceled and resets progress only after confirmation, retai
   expect(await page.evaluate(() => localStorage.getItem('next-please.preferences'))).toBe(preferences);
   await page.keyboard.press('Escape');
   await activate(page, 'saves');
-  expect(await exportState(page, testInfo)).toEqual(createInitialState());
+  const restarted = await exportState(page, testInfo);
+  expect(restarted).toEqual({ ...createInitialState(), rngState: restarted.rngState, roster: restarted.roster });
+  expect(restarted.roster).toHaveLength(CHARACTER_COUNT);
+  expect(new Set(restarted.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(CHARACTER_COUNT);
 });
 
 for (const phase of ['intro', 'cabinet'] as const) {
@@ -187,5 +193,8 @@ test('a delayed import cannot overwrite a newly restarted game', async ({ page }
   await expect(page.getByRole('status')).not.toContainText('Zapis wczytany');
   await page.keyboard.press('Escape');
   await activate(page, 'saves');
-  expect(await exportState(page, testInfo)).toEqual(createInitialState());
+  const restarted = await exportState(page, testInfo);
+  expect(restarted).toEqual({ ...createInitialState(), rngState: restarted.rngState, roster: restarted.roster });
+  expect(restarted.roster).toHaveLength(CHARACTER_COUNT);
+  expect(new Set(restarted.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(CHARACTER_COUNT);
 });

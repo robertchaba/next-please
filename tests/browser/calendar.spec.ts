@@ -21,14 +21,20 @@ test('calendar starts on the agreed date, follows the saved day and preserves ol
 
   await activate(page, 'saves');
   const state = { ...createInitialState(), phase: 'cabinet' as const, introStep: 3, day: 28,
-    patientsProcessed: 3, shiftCompleted: 3, clockMinutes: 600, nextPaperId: 2,
+    patientsProcessed: 3, shiftCompleted: 3, clockMinutes: 840, nextPaperId: 2,
     papers: [{ id: 1, kind: 'referral' as const, patientId: 0, day: 1, location: 'desk' as const }],
   };
   await page.locator('#save-input').setInputFiles({ name: 'calendar.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(state)) });
   await expect(page.locator('#announcement')).toContainText('Zapis wczytany');
   await activate(page, 'back');
   await expect(page.locator('#screen-description')).toContainText('Datownik na biurku: 30 listopada.');
-  await activate(page, 'next-day');
+  await activate(page, 'end-day');
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'home');
+  await activate(page, 'home-next');
+  await activate(page, 'home-next');
+  await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'work');
+  await activate(page, 'home-next');
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   await expect(page.locator('#screen-description')).toContainText('Datownik na biurku: 1 grudnia.');
   await expect(page.locator('#control-paper-1')).toHaveAccessibleName(/Wystawiono: 03\.11\.1983/);
   await activate(page, 'language-en');

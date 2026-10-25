@@ -1,3 +1,6 @@
+import { translations } from '../../src/i18n';
+import { MANUAL_PAGE_COUNT } from '../../src/render/manual';
+import { loadKnownQueue } from './fixtures';
 import { expect, test, type Page } from '@playwright/test';
 import { PATIENT_HANDOFF, RIGHT_DESK_TOP, DESK_FRONT, TRAY, type Point, type Rect } from '../../src/core/desk';
 
@@ -21,6 +24,7 @@ async function enterCabinet(page: Page): Promise<void> {
   await activate(page, 'start');
   for (let step = 0; step < 4; step++) await activate(page, 'intro-next');
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
+  await loadKnownQueue(page);
 }
 
 async function logicalRect(page: Page, id: string): Promise<Rect> {
@@ -100,7 +104,7 @@ test('carried stamps stay in hand, rest at the side, and only handing the certif
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
   await carryTo(page, 'apply-stamp', center(PATIENT_HANDOFF));
   await expect(page.locator('#control-apply-stamp')).toHaveCount(0);
-  await expect(page.locator('#screen-description')).toContainText('Bez premii.');
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.feedback['patient-completed']);
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'exit');
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
 });
@@ -207,7 +211,7 @@ test('a stamped certificate without a handwritten name is restored after a rejec
   await expect(page.locator('#control-apply-stamp')).toHaveCount(0);
 });
 
-test('the rulebook keeps its cover on placement and its physical corners open and turn all five spreads', async ({ page }) => {
+test('the rulebook keeps its cover on placement and its physical corners open and turn all eight spreads', async ({ page }) => {
   await enterCabinet(page);
   const shelfBook = await logicalRect(page, 'manual');
   expect(shelfBook).toMatchObject({ w: 88, h: 48 });
@@ -248,7 +252,7 @@ test('the rulebook keeps its cover on placement and its physical corners open an
   await page.keyboard.press('Escape');
   expect(await logicalRect(page, 'manual')).toEqual(book);
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'true');
-  for (let pageIndex = 1; pageIndex < 5; pageIndex++) {
+  for (let pageIndex = 1; pageIndex < MANUAL_PAGE_COUNT; pageIndex++) {
     const next = await logicalRect(page, 'manual-next');
     expect(next.x).toBeGreaterThan(book.x + book.w / 2);
     expect(next.y).toBeGreaterThan(book.y + book.h / 2);
@@ -257,10 +261,11 @@ test('the rulebook keeps its cover on placement and its physical corners open an
     expect(await logicalRect(page, 'manual')).toEqual(book);
     await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
   }
-  await expect(page.locator('#screen-description')).toContainText('Czas');
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[MANUAL_PAGE_COUNT - 1]!.facingTitle);
+  await expect(page.locator('#control-manual-next')).toHaveCount(0);
   await activate(page, 'manual-prev');
-  await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', '3');
-  await expect(page.locator('#screen-description')).toContainText('Dokumentacja');
+  await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(MANUAL_PAGE_COUNT - 2));
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[MANUAL_PAGE_COUNT - 2]!.title);
   await page.keyboard.press('Escape');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
   await expect(page.locator('#control-manual')).toBeFocused();
@@ -408,21 +413,21 @@ test('reduced motion skips patient and clock transitions while preserving the co
   }
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
   await expect(page.locator('#controls')).toHaveAttribute('data-clock-moving', 'false');
-  await expect(page.locator('#screen-description')).toContainText('Decyzja zgodna z regulaminem. +10 punktów.');
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.feedback['patient-cleared']);
 });
 
 test('rulebook page boundaries keep keyboard focus on a page control', async ({ page }) => {
   await enterCabinet(page);
   await activate(page, 'manual');
-  for (let pageIndex = 1; pageIndex < 5; pageIndex++) {
+  for (let pageIndex = 1; pageIndex < MANUAL_PAGE_COUNT; pageIndex++) {
     await activate(page, 'manual-next');
     await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(pageIndex));
   }
   await expect(page.locator('#control-manual-next')).toHaveCount(0);
   await expect(page.locator('#control-manual-prev')).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', '3');
-  for (let pageIndex = 2; pageIndex >= 0; pageIndex--) {
+  await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(MANUAL_PAGE_COUNT - 2));
+  for (let pageIndex = MANUAL_PAGE_COUNT - 3; pageIndex >= 0; pageIndex--) {
     await activate(page, 'manual-prev');
     await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(pageIndex));
   }

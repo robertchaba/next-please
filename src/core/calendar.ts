@@ -14,7 +14,7 @@ function civilDayNumber(year: number, month: number, day: number): number {
 
 const firstDayNumber = civilDayNumber(GAME_START_DATE.year, GAME_START_DATE.month, GAME_START_DATE.day);
 
-/** Day one is 3 November 1983; each subsequent shift advances one calendar day. */
+/** Day one is 3 November 1983; each subsequent day advances one calendar day. */
 export function gameDate(shiftDay: number): GameDate {
   if (!Number.isSafeInteger(shiftDay) || shiftDay < 1) throw new RangeError('Invalid game day');
   const dayNumber = firstDayNumber + shiftDay - 1;
@@ -42,4 +42,10 @@ export function calendarText(shiftDay: number, locale: Locale): {
     monthShort: t.monthsShort[date.month - 1]!, year: String(date.year),
     weekday: t.weekdays[date.weekday]!, weekdayShort: t.weekdaysShort[date.weekday]!,
   };
+}
+
+/** Rest days share the same civil calendar as paid shifts. */
+export function isWeekend(day: number): boolean {
+  const weekday = gameDate(day).weekday;
+  return weekday === 0 || weekday === 6;
 }

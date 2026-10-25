@@ -179,7 +179,17 @@ export class AudioManager {
   }
 
   stopMusic(): void {
-    if (this.currentMusic) this.sounds.get(this.currentMusic)?.stop();
+    if (this.currentMusic) {
+      const sound = this.sounds.get(this.currentMusic);
+      sound?.stop();
+      // A scene switch must cancel queued playback, too. Howler queues stop()
+      // behind a pending play while loading, which can briefly sound in the
+      // next scene; unload removes the abandoned load and its entire queue.
+      if (sound && sound.state() !== 'loaded') {
+        sound.unload();
+        this.sounds.delete(this.currentMusic);
+      }
+    }
     this.currentMusic = null;
     this.musicPaused = false;
     this.playlist = [];
@@ -221,7 +231,9 @@ export class AudioManager {
       loop: asset.loop ?? asset.kind === 'music',
       volume: asset.kind === 'music' ? this.musicVolume : this.soundVolume,
       mute: this.muted,
-      onend: () => this.advancePlaylist(id),
+      onend: () => {
+        if (this.sounds.get(id) === sound) this.advancePlaylist(id);
+      },
       onloaderror: () => {
         if (this.sounds.get(id) !== sound) return;
         sound.unload();

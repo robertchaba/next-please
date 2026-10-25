@@ -1,10 +1,11 @@
 import './style.css';
-import { applyAction, PATIENTS, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction } from './core/game';
+import { applyAction, PATIENTS, canEndDay, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction } from './core/game';
 import { effectsManifest } from './core/effects';
 import { choosePatientSpeech } from './core/patient-speech';
 import { renderCabinet, renderIntro, shiftButtons, shiftDescription, manualPageDescription, paperDescription, visibleDocumentClip, MANUAL_PAGE_COUNT, type SelectedStamp, type ShiftAction, type PatientSpeech } from './scenes/shift';
+import { homePage, homePages, renderHome, HOME_ACTION } from './scenes/home';
 import type { Button } from './ui';
-import { createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, containsPoint, restRect, itemAnchor, TRAY, DEFAULT_DOCUMENT, PATIENT_HANDOFF, MANUAL_SHELF_SIZE, RIGHT_DESK_X, CABINET_HOTSPOTS, type DeskItemId, type Point, type Rect } from './core/desk';
+import { createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, containsPoint, restRect, dropTargetRect, itemAnchor, TRAY, DEFAULT_DOCUMENT, PATIENT_HANDOFF, MANUAL_SHELF_SIZE, RIGHT_DESK_X, CABINET_HOTSPOTS, type DeskItemId, type Point, type Rect } from './core/desk';
 import { installDeskInput } from './core/desk-input';
 import { drawCreatorPortrait, drawPaper, drawPanelIllustration, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
 import { drawText } from './render/font';
@@ -13,10 +14,10 @@ import { drawerButtons, drawerDescription, renderDrawer, type DrawerAction } fro
 import { installCursor, installDisplay, WIDTH, HEIGHT } from './core/display';
 import { translations, readPreferences, savePreferences, type Locale } from './i18n';
 import { audio } from './core/audio';
-import { musicManifest, musicPlaylist } from './core/music';
+import { musicManifest, musicPlaylist, endDayPlaylist } from './core/music';
 import { createInitialState, downloadSave, importSave, SaveError } from './core/save';
 
-type Screen = 'welcome' | 'intro' | 'cabinet' | 'credits' | 'saves' | 'break-room' | 'restart' | 'drawer';
+type Screen = 'welcome' | 'intro' | 'cabinet' | 'credits' | 'saves' | 'break-room' | 'restart' | 'drawer' | 'home';
 const app = document.querySelector<HTMLElement>('#app')!;
 let desktopActive = !app.hidden;
 let desktopFocus: string | undefined;
@@ -42,8 +43,11 @@ let shiftStarted = false;
 let selectedStamp: SelectedStamp = null;
 let feedback = '';
 let introCharacters = 0;
+let homePageIndex = 0;
+let typingKey = '';
+let musicContext = 'work';
 let typingTimer: ReturnType<typeof setInterval> | undefined;
-let gameState = createInitialState();
+let gameState = createInitialState(crypto.getRandomValues(new Uint32Array(1))[0]);
 let deskState = createDeskState();
 let heldItem: DeskItemId | null = null;
 let nextClipId = 1;
@@ -120,7 +124,7 @@ function persist(): void { savePreferences(locale, audio.isMuted(), audio.getMus
 function setLocale(next: Locale): void {
   deskInput.cancel();
   locale = next; persist(); status = ''; toast = '';
-  if (screen === 'intro') startTyping();
+  if (screen === 'intro' || screen === 'home') startTyping();
   if (screen === 'cabinet') feedback = '';
   syncControls(`language-${next}`);
 }
@@ -129,26 +133,44 @@ function playEffect(id: string): void {
   if (desktopActive && !audio.isMuted()) audio.playSound(id);
 }
 
+function typedContent(): string {
+  return screen === 'home' ? homePage(gameState, locale, homePageIndex).text : t().intro[gameState.introStep].body;
+}
+
 function startTyping(): void {
   clearInterval(typingTimer);
-  const body = t().intro[gameState.introStep].body;
-  introCharacters = reducedMotion.matches ? body.length : 0;
+  const body = typedContent();
+  const key = `${screen}:${gameState.day}:${gameState.introStep}:${homePageIndex}:${locale}`;
+  if (typingKey !== key) { typingKey = key; introCharacters = 0; }
+  if (reducedMotion.matches) introCharacters = body.length;
   if (introCharacters === body.length) return;
   typingTimer = setInterval(() => {
-    if (screen !== 'intro') { clearInterval(typingTimer); return; }
+    if (screen !== 'intro' && screen !== 'home') { clearInterval(typingTimer); return; }
     if (!desktopActive || document.hidden) return;
     introCharacters = Math.min(body.length, introCharacters + 1);
-    if (body[introCharacters - 1]?.trim()) playEffect('typewriter');
-    if (introCharacters === body.length) clearInterval(typingTimer);
+    if (body[introCharacters - 1]?.trim() && (screen === 'intro' || introCharacters % 3 === 0)) playEffect('typewriter');
+    if (introCharacters === body.length) {
+      clearInterval(typingTimer);
+      if (screen === 'home') syncControls(focused || undefined);
+    }
     render();
-  }, 55);
+  }, screen === 'home' ? 24 : 55);
+}
+
+function advanceHome(): void {
+  if (introCharacters < typedContent().length) {
+    introCharacters = typedContent().length; clearInterval(typingTimer); syncControls('home-next'); return;
+  }
+  playEffect('carriage');
+  if (homePageIndex < homePages(gameState).length - 1) { homePageIndex++; startTyping(); syncControls('home-next'); }
+  else handleShiftAction('next-day');
 }
 
 function startShift(): void {
   shiftStarted = true;
   screen = gameState.phase;
-  if (screen === 'intro') startTyping();
-  syncControls(screen === 'intro' ? 'intro-next' : 'call-patient');
+  if (screen === 'intro' || screen === 'home') startTyping();
+  syncControls(screen === 'intro' ? 'intro-next' : screen === 'home' ? 'home-next' : canEndDay(gameState) ? 'end-day' : 'call-patient');
 }
 
 function clearPatientMotion(preserveSpeech = false): void {
@@ -247,6 +269,7 @@ function announceDesk(message: string, focusId?: string): void {
 }
 
 function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
+  if (action === 'end-day') { deskInput.cancel(); selectedStamp = null; }
   if (action === 'reserved-form') return;
   if (typeof action === 'object') {
     if (action.type === 'store-drawer-item' || action.type === 'retrieve-drawer-item') return;
@@ -378,8 +401,14 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
       }), true);
       animatePatient(previousState.visit.patientId, 'exit');
     }
-    selectedStamp = null; playEffect('paper'); focusId = gameState.shiftCompleted === 3 ? 'next-day' : 'call-patient';
-  } else if (actual === 'next-day') { clearPatientMotion(); focusId = 'call-patient'; }
+    selectedStamp = null; playEffect('paper'); focusId = canEndDay(gameState) ? 'end-day' : 'call-patient';
+  } else if (actual === 'end-day' && screen === 'home') {
+    clearPatientMotion(); homePageIndex = 0; typingKey = ''; startTyping(); focusId = 'home-next';
+  } else if (actual === 'next-day') {
+    clearPatientMotion(); clearInterval(typingTimer); homePageIndex = 0;
+    clockMinutes = gameState.clockMinutes; clockTransition = undefined; focusId = 'call-patient';
+    if (screen === 'home') { typingKey = ''; startTyping(); focusId = 'home-next'; }
+  }
   else if (actual === 'toggle-lamp') focusId = 'lamp';
   else if (actual === 'change-decoration') focusId = 'decoration';
   syncControls(focusId);
@@ -427,13 +456,13 @@ function openScreen(next: Screen, trigger = 'start'): void {
 function closeScreen(): void {
   deskInput.cancel();
   if (screen === 'drawer') { screen = 'cabinet'; syncControls('drawer'); return; }
-  if (screen === 'cabinet') { goToMenu(); return; }
+  if (screen === 'cabinet' || screen === 'home') { goToMenu(); return; }
   if (screen === 'break-room') { startShift(); return; }
   if (screen === 'restart') { screen = 'break-room'; syncControls('restart'); return; }
   const isPanel = screen === 'credits' || screen === 'saves';
   screen = isPanel ? panelReturn : 'welcome'; status = ''; toast = '';
   if (screen === 'welcome') clearPatientMotion();
-  if (screen === 'intro') startTyping();
+  if (screen === 'intro' || screen === 'home') startTyping();
   syncControls(isPanel ? returnFocus : 'start');
 }
 function goToMenu(): void {
@@ -444,7 +473,8 @@ function goToMenu(): void {
 function restartGame(): void {
   deskInput.cancel(); clearPatientMotion(); clearInterval(typingTimer);
   saveReadId++; busy = false;
-  gameState = createInitialState(); deskState = createDeskState(); deskBeforePickup = deskState;
+  typingKey = ''; homePageIndex = 0;
+  gameState = createInitialState(crypto.getRandomValues(new Uint32Array(1))[0]); deskState = createDeskState(); deskBeforePickup = deskState;
   nextClipId = 1;
   heldItem = null; selectedStamp = null; manualOpen = false; manualPage = 0; manualBeforePickup = false;
   clockMinutes = gameState.clockMinutes; clockTransition = undefined;
@@ -480,6 +510,8 @@ function updateMusicMeter(): void {
 }
 
 function getButtons(): Button[] {
+  if (screen === 'home') return [{ id: 'home-next', label: introCharacters < typedContent().length ? t().home.reveal : homePage(gameState, locale, homePageIndex).action,
+    ...HOME_ACTION, kind: 'text', action: advanceHome }];
   if (screen === 'drawer') return drawerButtons(gameState, locale, drawerPage, handleDrawerAction);
   if (screen === 'intro' || screen === 'cabinet') return shiftButtons(gameState, locale, selectedStamp, handleShiftAction, deskView());
   if (screen === 'credits') return [
@@ -501,13 +533,13 @@ function getButtons(): Button[] {
     { id: 'saves', label: t().saves, x: 32, y: 264, w: 208, h: 20, kind: 'text', action: () => openScreen('saves', 'saves') },
   ];
   if (screen === 'break-room') return [
-    { id: 'start', label: t().resume, x: 32, y: 158, w: 208, h: 27, kind: 'primary', action: startShift },
+    { id: 'start', label: gameState.phase === 'home' ? t().home.resume : t().resume, x: 32, y: 158, w: 208, h: 27, kind: 'primary', action: startShift },
     { id: 'saves', label: t().saves, x: 32, y: 193, w: 208, h: 25, action: () => openScreen('saves', 'saves') },
     { id: 'restart', label: t().restart, x: 32, y: 228, w: 208, h: 25, action: () => { screen = 'restart'; syncControls('back'); } },
     { id: 'credits', label: t().credits, x: 32, y: 264, w: 91, h: 18, kind: 'text', action: () => openScreen('credits', 'credits') },
   ];
   return [
-    { id: 'start', label: shiftStarted ? t().resume : t().start, x: 32, y: 199, w: 208, h: 27, kind: 'primary', action: startShift },
+    { id: 'start', label: shiftStarted ? (gameState.phase === 'home' ? t().home.resume : t().resume) : t().start, x: 32, y: 199, w: 208, h: 27, kind: 'primary', action: startShift },
     { id: 'saves', label: t().saves, x: 32, y: 233, w: 208, h: 24, action: () => openScreen('saves', 'saves') },
     { id: 'credits', label: t().credits, x: 32, y: 264, w: 91, h: 18, kind: 'text', action: () => openScreen('credits', 'credits') },
   ];
@@ -549,10 +581,11 @@ function syncUtilityControls(modal: boolean): void {
   sessionControls.replaceChildren();
   utilityControls.inert = modal;
   sessionControls.inert = modal;
-  if (screen === 'cabinet') {
+  if (screen === 'cabinet' || screen === 'home') {
     for (const [id, label, action] of [
       ['menu', t().menu, goToMenu],
       ['saves', t().archive, () => openScreen('saves', 'saves')],
+      ...(canEndDay(gameState) && screen === 'cabinet' ? [['end-day-home', t().endDay, () => handleShiftAction('end-day')] as const] : []),
     ] as const) {
       const element = document.createElement('button');
       element.type = 'button'; element.id = `control-${id}`; element.textContent = label;
@@ -592,6 +625,13 @@ function syncUtilityControls(modal: boolean): void {
 }
 
 function syncControls(focusId?: string): void {
+  // Preparing even while muted cancels pending requests from the previous scene.
+  const context = gameState.phase === 'home' ? 'home' : 'work';
+  if (context !== musicContext) {
+    musicContext = context;
+    audio.preparePlaylist(context === 'home' ? endDayPlaylist : musicPlaylist, () => notify(t().audioError));
+    startMusic();
+  }
   if (desktopActive) {
     document.documentElement.lang = locale;
     document.title = t().documentTitle;
@@ -605,11 +645,12 @@ function syncControls(focusId?: string): void {
   buttons = getButtons();
   const heading = document.createElement('h1');
   heading.className = 'sr-only'; heading.id = 'screen-heading';
-  heading.textContent = screen === 'drawer' ? t().drawer : screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'break-room' ? t().breakRoomTitle : screen === 'restart' ? t().restartTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
+  heading.textContent = screen === 'home' ? homePage(gameState, locale, homePageIndex).title : screen === 'drawer' ? t().drawer : screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'break-room' ? t().breakRoomTitle : screen === 'restart' ? t().restartTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
   const description = document.createElement('p');
   description.className = 'sr-only'; description.id = 'screen-description';
   description.textContent = screen === 'credits'
     ? `${t().creator}: Robert Chaba. ${t().creatorPortrait} ${t().programming}: ${t().programmingName}. ${t().audio}: ${t().musicSource}. ${t().creditsFooter}`
+    : screen === 'home' ? `${homePage(gameState, locale, homePageIndex).description} ${homePage(gameState, locale, homePageIndex).text}`
     : screen === 'drawer' ? drawerDescription(gameState, locale, drawerPage)
     : screen === 'intro' ? t().intro[gameState.introStep].body
     : screen === 'cabinet' ? `${shiftDescription(gameState, locale)} ${manualOpen ? manualPageDescription(locale, manualPage) : ''} ${feedback}`
@@ -618,6 +659,8 @@ function syncControls(focusId?: string): void {
     : screen === 'restart' ? t().restartBody.join(' ')
     : `${t().subtitle} ${t().tagline} ${t().description}`;
   controls.append(heading, description);
+  controls.dataset.homePage = String(homePageIndex);
+  controls.dataset.homeKind = screen === 'home' ? homePage(gameState, locale, homePageIndex).kind : '';
   controls.dataset.screen = screen; controls.dataset.introStep = String(gameState.introStep);
   const modal = screen === 'credits' || screen === 'saves' || screen === 'restart' || screen === 'drawer';
   controls.setAttribute('role', modal ? 'dialog' : 'group');
@@ -656,6 +699,7 @@ function syncControls(focusId?: string): void {
       });
     }
     element.addEventListener('click', () => { startMusic(); button.action?.(); });
+    element.addEventListener('keydown', event => { if (event instanceof KeyboardEvent && screen === 'home' && event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault(); });
     element.addEventListener('mouseenter', () => { hovered = button.id; render(); });
     element.addEventListener('mouseleave', () => { hovered = ''; render(); });
     element.addEventListener('focus', () => { focused = button.id; render(); });
@@ -748,6 +792,11 @@ function render(): void {
   const speechElement = document.getElementById('patient-speech')!;
   const speechText = speech ? `${t().patientNames[speech.patientId]}: ${t().patientSpeech[speech.line]}` : '';
   if (speechElement.textContent !== speechText) speechElement.textContent = speechText;
+  if (screen === 'home') {
+    renderHome(ctx, gameState, locale, homePageIndex, introCharacters);
+    if (focused === 'home-next') outline(HOME_ACTION.x, HOME_ACTION.y, HOME_ACTION.w, HOME_ACTION.h, colors.bone);
+    drawToast(); return;
+  }
   if (screen === 'intro') {
     renderIntro(ctx, gameState, locale, introCharacters); buttons.forEach(drawButton); drawToast(); return;
   }
@@ -782,10 +831,6 @@ function render(): void {
   rect(33, 151, 29, 2, colors.red);
   text(t().subtitle, 33, 160, '#bdc1a6');
   text(t().tagline, 33, 177, '#8e9b84');
-  // A small enamel department plate on the service window.
-  rect(349, 49, 184, 19, '#1c2721'); outline(349, 49, 184, 19, '#5e6853');
-  rect(353, 57, 1, 1, colors.bone); rect(528, 57, 1, 1, colors.bone);
-  text(t().department, 441, 53, '#c0c4a2', 1, 'center');
   text(t().motto, 20, 300, '#98a58c');
   text(t().build, 550, 300, '#6f8069', 1, 'right');
 
@@ -823,15 +868,15 @@ fileInput.addEventListener('change', async () => {
     const loadedState = await importSave(file);
     if (readId !== saveReadId) return;
     deskInput.cancel(); clearPatientMotion(); deskState = createDeskState();
-    gameState = loadedState; shiftStarted = true; selectedStamp = null; feedback = '';
+    gameState = loadedState; homePageIndex = 0; typingKey = ''; shiftStarted = true; selectedStamp = null; feedback = '';
     nextClipId = 1; reconcileDeskPapers();
     manualOpen = false; manualPage = 0; clockMinutes = gameState.clockMinutes; clockTransition = undefined;
-    if (panelReturn === 'intro' || panelReturn === 'cabinet') panelReturn = loadedState.phase;
+    if (panelReturn === 'intro' || panelReturn === 'cabinet' || panelReturn === 'home') panelReturn = loadedState.phase;
     // File reads can finish after the player closes the archive. Reconcile the
     // active scene as well as the saved data before rebuilding its controls.
-    if (screen === 'intro' || screen === 'cabinet' || screen === 'drawer') {
+    if (screen === 'intro' || screen === 'cabinet' || screen === 'drawer' || screen === 'home') {
       drawerPage = 0; screen = loadedState.phase;
-      if (screen === 'intro') startTyping();
+      if (screen === 'intro' || screen === 'home') startTyping();
     }
     status = t().imported;
   } catch (error) {
@@ -844,7 +889,7 @@ fileInput.addEventListener('change', async () => {
         syncControls('import');
         document.querySelector('#announcement')!.textContent = status;
       } else {
-        syncControls(screen === 'intro' ? 'intro-next' : screen === 'cabinet' ? 'call-patient' : undefined);
+        syncControls(screen === 'intro' ? 'intro-next' : screen === 'cabinet' ? 'call-patient' : screen === 'home' ? 'home-next' : undefined);
         notify(status);
       }
     }
@@ -854,7 +899,7 @@ fileInput.addEventListener('change', async () => {
 function startMusic(): void {
   if (!desktopActive || audio.isMuted()) return;
   audio.unlock();
-  audio.playPlaylist(musicPlaylist, () => notify(t().audioError));
+  audio.playPlaylist(gameState.phase === 'home' ? endDayPlaylist : musicPlaylist, () => notify(t().audioError));
 }
 
 function updateDeskControls(): void {
@@ -902,6 +947,8 @@ const deskInput = installDeskInput(stage, {
     const anchor = itemAnchor(id, deskRect(id));
     const target = point ?? { x: position.x + anchor.x, y: position.y + anchor.y };
     const carried = groupItems(id);
+    const overDrawer = containsPoint(dropTargetRect('drawer', id, carried), target);
+    const overTrash = containsPoint(dropTargetRect('trash', id, carried), target);
     const visibleItems = [...deskState.order].reverse().filter(other => !carried.includes(other)
       && (other !== 'document' || gameState.visit?.certificateTaken)
       && (other !== 'incoming-referral' || gameState.visit?.document === 'tray'));
@@ -948,6 +995,10 @@ const deskInput = installDeskInput(stage, {
         return true;
       }
       const paperId: DeskItemId = `paper-${gameState.nextPaperId - 1}`;
+      if (overDrawer || overTrash) {
+        handleShiftAction({ type: overDrawer ? 'store-paper' : 'trash-paper', paperId: gameState.nextPaperId - 1 });
+        return true;
+      }
       if (joinAtClip(paperId)) return true;
       if (deskState.positions[paperId]) {
         deskState = moveDeskItem(deskState, paperId, target.x >= RIGHT_DESK_X
@@ -962,10 +1013,10 @@ const deskInput = installDeskInput(stage, {
       heldItem = null;
       deskState = deskBeforePickup;
       handleShiftAction('return-document');
-      syncControls(gameState.visit ? itemControlId(id) : gameState.shiftCompleted === 3 ? 'next-day' : 'call-patient');
+      syncControls(gameState.visit ? itemControlId(id) : canEndDay(gameState) ? 'end-day' : 'call-patient');
       return true;
     }
-    if ((id === 'manual' || id.startsWith('clip-')) && containsPoint(CABINET_HOTSPOTS.drawer, target)) {
+    if ((id === 'manual' || id.startsWith('clip-')) && overDrawer) {
       const result = applyAction(gameState, { type: 'store-drawer-item', item: id === 'manual' ? 'manual' : 'clip' });
       if (result.state === gameState) { announceDesk(t().feedback[result.feedback], itemControlId(id)); return false; }
       gameState = result.state; heldItem = null;
@@ -976,16 +1027,16 @@ const deskInput = installDeskInput(stage, {
     }
     if (id.startsWith('paper-')) {
       const paperId = Number(id.slice(6));
-      if (joinAtClip(id)) return true;
-      if (containsPoint(CABINET_HOTSPOTS.drawer, target) || containsPoint(CABINET_HOTSPOTS.trash, target)) {
+      if (overDrawer || overTrash) {
         heldItem = null;
-        handleShiftAction({ type: containsPoint(CABINET_HOTSPOTS.drawer, target) ? 'store-paper' : 'trash-paper', paperId });
+        handleShiftAction({ type: overDrawer ? 'store-paper' : 'trash-paper', paperId });
         if (gameState.papers.some(paper => paper.id === paperId && paper.location === 'desk')) {
           deskState = deskBeforePickup;
           syncControls(id);
         }
         return true;
       }
+      if (joinAtClip(id)) return true;
       heldItem = null;
       deskState = moveDeskItem(deskState, id, target.x >= RIGHT_DESK_X
         ? { x: Math.max(RIGHT_DESK_X, target.x - itemAnchor(id).x), y: target.y - itemAnchor(id).y }
@@ -996,6 +1047,12 @@ const deskInput = installDeskInput(stage, {
       return true;
     }
     if (id.startsWith('clip-')) {
+      if (overTrash) {
+        heldItem = null; deskState = removeDeskItem(deskState, id);
+        spendTime('handle-item');
+        announceDesk(t().itemDropped, 'take-clip');
+        return true;
+      }
       const surface = targetItem ?? surfaceAt(target);
       const record = surface ? documentId(surface) : undefined;
       if (record !== undefined) {
@@ -1009,7 +1066,7 @@ const deskInput = installDeskInput(stage, {
         return true;
       }
       heldItem = null;
-      if (containsPoint(CABINET_HOTSPOTS.trash, target) || containsPoint(CABINET_HOTSPOTS.clipSupply, target)) {
+      if (containsPoint(CABINET_HOTSPOTS.clipSupply, target)) {
         deskState = removeDeskItem(deskState, id);
       } else deskState = moveDeskItem(deskState, id, position);
       spendTime('handle-item');
@@ -1069,7 +1126,7 @@ const deskInput = installDeskInput(stage, {
       }
     }
     if (!acted) { spendTime('handle-item'); playEffect('paper'); document.querySelector('#announcement')!.textContent = t().itemDropped; }
-    syncControls(gameState.visit || id !== 'document' ? itemControlId(id) : gameState.shiftCompleted === 3 ? 'next-day' : 'call-patient');
+    syncControls(gameState.visit || id !== 'document' ? itemControlId(id) : canEndDay(gameState) ? 'end-day' : 'call-patient');
     return true;
   },
   cancel: () => {
@@ -1112,7 +1169,11 @@ setInterval(() => {
   render();
 }, 40);
 reducedMotion.addEventListener('change', () => {
-  if (reducedMotion.matches) { clearPatientMotion(true); clockTransition = undefined; clockMinutes = gameState.clockMinutes; render(); }
+  if (reducedMotion.matches) {
+    clearPatientMotion(true); clockTransition = undefined; clockMinutes = gameState.clockMinutes;
+    if (screen === 'intro' || screen === 'home') { startTyping(); syncControls(focused || undefined); }
+    else render();
+  }
 });
 
 // Runs after button actions so enabling audio starts music in the same gesture.
@@ -1169,7 +1230,7 @@ export function setDesktopActive(active: boolean): void {
   locale = preferences.locale;
   audio.setMuted(preferences.muted);
   audio.setMusicVolume(preferences.musicVolume);
-  if (changedLocale && screen === 'intro') startTyping();
+  if (changedLocale && (screen === 'intro' || screen === 'home')) startTyping();
   syncControls(desktopFocus?.replace(/^control-/, ''));
   fitDisplay();
 }

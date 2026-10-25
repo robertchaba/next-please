@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addDeskItem, containsPoint, createDeskState, DEFAULT_DOCUMENT, DESK_BOUNDS, CARRY_BOUNDS, ITEM_SIZES, CARRIED_ITEM_SIZES, restRect, itemAnchor,
+  addDeskItem, containsPoint, createDeskState, DEFAULT_DOCUMENT, DESK_BOUNDS, CARRY_BOUNDS, ITEM_SIZES, CARRIED_ITEM_SIZES, restRect, itemAnchor, dropTargetRect, DROP_ZONES, CABINET_HOTSPOTS,
   itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, TRAY_DOCUMENT, MANUAL_OPEN_POSITION, MANUAL_OPEN_SIZE, RIGHT_DESK_X, RIGHT_DESK_TOP, DESK_FRONT, type DeskItemId,
 } from '../src/core/desk';
 
@@ -222,6 +222,43 @@ describe('temporary desktop layout', () => {
     expect(containsPoint(rect, { x: 14, y: 25 })).toBe(true);
     for (const point of [{ x: 9, y: 20 }, { x: 10, y: 19 }, { x: 15, y: 20 }, { x: 10, y: 26 }]) {
       expect(containsPoint(rect, point)).toBe(false);
+    }
+  });
+});
+
+
+describe('generous carrying targets', () => {
+  it('opens drawer/trash margins only for compatible carried items', () => {
+    for (const id of ['incoming-referral', 'paper-1', 'clip-1'] as const) {
+      expect(dropTargetRect('drawer', id)).toEqual(DROP_ZONES.drawer);
+      expect(dropTargetRect('trash', id)).toEqual(DROP_ZONES.trash);
+    }
+    expect(dropTargetRect('drawer', 'manual')).toEqual(DROP_ZONES.drawer);
+    expect(dropTargetRect('trash', 'manual')).toEqual(CABINET_HOTSPOTS.trash);
+    for (const id of [null, 'stamp-fit', 'stamp-unfit', 'document'] as const) {
+      expect(dropTargetRect('drawer', id)).toEqual(CABINET_HOTSPOTS.drawer);
+      expect(dropTargetRect('trash', id)).toEqual(CABINET_HOTSPOTS.trash);
+    }
+    for (const target of ['drawer', 'trash'] as const) {
+      expect(dropTargetRect(target, 'paper-2', ['paper-2', 'document'])).toEqual(CABINET_HOTSPOTS[target]);
+      expect(dropTargetRect(target, 'paper-2', ['paper-2', 'paper-1'])).toEqual(DROP_ZONES[target]);
+    }
+  });
+
+  it('covers near-corner drops within the viewport while keeping stamp holders outside', () => {
+    for (const [target, corners] of [
+      ['drawer', [{ x: 210, y: 278 }, { x: 364, y: 319 }]],
+      ['trash', [{ x: 456, y: 282 }, { x: 569, y: 319 }]],
+    ] as const) {
+      const rect = dropTargetRect(target, 'paper-1');
+      for (const point of corners) expect(containsPoint(rect, point)).toBe(true);
+      for (const id of ['stamp-fit', 'stamp-unfit'] as const) {
+        const rest = restRect(id)!;
+        expect(containsPoint(rect, { x: rest.x, y: rest.y })).toBe(false);
+        expect(containsPoint(rect, { x: rest.x + rest.w - 1, y: rest.y + rest.h - 1 })).toBe(false);
+      }
+      expect(containsPoint(rect, { x: rect.x + rect.w, y: rect.y })).toBe(false);
+      expect(containsPoint(rect, { x: rect.x, y: 320 })).toBe(false);
     }
   });
 });

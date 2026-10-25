@@ -1,5 +1,10 @@
+import { gameDate, isWeekend } from './calendar';
+import { PATIENTS, CHARACTER_COUNT, createRoster, randomStep, hasRequiredExaminations } from './patients';
+import { BASE_INSURANCE, emptyConsequences, settleDay, type DailyConsequences, type DaySettlement } from './economy';
+export type { DaySettlement, DailyConsequences } from './economy';
+
 export const INTRO_SLIDES = 4;
-export const SHIFT_LENGTH = 3;
+export const SHIFT_LENGTH = CHARACTER_COUNT;
 export const ARRIVAL_MINUTES = 477;
 export const SHIFT_START_MINUTES = 480;
 export const SHIFT_END_MINUTES = 840;
@@ -11,16 +16,7 @@ export type Decision = 'fit' | 'unfit';
 export type TestResult = 'pass' | 'refer';
 export type DocumentId = number | 'certificate';
 
-/** Fictional training cases. Results are game rules, not clinical thresholds. */
-export const PATIENTS = [
-  { id: 0, vision: 'pass', pressure: 'pass', expectedDecision: 'fit', birthDate: '1952-04-18', sex: 'female', examination: 'periodic', managerial: false, weight: 62, height: 164 },
-  { id: 1, vision: 'refer', pressure: 'pass', expectedDecision: 'unfit', birthDate: '1947-11-06', sex: 'male', examination: 'initial', managerial: true, weight: 86, height: 178 },
-  { id: 2, vision: 'pass', pressure: 'refer', expectedDecision: 'unfit', birthDate: '1958-08-23', sex: 'female', examination: 'periodic', managerial: false, weight: 71, height: 169 },
-] as const satisfies readonly {
-  id: number; vision: TestResult; pressure: TestResult; expectedDecision: Decision;
-  birthDate: string; sex: 'female' | 'male'; examination: 'initial' | 'periodic';
-  managerial: boolean; weight: number; height: number;
-}[];
+export { PATIENTS } from './patients';
 
 export interface NoteResults {
   vision: TestResult | null;
@@ -53,8 +49,14 @@ export interface Visit {
 export interface GameState {
   day: number;
   money: number;
+  previousMonthBalance: number;
   patientsProcessed: number;
-  phase: 'intro' | 'cabinet';
+  phase: 'intro' | 'cabinet' | 'home';
+  rngState: number;
+  roster: number[];
+  insuranceRate: number;
+  daily: DailyConsequences;
+  settlement: DaySettlement | null;
   introStep: number;
   shiftCompleted: number;
   clockMinutes: number;
@@ -72,7 +74,7 @@ export interface GameState {
 export type GameAction =
   | 'advance-intro' | 'skip-intro' | 'call-patient' | 'take-document' | 'take-certificate' | 'write-certificate'
   | 'run-vision' | 'run-pressure' | 'run-measurements' | 'stamp-fit' | 'stamp-unfit'
-  | 'return-document' | 'toggle-lamp' | 'change-decoration' | 'next-day'
+  | 'end-day' | 'return-document' | 'toggle-lamp' | 'change-decoration' | 'next-day'
   | 'handle-item' | 'read-manual' | 'take-paper' | 'use-phone'
   | { type: 'store-drawer-item' | 'retrieve-drawer-item'; item: 'manual' | 'clip' }
   | { type: 'write-note' | 'store-paper' | 'retrieve-paper' | 'trash-paper' | 'open-letter' | 'clip-paper'; paperId: number }
@@ -84,7 +86,7 @@ export type GameFeedback =
   | 'none' | 'cabinet-ready' | 'patient-called' | 'patient-waiting' | 'shift-finished'
   | 'document-taken' | 'document-needed' | 'certificate-taken' | 'certificate-needed' | 'no-patient' | 'vision-pass' | 'vision-refer'
   | 'pressure-pass' | 'pressure-refer' | 'stamped-fit' | 'stamped-unfit'
-  | 'stamp-needed' | 'patient-cleared' | 'patient-error' | 'lamp-on' | 'lamp-off'
+  | 'stamp-needed' | 'patient-cleared' | 'patient-completed' | 'patient-error' | 'lamp-on' | 'lamp-off'
   | 'decoration-changed' | 'next-day' | 'shift-unfinished' | 'limit-reached'
   | 'measurements-taken' | 'phone-unavailable' | 'paper-taken' | 'paper-written'
   | 'paper-stored' | 'paper-retrieved' | 'paper-trashed' | 'paper-missing'
@@ -93,12 +95,21 @@ export type GameFeedback =
   | 'certificate-written' | 'certificate-name-needed'
   | 'item-stored' | 'item-retrieved' | 'item-missing';
 
-export function createInitialState(): GameState {
+export function createInitialState(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0]!): GameState {
+  const generated = createRoster(seed >>> 0);
   return {
-    day: 1, money: 0, patientsProcessed: 0,
+    rngState: generated.seed, roster: generated.roster, insuranceRate: BASE_INSURANCE, daily: emptyConsequences(), settlement: null,
+    day: 1, money: 0, previousMonthBalance: 0, patientsProcessed: 0,
     phase: 'intro', introStep: 0, shiftCompleted: 0, clockMinutes: ARRIVAL_MINUTES, visit: null,
     lampOn: true, decoration: 'plant', papers: [], nextPaperId: 1, paperClips: [], drawerItems: { manual: false, clips: 0 },
   };
+}
+
+export function isShiftFinished(state: GameState): boolean {
+  return state.clockMinutes >= SHIFT_END_MINUTES || state.shiftCompleted >= state.roster.length;
+}
+export function canEndDay(state: GameState): boolean {
+  return state.phase === 'cabinet' && state.visit === null && isShiftFinished(state);
 }
 
 export interface ActionResult {
@@ -145,6 +156,28 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
     return unchanged('none');
   }
 
+  if (action === 'next-day') {
+    if (state.phase !== 'home') return unchanged('shift-unfinished');
+    if (state.day === GAME_LIMITS.day) return unchanged('limit-reached');
+    const day = state.day + 1;
+    const previousMonthBalance = gameDate(day).month !== gameDate(state.day).month ? state.money : state.previousMonthBalance;
+    if (isWeekend(day)) {
+      const result = settleDay({ ...state, day, shiftCompleted: 0, daily: emptyConsequences(), restDay: true });
+      if (Math.abs(result.settlement.closingBalance) > GAME_LIMITS.money) return unchanged('limit-reached');
+      return changed({ ...result, day, previousMonthBalance, phase: 'home', shiftCompleted: 0, roster: [],
+        clockMinutes: SHIFT_END_MINUTES, daily: emptyConsequences(), money: result.settlement.closingBalance }, 'next-day');
+    }
+    const generated = createRoster(state.rngState);
+    return changed({ phase: 'cabinet', day, previousMonthBalance, shiftCompleted: 0, clockMinutes: ARRIVAL_MINUTES,
+      roster: generated.roster, rngState: generated.seed, daily: emptyConsequences(), settlement: null }, 'next-day');
+  }
+  if (state.phase === 'home') return unchanged('none');
+  if (action === 'end-day') {
+    if (!canEndDay(state)) return unchanged('shift-unfinished');
+    const result = settleDay(state);
+    if (Math.abs(result.settlement.closingBalance) > GAME_LIMITS.money) return unchanged('limit-reached');
+    return changed({ ...result, phase: 'home', clockMinutes: SHIFT_END_MINUTES, money: result.settlement.closingBalance }, 'shift-finished');
+  }
   if (action === 'advance-intro' || action === 'skip-intro') return unchanged('none');
   const spend = (minutes: number): number => Math.min(SHIFT_END_MINUTES, state.clockMinutes + minutes);
   const canAddPaper = (): boolean => state.papers.length < GAME_LIMITS.papers && state.nextPaperId <= GAME_LIMITS.paperId;
@@ -241,17 +274,12 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
   if (action === 'change-decoration') {
     return changed({ clockMinutes: spend(ACTION_MINUTES.handling), decoration: state.decoration === 'plant' ? 'certificate' : 'plant' }, 'decoration-changed');
   }
-  if (action === 'next-day') {
-    if (state.visit || state.shiftCompleted < SHIFT_LENGTH) return unchanged('shift-unfinished');
-    if (state.day === GAME_LIMITS.day) return unchanged('limit-reached');
-    return changed({ day: state.day + 1, shiftCompleted: 0, clockMinutes: ARRIVAL_MINUTES }, 'next-day');
-  }
   if (action === 'call-patient') {
     if (state.visit) return unchanged('patient-waiting');
-    if (state.shiftCompleted === SHIFT_LENGTH) return unchanged('shift-finished');
-    if (state.patientsProcessed === GAME_LIMITS.patients || state.money > GAME_LIMITS.money - 10) return unchanged('limit-reached');
+    if (isShiftFinished(state)) return unchanged('shift-finished');
+    if (state.patientsProcessed === GAME_LIMITS.patients) return unchanged('limit-reached');
     return changed({ clockMinutes: Math.max(SHIFT_START_MINUTES, spend(ACTION_MINUTES.handling)), visit: {
-      patientId: state.shiftCompleted, document: 'tray', certificateTaken: false, certificateNamed: false, visionTested: false, pressureTested: false, measurementsTaken: false, decision: null,
+      patientId: state.roster[state.shiftCompleted]!, document: 'tray', certificateTaken: false, certificateNamed: false, visionTested: false, pressureTested: false, measurementsTaken: false, decision: null,
     } }, 'patient-called');
   }
 
@@ -295,20 +323,30 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
   if (!visit.decision) return unchanged('stamp-needed');
   if (!visit.certificateNamed) return unchanged('certificate-name-needed');
   const wrongDecision = visit.decision !== patient.expectedDecision;
-  const correct = visit.visionTested && visit.pressureTested && visit.measurementsTaken && !wrongDecision;
-  if (state.patientsProcessed === GAME_LIMITS.patients || (correct && state.money > GAME_LIMITS.money - 10)) {
-    return unchanged('limit-reached');
+  const correct = hasRequiredExaminations(patient, visit) && !wrongDecision;
+  if (state.patientsProcessed === GAME_LIMITS.patients) return unchanged('limit-reached');
+  const draw = wrongDecision ? randomStep(state.rngState) : null;
+  const undetected = visit.decision === 'fit' ? 0.35 : patient.managerial ? 0.03 : 0.25;
+  const detected = wrongDecision && draw!.value >= undetected;
+  if (detected && !canAddPaper()) return unchanged('limit-reached');
+  let daily = state.daily, insuranceRate = state.insuranceRate;
+  if (detected && visit.decision === 'fit') {
+    daily = { ...daily, zusCases: daily.zusCases + 1, fines: daily.fines + (daily.zusCases === 0 ? 100 : 400) };
+  } else if (detected) {
+    const increase = insuranceRate === BASE_INSURANCE ? 50 : 100;
+    if (insuranceRate > GAME_LIMITS.money - increase) return unchanged('limit-reached');
+    insuranceRate += increase;
+    daily = { ...daily, refusals: daily.refusals + 1, insuranceIncrease: daily.insuranceIncrease + increase };
   }
-  if (wrongDecision && !canAddPaper()) return unchanged('limit-reached');
   const completion: Partial<GameState> = {
     visit: null,
     shiftCompleted: state.shiftCompleted + 1,
     clockMinutes: spend(ACTION_MINUTES.handling),
     patientsProcessed: state.patientsProcessed + 1,
-    money: state.money + (correct ? 10 : 0),
+    rngState: draw?.seed ?? state.rngState, daily, insuranceRate,
     paperClips: state.paperClips.map(group => group.filter(id => id !== 'certificate')).filter(group => group.length > 0),
   };
-  if (wrongDecision) return addPaper({ id: state.nextPaperId, kind: 'letter', patientId: visit.patientId, day: state.day,
+  if (detected) return addPaper({ id: state.nextPaperId, kind: 'letter', patientId: visit.patientId, day: state.day,
     location: 'desk', sender: visit.decision === 'fit' ? 'zus' : 'employer', opened: false }, completion, 'patient-error');
-  return changed(completion, correct ? 'patient-cleared' : 'patient-error');
+  return changed(completion, correct ? 'patient-cleared' : 'patient-completed');
 }

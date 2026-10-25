@@ -1,3 +1,4 @@
+import { loadKnownQueue } from './fixtures';
 import { expect, test, type Page } from '@playwright/test';
 
 async function activate(page: Page, id: string): Promise<void> {
@@ -22,6 +23,7 @@ async function enterCabinet(page: Page): Promise<void> {
   for (let step = 0; step < 4; step++) await activate(page, 'intro-next');
   await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
   await page.clock.pauseAt(new Date(Date.now() + 1000));
+  await loadKnownQueue(page);
 }
 
 const portraitPixels = (page: Page) => page.locator('#game').evaluate(canvas =>

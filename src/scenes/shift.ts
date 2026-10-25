@@ -3,11 +3,11 @@ import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, drawCe
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
 import { drawManual, drawManualCover, manualControls, MANUAL_PAGE_COUNT } from '../render/manual';
-import { INTRO_SLIDES, PATIENTS, SHIFT_LENGTH, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
+import { INTRO_SLIDES, PATIENTS, canEndDay, isShiftFinished, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
 import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
 import { calendarText } from '../core/calendar';
-import { CABINET_HOTSPOTS, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
+import { CABINET_HOTSPOTS, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, dropTargetRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
 export { MANUAL_PAGE_COUNT, manualPageDescription } from '../render/manual';
 
 export type ShiftAction = GameAction | 'select-fit' | 'select-unfit' | 'apply-stamp' | 'manual'
@@ -46,9 +46,9 @@ export function shiftDescription(state: GameState, locale: Locale): string {
   const t = translations[locale]; const visit = state.visit;
   const patient = visit ? PATIENTS[visit.patientId] : null;
   const date = calendarText(state.day, locale);
-  return [t.cabinetHelp, `${t.clock}: ${clockTime(state)}.`, `${t.day}: ${state.day}.`, `${t.calendar.label}: ${date.day} ${date.month}.`, `${t.queue}: ${state.shiftCompleted}/${SHIFT_LENGTH}.`, `${t.points}: ${state.money}.`,
+  return [t.cabinetHelp, `${t.clock}: ${clockTime(state)}.`, `${t.day}: ${state.day}.`, `${t.calendar.label}: ${date.day} ${date.month}.`, `${t.queue}: ${state.shiftCompleted}/${state.roster.length}.`, `${t.points}: ${state.money}.`,
     visit && patient ? `${t.patientNames[visit.patientId]}. ${t.patientJobs[visit.patientId]}. ${visit.document === 'tray' ? t.awaitingDocument : t.document}. ${t.visionResult}: ${visit.visionTested ? t[patient.vision] : t.untested}. ${t.pressureResult}: ${visit.pressureTested ? t[patient.pressure] : t.untested}. ${t.paperwork.weight}: ${visit.measurementsTaken ? `${patient.weight} ${t.paperwork.kg}` : t.untested}. ${t.paperwork.height}: ${visit.measurementsTaken ? `${patient.height} ${t.paperwork.cm}` : t.untested}. ${visit.decision ? t[visit.decision] : t.stampHere}.`
-      : state.shiftCompleted === SHIFT_LENGTH ? t.shiftDone : t.emptyChair,
+      : isShiftFinished(state) ? t.shiftDone : t.emptyChair,
     ...(visit?.certificateTaken ? [certificateDescription(state, locale)] : []),
     ...state.papers.filter(paper => paper.location === 'desk').map(paper => paperDescription(paper, locale, isDocumentClipped(state, paper.id))),
   ].join(' ');
@@ -75,8 +75,8 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
   const pageCorners = manualControls(itemRect(view.desk, 'manual', false, false, view.manualOpen));
   return [
     ...(rest ? [button(restAction, restLabel, rest.x, rest.y, rest.w, rest.h, restAction)] : []),
-    ...(state.shiftCompleted === SHIFT_LENGTH ? [hotspot('next-day', t.nextDay, CABINET_HOTSPOTS.callPatient, 'next-day')]
-      : [hotspot('call-patient', t.callPatient, CABINET_HOTSPOTS.callPatient, 'call-patient')]),
+    ...(canEndDay(state) ? [hotspot('end-day', t.endDay, CABINET_HOTSPOTS.callPatient, 'end-day')]
+      : [{ ...hotspot('call-patient', t.callPatient, CABINET_HOTSPOTS.callPatient, 'call-patient'), disabled: isShiftFinished(state) }]),
     ...(state.visit?.document === 'tray' ? [item('take-document', t.takeDocument, 'incoming-referral', 'take-document')] : []),
     ...(state.visit?.certificateTaken ? [hotspot('return-document', t.returnDocument, PATIENT_HANDOFF, 'return-document'),
       item('apply-stamp', `${t.applyStamp}. ${certificateDescription(state, locale)}`, 'document', 'apply-stamp'),
@@ -92,8 +92,8 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     hotspot('take-certificate', t.takeCertificate, CABINET_HOTSPOTS.certificateSupply, 'take-certificate'),
     ...DOCUMENT_RACK_SLOTS.slice(2).map((bounds, index) => ({ ...hotspot(`reserved-form-${index + 3}`, `${t.reservedForm} ${index + 3}`, bounds, 'reserved-form'), disabled: true })),
     hotspot('take-clip', t.takeClip, CABINET_HOTSPOTS.clipSupply, 'take-clip'),
-    hotspot('drawer', `${t.drawer}: ${state.papers.filter(paper => paper.location === 'drawer').length + Number(state.drawerItems.manual) + state.drawerItems.clips}. ${t.drawerHelp}`, CABINET_HOTSPOTS.drawer, 'drawer'),
-    hotspot('trash', t.trash, CABINET_HOTSPOTS.trash, 'trash'),
+    hotspot('drawer', `${t.drawer}: ${state.papers.filter(paper => paper.location === 'drawer').length + Number(state.drawerItems.manual) + state.drawerItems.clips}. ${t.drawerHelp}`, dropTargetRect('drawer', view.held, view.heldItems), 'drawer'),
+    hotspot('trash', t.trash, dropTargetRect('trash', view.held, view.heldItems), 'trash'),
     ...state.papers.filter(paper => paper.location === 'desk').flatMap(paper => {
       const id: DeskItemId = `paper-${paper.id}`;
       const action: ShiftAction = paper.kind === 'note' ? { type: 'write-note', paperId: paper.id }

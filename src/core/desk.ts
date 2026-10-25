@@ -38,6 +38,19 @@ export const CABINET_HOTSPOTS = {
   trash: { x: 478, y: 297, w: 68, h: 23 },
   measurements: { x: 405, y: 61, w: 42, h: 67 },
 } as const satisfies Record<string, Rect>;
+/** Generous storage targets apply only while carrying a compatible item. */
+export const DROP_ZONES = {
+  drawer: { x: 210, y: 278, w: 155, h: 42 },
+  trash: { x: 456, y: 282, w: 114, h: 38 },
+} as const satisfies Record<string, Rect>;
+
+export function dropTargetRect(target: keyof typeof DROP_ZONES, held: DeskItemId | null, carried: readonly DeskItemId[] = []): Rect {
+  const includesCertificate = held === 'document' || carried.includes('document');
+  const compatible = held !== null && !includesCertificate && (held === 'incoming-referral' || held.startsWith('paper-')
+    || held.startsWith('clip-') || (target === 'drawer' && held === 'manual'));
+  return compatible ? { ...DROP_ZONES[target] } : { ...CABINET_HOTSPOTS[target] };
+}
+
 export const DOCUMENT_RACK: Rect = { x: 504, y: 112, w: 60, h: 65 };
 export const DOCUMENT_RACK_SLOTS = [CABINET_HOTSPOTS.paperSupply, CABINET_HOTSPOTS.certificateSupply,
   { x: 507, y: 148, w: 54, h: 14 }, { x: 507, y: 162, w: 54, h: 13 }] as const;

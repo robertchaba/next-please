@@ -30,6 +30,62 @@ beforeEach(() => {
 });
 
 describe('music playback', () => {
+  it('switches between work and home without leaking pending music across scenes', () => {
+    const onError = vi.fn();
+    audio.register({ home: { kind: 'music', src: ['/home-eod.mp3'] } });
+    audio.unlock();
+    audio.playPlaylist(playlist, onError);
+    const [work, second, home] = sounds();
+    audio.preparePlaylist(['home'], onError);
+    expect(work.stop).toHaveBeenCalledOnce();
+    expect(work.unload).toHaveBeenCalledOnce();
+    expect(home.play).not.toHaveBeenCalled();
+    audio.playPlaylist(['home'], onError);
+    expect(home.play).toHaveBeenCalledOnce();
+    work.options.onloaderror!(1, 'cancelled work request');
+    work.options.onend!(1);
+    expect(second.play).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
+
+    audio.setMuted(true);
+    audio.preparePlaylist(playlist, onError);
+    expect(home.stop).toHaveBeenCalledOnce();
+    expect(home.unload).toHaveBeenCalledOnce();
+    expect(audio.playPlaylist(playlist, onError)).toBe(false);
+    home.options.onloaderror!(1, 'cancelled home request');
+    home.options.onend!(1);
+    expect(onError).not.toHaveBeenCalled();
+    expect(second.play).not.toHaveBeenCalled();
+    audio.setMuted(false);
+    audio.playPlaylist(playlist, onError);
+    expect(sounds().at(-1)!.options.src).toEqual(['/first.mp3']);
+    expect(sounds().at(-1)!.play).toHaveBeenCalledOnce();
+    work.options.onend!(1);
+    expect(second.play).not.toHaveBeenCalled();
+  });
+
+  it('keeps automatic and manual track changes inside the home playlist', () => {
+    audio.register({ home: { kind: 'music', src: ['/home-eod.mp3'] } });
+    audio.preparePlaylist(['home']);
+    audio.nextTrack();
+    expect(Howl).not.toHaveBeenCalled();
+    audio.unlock();
+    audio.playPlaylist(['home']);
+    const [first, second, home] = sounds();
+    vi.mocked(home.state).mockReturnValue('loaded');
+    home.options.onend!(1);
+    audio.previousTrack();
+    audio.nextTrack();
+    expect(home.play).toHaveBeenCalledTimes(4);
+    expect(first.play).not.toHaveBeenCalled();
+    expect(second.play).not.toHaveBeenCalled();
+    audio.preparePlaylist(playlist);
+    expect(home.stop).toHaveBeenCalledTimes(4);
+    expect(home.unload).not.toHaveBeenCalled();
+    audio.playPlaylist(playlist);
+    expect(first.play).toHaveBeenCalledOnce();
+  });
+
   it('pauses loaded music without changing tracks and resumes only when playback is requested', () => {
     audio.unlock();
     audio.playPlaylist(playlist);

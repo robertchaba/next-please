@@ -1,17 +1,20 @@
 # Portable save format
 
-Saves are local `.npsave` files containing a single gzip member with UTF-8 JSON. They are neither encrypted nor uploaded. Export uses `next-please-day-N.npsave`; import identifies the bytes rather than trusting the filename or MIME type.
+Saves are local `.npsave` files containing one gzip member with UTF-8 JSON. They are neither encrypted nor uploaded. Export uses `next-please-day-N.npsave`; import checks bytes rather than trusting filenames or MIME types. Only locale and audio preferences use localStorage. Import replaces live state only after validation succeeds, preserving all live gameplay and presentation on failure.
 
-The version 8 envelope is:
+## Version 10
+
+The envelope contains exactly `game: "next-please"`, `version: 10`, a canonical ISO `savedAt` timestamp, and `state`:
 
 ```json
 {
   "game": "next-please",
-  "version": 8,
-  "savedAt": "2026-10-23T12:00:00.000Z",
+  "version": 10,
+  "savedAt": "2026-10-25T12:00:00.000Z",
   "state": {
     "day": 1,
     "money": 0,
+    "previousMonthBalance": 0,
     "patientsProcessed": 0,
     "phase": "cabinet",
     "introStep": 3,
@@ -23,20 +26,31 @@ The version 8 envelope is:
     "papers": [],
     "nextPaperId": 1,
     "paperClips": [],
-    "drawerItems": { "manual": false, "clips": 0 }
+    "drawerItems": { "manual": false, "clips": 0 },
+    "rngState": 3694606495,
+    "roster": [21, 149, 1, 296, 135, 160, 202, 116, 74, 224, 2, 177, 31, 30, 82, 196, 99, 49, 14, 85, 275, 158, 23, 68, 255, 66, 16, 51, 110, 216, 128, 0, 233, 56, 279, 167, 91, 95, 90, 249, 212, 35, 41, 288, 45, 266, 123, 76, 3, 186, 244, 10, 62],
+    "insuranceRate": 300,
+    "daily": { "zusCases": 0, "refusals": 0, "fines": 0, "insuranceIncrease": 0 },
+    "settlement": null
   }
 }
 ```
 
-Money is an integer game currency amount; negative balances are allowed. Day is an integer from 1 to 1,000,000, money from −1,000,000,000 to 1,000,000,000, and patients processed from 0 to 1,000,000,000. These are format guardrails, not gameplay rules. Actions stop at these limits instead of producing an invalid save. Locale and audio preferences belong to local settings, not to a player's progress. The civil date is derived from `day`: day 1 is 3 November 1983 and each next day advances one calendar day, including weekends. No separate date field is persisted; each paper's `day` determines its issue date.
+All documented objects have exact keys; missing, additional, mistyped and out-of-range values fail validation. Integer guardrails are day 1–1,000,000, money −1,000,000,000–1,000,000,000, lifetime patients 0–1,000,000,000, and paper IDs 1–1,000,000,000. Actions stop at these bounds instead of producing invalid saves. Negative balances are allowed. Day 1 is 3 November 1983; the civil date advances one calendar day at a time, including rest days, and is derived rather than stored separately. `previousMonthBalance` is a signed integer within the money guardrail. It begins at zero and captures the actual closing balance when `next-day` crosses into a new calendar month; it stays fixed for that month, including negative balances. It is separate from the daily opening balance.
 
-`phase` is `intro` or `cabinet`. `introStep` is an integer slide index from 0 to 3; cabinet states keep it at 3. `shiftCompleted` counts returned documents in the current three-patient shift and is an integer from 0 to 3, never greater than the lifetime `patientsProcessed` count. The introduction has no active visit or completed appointments. `lampOn` is a boolean and `decoration` is `plant` or `certificate`.
+`phase` is `intro`, `cabinet` or `home`. `introStep` is 0–3 in the introduction and 3 afterwards. The introduction has no visit, completed appointments, paperwork, clips, drawer inventory or daily consequences; its insurance is 300 and clock is 477. Historical day/money/lifetime counters remain compatible with old imports. `shiftCompleted` is 0–53 and cannot exceed the current roster length or lifetime patients. `lampOn` is boolean; `decoration` is `plant` or `certificate`.
 
-`clockMinutes` is the simulated minute of the day, from 477 (07:57 arrival) to 840 (14:00 closing). Time advances through completed actions, independently of animation or wall-clock time. Calling a patient, taking the referral, fetching, naming or returning the certificate, stamping, handling an object, turning a manual page, switching the lamp, or changing the decoration costs one minute. An eye examination costs three minutes, a pressure examination costs four, and measuring weight and height together costs two; repeated examinations and corrected stamps cost the same as their first use. Calling the first patient advances to at least 08:00. Unavailable actions, pointer movement, menus, and canceled placement do not add time on their own. All costs cap at 14:00; an active appointment can still be completed at closing.
+## Patients, randomness and time
 
-Returning the certificate no longer jumps to a two-hour appointment boundary. The prototype still contains three cases, so finishing those cases can occur before 14:00. Starting the next day resets the clock to 07:57. Current saves accept any integer clock within the bounds and at or above the minimum work represented by their appointment: with `n` completed cases, an empty cabinet needs at least `480 + 4n − 1` minutes (or 477 before the first case); an active visit needs at least `480 + 4n`, plus one minute for a desk document, three for a recorded eye test, four for a recorded pressure test, two for weight/height measurements, and one for a decision. Fetching a certificate in version 6 spends one additional minute, but these import lower bounds deliberately remain compatible with earlier saves, in which referral intake already supplied the certificate. No provenance field or artificial clock adjustment is required. Introduction saves remain exactly at 477. These lower bounds allow time spent on handling, reading, and repeated work while rejecting impossible earlier clocks. Displayed hand interpolation is temporary presentation state and never changes the persisted value.
+`src/core/patients.ts` defines a stable catalog of 303 fictional cases: the original 103 cases retain their immutable identities and examination outcomes, and 25 additional characters have eight variants each at IDs 103–302. Each case supplies a `characterId`, portrait, demographics, employer/job, managerial responsibility, examination kind, requirement profile and test results. New profiles distinguish vision, pressure, and combined requirements; measurements accompany each profile. Stored paper and visit `patientId` values identify cases, not portrait indices. Static case IDs preserve historical results across later days without storing duplicate patient snapshots. The game uses simplified fictional examination rules rather than clinical thresholds.
 
-The current appointment and its paperwork are stored in `visit`:
+`roster` contains 53 valid case IDs on newly generated workdays, one per distinct character. Every identity is shuffled from the first day; no fixed introductory patients lead the queue. Its order and chosen variants are persisted. A migrated queue of exactly 28 original characters remains valid until the next workday, with case IDs limited to 0–102. Rest days have an empty roster and require the home phase, a Saturday/Sunday date, zero completed patients and zero salary/bonus. `rngState` is an unsigned 32-bit integer; the pure LCG transition is `next = (1664525 * seed + 1013904223) mod 2^32`, with result `next / 2^32`. Explicit updates consume draws for queues, detection and the household budget. Renderers consume no randomness. `createInitialState(seed)` accepts a caller-supplied seed for reproducible fixtures; omitting it obtains a fresh unsigned seed through browser `crypto.getRandomValues`, outside drawing. Saving and loading cannot reroll an existing queue, detected mistake or settled expense.
+
+Time advances only through actions. The clock is an integer from 477 (07:57 arrival) to 840 (14:00 closing). Calling a patient, taking a referral, fetching/naming/returning a certificate, stamping, handling an object, turning a manual page and decorative interactions cost one minute. Vision costs three, blood pressure four, and measurements two; repeated procedures retain these costs. Calling the first patient advances to at least 08:00. Waiting, animation, pointer movement and unavailable actions do not spend simulated time. Time caps at 14:00, but a patient admitted before closing can complete all examinations, paperwork and corrections afterwards. No new patient can be called at or after 14:00. Exhausting the queue allows `end-day` to wait until 14:00.
+
+Imports retain the minimum action-time bounds compatible with earlier saves: an empty cabinet after `n` completed visits requires at least `480 + 4n − 1` (477 before the first visit); an active visit requires `480 + 4n`, plus one for referral intake, three for vision, four for pressure, two for measurements and one for an applied stamp. Bounds cap at 840. Migration does not invent time for certificates that were already supplied or named by older rules.
+
+A visit exists only in the cabinet and must use `roster[shiftCompleted]`:
 
 ```json
 {
@@ -51,23 +65,67 @@ The current appointment and its paperwork are stored in `visit`:
 }
 ```
 
-Visits exist only in the cabinet. Patient IDs are deterministic indices 0–2 and must equal `shiftCompleted`. `document` is `tray` or `desk` and records referral intake only. Taking the referral creates its paper without supplying a certificate. A tray visit cannot have test results, a certificate, or a decision. All three examination flags, `certificateTaken`, and `certificateNamed` must be booleans. A new certificate starts unnamed. The pen action writes the patient’s name and sets `certificateNamed: true`; it costs one minute and is a no-op if already written. An absent certificate cannot be named. Handing it back requires both a stamp and a written name. The player fetches the certificate separately from the right document rack after taking the referral; repeat fetching is a no-op. Examinations and writing notes are available before this fetch. A decision is `null`, `fit`, or `unfit`; applying or returning a decision requires `certificateTaken: true`. A fetched certificate can be stamped before any examinations. Players may then complete the examinations and correct the stamp, or name and return it without completing the examinations. Returning a stamped document with any missing examination counts as a mistake and earns no bonus, even if its decision matches the patient's expected outcome. Every object has exactly the documented keys. The saved visit resumes at the same stage, including an early stamp that has not yet been returned. The tests and fitness decisions are simplified fictional game rules, not medical thresholds.
+`document` is `tray` or `desk`. A tray visit has no examinations, certificate or decision. The player takes the referral separately from fetching a certificate. Naming requires a fetched certificate. A decision is null, `fit` or `unfit`, and requires a fetched certificate; returning requires a written name and stamp. Examinations may happen before or after stamping. Completion feedback checks the case’s required examination profile; missing required examinations use neutral feedback. Every returned certificate counts toward the 50 zł patient bonus. No per-patient money is credited during work.
 
-Desktop coordinates, carried document footprint, item stacking order, selected/carried tools, manual cover/page, patient entry/exit frames and short speech balloons are temporary presentation state and are not save fields. Item handling can advance the saved clock, but pointer movement alone does not. Placing the rulebook leaves its cover closed; opening the cover and turning a page use the existing reading cost. Taking a document from the tray, using a carried stamp, and handing the certificate to the patient invoke the same validated gameplay transitions as their keyboard actions. After a successful import, restore the saved appointment with the default desktop layout, closed book, and no active animation or speech; a failed import preserves the live appointment, desktop layout, motion and speech. These presentation details remain outside the version 8 envelope.
+## Consequences and home settlement
 
-`src/core/game.ts` defines game state, the initial introduction, deterministic patient cases, and pure action transitions. `src/core/save.ts` re-exports `createInitialState()` and exposes `encodeSave(state)`, `decodeSave(bytes)`, `downloadSave(state)`, and asynchronous `importSave(file)`. Download must run from a user action. Import returns an independently copied, validated state; the caller should replace its live state only after that promise succeeds. No progress is automatically persisted by these functions.
+`daily` stores detected unsafe approvals (`zusCases`), detected refusals of healthy workers (`refusals`), cumulative `fines`, and `insuranceIncrease`. Counts cannot exceed completed patients, and their sum cannot exceed that count. An unsafe approval is unnoticed with probability 35%; a healthy refusal is unnoticed with probability 25%, or 3% for managers. Only detected mistakes generate complaint letters and financial consequences. Correct decisions consume no detection draw. A hidden mistake neither escalates fines nor increases insurance.
 
-Imports allow at most 1 MiB compressed and 2 MiB expanded. The streaming decoder checks actual expanded size even if the gzip trailer lies. It checks gzip headers, CRC32, length, UTF-8, the envelope, exact state fields, safe integer bounds, and a canonical ISO timestamp. Multiple gzip members are rejected. CRC32 catches accidental corruption; it is not an authenticity or anti-cheat mechanism.
+`fines` is exactly zero without a detected unsafe approval, otherwise `100 + 400 * (zusCases - 1)`. `insuranceRate` starts at 300, persists across days, stays in steps of 50 and is bounded by the money guardrail. Each detected healthy refusal increases it by 50 when it is 300, otherwise by 100. The recorded increase must match the refusal count and resulting rate. If no increase occurred that day, settlement first reduces the rate by 50, with a minimum of 300, then charges that reduced rate for the current day.
 
-Stable `SaveError.code` values for localized messages:
+`end-day` requires no active visit and either 14:00 or an exhausted queue. It computes the budget once, sets `phase: "home"`, sets clock 840 and credits the closing balance to `money`. `settlement` is null outside home. At home it contains exactly:
 
-| Code | Meaning |
-| --- | --- |
-| `file-too-large` | Compressed or expanded size exceeds its limit. |
-| `invalid-file` | Invalid gzip, checksum, JSON, envelope, or timestamp. |
-| `unsupported-version` | Valid game identifier, but an unsupported integer format version. |
-| `invalid-state` | Missing, extra, mistyped, or out-of-range state fields. |
-| `read-failed` | The browser could not read the selected file. |
+```json
+{
+  "day": 1,
+  "patients": 20,
+  "basePay": 1000,
+  "patientBonus": 1000,
+  "income": 2000,
+  "livingCost": 600,
+  "insuranceCost": 300,
+  "fines": 0,
+  "event": null,
+  "expenses": 900,
+  "openingBalance": 0,
+  "closingBalance": 1100
+}
+```
+
+On paid workdays, salary is 1000 zł and the bonus is 50 zł for each completed patient, including mistakes. On Saturday/Sunday rest days both are zero. Living cost is drawn uniformly from all integers 400–800 inclusive. After income, living cost, insurance and fines, savings at or below 2000 trigger no event. Above 2000, event probability is `min(0.85, 0.10 + (savings - 2000) / 10000)`. This balancing curve is an implementation parameter, not an additional fixed story rule. At most one random expense is generated per day: `medicine`, `car-repair`, `home-repair` or `fur-coat`. On rest days the same eligible pool also includes `mountain-trip` and `seaside-trip`, with no named destination; trips use the same savings threshold, probability and cost bounds. Event cost is a uniform integer from 200 to `min(savings, 700 + floor((savings - 2000) * 0.75))`, reducing available savings without creating event-induced debt. The fur bill leaves its recipient unspecified. Story, bribes and family/relationship details are reserved for later.
+
+`event` is null or exactly `{ "kind": "car-repair", "cost": 450 }` with a valid kind/cost. Validation checks all ledger values, event bounds, matching day/patient counts/premium/fines, `income = basePay + patientBonus`, `expenses = livingCost + insuranceCost + fines + eventCost`, and `closingBalance = openingBalance + income − expenses = money`. Saved home screens cannot settle again. `next-day` is available only from home. It preserves lifetime patients and stored belongings, resets daily consequences and checks for a month boundary. When the next date is Saturday/Sunday, it immediately settles that rest day once, retains home phase, uses an empty roster, charges living costs and insurance (including the normal daily premium decay), and saves any optional event. It creates no workday or patient income. When the next date is a weekday, it preserves money and insurance, clears the ledger, generates the 53-character queue and starts the cabinet at 07:57. Guardrail failure leaves the old state intact. The UI’s page and typewriter positions remain temporary. Paid weekend shifts imported from older formats retain their salary and remain resumable; newly advanced weekend dates use the rest-day flow.
+
+## Paperwork and presentation
+
+`papers` contains at most 4096 sheets. Every paper has a unique integer `id`, originating `day` no later than the current day, `patientId` and `location` (`desk` or `drawer`). IDs remain below `nextPaperId` (1–1,000,000,001), are allocated monotonically and are not reused. Shapes are:
+
+```json
+[
+  { "id": 1, "kind": "referral", "day": 1, "patientId": 0, "location": "desk" },
+  { "id": 2, "kind": "note", "day": 1, "patientId": 0, "location": "drawer", "additionalWritten": true,
+    "results": { "vision": "pass", "pressure": "pass", "weight": 62, "height": 164 } },
+  { "id": 3, "kind": "letter", "day": 1, "patientId": 0, "location": "desk", "sender": "employer", "opened": true }
+]
+```
+
+Referrals are created once at intake. Certificate availability belongs to the active visit rather than an independent Paper. Blank notes have null patient/results and `additionalWritten: false`. Examination actions automatically bind blank desk notes and update same-day notes for that case, including notes in the drawer. Retrieving a blank note records existing examinations. The pen adds supplementary information once. Bound notes require a finding or supplementary annotation; results must match their immutable case, and weight/height are both present or both null. Current-visit notes cannot claim an examination that has not occurred. Historical and other-patient notes remain unchanged. Referrals and letters are unique by kind/day/case; current-day paperwork must correspond to an admitted/completed position in the saved roster. Letter sender is `zus` for unfit cases, `employer` for fit cases; letters require a completed visit. Deleting a letter never removes recorded financial consequences.
+
+`paperClips` contains nonempty groups, e.g. `[[1, 2, "certificate"], [3]]`. Each member refers to an existing sheet or the active taken certificate, occurs only once, and shares its group’s location. Singleton groups represent one clipped sheet. Joining merges groups; unclipping removes the group record. Storing/retrieving/discarding operates on whole groups. Certificate groups cannot be stored or discarded; handoff removes only certificate membership. Storing moves papers to the end of the array in filing order. Papers, bundles and stored objects survive day transitions.
+
+`drawerItems` contains exactly boolean `manual` and integer `clips` (0–4096), independently of paper bundles. Each store/retrieve costs one handling minute capped at closing; duplicate manual storage, empty retrieval and excess clips leave state/time unchanged.
+
+Coordinates, carried footprints, loose desk clips, stacking order, selected tools, book pages, patient animations, speech and typewriter positions are presentation state. Import restores default layout and no active movement; failure preserves the existing layout, animation and state. Menus pause presentation without changing saved progress. Start over resets gameplay and invalidates pending old imports, preserving preferences and exported files.
+
+## Validation and legacy migrations
+
+`src/core/game.ts` owns pure gameplay transitions; `src/core/economy.ts` owns deterministic budget rules. `src/core/save.ts` exposes `encodeSave`, `decodeSave`, `downloadSave` and asynchronous `importSave`. Export/download is initiated by a user action. Import copies validated objects rather than adopting untrusted input references.
+
+The decoder accepts at most 1 MiB compressed and 2 MiB expanded, verifies gzip headers, single-member structure, CRC32, actual expanded length, UTF-8, envelope and timestamp, and checks actual expansion even when the trailer lies. CRC32 detects corruption and is not anti-cheat authentication. Stable localized error codes are `file-too-large`, `invalid-file`, `unsupported-version`, `invalid-state` and `read-failed`.
+
+Version 10 adds `previousMonthBalance`, the 53-character queue and rest-day settlements/trips. Version 9 retains its exact schema, original 28-character roster and case-ID bound 102 during validation. Migration copies its queue, RNG, papers, money, insurance and existing settlement unchanged; historical monthly carryover is unavailable and initializes to zero, without inventing a prior balance. Versions 1–8 likewise initialize that field to zero. The next month boundary records the actual current closing balance.
+
+Version 9 adds `rngState`, `roster`, `insuranceRate`, `daily`, `settlement`, and the home phase. Versions 1–8 retain their original strict validators, including their original three-patient limit and immutable first-three case fixtures. Migration keeps counters, clock, active visit, papers, clips and inventory; it initializes insurance to 300 and daily consequences to zero, adds a deterministic queue beginning with the original three cases, and leaves settlement null. It does not invent historical penalties or automatically pay a past day. An already completed legacy three-case shift before 14:00 may continue with the remaining queue; one already at 14:00 may go home. Current exports always use version 10.
 
 Version 1 remains importable with its original strict validator. Its state contains only `day`, `money`, and `patientsProcessed`, with the bounds above. Migration preserves these counters and enters an empty cabinet with `introStep: 3`, `shiftCompleted: 0`, `clockMinutes: 477`, `visit: null`, `lampOn: true`, and `decoration: "plant"`. The legacy counters do not imply a position in the three-patient shift.
 
@@ -79,36 +137,6 @@ Version 5 adds `visit.measurementsTaken`, `papers`, and `nextPaperId`. Migration
 
 Version 6 adds `visit.certificateTaken` to distinguish referral intake from taking a blank certificate. After strict version 5 validation, migration sets this flag to `true` for an existing desk visit and `false` for an existing tray visit. This preserves the certificate and any applied stamp that were already available under the old rules. Counters, papers, filing order, flags, and the validated clock remain unchanged. Versions 1–4 reach the same migration after their existing validation and earlier migration steps. An empty visit stays null. Version 6 rejects a certificate before referral intake and rejects any decision without a taken certificate. Version 6 retains its exact old keys, `clipped` paper flags, note snapshot rules and clock validation before migration.
 
-Version 7 adds `visit.certificateNamed`, `note.additionalWritten`, and top-level `paperClips`, and removes the individual `paper.clipped` flag. Migration from a strictly validated version 6 preserves clock, counters, results and filing order. Existing taken certificates become named, preserving the identity already printed on them under the old rules; unavailable certificates remain unnamed. Existing notes gain `additionalWritten: false` without inventing observations or filling previously missing results. Each legacy clipped paper becomes a singleton clip group. Versions 1–5 pass through the same migration after their original validators. Exports now write version 8. The minimum clock bounds remain compatible with old named certificates and do not add fictitious writing time during migration.
+Version 7 adds `visit.certificateNamed`, `note.additionalWritten`, and top-level `paperClips`, and removes the individual `paper.clipped` flag. Migration from a strictly validated version 6 preserves clock, counters, results and filing order. Existing taken certificates become named, preserving the identity already printed on them under the old rules; unavailable certificates remain unnamed. Existing notes gain `additionalWritten: false` without inventing observations or filling previously missing results. Each legacy clipped paper becomes a singleton clip group. Versions 1–5 pass through the same migration after their original validators. Exports now write version 10. The minimum clock bounds remain compatible with old named certificates and do not add fictitious writing time during migration.
 
 Version 8 adds top-level `drawerItems`, with exactly `manual` (a boolean) and `clips` (an integer from 0 to 4096). This inventory represents the rulebook and loose paperclips kept separately from the documents. Migration from a strictly validated version 7 initializes `{ "manual": false, "clips": 0 }`; papers, their filing order, bundles, visits and clock values are preserved. Versions 1–6 retain their original validation and migrate through the same empty inventory. Introduction saves require an empty inventory. Storing or retrieving one object costs one handling minute, capped at closing; a duplicate stored rulebook, an empty retrieval or a clip beyond the limit leaves state and time unchanged. Inventory remains across shifts. Loose clips currently on the desktop and all object coordinates remain temporary; only clips actually stored in the drawer are persisted.
-
-## Paperwork
-
-`papers` is a bounded array of up to 4096 independent documents. This is an import and storage guardrail; supplies have no per-shift stock count. Every paper has an integer `id` from 1 to 1,000,000,000, an originating `day` no later than the current day, a `patientId`, and `location` (`desk` or `drawer`). IDs are unique and smaller than `nextPaperId`, an integer from 1 to 1,000,000,001. IDs are allocated monotonically and never reused after disposal. Taking a new paper stops at these limits rather than generating a save that cannot be imported.
-
-The three exact paper shapes are:
-
-```json
-[
-  { "id": 1, "kind": "referral", "day": 1, "patientId": 0, "location": "desk" },
-  { "id": 2, "kind": "note", "day": 1, "patientId": 0, "location": "drawer", "additionalWritten": true,
-    "results": { "vision": "pass", "pressure": "pass", "weight": 62, "height": 164 } },
-  { "id": 3, "kind": "letter", "day": 1, "patientId": 0, "location": "desk",
-    "sender": "employer", "opened": true }
-]
-```
-
-Taking the patient's referral creates a `referral` paper once. The `visit.document` field describes referral intake only; the referral is independent afterwards. Certificate availability is stored separately in `visit.certificateTaken`. Fetching a certificate does not create another `Paper` or allocate a paper ID; the certificate belongs to the active visit until handed back. The referral's employer, date of birth, sex, examination type, job and managerial details come from the deterministic patient fixtures and localized content. The certificate contains the fitness decision rather than examination results.
-
-Taking a clean sheet creates a `note` with `patientId: null`, `additionalWritten: false`, and all four results null, then immediately records any examinations already completed for the active patient. Examination transitions update results automatically, without using the pen or spending a separate writing minute. Blank sheets on the desk bind to the active patient as findings arrive; existing notes for that same patient and day update even in the drawer. Blank sheets stored in the drawer and historical notes remain unchanged. Retrieving a blank sheet to the desk also records findings already available for the active patient. The pen writes deterministic supplementary patient information and sets `additionalWritten: true`; it is available before any test and does not repeat or charge time once written. Vision and pressure snapshots are `pass`, `refer`, or null; weight and height are integer kilograms and centimeters from that patient's fixture, or both null. A nonblank note binds to its patient and day and cannot be overwritten for another case. The values must match the fixture, and results recorded for the active visit cannot claim an examination that has not happened. A bound note must contain at least one finding or a supplementary annotation. A blank note cannot claim an annotation. Blank notes can be kept for a later day; their day updates when first bound to a case.
-
-Returning a decision that contradicts the scripted patient's fitness creates a sealed `letter`: `zus` after accepting an unfit patient, `employer` after rejecting a fit patient. A correct decision with incomplete examinations earns no bonus but does not create a false complaint. Opening the envelope persists `opened: true`. The letter retains the original patient and day, so later visits do not change its contents. Referrals and letters are unique by kind, patient and day.
-
-`paperClips` is an array of nonempty groups, for example `[[1, 2, "certificate"], [3]]`. Numeric members refer to existing paper IDs; `"certificate"` refers to the active taken certificate. Each document occurs in at most one group, including within a group. All members share one location; the active certificate is always on the desk. A singleton group represents a clip attached to one sheet. Dropping a sheet or bundle onto another sheet’s clip merges the whole groups. Clicking any group member’s clip removes the group, leaving independent sheets. These changes are pure game actions; temporary item coordinates remain outside saves.
-
-Storing or retrieving changes the location of the whole clipped group. Storing moves its papers to the end of the array, preserving their internal filing order for the full-screen drawer. The player chooses the sheet or bundle to retrieve; retrieving preserves the remaining filing order. Disposal removes the whole held group and its clip record without changing completed examinations. A group containing the active certificate cannot be stored or discarded: the player must unclip it first. Handing the certificate to the patient removes only its membership, retaining any remaining clipped papers. Paperwork remains across shifts. Each completed paper action, taking a blank sheet, or using the unavailable telephone costs one minute; rejected actions do not consume time. Opening an already open envelope or reattaching a clip is a no-op. The empty introduction has no papers or clip groups and `nextPaperId: 1`. Import checks exact nested keys, types, fixture results, unique identities, sender consistency, and current-day progress before copying any data into live state. Temporary positions, loose clips outside the drawer, the open drawer and browsing position, and held objects remain outside the save. The saved `drawerItems` inventory is independent of this presentation state.
-
-When gameplay expands the state schema, introduce a new envelope version and an explicit, tested migration from supported older versions. Keep old-version validators intact; do not silently reinterpret old fields. Unknown versions must continue to fail without changing live state.
-
-The staff-room menu pauses the current visit and its presentation in memory without changing save data. Confirming Start over replaces it with the initial first-day introduction, clears temporary presentation state and invalidates any older pending file read. Locale and audio preferences remain unchanged; existing exported files are untouched.

@@ -1,8 +1,8 @@
+import { createInitialState } from './fixtures/game';
 import { gunzipSync, gzipSync, strToU8 } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { applyAction, type GameState } from '../src/core/game';
 import {
-  createInitialState,
   decodeSave,
   encodeSave,
   importSave,
@@ -12,9 +12,16 @@ import {
 } from '../src/core/save';
 
 function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
+  // Current fixture builders contain v9 fields; explicit old-version fixtures
+  // retain exactly their historical schema before testing the old validators.
+  if (typeof overrides.version === 'number' && overrides.version <= 8 && overrides.state && typeof overrides.state === 'object' && !Array.isArray(overrides.state)) {
+    const old = { ...overrides.state } as Record<string, unknown>;
+    for (const key of ['rngState', 'roster', 'insuranceRate', 'daily', 'settlement', 'previousMonthBalance']) delete old[key];
+    overrides = { ...overrides, state: old };
+  }
   return gzipSync(strToU8(JSON.stringify({
     game: 'next-please',
-    version: 8,
+    version: 10,
     savedAt: '2026-10-23T12:00:00.000Z',
     state: createInitialState(),
     ...overrides,
@@ -44,7 +51,7 @@ describe('portable saves', () => {
   });
 
   it('rejects unsupported versions without interpreting their state', () => {
-    expectCode(() => decodeSave(envelope({ version: 9, state: {} })), 'unsupported-version');
+    expectCode(() => decodeSave(envelope({ version: 11, state: {} })), 'unsupported-version');
   });
 
   it('rejects a save for another game', () => {
@@ -130,7 +137,7 @@ describe('portable saves', () => {
   it('accepts gzip metadata produced by standard encoders', () => {
     const bytes = gzipSync(strToU8(JSON.stringify({
       game: 'next-please',
-      version: 8,
+      version: 10,
       savedAt: '2026-10-23T12:00:00.000Z',
       state: createInitialState(),
     })), { filename: 'save.json' });
@@ -172,7 +179,7 @@ describe('portable saves', () => {
     expect(decoded).toEqual(legacy);
     expect(decoded.visit).not.toBe(state.visit);
     expect(applyAction(applyAction(decoded, 'run-measurements').state, 'return-document').state).toMatchObject({
-      patientsProcessed: 1, shiftCompleted: 1, money: 10, clockMinutes: 573,
+      patientsProcessed: 1, shiftCompleted: 1, money: 0, clockMinutes: 573,
     });
   });
 
@@ -187,11 +194,11 @@ describe('portable saves', () => {
     expectCode(() => decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), ...patch }) })), 'invalid-state');
   });
 
-  it('exports version 8 after migrating an older save', () => {
+  it('exports version 10 after migrating an older save', () => {
     const migrated = decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), introStep: 5 }) }));
     const bytes = encodeSave(migrated);
     const exported = JSON.parse(new TextDecoder().decode(gunzipSync(bytes)));
-    expect(exported).toMatchObject({ version: 8, state: { phase: 'cabinet', introStep: 3 } });
+    expect(exported).toMatchObject({ version: 10, state: { phase: 'cabinet', introStep: 3 } });
     expect(decodeSave(bytes)).toEqual(migrated);
   });
 
@@ -218,7 +225,7 @@ describe('portable saves', () => {
     expect(decoded).toEqual(state);
     expect(decoded.visit).toMatchObject({ decision: 'fit' });
     expect(decoded.visit).not.toBe(state.visit);
-    expect(applyAction(decoded, 'return-document').feedback).toBe('patient-error');
+    expect(applyAction(decoded, 'return-document').feedback).toBe('patient-completed');
     const examined = applyAction(applyAction(applyAction(decoded, 'run-vision').state, 'run-pressure').state, 'run-measurements').state;
     expect(decodeSave(encodeSave(examined))).toEqual(examined);
     expect(applyAction(examined, 'return-document').feedback).toBe('patient-cleared');
@@ -273,12 +280,12 @@ describe('portable saves', () => {
       }
     }
     expect(state.clockMinutes).toBe(522);
-    const nextDay = applyAction(state, 'next-day').state;
+    const nextDay = applyAction(applyAction({ ...state, clockMinutes: 840 }, 'end-day').state, 'next-day').state;
     expect(decodeSave(encodeSave(nextDay)).clockMinutes).toBe(477);
     expectCode(() => decodeSave(envelope({ state: { ...state, clockMinutes: 482 } })), 'invalid-state');
   });
 
-  it('preserves v3 clocks after strict legacy validation and exports subsequent short actions as v8', () => {
+  it('preserves v3 clocks after strict legacy validation and exports subsequent short actions as v9', () => {
     const legacy = {
       ...createInitialState(), phase: 'cabinet', introStep: 3, clockMinutes: 500,
       visit: { patientId: 0, document: 'desk', visionTested: false, pressureTested: false, decision: 'fit' },
@@ -417,7 +424,7 @@ describe('version 6 certificate availability', () => {
     expect(migrated).toEqual({ ...stamped, clockMinutes: 482, visit: { ...stamped.visit, certificateNamed: true } });
     expect(migrated.visit).toMatchObject({ certificateTaken: true, decision: 'fit' });
     expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(8);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(10);
     const intake = act(createInitialState(), 'skip-intro', 'call-patient', 'take-document');
     expect(decodeSave(envelope({ version: 5, state: asV5(intake) }))).toEqual({ ...intake, visit: { ...intake.visit, certificateTaken: true, certificateNamed: true } });
     const waiting = act(createInitialState(), 'skip-intro', 'call-patient');
@@ -534,7 +541,7 @@ describe('version 8 drawer inventory', () => {
     expect(decoded.drawerItems).not.toBe(state.drawerItems);
     decoded.drawerItems.clips = 0;
     expect(state.drawerItems.clips).toBe(2);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(state)))).version).toBe(8);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(state)))).version).toBe(10);
   });
 
   it('migrates strictly validated v7 papers in filing order without inventing stored objects', () => {
@@ -558,5 +565,114 @@ describe('version 8 drawer inventory', () => {
     for (const drawerItems of [{ manual: true, clips: 0 }, { manual: false, clips: 1 }]) {
       expectCode(() => decodeSave(envelope({ state: { ...createInitialState(), drawerItems } })), 'invalid-state');
     }
+  });
+});
+
+describe('version 9 economic state', () => {
+  const closed = () => applyAction({ ...applyAction(createInitialState(75), 'skip-intro').state, clockMinutes: 840 }, 'end-day').state;
+  it('validates new top-level fields, queues and exact consequence counters', () => {
+    const state = applyAction(createInitialState(), 'skip-intro').state;
+    for (const patch of [
+      { rngState: -1 }, { rngState: 0x1_0000_0000 }, { rngState: .5 },
+      { roster: [] }, { roster: [...state.roster.slice(1), state.roster[1]] }, { roster: state.roster.map((id, i) => i === 4 ? 999 : id) },
+      { insuranceRate: 299 }, { insuranceRate: 325 }, { previousMonthBalance: null }, { previousMonthBalance: 1.5 }, { previousMonthBalance: 1_000_000_001 },
+      { daily: { zusCases: 0, refusals: 0, fines: 100, insuranceIncrease: 0 } },
+      { daily: { zusCases: 0, refusals: 0, fines: 0, insuranceIncrease: 50 } },
+      { daily: { zusCases: 1, refusals: 0, fines: 100, insuranceIncrease: 0 } },
+      { daily: { ...state.daily, unknown: true } },
+      { settlement: {} }, { phase: 'home' },
+    ]) expectCode(() => decodeSave(envelope({ state: { ...state, ...patch } })), 'invalid-state');
+    const keys = ['rngState', 'roster', 'insuranceRate', 'daily', 'settlement', 'previousMonthBalance'];
+    for (const key of keys) {
+      const partial = { ...state } as Record<string, unknown>;
+      delete partial[key];
+      expectCode(() => decodeSave(envelope({ state: partial })), 'invalid-state');
+    }
+  });
+  it('rejects inconsistent ledgers and future payouts instead of granting money', () => {
+    const state = closed();
+    for (const patch of [
+      { day: 2 }, { patients: 1 }, { basePay: 999 }, { patientBonus: 50 }, { income: 1001 },
+      { livingCost: 399 }, { livingCost: 801 }, { insuranceCost: 350 }, { fines: 100 },
+      { expenses: 0 }, { openingBalance: 100 }, { closingBalance: state.money + 1 },
+      { event: { kind: 'bribe', cost: 500 } }, { event: { kind: 'medicine', cost: -1 } },
+      { event: { kind: 'medicine', cost: 500 } }, { unknown: 0 },
+    ]) expectCode(() => decodeSave(envelope({ state: { ...state, settlement: { ...state.settlement, ...patch } } })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ state: { ...state, clockMinutes: 839 } })), 'invalid-state');
+    expectCode(() => decodeSave(envelope({ state: { ...state, money: state.money + 1 } })), 'invalid-state');
+    expect(decodeSave(encodeSave(state))).toEqual(state);
+  });
+  it('migrates v8 strictly and preserves old paper/case identities without inventing consequences', () => {
+    let state = createInitialState();
+    for (const action of ['skip-intro', 'call-patient', 'take-document', 'run-vision', 'take-paper'] as const) state = applyAction(state, action).state;
+    const bytes = envelope({ version: 8, state });
+    const migrated = decodeSave(bytes);
+    expect(migrated).toEqual(state);
+    expect(migrated.daily).toEqual({ zusCases: 0, refusals: 0, fines: 0, insuranceIncrease: 0 });
+    expect(migrated.settlement).toBeNull();
+    expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
+    const raw = JSON.parse(new TextDecoder().decode(gunzipSync(bytes)));
+    raw.state.rngState = 1;
+    expectCode(() => decodeSave(gzipSync(strToU8(JSON.stringify(raw)))), 'invalid-state');
+  });
+  it('returns independent nested economic state and preserves future random outcomes on roundtrip', () => {
+    const state = closed(), decoded = decodeSave(encodeSave(state));
+    expect(decoded.roster).not.toBe(state.roster);
+    expect(decoded.daily).not.toBe(state.daily);
+    expect(decoded.settlement).not.toBe(state.settlement);
+    expect(applyAction(decoded, 'next-day').state).toEqual(applyAction(state, 'next-day').state);
+    decoded.roster.reverse(); decoded.daily.fines = 100;
+    expect(state.daily.fines).toBe(0);
+    expect(decoded.roster).not.toEqual(state.roster);
+  });
+});
+
+
+describe('version 10 compatibility and rest-day invariants', () => {
+  const asV9 = (state: GameState): Record<string, unknown> => {
+    const previous = { ...state } as Record<string, unknown>;
+    delete previous.previousMonthBalance;
+    return previous;
+  };
+
+  it('preserves the exact v9 queue, RNG, papers and settled budget without inventing monthly history', () => {
+    let previous = applyAction(createInitialState(), 'skip-intro').state;
+    for (const action of ['call-patient', 'take-document', 'take-paper', 'run-vision', 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document'] as const) previous = applyAction(previous, action).state;
+    previous = applyAction({ ...previous, clockMinutes: 840 }, 'end-day').state;
+    const loaded = decodeSave(envelope({ version: 9, state: asV9(previous) }));
+    expect(loaded).toEqual(previous);
+    expect(loaded.roster).toHaveLength(28);
+    expect(loaded.previousMonthBalance).toBe(0);
+    expect(decodeSave(encodeSave(loaded))).toEqual(loaded);
+    expect(applyAction(loaded, 'next-day').state.roster).toHaveLength(53);
+  });
+
+  it('keeps v9 bounds and exact keys even after the catalog grows', () => {
+    const previous = asV9(createInitialState());
+    for (const patch of [
+      { previousMonthBalance: 0 },
+      { roster: createInitialState(15).roster },
+      { roster: (previous.roster as number[]).map((id, index) => index === 27 ? 103 : id) },
+    ]) expectCode(() => decodeSave(envelope({ version: 9, state: { ...previous, ...patch } })), 'invalid-state');
+  });
+
+  it('accepts a paid historical weekend shift but never treats it as a new rest-day payout', () => {
+    const saturday = applyAction({ ...applyAction(createInitialState(), 'skip-intro').state, day: 3, clockMinutes: 840 }, 'end-day').state;
+    const loaded = decodeSave(envelope({ version: 9, state: asV9(saturday) }));
+    expect(loaded.settlement?.basePay).toBe(1000);
+    expect(decodeSave(encodeSave(loaded))).toEqual(loaded);
+    expect(applyAction(loaded, 'end-day').state).toBe(loaded);
+    expect(applyAction(loaded, 'next-day').state.settlement?.basePay).toBe(0);
+  });
+
+  it('rejects rest days outside weekends, appointments on rest days and fabricated salaries', () => {
+    const friday = applyAction({ ...applyAction(createInitialState(41), 'skip-intro').state, day: 2, clockMinutes: 840 }, 'end-day').state;
+    const saturday = applyAction(friday, 'next-day').state;
+    for (const patch of [
+      { day: 5, settlement: { ...saturday.settlement, day: 5 } },
+      { phase: 'cabinet', settlement: null },
+      { shiftCompleted: 1, patientsProcessed: 1 },
+      { settlement: { ...saturday.settlement, basePay: 1000, income: 1000, closingBalance: saturday.money + 1000 }, money: saturday.money + 1000 },
+    ]) expectCode(() => decodeSave(envelope({ state: { ...saturday, ...patch } })), 'invalid-state');
   });
 });

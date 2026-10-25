@@ -1,5 +1,6 @@
+import { createInitialState } from './fixtures/game';
 import { describe, expect, it } from 'vitest';
-import { applyAction, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_LENGTH, clippedDocuments, isDocumentClipped, type GameAction, type GameState } from '../src/core/game';
+import { applyAction, GAME_LIMITS, INTRO_SLIDES, PATIENTS, clippedDocuments, isDocumentClipped, type GameAction, type GameState } from '../src/core/game';
 
 function act(state: GameState, ...actions: GameAction[]): GameState {
   return actions.reduce((current, action) => applyAction(current, action).state, state);
@@ -41,12 +42,12 @@ describe('separate drawer objects', () => {
 
   it('retains stored objects across visits and days, including actions after closing', () => {
     let state = act(cabinet(), { type: 'store-drawer-item', item: 'manual' }, { type: 'store-drawer-item', item: 'clip' });
-    for (let patient = 0; patient < SHIFT_LENGTH; patient++) {
+    for (let patient = 0; patient < state.roster.length; patient++) {
       state = act(state, 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document');
     }
     const closed = { ...state, clockMinutes: 840 };
     expect(applyAction(closed, { type: 'retrieve-drawer-item', item: 'clip' }).state).toMatchObject({ clockMinutes: 840, drawerItems: { manual: true, clips: 0 } });
-    expect(act(state, 'next-day').drawerItems).toEqual({ manual: true, clips: 1 });
+    expect(act(closed, 'end-day', 'next-day').drawerItems).toEqual({ manual: true, clips: 1 });
   });
 });
 
@@ -94,11 +95,11 @@ describe('cabinet work', () => {
 
   it.each([
     [], ['run-vision'], ['run-pressure'],
-  ] as const)('allows a stamped document with incomplete examinations %j to be returned as a mistake', (...tests) => {
+  ] as const)('allows a stamped document with incomplete examinations %j to be returned with neutral completion', (...tests) => {
     const state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'write-certificate', ...tests, 'stamp-fit');
     expect(state.visit?.decision).toBe('fit');
     const returned = applyAction(state, 'return-document');
-    expect(returned.feedback).toBe('patient-error');
+    expect(returned.feedback).toBe('patient-completed');
     expect(returned.state).toMatchObject({ visit: null, money: 0, patientsProcessed: 1, shiftCompleted: 1, clockMinutes: state.clockMinutes + 1 });
   });
 
@@ -114,7 +115,7 @@ describe('cabinet work', () => {
     expect(state.clockMinutes).toBe(497);
     state = act(state, 'write-certificate');
     expect(applyAction(state, 'return-document')).toMatchObject({
-      feedback: 'patient-cleared', state: { money: 10, patientsProcessed: 1, clockMinutes: 499 },
+      feedback: 'patient-cleared', state: { money: 0, patientsProcessed: 1, clockMinutes: 499 },
     });
   });
 
@@ -123,7 +124,7 @@ describe('cabinet work', () => {
     expect(state.visit?.decision).toBe('fit');
     const returned = applyAction(state, 'return-document');
     expect(returned.feedback).toBe('patient-cleared');
-    expect(returned.state).toMatchObject({ visit: null, money: 10, patientsProcessed: 1, shiftCompleted: 1 });
+    expect(returned.state).toMatchObject({ visit: null, money: 0, patientsProcessed: 1, shiftCompleted: 1 });
     expect(applyAction(returned.state, 'return-document').state).toBe(returned.state);
   });
 
@@ -133,10 +134,11 @@ describe('cabinet work', () => {
     expect(result.state).toMatchObject({ visit: null, money: 0, patientsProcessed: 1, shiftCompleted: 1 });
   });
 
-  it('completes a deterministic shift and preserves totals and decorations into the next day', () => {
+  it('settles a completed day and preserves totals and decorations into the next day', () => {
     let state = act(cabinet(), 'toggle-lamp', 'change-decoration');
     expect(applyAction(state, 'next-day')).toEqual({ state, feedback: 'shift-unfinished' });
-    for (const patient of PATIENTS) {
+    while (state.clockMinutes < 840 && state.shiftCompleted < state.roster.length) {
+      const patient = PATIENTS[state.roster[state.shiftCompleted]!]!;
       state = act(state, 'call-patient', 'take-document', 'take-certificate');
       expect(state.visit?.patientId).toBe(patient.id);
       const vision = applyAction(state, 'run-vision');
@@ -145,12 +147,14 @@ describe('cabinet work', () => {
       expect(pressure.feedback).toBe(`pressure-${patient.pressure}`);
       state = act(pressure.state, 'run-measurements', 'write-certificate', patient.expectedDecision === 'fit' ? 'stamp-fit' : 'stamp-unfit', 'return-document');
     }
-    expect(state).toMatchObject({ day: 1, shiftCompleted: SHIFT_LENGTH, money: 30, patientsProcessed: 3, clockMinutes: 524, visit: null });
+    expect(state).toMatchObject({ day: 1, money: 0, clockMinutes: 840, visit: null });
     expect(applyAction(state, 'call-patient')).toEqual({ state, feedback: 'shift-finished' });
+    state = act(state, 'end-day');
+    expect(state.settlement).toMatchObject({ income: 1000 + state.shiftCompleted * 50, insuranceCost: 300, fines: 0 });
     const next = applyAction(state, 'next-day');
     expect(next.feedback).toBe('next-day');
-    expect(next.state).toMatchObject({ day: 2, shiftCompleted: 0, money: 30, patientsProcessed: 3, clockMinutes: 477, lampOn: false, decoration: 'certificate' });
-    expect(act(next.state, 'call-patient').visit?.patientId).toBe(0);
+    expect(next.state).toMatchObject({ day: 2, shiftCompleted: 0, money: state.money, patientsProcessed: state.patientsProcessed, clockMinutes: 477, lampOn: false, decoration: 'certificate' });
+    expect(act(next.state, 'call-patient').visit?.patientId).toBe(next.state.roster[0]);
   });
 
   it('does not mutate either the original state or its visit', () => {
@@ -209,8 +213,10 @@ describe('cabinet work', () => {
     expect(applyAction(exhausted, 'call-patient')).toEqual({ state: exhausted, feedback: 'limit-reached' });
     const stamped = act(readyToStamp(), 'stamp-fit');
     const rich = { ...stamped, money: GAME_LIMITS.money - 5 };
-    expect(applyAction(rich, 'return-document')).toEqual({ state: rich, feedback: 'limit-reached' });
-    const finalDay = { ...cabinet(), day: GAME_LIMITS.day, patientsProcessed: 3, shiftCompleted: SHIFT_LENGTH, clockMinutes: 840 };
+    expect(applyAction(rich, 'return-document').state.money).toBe(rich.money);
+    const overflowing = { ...cabinet(), money: GAME_LIMITS.money, clockMinutes: 840, rngState: 7 };
+    expect(applyAction(overflowing, 'end-day')).toEqual({ state: overflowing, feedback: 'limit-reached' });
+    const finalDay = act({ ...cabinet(), day: GAME_LIMITS.day, clockMinutes: 840 }, 'end-day');
     expect(applyAction(finalDay, 'next-day')).toEqual({ state: finalDay, feedback: 'limit-reached' });
   });
 });
@@ -227,7 +233,7 @@ describe('paperwork and the new instruments', () => {
 
   it('requires measurements for a complete examination and returns reproducible weight and height', () => {
     const state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'run-vision', 'run-pressure', 'stamp-fit');
-    expect(applyAction(state, 'return-document').feedback).toBe('patient-error');
+    expect(applyAction(state, 'return-document').feedback).toBe('patient-completed');
     const measured = applyAction(state, 'run-measurements');
     expect(measured.feedback).toBe('measurements-taken');
     expect(measured.state.clockMinutes).toBe(state.clockMinutes + 2);
@@ -322,9 +328,9 @@ describe('paperwork and the new instruments', () => {
 
   it('retains stored documentation across shifts and only records a telephone interaction', () => {
     let state = act(cabinet(), 'take-paper', { type: 'store-paper', paperId: 1 });
-    for (const patient of PATIENTS) state = act(state, 'call-patient', 'take-document', 'take-certificate', 'write-certificate', patient.expectedDecision === 'fit' ? 'stamp-fit' : 'stamp-unfit', 'return-document');
+    for (const patient of state.roster.map(id => PATIENTS[id]!)) state = act(state, 'call-patient', 'take-document', 'take-certificate', 'write-certificate', patient.expectedDecision === 'fit' ? 'stamp-fit' : 'stamp-unfit', 'return-document');
     const papers = state.papers;
-    state = act(state, 'next-day');
+    state = act(state, 'end-day', 'next-day');
     expect(state.papers).toBe(papers);
     const called = applyAction(state, 'use-phone');
     expect(called.feedback).toBe('phone-unavailable');
