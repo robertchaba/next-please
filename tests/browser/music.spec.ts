@@ -27,7 +27,7 @@ test('music decodes, plays continuously across screens, repeats, and respects pe
   page.on('pageerror', error => errors.push(error.message));
   page.on('request', request => { if (request.url().endsWith('.mp3')) requests.push(request.url()); });
   await page.goto('/');
-  await page.getByRole('button', { name: 'AUTORZY', exact: true }).click();
+  await page.getByRole('button', { name: 'O AUTORZE', exact: true }).click();
   await page.keyboard.press('Escape');
   expect(requests).toEqual([]);
   await page.getByRole('button', { name: 'Włącz dźwięk' }).click();
@@ -38,7 +38,7 @@ test('music decodes, plays continuously across screens, repeats, and respects pe
   await expect(page.getByRole('heading', { name: 'INSTRUKTAŻ STANOWISKOWY' })).toBeAttached();
   expect((await playing(page))[0].seek).toBeGreaterThan(position);
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'AUTORZY', exact: true }).click();
+  await page.getByRole('button', { name: 'O AUTORZE', exact: true }).click();
   expect((await playing(page))[0].seek).toBeGreaterThan(position);
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Wycisz dźwięk' }).click();

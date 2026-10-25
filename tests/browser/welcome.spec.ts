@@ -36,6 +36,10 @@ test('Polish default, English persistence, credits and keyboard controls', async
   await expect(page.getByRole('button', { name: 'ROZPOCZNIJ DYŻUR' })).toBeVisible();
   await page.waitForFunction(() => performance.getEntriesByType('resource').some(entry => entry.name.endsWith('title-clinic.png')));
   await page.screenshot({ path: testInfo.outputPath('welcome-pl.png') });
+  await page.getByRole('button', { name: 'O AUTORZE', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('PRZY WSPARCIU NARZĘDZI AI: CODEX, MODELE OPENAI, SUNO');
+  await page.screenshot({ path: testInfo.outputPath('credits-pl.png') });
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'English', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await page.reload();
@@ -44,8 +48,7 @@ test('Polish default, English persistence, credits and keyboard controls', async
   await page.getByRole('button', { name: 'CREDITS', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Robert Chaba');
   await expect(page.getByRole('dialog')).not.toContainText('Papers, Please');
-  await expect(page.getByRole('dialog')).toContainText('PROGRAMMING: Codex and OpenAI Models');
-  await expect(page.getByRole('dialog')).toContainText('MUSIC: Suno');
+  await expect(page.getByRole('dialog')).toContainText('WITH SUPPORT FROM AI TOOLS: CODEX, OPENAI MODELS, SUNO');
   await expect(page.getByRole('dialog')).not.toContainText('Officious March');
   await expect(page.getByRole('dialog')).not.toContainText('TITLE ART');
   await expect(page.getByRole('link', { name: 'github.com/robertchaba' })).toHaveAttribute('href', 'https://github.com/robertchaba');
@@ -104,7 +107,7 @@ test('native resolution, integer scaling, fullscreen and small-screen fit', asyn
   expect(await page.evaluate(() => document.fullscreenElement!.contains(document.querySelector('#utility-controls')))).toBe(true);
   await page.getByRole('button', { name: 'Opuść pełny ekran' }).click();
   await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(false);
-  await page.getByRole('button', { name: 'AUTORZY', exact: true }).click();
+  await page.getByRole('button', { name: 'O AUTORZE', exact: true }).click();
   await page.getByRole('link').focus();
   await page.keyboard.press('f');
   await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(true);
@@ -120,7 +123,7 @@ test('native resolution, integer scaling, fullscreen and small-screen fit', asyn
   expect(bounds!.height / bounds!.width).toBeCloseTo(320 / 570, 3);
   await expectExternalUtilities(page);
   await page.screenshot({ path: testInfo.outputPath('welcome-mobile.png') });
-  await page.getByRole('button', { name: 'AUTORZY', exact: true }).click();
+  await page.getByRole('button', { name: 'O AUTORZE', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
 });
 

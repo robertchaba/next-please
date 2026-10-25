@@ -528,8 +528,8 @@ function getButtons(): Button[] {
   if (screen === 'drawer') return drawerButtons(gameState, locale, drawerPage, handleDrawerAction);
   if (screen === 'intro' || screen === 'cabinet') return shiftButtons(gameState, locale, selectedStamp, handleShiftAction, deskView());
   if (screen === 'credits') return [
-    { id: 'github', label: 'github.com/robertchaba', x: 104, y: 93, w: 170, h: 17, href: 'https://github.com/robertchaba', kind: 'text' },
-    { id: 'back', label: t().back, x: 227, y: 277, w: 116, h: 24, action: closeScreen },
+    { id: 'github', label: t().creatorGithub, x: 104, y: 137, w: 170, h: 17, href: 'https://github.com/robertchaba', kind: 'text' },
+    { id: 'back', label: t().back, x: 227, y: 216, w: 116, h: 24, action: closeScreen },
   ];
   if (screen === 'saves') return [
     { id: 'export', label: t().export, x: 32, y: 195, w: 208, h: 25, action: () => {
@@ -662,7 +662,7 @@ function syncControls(focusId?: string): void {
   const description = document.createElement('p');
   description.className = 'sr-only'; description.id = 'screen-description';
   description.textContent = screen === 'credits'
-    ? `${t().creator}: Robert Chaba. ${t().creatorPortrait} ${t().programming}: ${t().programmingName}. ${t().audio}: ${t().musicSource}. ${t().creditsFooter}`
+    ? `${t().creatorName}. ${t().creatorPortrait} ${t().aiSupport}. ${t().creditsFooter}`
     : screen === 'home' ? `${homePage(gameState, locale, homePageIndex).description} ${homePage(gameState, locale, homePageIndex).text}`
     : screen === 'drawer' ? drawerDescription(gameState, locale, drawerPage)
     : screen === 'intro' ? t().intro[gameState.introStep].body
@@ -848,15 +848,11 @@ function render(): void {
   text(t().build, 550, 300, '#6f8069', 1, 'right');
 
   if (screen === 'credits') {
-    paper(78, 15, 414, 298, t().creditsTitle, 'NP / 002');
-    drawCreatorPortrait(ctx, 350, 13);
-    text(t().creator, 104, 65, '#6a705d');
-    text('ROBERT CHABA', 104, 78, colors.ink);
-    text(t().programming, 104, 136, '#6a705d');
-    text(t().programmingName, 104, 151, colors.ink);
-    text(t().audio, 104, 197, '#6a705d');
-    text(t().musicSource, 104, 212, colors.ink);
-    text(t().creditsFooter, 285, 259, '#6a705d', 1, 'center');
+    paper(78, 72, 414, 176, t().creditsTitle, 'NP / 002');
+    drawCreatorPortrait(ctx, 358, 70);
+    text(t().creatorName, 104, 126, colors.ink);
+    text(t().aiSupport, 104, 164, '#6a705d');
+    text(t().creditsFooter, 104, 200, '#6a705d');
   }
   buttons.forEach(drawButton);
   drawToast();
