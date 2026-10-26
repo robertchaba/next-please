@@ -25,13 +25,13 @@ async function exportState(page: Page, info: TestInfo): Promise<{ state: GameSta
   const buffer = await readFile(file);
   return { state: decodeSave(buffer), buffer };
 }
-function homeState(day = 1, money = 0, seed = 17): GameState {
+function homeState(day = 1, money = 200, seed = 17): GameState {
   const cabinet = applyAction(createInitialState(seed), 'skip-intro').state;
   return applyAction({ ...cabinet, day, money, clockMinutes: 840 }, 'end-day').state;
 }
 function closingVisit(): GameState {
   let state = applyAction(createInitialState(17), 'skip-intro').state;
-  state = { ...state, clockMinutes: 839 };
+  state = { ...state, money: 200, clockMinutes: 839 };
   for (const action of ['call-patient', 'take-document', 'take-certificate'] as const) state = applyAction(state, action).state;
   return state;
 }
@@ -131,6 +131,7 @@ test('weekends stay at home, have optional resort events and lead into Monday', 
   await key(page, 'home-next');
   await expect(page.locator('#screen-heading')).toHaveText('BUDŻET WEEKENDU');
   await expect(page.locator('#screen-description')).toContainText('Dochód podst.: 0 zł');
+  await expect(page.locator('#screen-description')).toContainText('Ubezpieczenie: 0 zł');
   await page.screenshot({ path: info.outputPath('weekend-budget-pl.png') });
   await key(page, 'home-next');
   await expect(page.locator('#screen-description')).not.toContainText('06.11.1983');
@@ -141,6 +142,27 @@ test('weekends stay at home, have optional resort events and lead into Monday', 
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   const monday = await exportState(page, info);
   expect(monday.state).toMatchObject({ day: 5, clockMinutes: 477, settlement: null });
+});
+
+test('modest weekends show their own scene and joke in both languages and preserve the Sunday plan', async ({ page }, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const friday = homeState(2, 200), saturday = applyAction(friday, 'next-day').state;
+  await load(page, saturday);
+  await expect(page.locator('#screen-description')).toContainText('Wczasy pod gruszą.');
+  await expect(page.locator('#screen-description')).toContainText('pusty portfel');
+  await page.screenshot({ path: info.outputPath('weekend-modest-pl.png') });
+  await key(page, 'language-en');
+  await expect(page.locator('#screen-description')).toContainText('Enjoy the wall view.');
+  await page.screenshot({ path: info.outputPath('weekend-modest-en.png') });
+  await key(page, 'home-next');
+  await expect(page.locator('#screen-description')).toContainText('Insurance: 0 zł');
+  await key(page, 'home-next');
+  await expect(page.locator('#screen-description')).toContainText('Enjoy the wall view.');
+  const saved = await exportState(page, info);
+  const sunday = applyAction(saturday, 'next-day').state;
+  expect(saved.state).toEqual(sunday);
+  expect(saved.state.money).toBe(100);
+  expect(saved.state.settlement!.livingCost).toBe(saturday.settlement!.weekend!.sundayLivingCost);
 });
 
 test('EOD music is isolated from the workplace across mute, saves and departure', async ({ page }) => {

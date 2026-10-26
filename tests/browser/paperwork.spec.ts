@@ -56,9 +56,9 @@ test('referrals, measurements and written notes remain separate from the certifi
   for (const id of ['run-general', 'run-vision', 'run-pressure', 'run-measurements', 'take-paper']) await activate(page, id);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/62 kg/);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Wiek: 41/);
-  await expect(page.locator('#control-paper-2')).not.toHaveAccessibleName(/Pozycja siedząca/);
+  await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Pozycja siedząca/);
   await expect(page.locator('#control-paper-2')).not.toHaveAccessibleName(/BRAK|NORMA|KONTROLA/);
-  await page.locator('#control-paper-action-2').click();
+  await expect(page.locator('#control-paper-action-2')).toHaveCount(0);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Pozycja siedząca/);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/62 kg/);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/164 cm/);
@@ -259,7 +259,7 @@ test('keyboard joins a certificate bundle, drawer rejects it, and handoff detach
   expect(state.paperClips).toEqual([[1]]);
 });
 
-test('findings update notes without the pen and preserve supplementary writing independently', async ({ page }, testInfo) => {
+test('findings and history append automatically without a pen, including filed notes', async ({ page }, testInfo) => {
   await enter(page);
   for (const id of ['call-patient', 'take-document', 'take-paper']) await activate(page, id);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName('Dokumentacja lekarska. Irena Wolska   Wiek: 41.');
@@ -275,7 +275,7 @@ test('findings update notes without the pen and preserve supplementary writing i
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName('Medical notes. Irena Wolska   Age: 41.');
   await page.locator('#stage').screenshot({ path: testInfo.outputPath('identity-only-en.png') });
   await activate(page, 'paper-2');
-  await expect(page.locator('#announcement')).toContainText('Perform the general examination');
+  await expect(page.locator('#announcement')).toContainText('Medical notes. Irena Wolska');
   await expect(page.locator('#control-paper-action-2')).toHaveCount(0);
   await activate(page, 'language-pl');
   await activate(page, 'run-vision');
@@ -284,11 +284,11 @@ test('findings update notes without the pen and preserve supplementary writing i
   await expect(page.locator('#control-paper-2')).not.toHaveAccessibleName(/BRAK|NORMA|KONTROLA/);
   await expect(page.locator('#control-paper-action-2')).toHaveCount(0);
   await activate(page, 'paper-2');
-  await expect(page.locator('#announcement')).toContainText('Najpierw przeprowadź badanie ogólne');
+  await expect(page.locator('#announcement')).toContainText('Wzrok: OL: 0, OP: 0');
   await expect(page.locator('#control-paper-2')).not.toHaveAccessibleName(/Pozycja siedząca/);
   await activate(page, 'run-general');
-  await expect(page.locator('#control-paper-2')).not.toHaveAccessibleName(/Pozycja siedząca/);
-  await page.locator('#control-paper-action-2').click();
+  await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Pozycja siedząca/);
+  await expect(page.locator('#control-paper-action-2')).toHaveCount(0);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Pozycja siedząca/);
   await sendPaper(page, 2, 'drawer');
   await activate(page, 'run-pressure');
@@ -335,6 +335,11 @@ test('notes append completed tests in order and show very high numeric pressure 
   for (const id of ['run-measurements', 'run-general', 'run-pressure', 'run-vision']) await activate(page, id);
   const note = page.locator('#control-paper-2');
   await expect(note).toHaveAccessibleName(/Waga 55 kg.*Badanie ogólne: bez uwag.*Ciśnienie: 200\/120.*Wzrok: OL:/);
+  const beforeRepeat = await note.getAttribute('aria-label');
+  await activate(page, 'run-pressure');
+  await expect(note).toHaveAccessibleName(/Waga 55 kg.*Badanie ogólne: bez uwag.*Ciśnienie: 200\/120.*Wzrok: OL:.*Ciśnienie:/);
+  expect((await note.getAttribute('aria-label'))!.startsWith(beforeRepeat!.replace(/ Ciśnienie: bardzo wysokie\.$/, ''))).toBe(true);
+  await expect(page.locator('#control-paper-action-2')).toHaveCount(0);
   await expect(note).toHaveAccessibleName(/bardzo wysokie/);
   await expect(note).not.toHaveAccessibleName(/BRAK|NORMA|KONTROLA/);
   const redPixels = await page.locator('#game').evaluate((element) => {
@@ -349,5 +354,5 @@ test('notes append completed tests in order and show very high numeric pressure 
   await expect(note).toHaveAccessibleName(/Weight 55 kg.*General examination: no concerns.*Pressure: 200\/120.*Vision: LE:/);
   await page.locator('#stage').screenshot({ path: testInfo.outputPath('numeric-pressure-en.png') });
   const { state } = await exportState(page, testInfo, 'numeric-notes.npsave');
-  expect(state.papers.find(paper => paper.id === 2)).toMatchObject({ examinationOrder: ['measurements', 'general', 'pressure', 'vision'] });
+  expect(state.papers.find(paper => paper.id === 2)).toMatchObject({ examinationOrder: ['measurements', 'general', 'pressure', 'vision'], noteOrder: ['measurements', 'general', 'history', 'pressure', 'vision', 'pressure-repeat'] });
 });

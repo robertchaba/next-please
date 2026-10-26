@@ -64,7 +64,7 @@ describe('decision consequences', () => {
     expect(state.daily).toMatchObject({ zusCases: 2, fines: 500 });
     state = submit(4, 'fit', .9, state);
     expect(state.daily).toMatchObject({ zusCases: 3, fines: 900 });
-    const home = act({ ...state, clockMinutes: 840 }, 'end-day');
+    const home = act({ ...state, money: 2000, clockMinutes: 840 }, 'end-day');
     expect(home.settlement?.fines).toBe(900);
     expect(act(home, 'next-day').daily).toEqual(emptyConsequences());
   });
@@ -83,13 +83,13 @@ describe('decision consequences', () => {
     for (const rate of [400, 350, 300, 300]) {
       state = act({ ...state, clockMinutes: 840 }, 'end-day');
       expect(state.insuranceRate).toBe(rate);
-      expect(state.settlement?.insuranceCost).toBe(rate);
+      expect(state.settlement?.insuranceCost).toBe(state.roster.length ? rate : 0);
       state = act(state, 'next-day');
     }
   });
   it('records all patients for their 50 bonus, including incomplete and mistaken decisions', () => {
     const state = submit(0, 'unfit', .1);
-    const home = act({ ...state, clockMinutes: 840 }, 'end-day');
+    const home = act({ ...state, money: 2000, clockMinutes: 840 }, 'end-day');
     expect(home.settlement).toMatchObject({ patients: 1, basePay: 1000, patientBonus: 50, income: 1050 });
   });
 });
@@ -171,7 +171,7 @@ describe('closing and the household budget', () => {
 
 describe('multi-day case and save integration', () => {
   it('preserves new randomized patients, historical notes and daily accounts across repeated imports', () => {
-    let state = act(createInitialState(614), 'skip-intro');
+    let state = act({ ...createInitialState(614), money: 100000 }, 'skip-intro');
     const seen = new Set<number>();
     for (let day = 0; day < 3; day++) {
       while (state.phase === 'cabinet' && !canEndDay(state)) {
@@ -215,13 +215,13 @@ describe('rest days and monthly carryover', () => {
     const friday = act({ ...cabinet(), day: 2, clockMinutes: 840, money: 5000, insuranceRate: 500 }, 'take-paper', 'end-day');
     const saturday = act(friday, 'next-day');
     expect(saturday).toMatchObject({ day: 3, phase: 'home', roster: [], clockMinutes: 840, shiftCompleted: 0, insuranceRate: 400 });
-    expect(saturday.settlement).toMatchObject({ basePay: 0, patientBonus: 0, patients: 0, income: 0, openingBalance: friday.money });
+    expect(saturday.settlement).toMatchObject({ basePay: 0, patientBonus: 0, patients: 0, income: 0, insuranceCost: 0, openingBalance: friday.money });
     expect(saturday.papers).toEqual(friday.papers);
     expect(saturday.money).toBe(friday.money - saturday.settlement!.expenses);
     expect(act(saturday, 'call-patient', 'end-day')).toBe(saturday);
     const sunday = act(decodeSave(encodeSave(saturday)), 'next-day');
     expect(sunday).toMatchObject({ day: 4, phase: 'home', roster: [], insuranceRate: 350 });
-    expect(sunday.settlement).toMatchObject({ basePay: 0, patientBonus: 0, patients: 0, openingBalance: saturday.money });
+    expect(sunday.settlement).toMatchObject({ basePay: 0, patientBonus: 0, patients: 0, insuranceCost: 0, openingBalance: saturday.money });
     const monday = act(decodeSave(encodeSave(sunday)), 'next-day');
     expect(monday).toMatchObject({ day: 5, phase: 'cabinet', clockMinutes: 477, money: sunday.money, insuranceRate: 350, settlement: null });
     expect(monday.roster).toHaveLength(78);
@@ -244,12 +244,12 @@ describe('rest days and monthly carryover', () => {
     expect(kinds.has('seaside-trip')).toBe(true);
   });
 
-  it('snapshots the actual closing balance only when the month changes, including debt', () => {
-    const november = act({ ...cabinet(), day: 28, clockMinutes: 840, money: -2000, previousMonthBalance: 300 }, 'end-day');
+  it('snapshots the actual closing balance only when the month changes; historical debt stays in its own field', () => {
+    const november = act({ ...cabinet(), day: 28, clockMinutes: 840, money: 2000, previousMonthBalance: -300 }, 'end-day');
     const december = act(november, 'next-day');
     expect(december.day).toBe(29);
     expect(december.previousMonthBalance).toBe(november.money);
-    expect(december.previousMonthBalance).toBeLessThan(0);
+    expect(december.previousMonthBalance).toBeGreaterThanOrEqual(0);
     const secondDay = act({ ...december, clockMinutes: 840 }, 'end-day', 'next-day');
     expect(secondDay.previousMonthBalance).toBe(november.money);
     expect(decodeSave(encodeSave(secondDay))).toEqual(secondDay);

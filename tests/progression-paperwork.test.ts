@@ -29,7 +29,7 @@ describe('progressive paperwork presentation', () => {
       for (const bribe of [false, true]) {
         const patient = effectivePatient(original.id, bribe);
         const note: Extract<Paper, { kind: 'note' }> = { id: 1, day: 8, location: 'desk', kind: 'note', patientId: patient.id,
-          examinationOrder: ['general', 'vision', 'pressure', 'measurements'], bribe, calls: { specialist: true, employer: false }, additionalWritten: true,
+          examinationOrder: ['general', 'vision', 'pressure', 'measurements'], noteOrder: ['general', 'history', 'vision', 'pressure', 'pressure-repeat', 'measurements', 'call-specialist', 'call-employer'], bribe, calls: { specialist: true, employer: false }, additionalWritten: true,
           results: { general: patient.general, vision: patient.visionValues, pressure: patient.pressureValues,
             pressureReadings: [patient.pressureValues, patient.pressureValues], weight: patient.weight, height: patient.height } };
         const entries = noteEntries(note, locale), lines = entries.flatMap(entry => wrapDocumentLines([entry.text], 166));

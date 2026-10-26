@@ -216,7 +216,7 @@ describe('separate localized paperwork', () => {
     const note = state.papers.find(paper => paper.kind === 'note')!;
     if (note.kind !== 'note') throw new Error('Expected note');
     expect(noteEntries(note, 'pl').map(row => row.text)).toEqual([
-      'Waga 62 kg   Wzrost 164 cm', 'Badanie ogólne: bez uwag', 'Wzrok: OL: 0, OP: 0', 'Ciśnienie: 108/62',
+      'Waga 62 kg   Wzrost 164 cm', 'Badanie ogólne: bez uwag', ...translations.pl.patientNotes[0]!, 'Wzrok: OL: 0, OP: 0', 'Ciśnienie: 108/62',
     ]);
     expect(paperDescription(note, 'pl')).not.toContain(translations.pl.untested);
   });
@@ -250,7 +250,7 @@ describe('separate localized paperwork', () => {
         for (const state of [examined, repeated, imported]) {
           const note = state.papers.find(paper => paper.kind === 'note')!;
           if (note.kind !== 'note') throw new Error('Expected note');
-          expect(noteEntries(note, locale)).toEqual([{ text: `${t.generalResult}: ${finding}`, color: HANDWRITING_INK }]);
+          expect(noteEntries(note, locale)).toEqual([{ text: `${t.generalResult}: ${finding}`, color: HANDWRITING_INK }, ...t.patientNotes[patient.id]!.map(text => ({ text, color: HANDWRITING_INK }))]);
           expect(paperDescription({ ...note, location: 'drawer' }, locale)).toContain(finding);
         }
       }
@@ -262,7 +262,7 @@ describe('separate localized paperwork', () => {
       const note = { id: 1, day: 1, location: 'desk' as const, kind: 'note' as const, patientId: patient.id, calls: { specialist: null, employer: null }, bribe: false,
         examinationOrder: ['general', 'vision', 'pressure', 'measurements'] as const,
         results: { general: patient.general, vision: patient.visionValues, pressure: patient.pressureValues, pressureReadings: [{ ...patient.pressureValues }, { ...patient.pressureValues, systolic: patient.pressureValues.systolic + 1 }], weight: patient.weight, height: patient.height }, additionalWritten: true };
-      const entries = noteEntries({ ...note, examinationOrder: [...note.examinationOrder] }, locale);
+      const entries = noteEntries({ ...note, noteOrder: ['general', 'vision', 'pressure', 'pressure-repeat', 'measurements', 'history'], examinationOrder: [...note.examinationOrder] }, locale);
       const pressure = entries[2]!;
       const high = patient.pressureValues.systolic >= 180 || patient.pressureValues.diastolic >= 110;
       expect(pressure.color).toBe(high ? ALERT_INK : HANDWRITING_INK);

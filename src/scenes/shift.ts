@@ -3,7 +3,7 @@ import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, paperP
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
 import { drawManual, drawManualCover, manualControls, MANUAL_PAGE_COUNT } from '../render/manual';
-import { INTRO_SLIDES, canEndDay, canWriteNote, isShiftFinished, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
+import { INTRO_SLIDES, canEndDay, isShiftFinished, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
 import { patientForVisit, workDayNumber } from '../core/progression';
 import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
@@ -105,19 +105,18 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     hotspot('trash', t.trash, dropTargetRect('trash', view.held, view.heldItems), 'trash'),
     ...state.papers.filter(paper => paper.location === 'desk' && !view.hiddenPaperIds?.includes(paper.id)).flatMap(paper => {
       const id: DeskItemId = `paper-${paper.id}`;
-      const action: ShiftAction = paper.kind === 'note' ? { type: 'write-note', paperId: paper.id }
-        : (paper.kind === 'letter' || paper.kind === 'directive') && !paper.opened ? { type: 'open-letter', paperId: paper.id }
+      const action: ShiftAction = (paper.kind === 'letter' || paper.kind === 'directive') && !paper.opened ? { type: 'open-letter', paperId: paper.id }
         : { type: 'read-paper', paperId: paper.id };
       const bounds = itemRect(view.desk, id, false, isLifted(view, id));
       const canAct = !isLifted(view, id) && bounds.x >= RIGHT_DESK_X
-        && (canWriteNote(state, paper) || ((paper.kind === 'letter' || paper.kind === 'directive') && !paper.opened));
+        && ((paper.kind === 'letter' || paper.kind === 'directive') && !paper.opened);
       const callable = !isLifted(view, id) && bounds.x >= RIGHT_DESK_X && paper.day === state.day && paper.patientId === state.visit?.patientId
         && ((paper.kind === 'specialist' && workDayNumber(state.day) >= 4) || (paper.kind === 'referral' && workDayNumber(state.day) >= 5));
       return [item(id, paperDescription(paper, locale, isDocumentClipped(state, paper.id)), id, action),
         ...(callable ? [{ ...hotspot(`${paper.kind === 'specialist' ? 'call-specialist' : 'call-employer'}-${paper.id}`,
           paper.kind === 'specialist' ? t.progression.callSpecialist : t.progression.callEmployer, paperPhoneRect(bounds),
           paper.kind === 'specialist' ? 'call-specialist' : 'call-employer'), owner: id }] : []),
-        ...(canAct ? [{ ...hotspot(`paper-action-${paper.id}`, paper.kind === 'note' ? t.paperwork.write : t.paperwork.open, paperActionRect(bounds), action), owner: id }] : []),
+        ...(canAct ? [{ ...hotspot(`paper-action-${paper.id}`, t.paperwork.open, paperActionRect(bounds), action), owner: id }] : []),
         ...(!isLifted(view, id) && visibleDocumentClip(state, paper.id, view)
           ? [{ ...hotspot(`paper-clip-${paper.id}`, t.paperwork.unclip, paperClipRect(bounds), { type: 'unclip-document', documentId: paper.id }), owner: id }] : [])];
     }),
@@ -162,7 +161,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     }
     if (id.startsWith('paper-')) {
       const paper = state.papers.find(entry => `paper-${entry.id}` === id && entry.location === 'desk');
-      if (paper && !view.hiddenPaperIds?.includes(paper.id)) drawPaperwork(ctx, paper, bounds, locale, lifted, visibleDocumentClip(state, paper.id, view), paper.kind !== 'note' || canWriteNote(state, paper));
+      if (paper && !view.hiddenPaperIds?.includes(paper.id)) drawPaperwork(ctx, paper, bounds, locale, lifted, visibleDocumentClip(state, paper.id, view));
       continue;
     }
     if (id.startsWith('clip-')) {

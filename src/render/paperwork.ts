@@ -46,16 +46,19 @@ export function noteEntries(paper: Extract<Paper, { kind: 'note' }>, locale: Loc
   if (paper.patientId === null) return [];
   const t = translations[locale], p = t.paperwork, r = paper.results;
   const rows: { text: string; color: string }[] = [];
-  for (const examination of paper.examinationOrder) {
-    if (examination === 'general' && r.general !== null) rows.push({ text: `${t.generalResult}: ${r.general === 'pass' ? t.generalClear : generalReading(paper.patientId, locale)}`, color: HANDWRITING_INK });
-    if (examination === 'vision' && r.vision !== null) rows.push({ text: `${t.documentVision}: ${visionReading(r.vision, locale)}`, color: HANDWRITING_INK });
-    if (examination === 'pressure') for (const reading of r.pressureReadings) rows.push({ text: `${t.documentPressure}: ${pressureReading(reading)}`, color: veryHighPressure(reading) ? ALERT_INK : HANDWRITING_INK });
-    if (examination === 'measurements' && r.weight !== null && r.height !== null) rows.push({ text: `${p.weight} ${r.weight} ${p.kg}   ${p.height} ${r.height} ${p.cm}`, color: HANDWRITING_INK });
-  }
   const history = paper.bribe ? t.progression.bribeNotes[effectivePatient(paper.patientId, true).vision === 'refer' ? 'vision' : 'pressure'] : t.patientNotes[paper.patientId]!;
-  if (paper.additionalWritten && r.general !== null) for (const text of history) rows.push({ text, color: HANDWRITING_INK });
-  if (paper.calls.specialist !== null) rows.push({ text: t.progression.notes[paper.calls.specialist ? 'specialistValid' : 'specialistInvalid'], color: HANDWRITING_INK });
-  if (paper.calls.employer !== null) rows.push({ text: t.progression.notes[paper.calls.employer ? 'employerValid' : 'employerInvalid'], color: HANDWRITING_INK });
+  for (const entry of paper.noteOrder) {
+    if (entry === 'general' && r.general !== null) rows.push({ text: `${t.generalResult}: ${r.general === 'pass' ? t.generalClear : generalReading(paper.patientId, locale)}`, color: HANDWRITING_INK });
+    if (entry === 'history' && r.general !== null) for (const text of history) rows.push({ text, color: HANDWRITING_INK });
+    if (entry === 'vision' && r.vision !== null) rows.push({ text: `${t.documentVision}: ${visionReading(r.vision, locale)}`, color: HANDWRITING_INK });
+    if (entry === 'pressure' || entry === 'pressure-repeat') {
+      const reading = r.pressureReadings[entry === 'pressure' ? 0 : 1];
+      if (reading) rows.push({ text: `${t.documentPressure}: ${pressureReading(reading)}`, color: veryHighPressure(reading) ? ALERT_INK : HANDWRITING_INK });
+    }
+    if (entry === 'measurements' && r.weight !== null && r.height !== null) rows.push({ text: `${p.weight} ${r.weight} ${p.kg}   ${p.height} ${r.height} ${p.cm}`, color: HANDWRITING_INK });
+    if (entry === 'call-specialist' && paper.calls.specialist !== null) rows.push({ text: t.progression.notes[paper.calls.specialist ? 'specialistValid' : 'specialistInvalid'], color: HANDWRITING_INK });
+    if (entry === 'call-employer' && paper.calls.employer !== null) rows.push({ text: t.progression.notes[paper.calls.employer ? 'employerValid' : 'employerInvalid'], color: HANDWRITING_INK });
+  }
   return rows;
 }
 
@@ -242,7 +245,6 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
         }
       }
     }
-    if (!lifted && showActions) drawActionCorner(ctx, bounds, true);
   } else {
     write(p.letter, 11, 10);
     dateAndReference();

@@ -15,7 +15,7 @@ test('five identities share a portrait while names, occupations and ages survive
   await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
 
   // Academic, workshop and female professional portraits exercise distinct roles.
-  for (const portraitId of ['patient-72', 'patient-74', 'patient-13']) {
+  for (const portraitId of ['patient-72', 'patient-74', 'patient-13', 'patient-29', 'patient-11', 'patient-66']) {
     const portraits = new Set<string>();
     const names = new Set<string>();
     for (const identity of PATIENT_IDENTITIES.filter(identity => identity.portraitId === portraitId)) {

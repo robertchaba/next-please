@@ -5,7 +5,7 @@ import { measureText } from '../src/render/font';
 import { translations } from '../src/i18n';
 import type { ExpenseKind } from '../src/core/economy';
 
-function homeState(day = 1, money = 0): GameState {
+function homeState(day = 1, money = 200): GameState {
   const cabinet = applyAction(createInitialState(17), 'skip-intro').state;
   return applyAction({ ...cabinet, day, clockMinutes: 840, money }, 'end-day').state;
 }
@@ -24,7 +24,7 @@ describe('localized home sequence', () => {
     }
     expect(state.settlement!.livingCost).toBeGreaterThanOrEqual(400);
     expect(state.settlement!.livingCost).toBeLessThanOrEqual(800);
-    expect(state.money).toBe(1000 - state.settlement!.livingCost - 300);
+    expect(state.money).toBe(200 + 1000 - state.settlement!.livingCost - 300);
     expect(state).toEqual(before);
   });
 
@@ -86,6 +86,24 @@ describe('localized home sequence', () => {
     const sunday = applyAction(saturday, 'next-day').state;
     expect(homePages(sunday)).toContain('work');
     expect(homePage(sunday, 'pl', homePages(sunday).indexOf('work')).title).toBe('DO PRACY');
+  });
+
+  it('shows the modest weekend artwork and joke only when reduced living costs apply', () => {
+    const saturday = applyAction(homeState(2, 200), 'next-day').state;
+    const sunday = applyAction(saturday, 'next-day').state;
+    for (const state of [saturday, sunday]) for (const locale of ['pl', 'en'] as const) {
+      const before = structuredClone(state), content = homePage(state, locale, 0);
+      expect(content.illustration).toBe('weekend-modest');
+      expect(content.body.replaceAll('\n', ' ')).toBe(translations[locale].home.modestRest);
+      expect(content.description).toBe(translations[locale].home.illustrations['weekend-modest']);
+      expect(content.body.split('\n').length).toBeLessThanOrEqual(5);
+      for (const line of content.body.split('\n')) expect(measureText(line, 2), line).toBeLessThanOrEqual(312);
+      expect(state).toEqual(before);
+    }
+    const comfortable = applyAction(homeState(2, 5000), 'next-day').state;
+    expect(homePage(comfortable, 'pl', 0).illustration).toBe('weekend-budget');
+    expect(homePage(homeState(2, 200), 'pl', 0).illustration).toBe('homecoming');
+    expect(homePage(sunday, 'pl', homePages(sunday).indexOf('work')).illustration).toBe('going-to-work');
   });
 
   it('keeps all twelve daily comments stable, translated and within the narrative area', () => {

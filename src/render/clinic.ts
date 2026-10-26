@@ -18,7 +18,7 @@ const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate
 export const PATIENT_MOTION_FRAMES = 12;
 
 export async function loadClinicArt(): Promise<void> {
-  const files = ['home-evening', 'homecoming', 'going-to-work', 'weekend-budget', 'mountain-resort', 'seaside-resort', 'cabinet-workstation', 'archives-clinic', 'break-room', 'drawer-interior', 'creator-robert', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
+  const files = ['bankruptcy-cloakroom', 'home-evening', 'homecoming', 'going-to-work', 'weekend-budget', 'weekend-modest', 'mountain-resort', 'seaside-resort', 'cabinet-workstation', 'archives-clinic', 'break-room', 'drawer-interior', 'creator-robert', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`)];
   await Promise.all(files.map(name => new Promise<void>((resolve, reject) => {
     const image = new Image();
     images.set(name, image);
@@ -277,7 +277,7 @@ export function drawPanelIllustration(ctx: CanvasRenderingContext2D, panel: 'sav
   asset(ctx, panel === 'saves' ? 'archives-clinic' : 'break-room', 0, 0, 570, 320);
 }
 
-export type HomeIllustration = 'home-evening' | 'homecoming' | 'going-to-work' | 'weekend-budget' | 'mountain-resort' | 'seaside-resort';
+export type HomeIllustration = 'bankruptcy-cloakroom' | 'home-evening' | 'homecoming' | 'going-to-work' | 'weekend-budget' | 'weekend-modest' | 'mountain-resort' | 'seaside-resort';
 
 export function drawHomeIllustration(ctx: CanvasRenderingContext2D, scene: HomeIllustration): void {
   rect(ctx, 0, 0, 570, 320, '#171e18');

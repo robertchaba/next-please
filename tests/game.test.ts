@@ -42,7 +42,7 @@ describe('separate drawer objects', () => {
   });
 
   it('retains stored objects across visits and days, including actions after closing', () => {
-    let state = act(cabinet(), { type: 'store-drawer-item', item: 'manual' }, { type: 'store-drawer-item', item: 'clip' });
+    let state = act({ ...cabinet(), money: 100000 }, { type: 'store-drawer-item', item: 'manual' }, { type: 'store-drawer-item', item: 'clip' });
     for (let patient = 0; patient < state.roster.length; patient++) {
       state = act(state, 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document');
     }
@@ -218,7 +218,7 @@ describe('cabinet work', () => {
     expect(applyAction(rich, 'return-document').state.money).toBe(rich.money);
     const overflowing = { ...cabinet(), money: GAME_LIMITS.money, clockMinutes: 840, rngState: 7 };
     expect(applyAction(overflowing, 'end-day')).toEqual({ state: overflowing, feedback: 'limit-reached' });
-    const finalDay = act({ ...cabinet(), day: GAME_LIMITS.day, clockMinutes: 840 }, 'end-day');
+    const finalDay = act({ ...cabinet(), day: GAME_LIMITS.day, money: 1000, clockMinutes: 840 }, 'end-day');
     expect(applyAction(finalDay, 'next-day')).toEqual({ state: finalDay, feedback: 'limit-reached' });
   });
 });
@@ -254,7 +254,7 @@ describe('paperwork and the new instruments', () => {
     expect(applyAction(measured.state, 'run-measurements').state.clockMinutes).toBe(state.clockMinutes + 4);
   });
 
-  it('automatically records results and uses the pen only for supplementary information', () => {
+  it('automatically records results and history while the legacy writing action stays idempotent', () => {
     let state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'take-paper');
     const blank = state.papers[1]!;
     expect(blank).toMatchObject({ id: 2, kind: 'note', patientId: 0, additionalWritten: false,
@@ -287,7 +287,7 @@ describe('paperwork and the new instruments', () => {
 
   it('backfills newly fetched notes while protecting previous patients and stored blank supplies', () => {
     let state = act(readyToStamp(), 'take-paper');
-    expect(state.papers[1]).toMatchObject({ patientId: 0, additionalWritten: false,
+    expect(state.papers[1]).toMatchObject({ patientId: 0, additionalWritten: true,
       results: { vision: PATIENTS[0]!.visionValues, pressure: PATIENTS[0]!.pressureValues, weight: 62, height: 164 } });
     state = act(state, 'stamp-fit', 'return-document', 'take-paper', { type: 'store-paper', paperId: 3 },
       'call-patient', 'take-document', 'take-certificate', 'run-vision');

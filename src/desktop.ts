@@ -189,6 +189,7 @@ function advanceHome(): void {
   }
   playEffect('carriage');
   if (homePageIndex < homePages(gameState).length - 1) { homePageIndex++; startTyping(); syncControls('home-next'); }
+  else if (gameState.ending === 'bankruptcy') restartGame();
   else if (gameState.ending === 'hospital') { screen = 'break-room'; syncControls('restart'); }
   else handleShiftAction('next-day');
 }
