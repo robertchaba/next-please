@@ -196,17 +196,34 @@ test('right-side papers overlap the room while keeping half on the desk and cove
   expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ x: 300, y: 100 });
 });
 
-test('a stamped certificate without a handwritten name is restored after a rejected handoff', async ({ page }) => {
+test('a blank certificate requires handwritten name and job before handoff', async ({ page }, testInfo) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await enterCabinet(page);
   for (const id of ['call-patient', 'take-document', 'take-certificate', 'stamp-fit', 'apply-stamp']) await activate(page, id);
+  const certificate = page.locator('#control-apply-stamp');
+  for (const locale of ['en', 'pl'] as const) {
+    await activate(page, `language-${locale}`);
+    const t = translations[locale];
+    await expect(certificate).toHaveAccessibleName(new RegExp(t.paperwork.positionMissing));
+    await expect(certificate).not.toHaveAccessibleName(new RegExp(`${t.patientNames[0]}|${t.patientJobs[0]}`));
+    await expect(page.locator('#control-write-certificate')).toHaveAccessibleName(t.paperwork.writeCertificate);
+  }
+  await page.locator('#stage').screenshot({ path: testInfo.outputPath('certificate-blank-pl.png') });
   const before = await logicalRect(page, 'apply-stamp');
   await carryTo(page, 'apply-stamp', center(PATIENT_HANDOFF));
-  await expect(page.locator('#screen-description')).toContainText('Wpisz nazwisko na orzeczeniu');
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.feedback['certificate-name-needed']);
   expect(await logicalRect(page, 'apply-stamp')).toEqual(before);
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
   await page.locator('#control-write-certificate').click();
-  await expect(page.locator('#screen-description')).toContainText('Nazwisko pacjenta wpisane na orzeczeniu.');
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.feedback['certificate-written']);
+  for (const locale of ['en', 'pl'] as const) {
+    await activate(page, `language-${locale}`);
+    const t = translations[locale];
+    await expect(certificate).toHaveAccessibleName(new RegExp(t.patientNames[0]));
+    await expect(certificate).toHaveAccessibleName(new RegExp(`${t.paperwork.position}: ${t.patientJobs[0]}`));
+    await expect(certificate).not.toHaveAccessibleName(new RegExp(t.paperwork.positionMissing));
+    await page.locator('#stage').screenshot({ path: testInfo.outputPath(`certificate-written-${locale}.png`) });
+  }
   await carryTo(page, 'apply-stamp', center(PATIENT_HANDOFF));
   await expect(page.locator('#control-apply-stamp')).toHaveCount(0);
 });

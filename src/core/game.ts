@@ -43,6 +43,7 @@ export interface Visit {
   patientId: number;
   document: 'tray' | 'desk';
   certificateTaken: boolean;
+  /** The pen fills both name and job; retain this key for save compatibility. */
   certificateNamed: boolean;
   generalTested: boolean;
   examinationOrder: ExaminationId[];
@@ -146,12 +147,19 @@ function noteResults(visit: Visit): NoteResults {
   };
 }
 
-/** Examination transitions record findings, including notes kept in the drawer. */
+/** Available desk sheets receive the patient's identity before any findings. */
 function recordResults(papers: Paper[], visit: Visit | null, day: number): Paper[] {
-  if (!visit || (!visit.generalTested && !visit.visionTested && !visit.pressureTested && !visit.measurementsTaken)) return papers;
+  if (!visit) return papers;
   return papers.map(paper => paper.kind === 'note'
     && ((paper.patientId === null && paper.location === 'desk') || (paper.patientId === visit.patientId && paper.day === day))
     ? { ...paper, patientId: visit.patientId, day, results: noteResults(visit), examinationOrder: [...visit.examinationOrder] } : paper);
+}
+
+export function canWriteNote(state: GameState, paper: Paper): boolean {
+  const visit = state.visit;
+  return paper.kind === 'note' && paper.location === 'desk' && !paper.additionalWritten
+    && visit?.document === 'desk' && visit.generalTested
+    && (paper.patientId === null || (paper.patientId === visit.patientId && paper.day === state.day));
 }
 
 /** Pure transitions: all results and rewards are reproducible from saved state. */
@@ -288,6 +296,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
     if (!visit) return unchanged('no-patient');
     if (visit.document !== 'desk') return unchanged('document-needed');
     if (paper.patientId !== null && (paper.patientId !== visit.patientId || paper.day !== state.day)) return unchanged('paper-wrong-patient');
+    if (!visit.generalTested) return unchanged('results-needed');
     if (paper.additionalWritten) return unchanged('paper-written');
     return updatePaper({ ...paper, patientId: visit.patientId, day: state.day, additionalWritten: true, results: noteResults(visit), examinationOrder: [...visit.examinationOrder] }, 'paper-written');
   }
@@ -302,9 +311,11 @@ function transition(state: GameState, action: GameAction): ActionResult {
     if (state.visit) return unchanged('patient-waiting');
     if (isShiftFinished(state)) return unchanged('shift-finished');
     if (state.patientsProcessed === GAME_LIMITS.patients) return unchanged('limit-reached');
-    return changed({ clockMinutes: Math.max(SHIFT_START_MINUTES, spend(ACTION_MINUTES.handling)), visit: {
+    const visit: Visit = {
       patientId: state.roster[state.shiftCompleted]!, document: 'tray', certificateTaken: false, certificateNamed: false, generalTested: false, examinationOrder: [], visionTested: false, pressureTested: false, pressureLatest: null, pressureReadings: [], measurementsTaken: false, decision: null,
-    } }, 'patient-called');
+    };
+    return changed({ clockMinutes: Math.max(SHIFT_START_MINUTES, spend(ACTION_MINUTES.handling)), visit,
+      papers: recordResults(state.papers, visit, state.day) }, 'patient-called');
   }
 
   const visit = state.visit;

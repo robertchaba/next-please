@@ -38,7 +38,7 @@ describe('separate localized paperwork', () => {
   });
 
   it('describes persisted notes independently of the current appointment', () => {
-    const examined = stateAfter('skip-intro', 'call-patient', 'take-document', 'run-vision', 'run-pressure', 'run-measurements', 'take-paper');
+    const examined = stateAfter('skip-intro', 'call-patient', 'take-document', 'run-general', 'run-vision', 'run-pressure', 'run-measurements', 'take-paper');
     const blank = examined.papers.find(paper => paper.kind === 'note')!;
     expect(paperDescription(blank, 'pl')).toContain(`${PATIENTS[0].weight} kg`);
     expect(paperDescription(blank, 'pl')).not.toContain(translations.pl.paperwork.additionalHeading);
@@ -114,7 +114,7 @@ describe('separate localized paperwork', () => {
   });
 
   it('uses distinct blue handwriting for recorded results and supplementary notes', () => {
-    const state = stateAfter('skip-intro', 'call-patient', 'take-document', 'run-measurements', 'take-paper', { type: 'write-note', paperId: 2 });
+    const state = stateAfter('skip-intro', 'call-patient', 'take-document', 'run-measurements', 'run-general', 'take-paper', { type: 'write-note', paperId: 2 });
     const note = state.papers.find(paper => paper.kind === 'note')!;
     const marks: { x: number; y: number; color: string }[] = [];
     const recorder = {
@@ -145,23 +145,39 @@ describe('separate localized paperwork', () => {
     }
   });
 
-  it('describes date and signature consistently with the certificate decision', () => {
+  it('keeps certificate identity fields blank until writing, with consistent descriptions, ink and saved state', () => {
     const blank = stateAfter('skip-intro', 'call-patient', 'take-document', 'take-certificate');
     const signed = applyAction(applyAction(blank, 'write-certificate').state, 'stamp-unfit').state;
     for (const locale of ['pl', 'en'] as const) {
       const t = translations[locale], p = t.paperwork;
       expect(certificateDescription(blank, locale)).toContain(p.nameMissing);
+      expect(certificateDescription(blank, locale)).toContain(p.positionMissing);
+      expect(certificateDescription(blank, locale)).not.toContain(t.patientNames[0]);
+      expect(certificateDescription(blank, locale)).not.toContain(t.patientJobs[0]);
       expect(certificateDescription(blank, locale)).not.toContain(p.signed);
       expect(certificateDescription(signed, locale)).toContain(t.patientNames[0]);
+      expect(certificateDescription(signed, locale)).toContain(`${p.position}: ${t.patientJobs[0]}`);
+      expect(certificateDescription(signed, locale)).not.toContain(p.positionMissing);
       expect(certificateDescription(signed, locale)).toContain(t.unfit);
       expect(certificateDescription(signed, locale)).toContain(p.signed);
       expect(certificateDescription(signed, locale)).toContain(locale === 'pl' ? '03.11.1983' : '03/11/1983');
+      for (const state of [blank, signed]) {
+        const restored = decodeSave(encodeSave(state));
+        expect(certificateDescription(restored, locale)).toBe(certificateDescription(state, locale));
+        const handwriting: number[] = [];
+        const recorder = { fillStyle: '', save() {}, restore() {}, fillRect(_x: number, y: number) {
+          if (this.fillStyle === HANDWRITING_INK) handwriting.push(y);
+        } };
+        drawCertificate(recorder as unknown as CanvasRenderingContext2D, restored, { x: 0, y: 0, w: 188, h: 144 }, locale, false);
+        expect(handwriting.some(y => y >= 56 && y < 63)).toBe(state === signed);
+        expect(handwriting.some(y => y >= 69 && y < 76)).toBe(state === signed);
+      }
     }
   });
 
   it('keeps complete dated forms and certificate lettering inside the native paper', () => {
     for (const locale of ['pl', 'en'] as const) for (const decision of ['stamp-fit', 'stamp-unfit'] as const) {
-      const state = stateAfter('skip-intro', 'call-patient', 'take-document', 'run-vision', 'take-paper',
+      const state = stateAfter('skip-intro', 'call-patient', 'take-document', 'run-general', 'run-vision', 'take-paper',
         { type: 'write-note', paperId: 2 }, 'take-certificate', 'write-certificate', decision);
       const marks: { x: number; y: number }[] = [];
       const recorder = { fillStyle: '', save() {}, restore() {}, fillRect(x: number, y: number, w: number, h: number) {
@@ -190,12 +206,12 @@ describe('separate localized paperwork', () => {
     expect(shiftButtons(state, 'pl', null, () => {}, view).find(button => button.id === 'apply-stamp')?.label).toContain(translations.pl.patientNames[0]);
   });
 
-  it('leaves a blank sheet empty and adds compact chronological findings with no pending slots', () => {
+  it('starts with identity and age, then adds compact chronological findings with no pending slots', () => {
     let state = stateAfter('skip-intro', 'call-patient', 'take-document', 'take-paper');
     const blank = state.papers.find(paper => paper.kind === 'note')!;
     if (blank.kind !== 'note') throw new Error('Expected note');
     expect(noteEntries(blank, 'pl')).toEqual([]);
-    expect(paperDescription(blank, 'pl')).toBe(translations.pl.paperwork.blank);
+    expect(paperDescription(blank, 'pl')).toBe(`${translations.pl.paperwork.note}. Irena Wolska   Wiek: 41.`);
     for (const action of ['run-measurements', 'run-general', 'run-vision', 'run-pressure', 'run-vision'] as const) state = applyAction(state, action).state;
     const note = state.papers.find(paper => paper.kind === 'note')!;
     if (note.kind !== 'note') throw new Error('Expected note');
@@ -203,6 +219,21 @@ describe('separate localized paperwork', () => {
       'Waga 62 kg   Wzrost 164 cm', 'Badanie ogólne: bez uwag', 'Wzrok: OL: 0, OP: 0', 'Ciśnienie: 108/62',
     ]);
     expect(paperDescription(note, 'pl')).not.toContain(translations.pl.untested);
+  });
+
+  it('hides history from legacy notes until the physical examination is recorded, in both languages', () => {
+    const state = stateAfter('skip-intro', 'call-patient', 'take-document', 'take-paper');
+    const note = state.papers[1]!;
+    if (note.kind !== 'note') throw new Error('Expected note');
+    const legacy = { ...note, additionalWritten: true };
+    const examined = applyAction({ ...state, papers: [state.papers[0]!, legacy] }, 'run-general').state.papers[1]!;
+    for (const locale of ['pl', 'en'] as const) {
+      expect(noteEntries(legacy, locale)).toEqual([]);
+      for (const line of translations[locale].patientNotes[0]) {
+        expect(paperDescription(legacy, locale)).not.toContain(line);
+        expect(paperDescription(examined, locale)).toContain(line);
+      }
+    }
   });
 
   it('names the exact abnormal general finding and preserves it on repeat and import', () => {

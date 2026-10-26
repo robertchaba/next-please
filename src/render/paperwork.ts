@@ -51,7 +51,7 @@ export function noteEntries(paper: Extract<Paper, { kind: 'note' }>, locale: Loc
     if (examination === 'pressure') for (const reading of r.pressureReadings) rows.push({ text: `${t.documentPressure}: ${pressureReading(reading)}`, color: veryHighPressure(reading) ? ALERT_INK : HANDWRITING_INK });
     if (examination === 'measurements' && r.weight !== null && r.height !== null) rows.push({ text: `${p.weight} ${r.weight} ${p.kg}   ${p.height} ${r.height} ${p.cm}`, color: HANDWRITING_INK });
   }
-  if (paper.additionalWritten) for (const text of t.patientNotes[paper.patientId]!) rows.push({ text, color: HANDWRITING_INK });
+  if (paper.additionalWritten && r.general !== null) for (const text of t.patientNotes[paper.patientId]!) rows.push({ text, color: HANDWRITING_INK });
   return rows;
 }
 
@@ -84,7 +84,8 @@ export function paperDescription(paper: Paper, locale: Locale, clipped = false):
       text += ` ${name}. ${letter.subject}. ${letter.body} ${letter.role}: ${letter.signature}. ${p.signed}.`;
     }
   } else {
-    text = paper.patientId === null ? p.blank : `${p.note}. ${noteIdentity(paper, locale)}. ${noteEntries(paper, locale).map(row => row.text.replace(/\.$/, '')).join('. ')}.`;
+    text = paper.patientId === null ? p.blank : [p.note, noteIdentity(paper, locale),
+      ...noteEntries(paper, locale).map(row => row.text.replace(/\.$/, ''))].join('. ') + '.';
     if (paper.results.pressureReadings.some(veryHighPressure)) text += ` ${t.documentPressure}: ${t.veryHigh}.`;
   }
   if (paper.kind !== 'note') text += ` ${p.issued}: ${formatGameDate(paper.day, locale)}. ${p.reference}: ${paper.id}.`;
@@ -98,7 +99,7 @@ export function certificateDescription(state: GameState, locale: Locale): string
   if (!visit?.certificateTaken) return t.certificate;
   return [t.certificate,
     visit.certificateNamed ? `${p.nameWritten}: ${t.patientNames[visit.patientId]}` : p.nameMissing,
-    `${p.position}: ${t.patientJobs[visit.patientId]}`,
+    visit.certificateNamed ? `${p.position}: ${t.patientJobs[visit.patientId]}` : p.positionMissing,
     `${p.issued}: ${formatGameDate(state.day, locale)}`,
     `${p.reference}: ${state.day}/${state.shiftCompleted + 1}`,
     visit.decision ? `${p.decisionHeading}: ${t[visit.decision]}. ${p.signed}` : t.stampHere,
@@ -242,7 +243,10 @@ export function drawCertificate(ctx: CanvasRenderingContext2D, state: GameState,
     write(p.name, 12, 45, muted);
     if (visit.certificateNamed) write(t.patientNames[visit.patientId]!, 12, 56, HANDWRITING_INK);
     else for (let dx = 12; dx < 150; dx += 4) fill(ctx, x + dx, y + 63, 2, 1, '#b3a984');
-    write(`${p.position}: ${t.patientJobs[visit.patientId]}`, 12, 69);
+    write(`${p.position}:`, 12, 69, muted);
+    const positionX = 12 + measureDocumentText(`${p.position}: `);
+    if (visit.certificateNamed) write(t.patientJobs[visit.patientId]!, positionX, 69, HANDWRITING_INK);
+    else for (let dx = positionX; dx < w - 12; dx += 4) fill(ctx, x + dx, y + 76, 2, 1, '#b3a984');
     write(p.certificatePurpose, 12, 81, muted);
     write(p.decisionHeading, 12, 94, muted);
     if (visit.decision) {

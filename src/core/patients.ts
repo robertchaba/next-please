@@ -1,3 +1,5 @@
+import { IDENTITY_PROFILES } from './patient-identities';
+
 /** Stable fictional case catalog: no real diagnostic thresholds or medical advice. */
 export type PatientCondition = 'healthy' | 'vision' | 'pressure' | 'combined' | 'general';
 export type ExaminationId = 'general' | 'vision' | 'pressure' | 'measurements';
@@ -58,6 +60,19 @@ export const JOBS: readonly JobDefinition[] = [
   job(29, 'quality-inspector', 'vision', ['fine-detail', 'stress'], [1, 3, 10]),
   job(30, 'shift-supervisor', 'full', ['stress', 'noise'], [1, 3, 6], true),
   job(31, 'survey-assistant', 'full', ['outdoors', 'fine-detail'], [13, 15]),
+  job(32, 'teacher', 'pressure', ['stress', 'standing'], [5, 20]),
+  job(33, 'professor', 'vision', ['paper-dust', 'fine-detail'], [20]),
+  job(34, 'librarian', 'vision', ['paper-dust'], [21]),
+  job(35, 'accountant', 'vision', ['fine-detail', 'stress'], [7, 18]),
+  job(36, 'clerk', 'vision', ['paper-dust', 'fine-detail'], [7, 14]),
+  job(37, 'engineer', 'full', ['fine-detail', 'noise'], [1, 15]),
+  job(38, 'architect', 'vision', ['fine-detail'], [22]),
+  job(39, 'editor', 'vision', ['paper-dust', 'fine-detail'], [8]),
+  job(40, 'drafter', 'vision', ['fine-detail'], [22, 15]),
+  job(41, 'receptionist', 'pressure', ['stress', 'standing'], [19]),
+  job(42, 'chemist', 'vision', ['chemicals', 'fine-detail'], [16]),
+  job(43, 'technician', 'full', ['fine-detail', 'noise'], [15, 16]),
+  job(44, 'carpenter', 'full', ['noise', 'fine-detail', 'lifting'], [23]),
 ];
 
 export interface VisionValues { left: number; right: number }
@@ -109,7 +124,10 @@ export function generalFindingIndex(patient: Pick<PatientCase, 'id' | 'general'>
   return patient.general === 'refer' ? patient.id % GENERAL_FINDING_COUNT : null;
 }
 
-export const CHARACTER_COUNT = 53;
+/** Visual character groups: each portrait appears at most once per daily queue. */
+export const CHARACTER_COUNT = 78;
+export const CURATED_CASE_START = 553;
+export const CASES_PER_IDENTITY = 5;
 export const LEGACY_CASE_COUNT = 103;
 type OriginalCase = Omit<PatientCase, 'general' | 'visionValues' | 'pressureValues'>;
 const original: OriginalCase[] = [
@@ -119,6 +137,7 @@ const original: OriginalCase[] = [
 ];
 const ages = [26, 53, 41, 30, 59, 44, 33, 61, 47, 24, 38, 49, 55, 36, 22, 57, 45, 28, 63, 40, 31, 52, 43, 34, 50];
 const newAges = [32, 46, 60, 27, 39, 54, 23, 64, 48, 35, 56, 29, 42, 58, 25, 51, 37, 62, 44, 30, 55, 40, 33, 47, 59];
+const thirdBatchAges = [28, 43, 57, 24, 36, 62, 49, 31, 54, 40, 22, 59, 46, 34, 64, 27, 51, 38, 60, 45, 29, 55, 42, 25, 48];
 const conditions: PatientCondition[] = ['healthy', 'vision', 'pressure', 'combined'];
 const patterns: WorkPatternId[] = ['day', 'early', 'shifts', 'night', 'split', 'seasonal'];
 
@@ -183,7 +202,7 @@ function withMeasurements(patient: OriginalCase, general: 'pass' | 'refer' = 'pa
   return { ...patient, general, visionValues, pressureValues };
 }
 
-export const PATIENTS: readonly PatientCase[] = [
+const historicalPatients: readonly PatientCase[] = [
   ...establishedCases.map(patient => withMeasurements(patient)),
   // Append-only general-examination cases preserve every older save's identity.
   ...Array.from({ length: 25 }, (_, person): PatientCase => {
@@ -191,10 +210,90 @@ export const PATIENTS: readonly PatientCase[] = [
     return withMeasurements({ ...original, id: establishedCases.length + person,
       caseVariant: 8, conditionId: 'general', vision: 'pass', pressure: 'pass', expectedDecision: 'unfit' }, 'refer');
   }),
+  // Third portrait batch: append after all 328 established cases, including concerns.
+  ...Array.from({ length: 25 * 9 }, (_, index): PatientCase => {
+    const person = Math.floor(index / 9), variant = index % 9;
+    const job = JOBS[8 + (person * 5 + (variant >= 4 && variant < 8 ? 11 : 0)) % 24]!;
+    const condition = variant === 8 ? 0 : variant % 4;
+    const general = variant === 8 ? 'refer' : 'pass';
+    const vision = condition === 1 || condition === 3 ? 'refer' : 'pass';
+    const pressure = condition >= 2 ? 'refer' : 'pass';
+    const month = 1 + (person * 7) % 12, date = 1 + (person * 11) % 28;
+    return withMeasurements({
+      id: 328 + index, characterId: 53 + person, portraitId: `patient-${51 + person}`,
+      employerId: job.employerIds[(person + (variant >= 4 && variant < 8 ? 1 : 0)) % job.employerIds.length]!, jobId: job.id,
+      caseVariant: variant, conditionId: variant === 8 ? 'general' : conditions[condition]!, vision, pressure,
+      expectedDecision: decisionForFindings(job.requirementId, { general, vision, pressure }),
+      birthDate: `${1983 - thirdBatchAges[person]! - (month > 11 || (month === 11 && date > 3) ? 1 : 0)}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}`,
+      sex: person % 2 === 0 ? 'female' : 'male', examination: variant < 4 || variant === 8 ? 'initial' : 'periodic',
+      managerial: job.managerial, weight: 54 + (person * 13) % 47, height: 155 + (person * 7) % 35,
+      requirementId: job.requirementId, workPatternId: patterns[(person + (variant >= 4 && variant < 8 ? 1 : 0)) % patterns.length]!,
+    }, general);
+  }),
 ];
 
-const CASES_BY_CHARACTER = Array.from({ length: CHARACTER_COUNT }, (_, characterId) => PATIENTS.filter(patient => patient.characterId === characterId).map(patient => patient.id));
-const FIT_CASES_BY_CHARACTER = CASES_BY_CHARACTER.map(cases => cases.filter(id => PATIENTS[id]!.expectedDecision === 'fit'));
+export interface PatientIdentity {
+  id: number;
+  characterId: number;
+  variant: number;
+  portraitId: string;
+  birthDate: string;
+  sex: PatientCase['sex'];
+  jobId: number;
+  employerId: number;
+  workPatternId: WorkPatternId;
+  weight: number;
+  height: number;
+}
+
+/** Five complete identities per face, independent of the clinical case variant. */
+export const PATIENT_IDENTITIES: readonly PatientIdentity[] = IDENTITY_PROFILES.flatMap((profiles, characterId) => {
+  const portrait = historicalPatients.find(patient => patient.characterId === characterId)!;
+  return profiles.map(([age, jobId], variant): PatientIdentity => {
+    const id = characterId * 5 + variant;
+    const month = 1 + id % 12, day = 1 + (id * 7) % 28;
+    const year = 1983 - age - Number(month > 11 || (month === 11 && day > 3));
+    const occupation = JOBS[jobId]!;
+    return {
+      id, characterId, variant, portraitId: portrait.portraitId,
+      birthDate: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      sex: portrait.sex, jobId, employerId: occupation.employerIds[variant % occupation.employerIds.length]!,
+      workPatternId: [1, 3, 17, 18, 19, 23, 24, 25, 26, 27, 28, 30, 41].includes(jobId) ? 'shifts' : jobId === 11 ? 'early' : 'day',
+      weight: portrait.weight, height: portrait.height,
+    };
+  });
+});
+
+/** The saved case ID resolves its entire identity; no extra random or save field. */
+export function patientIdentity(patient: Pick<PatientCase, 'id'>): PatientIdentity | undefined {
+  return patient.id < CURATED_CASE_START ? undefined : PATIENT_IDENTITIES[Math.floor((patient.id - CURATED_CASE_START) / CASES_PER_IDENTITY)];
+}
+
+export const PATIENTS: readonly PatientCase[] = [
+  ...historicalPatients,
+  ...PATIENT_IDENTITIES.flatMap((identity) => Array.from({ length: CASES_PER_IDENTITY }, (_, variant): PatientCase => {
+    const occupation = JOBS[identity.jobId]!;
+    const general = variant === 4 ? 'refer' : 'pass';
+    const vision = variant === 1 || variant === 3 ? 'refer' : 'pass';
+    const pressure = variant === 2 || variant === 3 ? 'refer' : 'pass';
+    return withMeasurements({
+      id: CURATED_CASE_START + identity.id * CASES_PER_IDENTITY + variant,
+      characterId: identity.characterId, portraitId: identity.portraitId,
+      employerId: identity.employerId, jobId: identity.jobId,
+      caseVariant: variant, conditionId: variant === 4 ? 'general' : conditions[variant]!,
+      vision, pressure, expectedDecision: decisionForFindings(occupation.requirementId, { general, vision, pressure }),
+      birthDate: identity.birthDate, sex: identity.sex, examination: identity.variant % 2 === 0 ? 'periodic' : 'initial',
+      managerial: occupation.managerial, weight: identity.weight, height: identity.height,
+      requirementId: occupation.requirementId, workPatternId: identity.workPatternId,
+    }, general);
+  })),
+];
+
+const CASES_BY_CHARACTER = Array.from({ length: CHARACTER_COUNT }, (_, characterId) => PATIENTS
+  .filter(patient => patient.id >= CURATED_CASE_START && patient.characterId === characterId).map(patient => patient.id));
+const FIT_CASES_BY_IDENTITY = PATIENT_IDENTITIES.map(identity => PATIENTS
+  .slice(CURATED_CASE_START + identity.id * CASES_PER_IDENTITY, CURATED_CASE_START + (identity.id + 1) * CASES_PER_IDENTITY)
+  .filter(patient => patient.expectedDecision === 'fit').map(patient => patient.id));
 const MAX_UNFIT_PERCENT = 33;
 
 /** Explicit unsigned state makes replay/import independent of browser randomness. */
@@ -217,24 +316,23 @@ export function createRoster(seed: number, _tutorial = false): { roster: number[
     return cases[Math.floor(random.value * cases.length)]!;
   });
 
-  // Replace excess refusals with existing fit cases of the same characters.
-  // Historical case facts and the two original, always-unfit cases stay intact.
+  // Balance findings without replacing the selected person's name, age or job.
   let unfitCount = roster.filter(id => PATIENTS[id]!.expectedDecision === 'unfit').length;
   const maxUnfit = Math.floor(roster.length * MAX_UNFIT_PERCENT / 100);
   const replaceable = roster.flatMap((id, index) => PATIENTS[id]!.expectedDecision === 'unfit'
-    && FIT_CASES_BY_CHARACTER[PATIENTS[id]!.characterId]!.length > 0 ? [index] : []);
+    && FIT_CASES_BY_IDENTITY[patientIdentity(PATIENTS[id]!)!.id]!.length > 0 ? [index] : []);
   while (unfitCount > maxUnfit) {
     if (replaceable.length === 0) throw new Error('Patient catalog cannot satisfy the unfit limit');
     const selection = randomStep(seed); seed = selection.seed;
     const index = replaceable.splice(Math.floor(selection.value * replaceable.length), 1)[0]!;
     const patient = PATIENTS[roster[index]!]!;
-    const cases = FIT_CASES_BY_CHARACTER[patient.characterId]!;
+    const cases = FIT_CASES_BY_IDENTITY[patientIdentity(patient)!.id]!;
     const variant = randomStep(seed); seed = variant.seed;
     roster[index] = cases[Math.floor(variant.value * cases.length)]!;
     unfitCount -= 1;
   }
 
-  // A workday usually ends before all 53 visits: cap every prefix as well.
+  // A workday usually ends before the full queue: cap every prefix as well.
   // Advance the next fit patient only when needed, preserving the other order.
   unfitCount = 0;
   for (let index = 0; index < roster.length; index += 1) {

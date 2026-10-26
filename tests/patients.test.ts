@@ -1,17 +1,27 @@
+import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { CHARACTER_COUNT, GENERAL_FINDING_COUNT, JOBS, LEGACY_CASE_COUNT, PATIENTS, REQUIREMENTS, createRoster, decisionForFindings, generalFindingIndex, hasRequiredExaminations, significantVisionDefect, disqualifyingPressure, veryHighPressure, patientAge } from '../src/core/patients';
+import { CURATED_CASE_START, CASES_PER_IDENTITY, PATIENT_IDENTITIES, patientIdentity, CHARACTER_COUNT, GENERAL_FINDING_COUNT, JOBS, LEGACY_CASE_COUNT, PATIENTS, REQUIREMENTS, createRoster, decisionForFindings, generalFindingIndex, hasRequiredExaminations, significantVisionDefect, disqualifyingPressure, veryHighPressure, patientAge } from '../src/core/patients';
 import { applyAction, createInitialState, type GameAction } from '../src/core/game';
 import { gameDate } from '../src/core/calendar';
 import { translations } from '../src/i18n';
 
 describe('patient and occupation catalog', () => {
-  it('matches every portrait age and keeps birth dates identical across case variants', () => {
-    // The two generated portrait batches document these intended ages in their art records.
+  it('preserves every field of the 328 previously shipped cases', () => {
+    expect(createHash('sha256').update(JSON.stringify(PATIENTS.slice(0, 328))).digest('hex'))
+      .toBe('90f9b3560677011644a4cf18b2c01d23a75fa31e9991238f50de9356477f3b14');
+  });
+  it('preserves all 553 historical cases for imported queues and paperwork', () => {
+    expect(createHash('sha256').update(JSON.stringify(PATIENTS.slice(0, CURATED_CASE_START))).digest('hex'))
+      .toBe('81900b36b3641624e518982e9c995992bb50ada7c265812d3fb12d3795645a26');
+  });
+  it('matches every historical portrait age and keeps birth dates identical across case variants', () => {
+    // The three generated portrait batches document these intended ages in their art records.
     const ages = [41, 45, 58,
       26, 53, 41, 30, 59, 44, 33, 61, 47, 24, 38, 49, 55, 36, 22, 57, 45, 28, 63, 40, 31, 52, 43, 34, 50,
-      32, 46, 60, 27, 39, 54, 23, 64, 48, 35, 56, 29, 42, 58, 25, 51, 37, 62, 44, 30, 55, 40, 33, 47, 59];
+      32, 46, 60, 27, 39, 54, 23, 64, 48, 35, 56, 29, 42, 58, 25, 51, 37, 62, 44, 30, 55, 40, 33, 47, 59,
+      28, 43, 57, 24, 36, 62, 49, 31, 54, 40, 22, 59, 46, 34, 64, 27, 51, 38, 60, 45, 29, 55, 42, 25, 48];
     for (let characterId = 0; characterId < CHARACTER_COUNT; characterId++) {
-      const cases = PATIENTS.filter(patient => patient.characterId === characterId);
+      const cases = PATIENTS.slice(0, CURATED_CASE_START).filter(patient => patient.characterId === characterId);
       expect(new Set(cases.map(patient => patient.birthDate)).size).toBe(1);
       for (const patient of cases) expect(patientAge(patient, gameDate(1))).toBe(ages[characterId]);
     }
@@ -30,13 +40,50 @@ describe('patient and occupation catalog', () => {
     expect(patientAge(leapBirth, { year: 1984, month: 2, day: 29 })).toBe(24);
   });
 
-  it('provides 53 identities, 32 occupations and 20 localized employers with stable references', () => {
-    expect(CHARACTER_COUNT).toBe(53);
-    expect(PATIENTS).toHaveLength(328);
-    expect(JOBS).toHaveLength(32);
-    expect(new Set(PATIENTS.map(patient => patient.characterId)).size).toBe(53);
-    expect(new Set(PATIENTS.map(patient => patient.jobId)).size).toBe(32);
-    expect(new Set(PATIENTS.map(patient => patient.employerId)).size).toBe(20);
+  it('offers five complete identities per portrait with plausible ages and independent medical variants', () => {
+    expect(PATIENT_IDENTITIES).toHaveLength(390);
+    const names = new Set<string>();
+    for (let characterId = 0; characterId < CHARACTER_COUNT; characterId++) {
+      const identities = PATIENT_IDENTITIES.filter(identity => identity.characterId === characterId);
+      const original = PATIENTS.find(patient => patient.characterId === characterId)!;
+      expect(identities).toHaveLength(5);
+      expect(new Set(identities.map(identity => identity.jobId)).size).toBe(5);
+      expect(new Set(identities.map(identity => patientAge(identity, gameDate(1)))).size).toBe(5);
+      for (const identity of identities) {
+        expect(Math.abs(patientAge(identity, gameDate(1)) - patientAge(original, gameDate(1)))).toBeLessThanOrEqual(3);
+        const cases = PATIENTS.filter(patient => patientIdentity(patient)?.id === identity.id);
+        expect(cases).toHaveLength(CASES_PER_IDENTITY);
+        expect(new Set(cases.map(patient => patient.conditionId)).size).toBe(5);
+        expect(cases.some(patient => patient.expectedDecision === 'fit')).toBe(true);
+        expect(cases.some(patient => patient.general === 'refer')).toBe(true);
+        const name = translations.pl.patientNames[cases[0]!.id]!;
+        expect(names.has(name)).toBe(false);
+        names.add(name);
+        for (const patient of cases) {
+          expect(patient).toMatchObject({ characterId, portraitId: original.portraitId, birthDate: identity.birthDate,
+            jobId: identity.jobId, employerId: identity.employerId, sex: original.sex });
+          expect(JOBS[patient.jobId]!.employerIds).toContain(patient.employerId);
+          for (const t of Object.values(translations)) expect(t.patientNames[patient.id]).toBe(name);
+        }
+      }
+    }
+  });
+
+  it('keeps the scholarly portraits in their authored professional roles', () => {
+    for (const portrait of ['patient-08', 'patient-16', 'patient-28', 'patient-36', 'patient-50', 'patient-56', 'patient-62', 'patient-72']) {
+      const identities = PATIENT_IDENTITIES.filter(identity => identity.portraitId === portrait);
+      expect(identities.some(identity => JOBS[identity.jobId]!.key === 'professor'), portrait).toBe(true);
+      expect(identities.every(identity => ['professor', 'teacher', 'editor', 'engineer', 'librarian', 'archivist'].includes(JOBS[identity.jobId]!.key)), portrait).toBe(true);
+    }
+  });
+
+  it('provides 78 portraits, 45 occupations and 24 localized employers with stable references', () => {
+    expect(CHARACTER_COUNT).toBe(78);
+    expect(PATIENTS).toHaveLength(2503);
+    expect(JOBS).toHaveLength(45);
+    expect(new Set(PATIENTS.map(patient => patient.characterId)).size).toBe(78);
+    expect(new Set(PATIENTS.map(patient => patient.jobId)).size).toBe(45);
+    expect(new Set(PATIENTS.map(patient => patient.employerId)).size).toBe(24);
     for (const [id, patient] of PATIENTS.entries()) {
       expect(patient.id).toBe(id);
       expect(JOBS[patient.jobId]).toBeDefined();
@@ -62,7 +109,7 @@ describe('patient and occupation catalog', () => {
       expect(patient.requirementId).toBe('full');
     }
     for (let characterId = 28; characterId < CHARACTER_COUNT; characterId++) {
-      const cases = PATIENTS.filter(patient => patient.characterId === characterId);
+      const cases = PATIENTS.slice(0, CURATED_CASE_START).filter(patient => patient.characterId === characterId);
       expect(cases).toHaveLength(9);
       expect(new Set(cases.map(patient => patient.portraitId)).size).toBe(1);
       expect(new Set(cases.map(patient => patient.birthDate)).size).toBe(1);
@@ -73,16 +120,16 @@ describe('patient and occupation catalog', () => {
     }
   });
 
-  it('reproduces a saved queue seed and shuffles every identity, including the original three', () => {
+  it('reproduces a saved queue seed and shuffles every portrait, including the original three', () => {
     const first = createRoster(15), second = createRoster(16);
     expect(createRoster(15)).toEqual(first);
     expect(createRoster(15, true)).toEqual(first);
     expect(second.roster).not.toEqual(first.roster);
     for (const { roster } of [first, second]) {
-      expect(roster).toHaveLength(53);
-      expect(new Set(roster.map(id => PATIENTS[id]!.characterId)).size).toBe(53);
+      expect(roster).toHaveLength(78);
+      expect(new Set(roster.map(id => PATIENTS[id]!.characterId)).size).toBe(78);
     }
-    const positions = Array.from({ length: 30 }, (_, seed) => createRoster(seed).roster.findIndex(id => id === 0));
+    const positions = Array.from({ length: 30 }, (_, seed) => createRoster(seed).roster.findIndex(id => PATIENTS[id]!.characterId === 0));
     expect(new Set(positions).size).toBeGreaterThan(15);
     expect(positions.some(position => position > 2)).toBe(true);
   });
@@ -97,7 +144,7 @@ describe('patient and occupation catalog', () => {
     expect(hasRequiredExaminations(pressureCase, { generalTested: true, visionTested: true, pressureTested: true, measurementsTaken: false })).toBe(false);
   });
 
-  it('caps unfit patients at 33% of every queue prefix without losing identities or case variety', () => {
+  it('caps unfit patients at 33% of every queue prefix without repeating portraits or losing curated case variety', () => {
     const seenCases = new Set<number>();
     const seeds = [0, 0xffff_ffff, ...Array.from({ length: 4096 }, (_, index) => Math.imul(index + 1, 0x9e3779b1) >>> 0)];
     for (const seed of seeds) {
@@ -111,11 +158,10 @@ describe('patient and occupation catalog', () => {
         highestPercent = Math.max(highestPercent, 100 * unfit / (index + 1));
       }
       expect(highestPercent, `seed ${seed}`).toBeLessThanOrEqual(33);
-      expect(unfit).toBeLessThanOrEqual(17);
-      expect(roster).toContain(1);
-      expect(roster).toContain(2);
+      expect(unfit).toBeLessThanOrEqual(25);
+      expect(roster.every(id => id >= CURATED_CASE_START)).toBe(true);
     }
-    expect(seenCases.size).toBe(PATIENTS.length);
+    expect(seenCases.size).toBe(PATIENTS.length - CURATED_CASE_START);
   });
 
   it('completes a visit with its own required tests and does not penalize an unrelated finding', () => {
@@ -158,7 +204,7 @@ describe('numerical clinical findings', () => {
     for (const profile of ['full', 'vision', 'pressure'] as const) {
       expect(decisionForFindings(profile, { general: 'refer', vision: 'pass', pressure: 'pass' })).toBe('unfit');
     }
-    for (const patient of PATIENTS.slice(303)) {
+    for (const patient of PATIENTS.filter(patient => patient.conditionId === 'general')) {
       expect(patient.general).toBe('refer');
       expect(patient.expectedDecision).toBe('unfit');
     }

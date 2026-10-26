@@ -224,6 +224,16 @@ describe('cabinet work', () => {
 });
 
 describe('paperwork and the new instruments', () => {
+  it('identifies desk notes on arrival and retrieval while keeping stored supplies blank', () => {
+    const supplies = act(cabinet(), 'take-paper', 'take-paper', { type: 'store-paper', paperId: 2 });
+    expect(supplies.papers.every(paper => paper.patientId === null)).toBe(true);
+    const arrived = act(supplies, 'call-patient');
+    expect(arrived.papers[0]).toMatchObject({ patientId: 0, additionalWritten: false, examinationOrder: [], results: { general: null } });
+    expect(arrived.papers[1]).toMatchObject({ patientId: null, location: 'drawer' });
+    const retrieved = act(arrived, { type: 'retrieve-paper', paperId: 2 });
+    expect(retrieved.papers[1]).toMatchObject({ patientId: 0, additionalWritten: false, examinationOrder: [], results: { general: null } });
+  });
+
   it('fills a blank stored sheet when it is retrieved after examinations', () => {
     const stored = act(cabinet(), 'take-paper', { type: 'store-paper', paperId: 1 },
       'call-patient', 'take-document', 'run-vision');
@@ -247,14 +257,16 @@ describe('paperwork and the new instruments', () => {
   it('automatically records results and uses the pen only for supplementary information', () => {
     let state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'take-paper');
     const blank = state.papers[1]!;
-    expect(blank).toMatchObject({ id: 2, kind: 'note', patientId: null, additionalWritten: false,
+    expect(blank).toMatchObject({ id: 2, kind: 'note', patientId: 0, additionalWritten: false,
       results: { vision: null, pressure: null, weight: null, height: null } });
     state = act(state, 'run-vision', 'run-measurements');
     expect(state.papers).toHaveLength(2);
     expect(state.papers[0]).toMatchObject({ id: 1, kind: 'referral', patientId: 0 });
     expect(state.papers[1]).toMatchObject({ patientId: 0, additionalWritten: false,
       results: { vision: PATIENTS[0]!.visionValues, pressure: null, weight: 62, height: 164 } });
-    expect(blank).toMatchObject({ patientId: null, results: { vision: null } });
+    expect(blank).toMatchObject({ patientId: 0, results: { vision: null } });
+    expect(applyAction(state, { type: 'write-note', paperId: 2 })).toEqual({ state, feedback: 'results-needed' });
+    state = act(state, 'run-general');
     state = act(state, { type: 'write-note', paperId: 2 });
     expect(state.papers[1]).toMatchObject({ additionalWritten: true });
     expect(applyAction(state, { type: 'write-note', paperId: 2 }).state).toBe(state);
@@ -301,7 +313,7 @@ describe('paperwork and the new instruments', () => {
     let state = act(cabinet(), 'call-patient', 'take-document', 'take-certificate', 'take-paper');
     expect(applyAction(state, 'take-document').state).toBe(state);
     state = act(state, { type: 'write-note', paperId: 2 });
-    expect(state.papers[1]).toMatchObject({ patientId: 0, additionalWritten: true,
+    expect(state.papers[1]).toMatchObject({ patientId: 0, additionalWritten: false,
       results: { vision: null, pressure: null, weight: null, height: null } });
     expect(applyAction(state, { type: 'write-note', paperId: 2 }).state).toBe(state);
     state = act(state, { type: 'trash-paper', paperId: 1 });
@@ -516,7 +528,7 @@ describe('general examination and chronological findings', () => {
 
   it('requires a general examination for every profile, and records findings in action order only once', () => {
     let state = act(cabinet(), 'call-patient', 'take-document', 'take-paper');
-    expect(state.papers[1]).toMatchObject({ patientId: null, examinationOrder: [], results: { general: null } });
+    expect(state.papers[1]).toMatchObject({ patientId: 0, examinationOrder: [], results: { general: null } });
     state = act(state, 'run-pressure', 'run-general', 'run-measurements', 'run-vision', 'run-general');
     const order = ['pressure', 'general', 'measurements', 'vision'];
     expect(state.visit).toMatchObject({ generalTested: true, examinationOrder: order });

@@ -13,7 +13,7 @@ const patientShadows = new Map<string, HTMLCanvasElement>();
 let creatorPhotograph: { image: HTMLCanvasElement; shadow: HTMLCanvasElement } | undefined;
 const introNames = ['scalpel', 'catheter', 'pen', 'stamp'] as const;
 const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate', 'clock',
-  'patient-0', 'patient-1', 'patient-2', ...Array.from({ length: 50 }, (_, index) => `patient-${String(index + 1).padStart(2, '0')}`), 'workstation-phone', 'workstation-clips', 'workstation-clip', 'workstation-rack', 'workstation-paper',
+  ...new Set(PATIENTS.map(patient => patient.portraitId)), 'workstation-phone', 'workstation-clips', 'workstation-clip', 'workstation-rack', 'workstation-paper',
   'workstation-calendar', 'imprint-fit-pl', 'imprint-unfit-pl', 'imprint-fit-en', 'imprint-unfit-en', 'document-seal', 'document-seal-zus', 'document-seal-employer', 'document-signature'] as const;
 export const PATIENT_MOTION_FRAMES = 12;
 

@@ -18,11 +18,11 @@ function submit(patientId: number, decision: 'fit' | 'unfit', fraction: number, 
 }
 
 describe('patient catalog and deterministic queues', () => {
-  it('preserves the original 103 case fixtures while expanding to 53 identities', () => {
-    expect(PATIENTS).toHaveLength(328);
-    expect(new Set(PATIENTS.map(patient => patient.characterId)).size).toBe(53);
+  it('preserves the original 103 case fixtures while adding five identities per portrait', () => {
+    expect(PATIENTS).toHaveLength(2503);
+    expect(new Set(PATIENTS.map(patient => patient.characterId)).size).toBe(78);
     for (let character = 3; character < 28; character += 1) {
-      const cases = PATIENTS.filter(patient => patient.characterId === character);
+      const cases = PATIENTS.slice(0, 103).filter(patient => patient.characterId === character);
       expect(cases).toHaveLength(4);
       expect(new Set(cases.map(patient => patient.conditionId)).size).toBe(4);
       expect(new Set(cases.map(patient => patient.employerId)).size).toBe(4);
@@ -34,7 +34,7 @@ describe('patient catalog and deterministic queues', () => {
     const first = createRoster(15), second = createRoster(16);
     expect(createRoster(15)).toEqual(first);
     expect(second.roster).not.toEqual(first.roster);
-    expect(new Set(first.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(53);
+    expect(new Set(first.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(78);
     expect(createInitialState(15).roster).toEqual(first.roster);
     expect(createInitialState(15).roster.slice(0, 3)).not.toEqual([0, 1, 2]);
   });
@@ -224,7 +224,7 @@ describe('rest days and monthly carryover', () => {
     expect(sunday.settlement).toMatchObject({ basePay: 0, patientBonus: 0, patients: 0, openingBalance: saturday.money });
     const monday = act(decodeSave(encodeSave(sunday)), 'next-day');
     expect(monday).toMatchObject({ day: 5, phase: 'cabinet', clockMinutes: 477, money: sunday.money, insuranceRate: 350, settlement: null });
-    expect(monday.roster).toHaveLength(53);
+    expect(monday.roster).toHaveLength(78);
     expect(decodeSave(encodeSave(monday))).toEqual(monday);
   });
 

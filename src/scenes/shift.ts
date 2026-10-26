@@ -3,7 +3,7 @@ import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, drawCe
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
 import { drawManual, drawManualCover, manualControls, MANUAL_PAGE_COUNT } from '../render/manual';
-import { INTRO_SLIDES, PATIENTS, canEndDay, isShiftFinished, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
+import { INTRO_SLIDES, PATIENTS, canEndDay, canWriteNote, isShiftFinished, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
 import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
 import { calendarText } from '../core/calendar';
@@ -104,7 +104,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
         : { type: 'read-paper', paperId: paper.id };
       const bounds = itemRect(view.desk, id, false, isLifted(view, id));
       const canAct = !isLifted(view, id) && bounds.x >= RIGHT_DESK_X
-        && (paper.kind === 'note' || (paper.kind === 'letter' && !paper.opened));
+        && (canWriteNote(state, paper) || (paper.kind === 'letter' && !paper.opened));
       return [item(id, paperDescription(paper, locale, isDocumentClipped(state, paper.id)), id, action),
         ...(canAct ? [{ ...hotspot(`paper-action-${paper.id}`, paper.kind === 'note' ? t.paperwork.write : t.paperwork.open, paperActionRect(bounds), action), owner: id }] : []),
         ...(!isLifted(view, id) && visibleDocumentClip(state, paper.id, view)
@@ -149,7 +149,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     }
     if (id.startsWith('paper-')) {
       const paper = state.papers.find(entry => `paper-${entry.id}` === id && entry.location === 'desk');
-      if (paper && !view.hiddenPaperIds?.includes(paper.id)) drawPaperwork(ctx, paper, bounds, locale, lifted, visibleDocumentClip(state, paper.id, view));
+      if (paper && !view.hiddenPaperIds?.includes(paper.id)) drawPaperwork(ctx, paper, bounds, locale, lifted, visibleDocumentClip(state, paper.id, view), paper.kind !== 'note' || canWriteNote(state, paper));
       continue;
     }
     if (id.startsWith('clip-')) {
