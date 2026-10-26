@@ -6,9 +6,9 @@
   "description": "A browser-only occupational health bureaucracy game.",
   "author": "Robert Chaba (https://github.com/robertchaba)",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
+    "dev": "vite --host",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host 127.0.0.1",
+    "preview": "vite preview --host",
     "test": "vitest run",
     "test:browser": "playwright test"
   },
