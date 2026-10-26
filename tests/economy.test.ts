@@ -1,3 +1,4 @@
+import { createDailyRoster } from '../src/core/progression';
 import { createInitialState } from './fixtures/game';
 import { describe, expect, it, vi } from 'vitest';
 import { applyAction, canEndDay, createInitialState as createGame, PATIENTS, type GameAction, type GameState } from '../src/core/game';
@@ -35,7 +36,7 @@ describe('patient catalog and deterministic queues', () => {
     expect(createRoster(15)).toEqual(first);
     expect(second.roster).not.toEqual(first.roster);
     expect(new Set(first.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(103);
-    expect(createInitialState(15).roster).toEqual(first.roster);
+    expect(createInitialState(15).roster).toEqual(createDailyRoster(15, 1).roster);
     expect(createInitialState(15).roster.slice(0, 3)).not.toEqual([0, 1, 2]);
   });
 });
@@ -69,7 +70,7 @@ describe('decision consequences', () => {
     expect(act(home, 'next-day').daily).toEqual(emptyConsequences());
   });
   it('does not escalate a hidden error and persists the 50 then 100 insurance increases', () => {
-    let state = submit(0, 'unfit', .1);
+    let state = submit(0, 'unfit', .1, { ...cabinet(), money: 10000 });
     expect(state.insuranceRate).toBe(300);
     state = submit(3, 'unfit', .9, state);
     expect(state.insuranceRate).toBe(350);
@@ -224,7 +225,7 @@ describe('rest days and monthly carryover', () => {
     expect(sunday.settlement).toMatchObject({ basePay: 0, patientBonus: 0, patients: 0, insuranceCost: 0, openingBalance: saturday.money });
     const monday = act(decodeSave(encodeSave(sunday)), 'next-day');
     expect(monday).toMatchObject({ day: 5, phase: 'cabinet', clockMinutes: 477, money: sunday.money, insuranceRate: 350, settlement: null });
-    expect(monday.roster).toHaveLength(103);
+    expect(monday.roster).toHaveLength(83);
     expect(decodeSave(encodeSave(monday))).toEqual(monday);
   });
 

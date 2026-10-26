@@ -71,6 +71,7 @@
 - Returning the 100 zł and then refusing the patient brings no consequence; the completed appointment still earns the normal patient bonus.
 - Keeping the bribe and then issuing a refusal leads to the first ending: the doctor is beaten on the way home and hospitalized. The game ends with the news that, after treatment, the doctor will also need an occupational-health examination.
 
+- Pilots, militia officers, miners and steelworkers first join newly arranged patient queues on the seventh working day, when additional examinations become available.
 - At the start of the seventh working day, the Medical Chamber announces additional examinations: tonal audiometry for steelworkers, a vestibular examination for pilots, a psychiatric consultation for militia officers with diagnosed disturbances or doubts about mental fitness for service, and a chest X-ray for miners with radiological changes suggesting pneumoconiosis.
 - The doctor takes an additional-examination referral from the third rack slot from the top, circles exactly one appropriate examination and hands the referral to the patient. The patient leaves for the examination while their existing paperwork remains with the doctor; the next patient may then be called.
 - Referred patients return with a report later the same day, after several hours and several intervening patients, or on the next working day. The report clearly states whether the relevant finding allows approval or requires refusal. Blood pressure, eyesight, other findings and applicable document rules must still be checked.

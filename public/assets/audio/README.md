@@ -1,6 +1,6 @@
 # Music and sound effects
 
-Twenty supplied MP3s are bundled in [music/](music/README.md): seventeen ordinary tracks and one home/day-settlement track are registered in `src/core/music.ts`, while both filenames of the identical success cue remain reserved and unregistered. Eight original mechanical effects and two localized corridor voice clips are registered in `src/core/effects.ts`. The Howler manager in `src/core/audio.ts` provides lazy loading, separate music/effect volumes, mute, playlists, previous/next controls, and user-gesture unlocking.
+Twenty-one supplied MP3s are bundled in [music/](music/README.md): seventeen ordinary tracks, one home/day-settlement track and one failure-ending track (`Game Over.mp3`) are registered in `src/core/music.ts`, while both filenames of the identical success cue remain reserved and unregistered. Eight original mechanical effects and two localized corridor voice clips are registered in `src/core/effects.ts`. The Howler manager in `src/core/audio.ts` provides lazy loading, separate music/effect volumes, mute, playlists, previous/next controls, and user-gesture unlocking.
 
 ## Original effects
 

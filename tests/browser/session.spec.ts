@@ -1,4 +1,4 @@
-import { CHARACTER_COUNT, PATIENTS } from '../../src/core/patients';
+import { PATIENTS } from '../../src/core/patients';
 import { loadKnownQueue, knownQueueState } from './fixtures';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
@@ -127,8 +127,8 @@ test('restart can be canceled and resets progress only after confirmation, retai
   await activate(page, 'saves');
   const restarted = await exportState(page, testInfo);
   expect(restarted).toEqual({ ...createInitialState(), rngState: restarted.rngState, roster: restarted.roster });
-  expect(restarted.roster).toHaveLength(CHARACTER_COUNT);
-  expect(new Set(restarted.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(CHARACTER_COUNT);
+  expect(restarted.roster).toHaveLength(83);
+  expect(new Set(restarted.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(83);
   let unfit = 0;
   for (const [index, id] of restarted.roster.entries()) {
     if (PATIENTS[id]!.expectedDecision === 'unfit') unfit += 1;
@@ -199,6 +199,6 @@ test('a delayed import cannot overwrite a newly restarted game', async ({ page }
   await activate(page, 'saves');
   const restarted = await exportState(page, testInfo);
   expect(restarted).toEqual({ ...createInitialState(), rngState: restarted.rngState, roster: restarted.roster });
-  expect(restarted.roster).toHaveLength(CHARACTER_COUNT);
-  expect(new Set(restarted.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(CHARACTER_COUNT);
+  expect(restarted.roster).toHaveLength(83);
+  expect(new Set(restarted.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(83);
 });

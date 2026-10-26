@@ -17,7 +17,7 @@ import { drawerButtons, drawerDescription, renderDrawer, type DrawerAction } fro
 import { installCursor, installDisplay, WIDTH, HEIGHT } from './core/display';
 import { translations, readPreferences, savePreferences, type Locale } from './i18n';
 import { audio } from './core/audio';
-import { musicManifest, musicPlaylist, endDayPlaylist } from './core/music';
+import { musicManifest, musicPlaylist, playlistForState } from './core/music';
 import { createInitialState, downloadSave, importSave, SaveError } from './core/save';
 
 type Screen = 'welcome' | 'intro' | 'cabinet' | 'credits' | 'saves' | 'break-room' | 'restart' | 'drawer' | 'home';
@@ -48,7 +48,7 @@ let feedback = '';
 let introCharacters = 0;
 let homePageIndex = 0;
 let typingKey = '';
-let musicContext = 'work';
+let activeMusicPlaylist: readonly string[] = musicPlaylist;
 let typingTimer: ReturnType<typeof setInterval> | undefined;
 let gameState = createInitialState(crypto.getRandomValues(new Uint32Array(1))[0]);
 let deskState = createDeskState();
@@ -801,10 +801,10 @@ function syncControls(focusId?: string): void {
   reconcileDeskPapers();
 
   // Preparing even while muted cancels pending requests from the previous scene.
-  const context = gameState.phase === 'home' ? 'home' : 'work';
-  if (context !== musicContext) {
-    musicContext = context;
-    audio.preparePlaylist(context === 'home' ? endDayPlaylist : musicPlaylist, () => notify(t().audioError));
+  const playlist = playlistForState(gameState);
+  if (playlist !== activeMusicPlaylist) {
+    activeMusicPlaylist = playlist;
+    audio.preparePlaylist(playlist, () => notify(t().audioError));
     startMusic();
   }
   if (desktopActive) {
@@ -1076,7 +1076,7 @@ fileInput.addEventListener('change', async () => {
 function startMusic(): void {
   if (!desktopActive || audio.isMuted()) return;
   audio.unlock();
-  audio.playPlaylist(gameState.phase === 'home' ? endDayPlaylist : musicPlaylist, () => notify(t().audioError));
+  audio.playPlaylist(playlistForState(gameState), () => notify(t().audioError));
 }
 
 function updateDeskControls(): void {

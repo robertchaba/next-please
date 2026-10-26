@@ -305,15 +305,17 @@ export function randomStep(seed: number): { value: number; seed: number } {
   return { value: next / 0x1_0000_0000, seed: next };
 }
 
-export function createRoster(seed: number, _tutorial = false): { roster: number[]; seed: number } {
-  const ids = Array.from({ length: CHARACTER_COUNT }, (_, index) => index);
+export function createRoster(seed: number, _tutorial = false, eligible: (patient: PatientCase) => boolean = () => true): { roster: number[]; seed: number } {
+  // Filter identities before drawing or balancing; locked portraits stay unused.
+  const availableCases = CASES_BY_CHARACTER.map(cases => cases.filter(id => eligible(PATIENTS[id]!)));
+  const ids = availableCases.flatMap((cases, index) => cases.length ? [index] : []);
   for (let i = ids.length - 1; i > 0; i -= 1) {
     const random = randomStep(seed); seed = random.seed;
     const target = Math.floor(random.value * (i + 1));
     [ids[i], ids[target]] = [ids[target]!, ids[i]!];
   }
   const roster = ids.map(characterId => {
-    const cases = CASES_BY_CHARACTER[characterId]!;
+    const cases = availableCases[characterId]!;
     if (cases.length === 1) return cases[0]!;
     const random = randomStep(seed); seed = random.seed;
     return cases[Math.floor(random.value * cases.length)]!;

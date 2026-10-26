@@ -1,9 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readdirSync } from 'node:fs';
 import type { Howl } from 'howler';
+import { applyAction, createInitialState } from '../../src/core/game';
+import { encodeSave } from '../../src/core/save';
 
 const trackFiles = readdirSync(new URL('../../public/assets/audio/music/', import.meta.url))
-  .filter(file => file.endsWith('.mp3') && !file.endsWith(' - EOD.mp3') && !file.endsWith(' - SUCCESS.mp3') && file !== 'Victory Fanfare.mp3').sort();
+  .filter(file => file.endsWith('.mp3') && !file.endsWith(' - EOD.mp3') && !file.endsWith(' - SUCCESS.mp3') && file !== 'Victory Fanfare.mp3' && file !== 'Game Over.mp3').sort();
 
 // Inspect the actual Howler/Web Audio playback in the built app; no test-only
 // hooks or mocked audio are installed in production code.
@@ -20,6 +22,65 @@ const playing = (page: Page) => page.evaluate(() => window.Howler._howls.filter(
 // Observe the rendered meter on the music control outside the game canvas.
 const meterHeights = (page: Page) => page.locator('#control-sound .music-meter > i')
   .evaluateAll(bars => bars.map(bar => getComputedStyle(bar).height));
+
+for (const ending of ['bankruptcy', 'hospital'] as const) for (const muted of [true, false]) {
+  test(`Game Over stays isolated through ${ending}, import and restart (muted=${muted})`, async ({ page }) => {
+    const requests: string[] = [];
+    page.on('request', request => { if (request.url().endsWith('.mp3')) requests.push(decodeURIComponent(request.url())); });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+    if (!muted) await page.locator('#control-sound').click();
+    let state = applyAction(createInitialState(17), 'skip-intro').state;
+    if (ending === 'hospital') {
+      state = { ...state, day: 8, shiftCompleted: 1, patientsProcessed: 1 };
+      for (const action of ['call-patient', 'take-document', 'take-certificate', 'write-certificate', 'accept-bribe', 'stamp-unfit', 'return-document'] as const) {
+        state = applyAction(state, action).state;
+      }
+      expect(state.ending).toBe('assault-pending');
+    }
+    state = { ...state, clockMinutes: 840, money: ending === 'bankruptcy' ? -1000 : 1000 };
+    await page.locator('#control-saves').click();
+    await page.locator('#save-input').setInputFiles({ name: 'closing.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(state)) });
+    await expect(page.getByRole('status')).toContainText('Zapis wczytany');
+    await page.locator('#control-back').click();
+    await page.locator('#control-start').click();
+    expect(requests.some(src => src.endsWith('Game Over.mp3'))).toBe(false);
+    await page.locator('#control-end-day-home').click();
+    if (muted) {
+      await page.locator('#control-next-track').click();
+      expect(requests.some(src => src.endsWith('Game Over.mp3'))).toBe(false);
+      await page.locator('#control-sound').click();
+    }
+    const gameOverPlaying = async () => (await playing(page)).map(sound => ({ src: sound.src.split('/').at(-1), muted: sound.muted }));
+    await expect.poll(gameOverPlaying).toEqual([{ src: 'Game Over.mp3', muted: false }]);
+    for (const control of ['next-track', 'previous-track']) {
+      await page.locator(`#control-${control}`).click();
+      await expect.poll(gameOverPlaying).toEqual([{ src: 'Game Over.mp3', muted: false }]);
+    }
+    await page.evaluate(() => {
+      const sound = window.Howler._howls.find(sound => sound.playing() && decodeURIComponent(String(sound._src)).endsWith('Game Over.mp3'))!;
+      sound.seek(sound.duration() - 0.1);
+    });
+    await expect.poll(async () => (await playing(page))[0]?.seek).toBeLessThan(2);
+    await page.locator('#control-saves').click();
+    const ended = applyAction(state, 'end-day').state;
+    expect(ended.ending).toBe(ending);
+    await page.locator('#save-input').setInputFiles({ name: 'ending.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(ended)) });
+    await expect(page.getByRole('status')).toContainText('Zapis wczytany');
+    await page.locator('#control-back').click();
+    await expect.poll(gameOverPlaying).toEqual([{ src: 'Game Over.mp3', muted: false }]);
+    await page.locator('#control-sound').click();
+    await page.locator('#control-next-track').click();
+    await expect.poll(gameOverPlaying).toEqual([{ src: 'Game Over.mp3', muted: true }]);
+    await page.locator('#control-menu').click();
+    await page.locator('#control-restart').click();
+    await page.locator('#control-restart-confirm').click();
+    expect(await playing(page)).toEqual([]);
+    await page.locator('#control-sound').click();
+    await expect.poll(async () => (await playing(page)).map(sound => sound.src.split('/').at(-1))).toEqual(['Bureaucratic March 1.mp3']);
+    expect(requests.some(src => src.includes('EOD') || src.includes('Victory'))).toBe(false);
+  });
+}
 
 test('music decodes, plays continuously across screens, repeats, and respects persisted mute', async ({ page }) => {
   const errors: string[] = [];

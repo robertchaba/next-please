@@ -162,7 +162,7 @@ describe('day seven additional examinations', () => {
 
   it('rejects forged result, return schedule, unknown fields and duplicate pending identities', () => {
     const state = send(appointment(), 'vestibular');
-    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 20, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
+    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 21, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
     for (const change of [
       (s: GameState) => { s.pendingReferrals[0]!.fit = false; },
       (s: GameState) => { s.pendingReferrals[0]!.returnDay += 7; },

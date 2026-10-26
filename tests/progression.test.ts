@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { applyAction, advanceClinicTime, createInitialState, type GameAction, type GameState } from '../src/core/game';
-import { PATIENTS, createRoster, randomStep } from '../src/core/patients';
-import { arrangeProgressionRoster, createAppointmentDetails, directiveForDay, effectivePatient, expectedVisitDecision, patientForAppointment, referralDate, workDayNumber } from '../src/core/progression';
+import { JOBS, PATIENTS, createRoster, randomStep } from '../src/core/patients';
+import { arrangeProgressionRoster, createAppointmentDetails, createDailyRoster, directiveForDay, effectivePatient, expectedVisitDecision, patientForAppointment, referralDate, workDayNumber } from '../src/core/progression';
+import { decodeSave, encodeSave } from '../src/core/save';
 
 const act = (state: GameState, ...actions: GameAction[]): GameState => actions.reduce((current, action) => applyAction(current, action).state, state);
 const cabinet = (day = 1): GameState => ({ ...act(createInitialState(1337), 'skip-intro'), day });
@@ -25,12 +26,54 @@ function bribeAppointment(): GameState {
 }
 
 describe('progression follows working days', () => {
+  const reservedJobs = ['pilot', 'militia-officer', 'miner', 'furnace-operator'];
+  it('reserves the four additional-test professions until working day seven before balancing the queue', () => {
+    for (let seed = 0; seed < 256; seed++) {
+      for (const day of [1, 2, 5, 6, 7, 8]) {
+        const generated = createDailyRoster(seed, day);
+        expect(createDailyRoster(seed, day)).toEqual(generated);
+        expect(generated.roster).toHaveLength(83);
+        expect(new Set(generated.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(83);
+        let unfit = 0, highestPercent = 0;
+        const jobs = new Set(generated.roster.map(id => JOBS[PATIENTS[id]!.jobId]!.key));
+        for (const job of reservedJobs) expect(jobs.has(job)).toBe(false);
+        for (const [index, id] of generated.roster.entries()) {
+          const patient = PATIENTS[id]!;
+          unfit += Number(patient.expectedDecision === 'unfit');
+          highestPercent = Math.max(highestPercent, unfit * 100 / (index + 1));
+        }
+        expect(highestPercent).toBeLessThanOrEqual(33);
+      }
+      for (const day of [9, 12]) {
+        const { roster } = createDailyRoster(seed, day);
+        expect(roster).toHaveLength(103);
+        const jobs = roster.map(id => JOBS[PATIENTS[id]!.jobId]!.key);
+        for (const job of reservedJobs) expect(jobs).toContain(job);
+        expect(jobs.filter(job => job === 'militia-officer')).toHaveLength(10);
+        expect(jobs.filter(job => job === 'pilot')).toHaveLength(5);
+      }
+    }
+  });
+  it('uses the gate on new games and daily transitions, including weekends and save reloads', () => {
+    let state = act({ ...createInitialState(31), money: 100000 }, 'skip-intro');
+    for (let day = 1; day <= 9; day++) {
+      expect(state.day).toBe(day);
+      expect(decodeSave(encodeSave(state))).toEqual(state);
+      if (state.phase === 'cabinet') {
+        expect(state.roster).toHaveLength(day < 9 ? 83 : 103);
+        if (day < 9) for (const id of state.roster) expect(reservedJobs).not.toContain(JOBS[PATIENTS[id]!.jobId]!.key);
+        if (day === 8) expect(applyAction({ ...state, shiftCompleted: 1 }, 'call-patient').state.visit?.bribe).toBe('offered');
+        state = act({ ...state, clockMinutes: 840 }, 'end-day');
+      } else expect(state.roster).toEqual([]);
+      state = act(state, 'next-day');
+    }
+  });
   it('counts weekdays without advancing the rules during weekends', () => {
     expect(Array.from({ length: 12 }, (_, index) => workDayNumber(index + 1))).toEqual([1, 2, 2, 2, 3, 4, 5, 6, 7, 7, 7, 8]);
     expect([1, 2, 3, 4, 5, 6, 7, 8].map(directiveForDay)).toEqual([null, null, null, null, 'dates', 'specialist', 'authenticity', null]);
   });
   it('delivers one correctly signed directive before the first patient on days three, four and five', () => {
-    let state = cabinet();
+    let state = { ...cabinet(), money: 10000 };
     const received: string[] = [];
     for (let day = 2; day <= 8; day++) {
       state = act({ ...state, clockMinutes: 840 }, 'end-day', 'next-day');

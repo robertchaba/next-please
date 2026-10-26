@@ -1,6 +1,6 @@
 import { gameDate, isWeekend } from './calendar';
-import { additionalResultFor, additionalTestForPatient } from './additional-tests';
-import { JOBS, PATIENTS, REQUIREMENTS, randomStep, type PatientCase } from './patients';
+import { additionalResultFor, additionalTestForJob, additionalTestForPatient } from './additional-tests';
+import { JOBS, PATIENTS, REQUIREMENTS, createRoster, randomStep, type PatientCase } from './patients';
 import type { Decision, GameState, Visit } from './game';
 
 export type DirectiveRule = 'dates' | 'specialist' | 'authenticity' | 'additional-tests';
@@ -19,6 +19,11 @@ export const emptyCalls = (): PhoneConclusions => ({ specialist: null, employer:
 export function workDayNumber(day: number): number {
   const completeWeeks = Math.floor((day - 1) / 7), remainder = (day - 1) % 7;
   return completeWeeks * 5 + [1, 2, 2, 2, 3, 4, 5][remainder]!;
+}
+
+/** Reserve the four additional-examination professions until their rules arrive. */
+export function createDailyRoster(seed: number, day: number): ReturnType<typeof createRoster> {
+  return createRoster(seed, false, patient => workDayNumber(day) >= 7 || additionalTestForJob(patient) === null);
 }
 
 export function directiveForDay(day: number): DirectiveRule | null {

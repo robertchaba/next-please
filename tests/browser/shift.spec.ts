@@ -1,4 +1,3 @@
-import { CHARACTER_COUNT } from '../../src/core/patients';
 import { translations } from '../../src/i18n';
 import { MANUAL_PAGE_COUNT } from '../../src/render/manual';
 import { loadKnownQueue } from './fixtures';
@@ -159,7 +158,7 @@ test('examinations, stamping and the rulebook support keyboard visits with defer
   expect(completed.clockMinutes).toBeGreaterThan(480);
   // Three visits are only the start of the day; their pay remains deferred.
   expect(completed.clockMinutes).toBeLessThan(840);
-  expect(completed.roster).toHaveLength(CHARACTER_COUNT);
+  expect(completed.roster).toHaveLength(83);
   await useKeyboard(page, 'back');
   await useKeyboard(page, 'call-patient');
   await expect(page.locator('#control-take-document')).toBeVisible();

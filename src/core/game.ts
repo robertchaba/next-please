@@ -1,8 +1,8 @@
 import { gameDate, isWeekend } from './calendar';
 import { additionalResultFor, additionalTestForJob, additionalTestForPatient, nextWorkingDay, type AdditionalTest, type AdditionalResult, type PendingReferral } from './additional-tests';
-import { PATIENTS, CHARACTER_COUNT, createRoster, randomStep, hasRequiredExaminations, disqualifyingPressure, type ExaminationId, type VisionValues, type PressureValues } from './patients';
+import { PATIENTS, CHARACTER_COUNT, randomStep, hasRequiredExaminations, disqualifyingPressure, type ExaminationId, type VisionValues, type PressureValues } from './patients';
 import { BASE_INSURANCE, emptyConsequences, settleDay, type DailyConsequences, type DaySettlement } from './economy';
-import { arrangeProgressionRoster, createAppointmentDetails, directiveForDay, emptyCalls, expectedVisitDecision, patientForAppointment, specialistIsValid, workDayNumber,
+import { arrangeProgressionRoster, createAppointmentDetails, createDailyRoster, directiveForDay, emptyCalls, expectedVisitDecision, patientForAppointment, specialistIsValid, workDayNumber,
   type BribeState, type DirectiveRule, type PhoneConclusions, type ReferralDetails, type SpecialistCertificate } from './progression';
 export type { DaySettlement, DailyConsequences } from './economy';
 
@@ -136,7 +136,7 @@ export type GameFeedback =
   | 'employer-confirmed' | 'employer-denied' | 'bribe-accepted' | 'bribe-returned' | 'bribe-missing' | 'game-over';
 
 export function createInitialState(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0]!): GameState {
-  const generated = createRoster(seed >>> 0);
+  const generated = createDailyRoster(seed >>> 0, 1);
   return {
     pendingReferrals: [], referralsIssued: 0, budgetHistory: [],
     ending: null,
@@ -255,7 +255,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
         clockMinutes: SHIFT_END_MINUTES, referralsIssued: 0, daily: emptyConsequences(), money: result.settlement.closingBalance,
         ending: settledEnding(state, result.settlement.closingBalance) }, 'next-day');
     }
-    const generated = createRoster(state.rngState);
+    const generated = createDailyRoster(state.rngState, day);
     const rule = directiveForDay(day);
     if (rule && (state.papers.length >= GAME_LIMITS.papers || state.nextPaperId > GAME_LIMITS.paperId)) return unchanged('limit-reached');
     const papers: Paper[] = rule ? [...state.papers, { id: state.nextPaperId, kind: 'directive', patientId: null, day,

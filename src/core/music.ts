@@ -1,4 +1,5 @@
 import type { AudioManifest } from './audio';
+import type { GameState } from './game';
 
 const tracks = [
   ['bureaucratic-march-1', 'Bureaucratic March 1.mp3'],
@@ -23,6 +24,9 @@ const tracks = [
 /** This recording belongs only to the home/day-settlement context. */
 export const endDayMusic = 'wissenschaftlicher-optimismus-eod';
 export const endDayPlaylist: readonly string[] = [endDayMusic];
+/** Terminal failures have their own cue, outside work and ordinary settlement. */
+export const gameOverMusic = 'game-over';
+export const gameOverPlaylist: readonly string[] = [gameOverMusic];
 /** Both filenames contain the same success cue; neither plays until success scenes exist. */
 export const reservedMusicFiles = ['Victory Fanfare - SUCCESS.mp3', 'Victory Fanfare.mp3'] as const;
 
@@ -30,7 +34,13 @@ export const musicPlaylist = tracks.map(([id]) => id);
 export const musicManifest: AudioManifest = Object.fromEntries([
   ...tracks,
   [endDayMusic, 'Wissenschaftlicher Optimismus - EOD.mp3'],
+  [gameOverMusic, 'Game Over.mp3'],
 ].map(([id, filename]) => [id, {
   kind: 'music',
   src: [`${import.meta.env.BASE_URL}assets/audio/music/${encodeURIComponent(filename)}`],
 }]));
+
+export function playlistForState(state: Pick<GameState, 'phase' | 'ending'>): readonly string[] {
+  if (state.ending === 'bankruptcy' || state.ending === 'hospital') return gameOverPlaylist;
+  return state.phase === 'home' ? endDayPlaylist : musicPlaylist;
+}

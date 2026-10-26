@@ -47,14 +47,16 @@ describe('uniformed patients and fourth portrait expansion', () => {
     }
   });
 
-  it('ships 25 distinct local sprites in the established native footprint', () => {
+  it('ships a distinct local sprite for every catalog portrait in the established native footprint', () => {
     const hashes = new Set<string>();
-    for (const portrait of ADDITIONAL_PORTRAITS) {
-      const bytes = readFileSync(new URL(`../public/assets/art/sprites/${portrait.portraitId}.png`, import.meta.url));
+    const portraits = new Set(PATIENTS.map(patient => patient.portraitId));
+    for (const portrait of portraits) {
+      const bytes = readFileSync(new URL(`../public/assets/art/sprites/${portrait}.png`, import.meta.url));
       expect(bytes.readUInt32BE(16)).toBe(94);
       expect(bytes.readUInt32BE(20)).toBe(96);
       hashes.add(createHash('sha256').update(bytes).digest('hex'));
     }
-    expect(hashes.size).toBe(25);
+    expect(portraits.size).toBe(103);
+    expect(hashes.size).toBe(portraits.size);
   });
 });

@@ -84,7 +84,7 @@ test('last patient leaves at closing; automatic home and six-row budget preserve
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   const next = await exportState(page, info);
   expect(next.state).toMatchObject({ day: 2, money: saved.state.money, shiftCompleted: 0, clockMinutes: 477, settlement: null });
-  expect(next.state.roster).toHaveLength(103);
+  expect(next.state.roster).toHaveLength(83);
   let unfit = 0;
   for (const [index, id] of next.state.roster.entries()) {
     if (PATIENTS[id]!.expectedDecision === 'unfit') unfit += 1;
