@@ -5,7 +5,7 @@ import { ClinicClock } from './core/clock';
 import { effectsManifest } from './core/effects';
 import { choosePatientSpeech } from './core/patient-speech';
 import { examinationComment, examinationCommentText, type ExaminationComment } from './core/examination-feedback';
-import { renderCabinet, renderIntro, shiftButtons, shiftDescription, manualPageDescription, paperDescription, visibleDocumentClip, MANUAL_PAGE_COUNT, type SelectedStamp, type ShiftAction, type PatientSpeech } from './scenes/shift';
+import { renderCabinet, renderIntro, shiftButtons, shiftDescription, manualPageDescription, paperDescription, carriedAdditionalReferral, visibleDocumentClip, MANUAL_PAGE_COUNT, type SelectedStamp, type ShiftAction, type PatientSpeech } from './scenes/shift';
 import { homePage, homePages, renderHome, HOME_ACTION } from './scenes/home';
 import type { Button } from './ui';
 import { createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, containsPoint, restRect, dropTargetRect, itemAnchor, TRAY, DEFAULT_DOCUMENT, PATIENT_HANDOFF, MANUAL_SHELF_SIZE, RIGHT_DESK_X, CABINET_HOTSPOTS, type DeskItemId, type Point, type Rect } from './core/desk';
@@ -91,6 +91,7 @@ function deskItemHelp(id: DeskItemId): string {
   if (id === 'manual') return t().manualHelp;
   if (id.startsWith('paper-')) {
     const paper = gameState.papers.find(record => record.id === Number(id.slice(6)));
+    if (paper?.kind === 'additional-referral') return t().additionalTests.selectionHelp;
     return paper && (paper.kind === 'letter' || paper.kind === 'directive') && !paper.opened ? t().letterHelp : t().paperHelp;
   }
   return t().dragHelp;
@@ -359,12 +360,27 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
       if (paper) { spendTime('read-manual'); announceDesk(paperDescription(paper, locale, isDocumentClipped(gameState, paper.id)), `paper-${paper.id}`); }
       return;
     }
+    const previousState = gameState;
     const result = performAction(action);
     gameState = result.state;
     if (result.feedback === 'visit-interrupted') { syncControls(); return; }
     updateClock(); reconcileDeskPapers();
     playEffect('paper');
-    const focus = 'documentId' in action ? itemControlId(documentItem(action.documentId))
+    if (action.type === 'hand-additional-referral' && previousState.visit && !gameState.visit) {
+      stopPhone(); clearPatientMotion();
+      if (clinicSpeech?.speaker !== 'cleaner') clinicSpeech = undefined;
+      animatePatient(previousState.visit.patientId, 'exit');
+      selectedStamp = null; heldItem = null;
+      let focus = canEndDay(gameState) ? 'end-day' : 'call-patient';
+      if (gameState.phase === 'home') {
+        homePageIndex = 0; typingKey = '';
+        if (patientMotion || departingPatientId() !== undefined) screen = 'cabinet';
+        else { screen = 'home'; clearPatientMotion(); startTyping(); focus = 'home-next'; }
+      }
+      announceDesk(t().feedback[result.feedback], focus);
+      return;
+    }
+    const focus = action.type === 'select-additional-test' ? `select-additional-test-${action.paperId}-${action.test}` : 'documentId' in action ? itemControlId(documentItem(action.documentId))
       : paper && gameState.papers.some(record => record.id === paper.id && record.location === 'desk') ? `paper-${paper.id}` : 'drawer';
     announceDesk(t().feedback[result.feedback], focus);
     return;
@@ -437,15 +453,15 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     playEffect('carriage');
     if (screen === 'intro') { startTyping(); focusId = 'intro-next'; }
     else { clearInterval(typingTimer); focusId = 'call-patient'; }
-  } else if (actual === 'call-patient' && result.feedback === 'patient-called') {
-    selectedStamp = null; playEffect('bell'); focusId = 'take-document';
+  } else if (actual === 'call-patient' && (result.feedback === 'patient-called' || result.feedback === 'patient-returned')) {
+    selectedStamp = null; playEffect('bell'); focusId = result.feedback === 'patient-returned' ? `paper-${gameState.nextPaperId - 1}` : 'take-document';
     deskState = moveDeskItem(deskState, 'document', DEFAULT_DOCUMENT);
     // Calling again finishes the previous farewell so the portrait and papers
     // always belong to the same patient, even when the doctor works quickly.
     clearPatientMotion();
     stopPhone(); clinicSpeech = undefined;
     animatePatient(gameState.visit!.patientId, 'enter');
-    say(gameState.visit!.patientId, gameState.visit!.bribe === 'offered' ? 'bribe' : choosePatientSpeech('arrival', { day: gameState.day, patientId: gameState.visit!.patientId }));
+    say(gameState.visit!.patientId, result.feedback === 'patient-returned' ? 'returned' : gameState.visit!.bribe === 'offered' ? 'bribe' : choosePatientSpeech('arrival', { day: gameState.day, patientId: gameState.visit!.patientId }));
   } else if (actual === 'take-document' && result.feedback === 'document-taken') {
     playEffect('paper'); focusId = 'run-general';
     if (gameState !== previousState) newSheet = `paper-${gameState.nextPaperId - 1}`;
@@ -483,11 +499,11 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
       feedback += ` ${patient.weight} ${t().paperwork.kg} / ${patient.height} ${t().paperwork.cm}.`;
     }
   }
-  else if (actual === 'take-paper' && gameState !== previousState) {
+  else if ((actual === 'take-paper' || actual === 'take-additional-referral') && gameState !== previousState) {
     playEffect('paper'); focusId = `paper-${gameState.nextPaperId - 1}`;
     newSheet = `paper-${gameState.nextPaperId - 1}`;
     deskState = moveDeskItem(deskState, newSheet, DEFAULT_DOCUMENT);
-    sheetSupply = CABINET_HOTSPOTS.paperSupply;
+    sheetSupply = actual === 'take-additional-referral' ? CABINET_HOTSPOTS.additionalReferralSupply : CABINET_HOTSPOTS.paperSupply;
   }
   else if (actual === 'use-phone') {
     stopPhone();
@@ -500,7 +516,7 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     stopPhone(); playEffect('phone-dial');
     const kind = actual === 'call-specialist' ? 'specialist' : 'employer';
     phoneCall = { kind, valid: gameState.visit.calls[kind] === true, elapsed: 0 };
-    const paper = gameState.papers.find(paper => paper.day === gameState.day && paper.patientId === gameState.visit!.patientId && paper.kind === (kind === 'specialist' ? 'specialist' : 'referral'));
+    const paper = gameState.papers.find(paper => paper.day === gameState.visit!.startedDay && paper.patientId === gameState.visit!.patientId && paper.kind === (kind === 'specialist' ? 'specialist' : 'referral'));
     focusId = paper ? `${actual}-${paper.id}` : 'use-phone';
   } else if (actual === 'accept-bribe' || actual === 'return-bribe') {
     playEffect('paper'); focusId = 'run-general';
@@ -1198,6 +1214,20 @@ const deskInput = installDeskInput(stage, {
       if (id === 'manual') { manualOpen = false; deskState = { ...deskBeforePickup, order: deskBeforePickup.order.filter(item => item !== id) }; }
       else deskState = removeDeskItem(deskState, id);
       updateClock(); playEffect('paper'); announceDesk(t().feedback[result.feedback], 'drawer');
+      return true;
+    }
+    const referral = carriedAdditionalReferral(gameState, id, carried);
+    if (referral && containsPoint(PATIENT_HANDOFF, target)) {
+      deskState = deskBeforePickup;
+      handleShiftAction({ type: 'hand-additional-referral', paperId: referral.id });
+      if (gameState.papers.some(paper => paper.id === referral.id)) {
+        heldItem = id;
+        deskState = pickUpDeskItem(deskState, id);
+        arrangeDocumentGroup(id, true, true);
+        syncControls(itemControlId(id));
+        return false;
+      }
+      heldItem = null;
       return true;
     }
     if (id.startsWith('paper-')) {

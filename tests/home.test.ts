@@ -14,12 +14,12 @@ const eventKinds: ExpenseKind[] = ['medicine', 'car-repair', 'home-repair', 'fur
 
 describe('localized home sequence', () => {
   it('shows living costs in the first day budget, without explanations or event prices', () => {
-    const state = homeState(), before = structuredClone(state);
+    const state = { ...homeState(), previousMonthBalance: 12345 }, before = structuredClone(state);
     for (const locale of ['pl', 'en'] as const) {
       const content = homePage(state, locale, homePages(state).indexOf('budget'));
       const h = translations[locale].home;
-      expect(content.rows.map(row => row.label)).toEqual([h.base, h.bonus, h.previousMonth, h.living, h.fines, h.insurance]);
-      expect(content.rows.map(row => row.value)).toEqual([locale === 'pl' ? '1000 zł' : '1,000 zł', '0 zł', '0 zł', `${state.settlement!.livingCost} zł`, '0 zł', '300 zł']);
+      expect(content.rows.map(row => row.label)).toEqual([h.base, h.bonus, h.previousDay, h.living, h.fines, h.insurance]);
+      expect(content.rows.map(row => row.value)).toEqual([locale === 'pl' ? '1000 zł' : '1,000 zł', '0 zł', '200 zł', `${state.settlement!.livingCost} zł`, '0 zł', '300 zł']);
       expect(content.text).not.toMatch(/%|x 50|400–800|minimum|Minimum|ZUS/);
     }
     expect(state.settlement!.livingCost).toBeGreaterThanOrEqual(400);
@@ -45,8 +45,9 @@ describe('localized home sequence', () => {
   });
 
   it('keeps maximum supported carryover and debt amounts clear of the labels', () => {
-    for (const locale of ['pl', 'en'] as const) for (const previousMonthBalance of [-999999999, 999999999]) {
-      const state = { ...homeState(), previousMonthBalance };
+    for (const locale of ['pl', 'en'] as const) for (const openingBalance of [-1000000000, 1000000000]) {
+      const state = homeState();
+      state.settlement!.openingBalance = openingBalance;
       const content = homePage(state, locale, homePages(state).indexOf('budget'));
       for (const row of content.rows) expect(measureText(row.label) + measureText(row.value) + 12, row.label).toBeLessThanOrEqual(HOME_AMOUNT_RIGHT - 25);
     }
@@ -74,16 +75,27 @@ describe('localized home sequence', () => {
     }
   });
 
-  it('gives weekends a separate budget and skips departures until Sunday evening', () => {
+  it('shows one combined Friday–Sunday budget before the Monday departure', () => {
     const friday = homeState(2);
-    expect(homePages(friday)).toEqual(['arrival', 'budget']);
+    expect(homePages(friday)).toEqual(['arrival']);
     const saturday = applyAction(friday, 'next-day').state;
     expect(homePage(saturday, 'pl', 0).title).toBe('WOLNY DZIEŃ');
-    const budget = homePage(saturday, 'pl', homePages(saturday).indexOf('budget'));
-    expect(budget.illustration).toBe('weekend-budget');
-    expect(budget.rows[0].value).toBe('0 zł');
-    expect(homePages(saturday)).not.toContain('work');
+    expect(homePages(saturday)).toEqual(['arrival']);
     const sunday = applyAction(saturday, 'next-day').state;
+    expect([friday, saturday, sunday].flatMap(homePages).filter(kind => kind === 'budget')).toHaveLength(1);
+    for (const locale of ['pl', 'en'] as const) {
+      const h = translations[locale].home;
+      const budget = homePage(sunday, locale, homePages(sunday).indexOf('budget'));
+      expect(budget.illustration).toBe('weekend-budget');
+      expect(budget.rows).toEqual([
+        { label: h.base, value: locale === 'pl' ? '1000 zł' : '1,000 zł' },
+        { label: h.bonus, value: '0 zł' },
+        { label: h.beforeWeekend, value: '200 zł' },
+        { label: h.living, value: '800 zł' },
+        { label: h.fines, value: '0 zł' },
+        { label: h.insurance, value: '300 zł' },
+      ]);
+    }
     expect(homePages(sunday)).toContain('work');
     expect(homePage(sunday, 'pl', homePages(sunday).indexOf('work')).title).toBe('DO PRACY');
   });
@@ -104,6 +116,30 @@ describe('localized home sequence', () => {
     expect(homePage(comfortable, 'pl', 0).illustration).toBe('weekend-budget');
     expect(homePage(homeState(2, 200), 'pl', 0).illustration).toBe('homecoming');
     expect(homePage(sunday, 'pl', homePages(sunday).indexOf('work')).illustration).toBe('going-to-work');
+  });
+
+  it('adds every weekend expense and chooses its comment using the whole period', () => {
+    const cabinet = applyAction(createInitialState(17), 'skip-intro').state;
+    const friday = applyAction({ ...cabinet, day: 2, money: 10000, clockMinutes: 840,
+      shiftCompleted: 3, patientsProcessed: 3,
+      daily: { zusCases: 1, fines: 100, refusals: 0, insuranceIncrease: 0 } }, 'end-day').state;
+    const saturday = applyAction(friday, 'next-day').state;
+    const sunday = applyAction(saturday, 'next-day').state;
+    const ledgers = [...sunday.budgetHistory, sunday.settlement!];
+    expect(ledgers.some(day => day.event)).toBe(true);
+    const before = structuredClone(sunday);
+    for (const locale of ['pl', 'en'] as const) {
+      const h = translations[locale].home;
+      const content = homePage(sunday, locale, homePages(sunday).indexOf('budget'));
+      const values = content.rows.map(row => Number(row.value.replace(/[^\d-]/g, '')));
+      expect(values).toEqual([1000, 150, 10000,
+        ledgers.reduce((sum, day) => sum + day.livingCost, 0), 100, 300,
+        ledgers.reduce((sum, day) => sum + (day.event?.cost ?? 0), 0)]);
+      const result = sunday.money - friday.settlement!.openingBalance;
+      expect(h.budgetComments[result > 0 ? 'profit' : result < 0 ? 'loss' : 'even']).toContain(content.body);
+      for (const row of content.rows) expect(measureText(row.label) + measureText(row.value) + 12).toBeLessThanOrEqual(HOME_AMOUNT_RIGHT - 25);
+    }
+    expect(sunday).toEqual(before);
   });
 
   it('keeps all twelve daily comments stable, translated and within the narrative area', () => {

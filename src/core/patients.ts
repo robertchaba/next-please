@@ -1,10 +1,10 @@
-import { IDENTITY_PROFILES } from './patient-identities';
+import { ADDITIONAL_PORTRAITS, IDENTITY_PROFILES } from './patient-identities';
 
 /** Stable fictional case catalog: no real diagnostic thresholds or medical advice. */
 export type PatientCondition = 'healthy' | 'vision' | 'pressure' | 'combined' | 'general';
 export type ExaminationId = 'general' | 'vision' | 'pressure' | 'measurements';
 export type RequirementId = 'full' | 'vision' | 'pressure';
-export type ExposureId = 'paper-dust' | 'noise' | 'heights' | 'traffic' | 'textile-dust' | 'oil' | 'lifting' | 'stress' | 'fine-detail' | 'heat' | 'chemicals' | 'outdoors' | 'night-work' | 'standing' | 'food';
+export type ExposureId = 'paper-dust' | 'noise' | 'heights' | 'traffic' | 'textile-dust' | 'oil' | 'lifting' | 'stress' | 'fine-detail' | 'heat' | 'chemicals' | 'outdoors' | 'night-work' | 'standing' | 'food' | 'mineral-dust';
 export type WorkPatternId = 'day' | 'early' | 'shifts' | 'night' | 'split' | 'seasonal';
 
 /** Fictional game profiles, not clinical thresholds. The referral prints their code. */
@@ -73,6 +73,9 @@ export const JOBS: readonly JobDefinition[] = [
   job(42, 'chemist', 'vision', ['chemicals', 'fine-detail'], [16]),
   job(43, 'technician', 'full', ['fine-detail', 'noise'], [15, 16]),
   job(44, 'carpenter', 'full', ['noise', 'fine-detail', 'lifting'], [23]),
+  job(45, 'militia-officer', 'full', ['stress', 'night-work'], [24]),
+  job(46, 'pilot', 'full', ['heights', 'noise', 'stress'], [25]),
+  job(47, 'miner', 'full', ['noise', 'lifting', 'mineral-dust'], [26]),
 ];
 
 export interface VisionValues { left: number; right: number }
@@ -125,7 +128,7 @@ export function generalFindingIndex(patient: Pick<PatientCase, 'id' | 'general'>
 }
 
 /** Visual character groups: each portrait appears at most once per daily queue. */
-export const CHARACTER_COUNT = 78;
+export const CHARACTER_COUNT = 103;
 export const CURATED_CASE_START = 553;
 export const CASES_PER_IDENTITY = 5;
 export const LEGACY_CASE_COUNT = 103;
@@ -248,7 +251,7 @@ export interface PatientIdentity {
 
 /** Five complete identities per face, independent of the clinical case variant. */
 export const PATIENT_IDENTITIES: readonly PatientIdentity[] = IDENTITY_PROFILES.flatMap((profiles, characterId) => {
-  const portrait = historicalPatients.find(patient => patient.characterId === characterId)!;
+  const portrait = historicalPatients.find(patient => patient.characterId === characterId) ?? ADDITIONAL_PORTRAITS[characterId - 78]!;
   return profiles.map(([age, jobId], variant): PatientIdentity => {
     const id = characterId * 5 + variant;
     const month = 1 + id % 12, day = 1 + (id * 7) % 28;
@@ -258,7 +261,7 @@ export const PATIENT_IDENTITIES: readonly PatientIdentity[] = IDENTITY_PROFILES.
       id, characterId, variant, portraitId: portrait.portraitId,
       birthDate: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
       sex: portrait.sex, jobId, employerId: occupation.employerIds[variant % occupation.employerIds.length]!,
-      workPatternId: [1, 3, 17, 18, 19, 23, 24, 25, 26, 27, 28, 30, 41].includes(jobId) ? 'shifts' : jobId === 11 ? 'early' : 'day',
+      workPatternId: [1, 3, 17, 18, 19, 23, 24, 25, 26, 27, 28, 30, 41, 45, 46, 47].includes(jobId) ? 'shifts' : jobId === 11 ? 'early' : 'day',
       weight: portrait.weight, height: portrait.height,
     };
   });

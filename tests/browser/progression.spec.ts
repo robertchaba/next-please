@@ -10,7 +10,7 @@ const actions = (state: GameState, ...items: GameAction[]): GameState => items.r
 /** Actual weekday transitions retain the letters and weekend accounting. */
 function beginningOfDay(day: number, seed = 71): GameState {
   let state = actions(createInitialState(seed), 'skip-intro');
-  while (state.day < day) {
+  while (state.day < day && state.ending === null) {
     if (state.phase === 'cabinet') state = applyAction({ ...state, clockMinutes: 840 }, 'end-day').state;
     state = applyAction(state, 'next-day').state;
   }
@@ -25,6 +25,7 @@ function completeVisit(state: GameState): GameState {
 function patientFixture(day: number, matches: (visit: Visit) => boolean): GameState {
   for (let seed = 1; seed <= 300; seed++) {
     let state = beginningOfDay(day, seed);
+    if (state.day !== day || state.phase !== 'cabinet') continue;
     for (let index = 0; index < 14; index++) {
       state = actions(state, 'call-patient');
       if (state.visit && matches(state.visit)) return state;

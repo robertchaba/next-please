@@ -2,13 +2,14 @@ import { gunzipSync, gzipSync, strToU8 } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { applyAction, createInitialState, type GameState } from '../src/core/game';
 import { decodeSave, encodeSave, importSave } from '../src/core/save';
+import { homePage, homePages } from '../src/scenes/home';
 
 const next = (state: GameState): GameState => applyAction(state, 'next-day').state;
 function friday(money: number, seed = 1, insuranceRate = 300): GameState {
   const cabinet = applyAction(createInitialState(seed), 'skip-intro').state;
   return applyAction({ ...cabinet, day: 2, money, insuranceRate, clockMinutes: 840 }, 'end-day').state;
 }
-const file = (state: unknown, version = 17): Uint8Array => gzipSync(strToU8(JSON.stringify({
+const file = (state: unknown, version = 20): Uint8Array => gzipSync(strToU8(JSON.stringify({
   game: 'next-please', version, savedAt: '2026-10-26T12:00:00.000Z', state,
 })));
 
@@ -86,7 +87,56 @@ describe('version 17 weekend saves', () => {
     expect(next(decodeSave(encodeSave(fri)))).toEqual(sat);
     expect(next(decodeSave(encodeSave(sat)))).toEqual(next(sat));
     expect(applyAction(decodeSave(encodeSave(sat)), 'end-day').state).toEqual(sat);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(18);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(20);
+  });
+
+  it('preserves the whole weekend budget through saving, month rollover and Monday', () => {
+    const cabinet = applyAction(createInitialState(17), 'skip-intro').state;
+    const fri = applyAction({ ...cabinet, day: 58, money: 200, clockMinutes: 840 }, 'end-day').state;
+    const sat = next(decodeSave(encodeSave(fri))), sun = next(decodeSave(encodeSave(sat)));
+    expect(sat.budgetHistory).toEqual([fri.settlement]);
+    expect(sun.budgetHistory).toEqual([fri.settlement, sat.settlement]);
+    expect(sun.previousMonthBalance).toBe(sat.money);
+    const loaded = decodeSave(encodeSave(sun));
+    expect(loaded).toEqual(sun);
+    for (const locale of ['pl', 'en'] as const) {
+      const budget = homePage(loaded, locale, homePages(loaded).indexOf('budget'));
+      expect(budget.rows[2]!.value).toBe('200 zł');
+      expect(budget.rows[3]!.value).toBe('800 zł');
+    }
+    expect(next(loaded)).toMatchObject({ phase: 'cabinet', day: 61, budgetHistory: [], money: sun.money });
+  });
+
+  it('rejects broken weekend history without replacing the live budget', async () => {
+    const fri = friday(200), sat = next(fri), state = next(sat);
+    const invalidHistories: unknown[] = [undefined, null, {}, [null], [fri.settlement],
+      [...state.budgetHistory, sat.settlement],
+      [{ ...fri.settlement, extra: true }, sat.settlement],
+      [{ ...fri.settlement, day: 1 }, sat.settlement],
+      [{ ...fri.settlement, expenses: 0 }, sat.settlement],
+      [{ ...fri.settlement, openingBalance: 201, closingBalance: fri.money + 1 }, sat.settlement],
+      [fri.settlement, { ...sat.settlement, weekend: { ...sat.settlement!.weekend, sundayLivingCost: sat.settlement!.weekend!.sundayLivingCost + 1 } }],
+    ];
+    for (const budgetHistory of invalidHistories) {
+      const bytes = file({ ...state, budgetHistory });
+      let live = state;
+      await expect(importSave({ size: bytes.length, arrayBuffer: async () => bytes.buffer as ArrayBuffer } as File)
+        .then(loaded => { live = loaded; })).rejects.toMatchObject({ code: 'invalid-state' });
+      expect(live).toBe(state);
+    }
+    expect(() => decodeSave(file({ ...next(state), budgetHistory: state.budgetHistory }))).toThrowError(expect.objectContaining({ code: 'invalid-state' }));
+  });
+
+  it('imports v19 without inventing missing costs or settling a day again', () => {
+    for (const current of [friday(200), next(friday(200)), next(next(friday(200)))]) {
+      const { budgetHistory: _history, ...old } = current;
+      const loaded = decodeSave(file(old, 19));
+      expect(loaded).toEqual({ ...current, budgetHistory: [] });
+      expect(decodeSave(encodeSave(loaded))).toEqual(loaded);
+      expect(next(loaded).money).toBe(next(current).money);
+      expect(next(loaded).rngState).toBe(next(current).rngState);
+      expect(() => decodeSave(file(current, 19))).toThrowError(expect.objectContaining({ code: 'invalid-state' }));
+    }
   });
 
   it('rejects missing, malformed and unaffordable weekend plans without replacing live state', async () => {
@@ -110,7 +160,8 @@ describe('version 17 weekend saves', () => {
   it('migrates an already paid v16 Saturday without refunds or another Sunday charge', () => {
     const current = friday(3000);
     const { weekend: _weekend, ...ledger } = current.settlement!;
-    const old = { ...current, day: 3, roster: [], money: ledger.openingBalance - ledger.expenses,
+    const { budgetHistory: _history, pendingReferrals: _pending, referralsIssued: _issued, ...legacy } = current;
+    const old = { ...legacy, day: 3, roster: [], money: ledger.openingBalance - ledger.expenses,
       settlement: { ...ledger, day: 3, basePay: 0, income: 0, closingBalance: ledger.openingBalance - ledger.expenses } };
     const migrated = decodeSave(file(old, 16));
     expect(migrated.money).toBe(old.money);

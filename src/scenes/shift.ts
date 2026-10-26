@@ -1,9 +1,10 @@
 import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, drawDeskCalendar, drawBanknote, type CabinetArtOptions } from '../render/clinic';
-import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, paperPhoneRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading } from '../render/paperwork';
+import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading } from '../render/paperwork';
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
 import { drawManual, drawManualCover, manualControls, MANUAL_PAGE_COUNT } from '../render/manual';
 import { INTRO_SLIDES, canEndDay, isShiftFinished, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
+import { ADDITIONAL_TESTS } from '../core/additional-tests';
 import { patientForVisit, workDayNumber } from '../core/progression';
 import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
@@ -34,6 +35,17 @@ export function visibleDocumentClip(state: GameState, documentId: DocumentId, vi
   const members = clippedDocuments(state, documentId).map(documentItem);
   const top = [...view.desk.order].reverse().find(id => members.includes(id));
   return top === documentItem(documentId);
+}
+
+/** A carried bundle can deliver its referral while the other sheets stay here. */
+export function carriedAdditionalReferral(state: GameState, held: DeskItemId | null, heldItems: readonly DeskItemId[] = []) {
+  if (!held || !state.visit) return undefined;
+  for (const id of [held, ...heldItems.filter(id => id !== held)]) {
+    const paper = state.papers.find(paper => `paper-${paper.id}` === id && paper.kind === 'additional-referral'
+      && paper.patientId === state.visit!.patientId && paper.day === state.visit!.startedDay);
+    if (paper?.kind === 'additional-referral') return paper;
+  }
+  return undefined;
 }
 
 const c = { ink: '#293226', paper: '#ded4ae', muted: '#a6ac8e', red: '#aa5d48', green: '#4e674e' };
@@ -76,6 +88,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
   const restLabel = view.held === 'stamp-fit' ? t.putAwayFit : t.putAwayUnfit;
   const certificateBounds = itemRect(view.desk, 'document', false, isLifted(view, 'document'));
   const certificateOnDesk = !isLifted(view, 'document') && certificateBounds.x >= RIGHT_DESK_X;
+  const heldReferral = carriedAdditionalReferral(state, view.held, view.heldItems);
   const pageCorners = manualControls(itemRect(view.desk, 'manual', false, false, view.manualOpen));
   return [
     ...(rest ? [button(restAction, restLabel, rest.x, rest.y, rest.w, rest.h, restAction)] : []),
@@ -85,8 +98,9 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     ...(state.visit?.bribe === 'offered' ? [item('banknote', `${t.progression.banknote}. ${t.progression.bribeHelp}`, 'banknote', 'accept-bribe')] : []),
     ...(state.visit && view.held === 'banknote' ? [hotspot('return-bribe', t.progression.returnBribe, PATIENT_HANDOFF, 'return-bribe')] : []),
     ...(view.held === 'banknote' ? [hotspot('accept-bribe', t.progression.acceptBribe, dropTargetRect('drawer', view.held), 'accept-bribe')] : []),
+    ...(heldReferral ? [hotspot('hand-additional-referral', t.additionalTests.hand, PATIENT_HANDOFF, { type: 'hand-additional-referral', paperId: heldReferral.id })] : []),
     ...(state.visit?.document === 'tray' ? [item('take-document', t.takeDocument, 'incoming-referral', 'take-document')] : []),
-    ...(state.visit?.certificateTaken ? [hotspot('return-document', t.returnDocument, PATIENT_HANDOFF, 'return-document'),
+    ...(state.visit?.certificateTaken ? [...(!heldReferral ? [hotspot('return-document', t.returnDocument, PATIENT_HANDOFF, 'return-document')] : []),
       item('apply-stamp', `${t.applyStamp}. ${certificateDescription(state, locale)}`, 'document', 'apply-stamp'),
       ...(certificateOnDesk ? [{ ...hotspot('write-certificate', t.paperwork.writeCertificate, paperActionRect(certificateBounds), 'write-certificate'), owner: 'document' as const }] : []),
       ...(!isLifted(view, 'document') && visibleDocumentClip(state, 'certificate', view)
@@ -99,7 +113,9 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     hotspot('use-phone', t.phone, CABINET_HOTSPOTS.phone, 'use-phone'),
     hotspot('take-paper', t.takePaper, CABINET_HOTSPOTS.paperSupply, 'take-paper'),
     hotspot('take-certificate', t.takeCertificate, CABINET_HOTSPOTS.certificateSupply, 'take-certificate'),
-    ...DOCUMENT_RACK_SLOTS.slice(2).map((bounds, index) => ({ ...hotspot(`reserved-form-${index + 3}`, `${t.reservedForm} ${index + 3}`, bounds, 'reserved-form'), disabled: true })),
+    ...(workDayNumber(state.day) >= 7 ? [hotspot('take-additional-referral', t.additionalTests.take, CABINET_HOTSPOTS.additionalReferralSupply, 'take-additional-referral')]
+      : [{ ...hotspot('reserved-form-3', `${t.reservedForm} 3`, DOCUMENT_RACK_SLOTS[2], 'reserved-form'), disabled: true }]),
+    { ...hotspot('reserved-form-4', `${t.reservedForm} 4`, DOCUMENT_RACK_SLOTS[3], 'reserved-form'), disabled: true },
     hotspot('take-clip', t.takeClip, CABINET_HOTSPOTS.clipSupply, 'take-clip'),
     hotspot('drawer', `${t.drawer}: ${state.papers.filter(paper => paper.location === 'drawer').length + Number(state.drawerItems.manual) + state.drawerItems.clips}. ${t.drawerHelp}`, dropTargetRect('drawer', view.held, view.heldItems), 'drawer'),
     hotspot('trash', t.trash, dropTargetRect('trash', view.held, view.heldItems), 'trash'),
@@ -110,9 +126,14 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
       const bounds = itemRect(view.desk, id, false, isLifted(view, id));
       const canAct = !isLifted(view, id) && bounds.x >= RIGHT_DESK_X
         && ((paper.kind === 'letter' || paper.kind === 'directive') && !paper.opened);
-      const callable = !isLifted(view, id) && bounds.x >= RIGHT_DESK_X && paper.day === state.day && paper.patientId === state.visit?.patientId
+      const callable = !isLifted(view, id) && bounds.x >= RIGHT_DESK_X && paper.day === state.visit?.startedDay && paper.patientId === state.visit?.patientId
         && ((paper.kind === 'specialist' && workDayNumber(state.day) >= 4) || (paper.kind === 'referral' && workDayNumber(state.day) >= 5));
+      const selectable = paper.kind === 'additional-referral' && paper.patientId === state.visit?.patientId && paper.day === state.visit?.startedDay
+        && !isLifted(view, id) && bounds.x >= RIGHT_DESK_X;
       return [item(id, paperDescription(paper, locale, isDocumentClipped(state, paper.id)), id, action),
+        ...(selectable ? ADDITIONAL_TESTS.map(test => ({ ...hotspot(`select-additional-test-${paper.id}-${test}`,
+          `${t.additionalTests.choose}: ${t.additionalTests.tests[test]}`, additionalTestRect(bounds, test),
+          { type: 'select-additional-test', paperId: paper.id, test }), owner: id, pressed: paper.test === test })) : []),
         ...(callable ? [{ ...hotspot(`${paper.kind === 'specialist' ? 'call-specialist' : 'call-employer'}-${paper.id}`,
           paper.kind === 'specialist' ? t.progression.callSpecialist : t.progression.callEmployer, paperPhoneRect(bounds),
           paper.kind === 'specialist' ? 'call-specialist' : 'call-employer'), owner: id }] : []),
@@ -147,7 +168,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     clockMinutes: view.clockMinutes ?? state.clockMinutes, patientMotion: view.patientMotion });
   if (view.patientSpeech) drawPatientSpeech(ctx, t.patientSpeech[view.patientSpeech.line]);
   drawDeskRests(ctx);
-  drawWorkstationObjects(ctx, state.papers.filter(paper => paper.location === 'drawer').length);
+  drawWorkstationObjects(ctx, state.papers.filter(paper => paper.location === 'drawer').length, workDayNumber(state.day) >= 7);
   drawDeskCalendar(ctx, state.day, locale);
   if (visit?.specialist && !visit.specialistTaken) drawPaper(ctx, 72, 181, 35, 66);
   for (const id of view.desk.order) {

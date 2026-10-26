@@ -99,7 +99,7 @@ test('examinations, stamping and the rulebook support keyboard visits with defer
   await expect(page.locator('#screen-description')).toContainText('INSTRUKCJA OBSŁUGI DYŻURU');
   await expect(page.locator('#control-manual-prev')).toHaveAccessibleName('Zamknij regulamin');
   await useKeyboard(page, 'manual-next');
-  await expect(page.locator('#screen-description')).toContainText('Kliknij pacjenta: to badanie ogólne.');
+  await expect(page.locator('#screen-description')).toContainText('Kliknięcie pacjenta uruchamia oględziny.');
   await page.screenshot({ path: testInfo.outputPath('rulebook-tests-pl.png') });
   for (let index = 2; index < MANUAL_PAGE_COUNT; index++) {
     await useKeyboard(page, 'manual-next');
@@ -110,10 +110,12 @@ test('examinations, stamping and the rulebook support keyboard visits with defer
   await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[MANUAL_PAGE_COUNT - 1]!.lines.join(' '));
   await useKeyboard(page, 'manual-prev');
   await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[MANUAL_PAGE_COUNT - 2]!.lines.join(' '));
-  await useKeyboard(page, 'manual-prev');
-  await expect(page.locator('#screen-description')).toContainText('Czynności doliczają czas.');
-  await useKeyboard(page, 'manual-prev');
-  await expect(page.locator('#screen-description')).toContainText('Kliknięcie spinacza rozpina dokumenty.');
+  for (let index = MANUAL_PAGE_COUNT - 3; index >= 5; index--) {
+    await useKeyboard(page, 'manual-prev');
+    await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(index));
+    await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[index]!.lines.join(' '));
+  }
+  await expect(page.locator('#screen-description')).toContainText('Kliknij spinacz, aby rodzinę rozdzielić.');
   await page.keyboard.press('Escape');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
   await expect(page.locator('#control-manual')).toBeFocused();

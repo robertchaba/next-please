@@ -33,6 +33,7 @@ export const CABINET_HOTSPOTS = {
   phone: { x: 216, y: 113, w: 73, h: 51 },
   paperSupply: { x: 507, y: 114, w: 54, h: 20 },
   certificateSupply: { x: 507, y: 134, w: 54, h: 14 },
+  additionalReferralSupply: { x: 507, y: 148, w: 54, h: 14 },
   clipSupply: { x: 296, y: 137, w: 37, h: 36 },
   drawer: { x: 222, y: 299, w: 110, h: 18 },
   trash: { x: 478, y: 297, w: 68, h: 23 },
@@ -53,7 +54,7 @@ export function dropTargetRect(target: keyof typeof DROP_ZONES, held: DeskItemId
 
 export const DOCUMENT_RACK: Rect = { x: 504, y: 112, w: 60, h: 65 };
 export const DOCUMENT_RACK_SLOTS = [CABINET_HOTSPOTS.paperSupply, CABINET_HOTSPOTS.certificateSupply,
-  { x: 507, y: 148, w: 54, h: 14 }, { x: 507, y: 162, w: 54, h: 13 }] as const;
+  CABINET_HOTSPOTS.additionalReferralSupply, { x: 507, y: 162, w: 54, h: 13 }] as const;
 export const DESK_FRONT: Rect = { x: 0, y: 296, w: 570, h: 24 };
 export const PATIENT_HANDOFF: Rect = { x: 38, y: 32, w: 94, h: 96 };
 export const MANUAL_OPEN_SIZE = { w: 276, h: 164 } as const;

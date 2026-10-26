@@ -1,0 +1,452 @@
+[
+  {
+    "id": 76,
+    "age": 25,
+    "sex": "male",
+    "occupation": "militia",
+    "subject": "young man about 25, close-cut dark brown hair, narrow clean-shaven face, attentive brown eyes, subdued blue-grey militia service tunic with plain shoulder straps and muted metal buttons, pale blue shirt and dark tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: young man about 25, close-cut dark brown hair, narrow clean-shaven face, attentive brown eyes, subdued blue-grey militia service tunic with plain shoulder straps and muted metal buttons, pale blue shirt and dark tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Wiesław Żmuda",
+    "alternative_names": [
+      "Wiesław Żmuda",
+      "Roman Świerk",
+      "Stefan Kula",
+      "Marek Bujak",
+      "Jan Węgrzyn"
+    ]
+  },
+  {
+    "id": 77,
+    "age": 32,
+    "sex": "male",
+    "occupation": "militia",
+    "subject": "man about 32, sandy blond cropped hair, broad square jaw, faint freckles and small neat moustache, faded slate-blue militia uniform tunic with plain shoulder straps, pale grey-blue shirt and black tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 32, sandy blond cropped hair, broad square jaw, faint freckles and small neat moustache, faded slate-blue militia uniform tunic with plain shoulder straps, pale grey-blue shirt and black tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Bogusław Cisek",
+    "alternative_names": [
+      "Bogusław Cisek",
+      "Piotr Stach",
+      "Adam Błach",
+      "Jerzy Kos",
+      "Paweł Górecki"
+    ]
+  },
+  {
+    "id": 78,
+    "age": 39,
+    "sex": "male",
+    "occupation": "militia",
+    "subject": "man about 39, black side-parted hair receding at temples, long angular face, thick dark moustache, deep blue-grey militia tunic with plain epaulettes, pale blue shirt and dark tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 39, black side-parted hair receding at temples, long angular face, thick dark moustache, deep blue-grey militia tunic with plain epaulettes, pale blue shirt and dark tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Czesław Pawlik",
+    "alternative_names": [
+      "Czesław Pawlik",
+      "Henryk Buda",
+      "Witold Łoza",
+      "Leon Bryła",
+      "Tomasz Kłosowski"
+    ]
+  },
+  {
+    "id": 79,
+    "age": 46,
+    "sex": "male",
+    "occupation": "militia",
+    "subject": "man about 46, short brown hair with grey temples, round heavyset clean-shaven face, weary hooded eyes, worn slate militia service jacket with shoulder straps, blue shirt and charcoal tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 46, short brown hair with grey temples, round heavyset clean-shaven face, weary hooded eyes, worn slate militia service jacket with shoulder straps, blue shirt and charcoal tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Mieczysław Zięba",
+    "alternative_names": [
+      "Mieczysław Zięba",
+      "Stanisław Gołąb",
+      "Edward Szela",
+      "Wiktor Jurga",
+      "Józef Kuc"
+    ]
+  },
+  {
+    "id": 80,
+    "age": 53,
+    "sex": "male",
+    "occupation": "militia",
+    "subject": "man about 53, iron-grey crew cut and broad thick grey moustache, broad weathered face, dark muted blue militia tunic with plain epaulettes, light grey shirt and black tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 53, iron-grey crew cut and broad thick grey moustache, broad weathered face, dark muted blue militia tunic with plain epaulettes, light grey shirt and black tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Władysław Kocioł",
+    "alternative_names": [
+      "Władysław Kocioł",
+      "Tadeusz Wąsik",
+      "Franciszek Wójcik",
+      "Ignacy Cieśla",
+      "Marian Żmij"
+    ]
+  },
+  {
+    "id": 81,
+    "age": 29,
+    "sex": "male",
+    "occupation": "militia",
+    "subject": "man about 29, very short red-brown hair, narrow pale face with freckles, clean-shaven and thin lips, blue-grey militia service tunic with plain shoulder straps, pale blue shirt and narrow dark tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 29, very short red-brown hair, narrow pale face with freckles, clean-shaven and thin lips, blue-grey militia service tunic with plain shoulder straps, pale blue shirt and narrow dark tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Grzegorz Jastrząb",
+    "alternative_names": [
+      "Grzegorz Jastrząb",
+      "Artur Wyrwa",
+      "Rafał Witek",
+      "Jacek Zając",
+      "Bartosz Wąski"
+    ]
+  },
+  {
+    "id": 82,
+    "age": 36,
+    "sex": "male",
+    "occupation": "militia",
+    "subject": "man about 36, thick dark cropped hair, olive skin, strong eyebrows and wide clean-shaven jaw, faded steel-blue militia uniform with plain epaulettes, light grey shirt and black tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 36, thick dark cropped hair, olive skin, strong eyebrows and wide clean-shaven jaw, faded steel-blue militia uniform with plain epaulettes, light grey shirt and black tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Sławomir Klimek",
+    "alternative_names": [
+      "Sławomir Klimek",
+      "Andrzej Szulc",
+      "Dariusz Mazur",
+      "Leszek Jagła",
+      "Krzysztof Suchy"
+    ]
+  },
+  {
+    "id": 83,
+    "age": 43,
+    "sex": "male",
+    "occupation": "militia",
+    "subject": "man about 43, thinning light brown hair, slim face, small round wire spectacles and a neat moustache, worn blue-grey militia service tunic with plain shoulder straps, pale blue shirt and charcoal tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 43, thinning light brown hair, slim face, small round wire spectacles and a neat moustache, worn blue-grey militia service tunic with plain shoulder straps, pale blue shirt and charcoal tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Zdzisław Gąsior",
+    "alternative_names": [
+      "Zdzisław Gąsior",
+      "Kazimierz Moskal",
+      "Jerzy Troć",
+      "Roman Węgiel",
+      "Bogdan Łuk"
+    ]
+  },
+  {
+    "id": 84,
+    "age": 50,
+    "sex": "male",
+    "occupation": "militia",
+    "subject": "man about 50, bald crown and dark grey hair at sides, long clean-shaven lined face, pronounced nose, dark slate militia uniform tunic with plain epaulettes, pale grey-blue shirt and black tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 50, bald crown and dark grey hair at sides, long clean-shaven lined face, pronounced nose, dark slate militia uniform tunic with plain epaulettes, pale grey-blue shirt and black tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Mirosław Janik",
+    "alternative_names": [
+      "Mirosław Janik",
+      "Henryk Płatek",
+      "Jan Ścigała",
+      "Witold Rataj",
+      "Edward Kozioł"
+    ]
+  },
+  {
+    "id": 85,
+    "age": 58,
+    "sex": "male",
+    "occupation": "militia",
+    "subject": "man about 58, thick wavy silver-grey hair combed back, square face and bushy silver moustache, muted blue militia service jacket with plain shoulder straps and worn metal buttons, pale blue shirt and dark tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 58, thick wavy silver-grey hair combed back, square face and bushy silver moustache, muted blue militia service jacket with plain shoulder straps and worn metal buttons, pale blue shirt and dark tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Bronisław Wójcik",
+    "alternative_names": [
+      "Bronisław Wójcik",
+      "Stanisław Rybka",
+      "Tadeusz Krupa",
+      "Władysław Serafin",
+      "Franciszek Kłosik"
+    ]
+  },
+  {
+    "id": 86,
+    "age": 28,
+    "sex": "male",
+    "occupation": "pilot",
+    "subject": "young man about 28, neatly side-parted dark hair, slim clean-shaven face and serious eyes, civilian pilot uniform of charcoal-navy jacket, plain shoulder epaulettes with muted gold stripes, cream shirt and black tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: young man about 28, neatly side-parted dark hair, slim clean-shaven face and serious eyes, civilian pilot uniform of charcoal-navy jacket, plain shoulder epaulettes with muted gold stripes, cream shirt and black tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Michał Wysocki",
+    "alternative_names": [
+      "Michał Wysocki",
+      "Paweł Skrzydło",
+      "Łukasz Chmura",
+      "Tomasz Żagle",
+      "Artur Słota"
+    ]
+  },
+  {
+    "id": 87,
+    "age": 35,
+    "sex": "male",
+    "occupation": "pilot",
+    "subject": "man about 35, short wavy sandy hair, broad clean-shaven face and slightly heavy eyebrows, civilian pilot uniform navy jacket with plain gold-striped shoulder epaulettes, cream shirt and dark tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 35, short wavy sandy hair, broad clean-shaven face and slightly heavy eyebrows, civilian pilot uniform navy jacket with plain gold-striped shoulder epaulettes, cream shirt and dark tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Robert Cieślik",
+    "alternative_names": [
+      "Robert Cieślik",
+      "Piotr Wietrzny",
+      "Marek Skowronek",
+      "Adam Lotny",
+      "Rafał Szydło"
+    ]
+  },
+  {
+    "id": 88,
+    "age": 42,
+    "sex": "male",
+    "occupation": "pilot",
+    "subject": "man about 42, dark close-cropped hair with grey temples, olive complexion, long face and neat short dark moustache, charcoal-navy civilian pilot jacket with simple muted gold-striped shoulder epaulettes, ivory shirt and black tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 42, dark close-cropped hair with grey temples, olive complexion, long face and neat short dark moustache, charcoal-navy civilian pilot jacket with simple muted gold-striped shoulder epaulettes, ivory shirt and black tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Wojciech Balicki",
+    "alternative_names": [
+      "Wojciech Balicki",
+      "Andrzej Woźniak",
+      "Jacek Rudzki",
+      "Grzegorz Szpak",
+      "Sławomir Nurek"
+    ]
+  },
+  {
+    "id": 89,
+    "age": 49,
+    "sex": "male",
+    "occupation": "pilot",
+    "subject": "man about 49, receding brown-grey hair, round face with under-eye lines, clean-shaven, civilian pilot uniform of deep navy wool jacket with simple muted gold-striped shoulder epaulettes, off-white shirt and narrow black tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 49, receding brown-grey hair, round face with under-eye lines, clean-shaven, civilian pilot uniform of deep navy wool jacket with simple muted gold-striped shoulder epaulettes, off-white shirt and narrow black tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Stanisław Żarski",
+    "alternative_names": [
+      "Stanisław Żarski",
+      "Roman Mirski",
+      "Jerzy Karski",
+      "Henryk Dębiec",
+      "Witold Kosma"
+    ]
+  },
+  {
+    "id": 90,
+    "age": 56,
+    "sex": "male",
+    "occupation": "pilot",
+    "subject": "man about 56, swept-back silver hair, angular lined face and thick grey eyebrows, clean-shaven, worn charcoal civilian pilot jacket with plain muted gold-striped epaulettes, cream shirt and black tie",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 56, swept-back silver hair, angular lined face and thick grey eyebrows, clean-shaven, worn charcoal civilian pilot jacket with plain muted gold-striped epaulettes, cream shirt and black tie. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Kazimierz Bystroń",
+    "alternative_names": [
+      "Kazimierz Bystroń",
+      "Edward Rudnik",
+      "Władysław Wierzbicki",
+      "Tadeusz Łukasz",
+      "Marian Płonka"
+    ]
+  },
+  {
+    "id": 91,
+    "age": 31,
+    "sex": "male",
+    "occupation": "civilian",
+    "subject": "man about 31, thick curly dark hair, medium brown skin, broad clean-shaven face, sturdy build, faded brown cotton work jacket over an unbuttoned-collar olive shirt",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 31, thick curly dark hair, medium brown skin, broad clean-shaven face, sturdy build, faded brown cotton work jacket over an unbuttoned-collar olive shirt. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Wacław Żelazny",
+    "alternative_names": [
+      "Wacław Żelazny",
+      "Marek Płomień",
+      "Paweł Kocioł",
+      "Adam Grot",
+      "Tomasz Kurek"
+    ]
+  },
+  {
+    "id": 92,
+    "age": 27,
+    "sex": "female",
+    "occupation": "civilian",
+    "subject": "woman about 27, auburn shoulder-length straight hair and blunt fringe, narrow face and light skin, muted mustard cardigan over a cream pointed-collar blouse",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: woman about 27, auburn shoulder-length straight hair and blunt fringe, narrow face and light skin, muted mustard cardigan over a cream pointed-collar blouse. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Natalia Błach",
+    "alternative_names": [
+      "Natalia Błach",
+      "Anna Żelazna",
+      "Ewa Płonka",
+      "Iwona Mirska",
+      "Lidia Karska"
+    ]
+  },
+  {
+    "id": 93,
+    "age": 44,
+    "sex": "male",
+    "occupation": "civilian",
+    "subject": "man about 44, short dark hair with receding hairline, ruddy broad face and heavy black moustache, faded blue cotton work jacket with cream open-collar undershirt",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 44, short dark hair with receding hairline, ruddy broad face and heavy black moustache, faded blue cotton work jacket with cream open-collar undershirt. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Brunon Węglarz",
+    "alternative_names": [
+      "Brunon Węglarz",
+      "Henryk Szyb",
+      "Roman Bednarz",
+      "Jan Pył",
+      "Stefan Kopa"
+    ]
+  },
+  {
+    "id": 94,
+    "age": 38,
+    "sex": "female",
+    "occupation": "civilian",
+    "subject": "woman about 38, dark brown hair pinned into a loose low bun, oval face and strong cheekbones, muted moss-green knitted cardigan over a pale yellow blouse",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: woman about 38, dark brown hair pinned into a loose low bun, oval face and strong cheekbones, muted moss-green knitted cardigan over a pale yellow blouse. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Elżbieta Wąsik",
+    "alternative_names": [
+      "Elżbieta Wąsik",
+      "Teresa Cisek",
+      "Maria Woźniak",
+      "Irena Pawlik",
+      "Halina Żmuda"
+    ]
+  },
+  {
+    "id": 95,
+    "age": 57,
+    "sex": "male",
+    "occupation": "civilian",
+    "subject": "man about 57, thinning silver hair, long lined face with square nose and grey stubble, worn olive-brown worker jacket over a charcoal knitted sweater",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 57, thinning silver hair, long lined face with square nose and grey stubble, worn olive-brown worker jacket over a charcoal knitted sweater. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Alojzy Szlaka",
+    "alternative_names": [
+      "Alojzy Szlaka",
+      "Wiktor Żelazny",
+      "Edward Grot",
+      "Jerzy Ogień",
+      "Franciszek Płomień"
+    ]
+  },
+  {
+    "id": 96,
+    "age": 46,
+    "sex": "female",
+    "occupation": "civilian",
+    "subject": "woman about 46, short curled black hair with greying temples, medium olive skin and round face, simple burgundy wool cardigan over a tan blouse",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: woman about 46, short curled black hair with greying temples, medium olive skin and round face, simple burgundy wool cardigan over a tan blouse. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Bogumiła Bednarz",
+    "alternative_names": [
+      "Bogumiła Bednarz",
+      "Halina Węglarz",
+      "Zofia Szyb",
+      "Maria Kopa",
+      "Jadwiga Pył"
+    ]
+  },
+  {
+    "id": 97,
+    "age": 34,
+    "sex": "male",
+    "occupation": "civilian",
+    "subject": "man about 34, sandy side-parted hair, lean freckled face and clean-shaven jaw, faded dark green work shirt with sleeves buttoned at wrists",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 34, sandy side-parted hair, lean freckled face and clean-shaven jaw, faded dark green work shirt with sleeves buttoned at wrists. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Maksymilian Rąb",
+    "alternative_names": [
+      "Maksymilian Rąb",
+      "Paweł Pokład",
+      "Marek Filar",
+      "Adam Sztolnia",
+      "Piotr Węglik"
+    ]
+  },
+  {
+    "id": 98,
+    "age": 52,
+    "sex": "female",
+    "occupation": "civilian",
+    "subject": "woman about 52, silver-streaked brown hair in a compact bun, long face and small oval spectacles, dull blue-grey cardigan over an ivory blouse",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: woman about 52, silver-streaked brown hair in a compact bun, long face and small oval spectacles, dull blue-grey cardigan over an ivory blouse. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Stanisława Janik",
+    "alternative_names": [
+      "Stanisława Janik",
+      "Irena Kuc",
+      "Maria Bujak",
+      "Halina Kos",
+      "Zofia Troć"
+    ]
+  },
+  {
+    "id": 99,
+    "age": 61,
+    "sex": "male",
+    "occupation": "civilian",
+    "subject": "man about 61, thick cropped white hair, weathered broad face and drooping grey moustache, charcoal work jacket over a faded russet collared shirt",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: man about 61, thick cropped white hair, weathered broad face and drooping grey moustache, charcoal work jacket over a faded russet collared shirt. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Bolesław Płomień",
+    "alternative_names": [
+      "Bolesław Płomień",
+      "Tadeusz Żelazny",
+      "Edward Kocioł",
+      "Jerzy Szlaka",
+      "Henryk Ogień"
+    ]
+  },
+  {
+    "id": 100,
+    "age": 41,
+    "sex": "female",
+    "occupation": "civilian",
+    "subject": "woman about 41, straight black chin-length bob with side part, broad cheekbones and dark olive skin, taupe wool cardigan over a muted pale-green blouse",
+    "prompt": "Use case: stylized-concept. Asset type: ONE original transparent occupational-clinic patient sprite for the browser game Next, Please!, intended native footprint 94 by 96 pixels. Generate one waist-up seated human patient facing the viewer, hands loosely folded and both forearms resting together along the very bottom edge, head and full hair visible with small top margin. No desk, chair, props or environment. Match the supplied reference patient's scale, face realism, low-resolution hard pixel clusters and weary ordinary 1983 analog clinic atmosphere, but create an entirely NEW fictional person. Subject: woman about 41, straight black chin-length bob with side part, broad cheekbones and dark olive skin, taupe wool cardigan over a muted pale-green blouse. Style: restrained original pixel art; tiny physically believable face, naturally proportioned hands, matte wool/cotton clothes, strong clean silhouette, dark brown/olive outlines, subdued charcoal #141a18, olive #353e32, brown #6b5945, dirty beige #c9c3a1 and restrained skin highlights. Extremely crisp pixel art at intended 94x96 scale; not a smooth painting, cartoon or glossy 3D. Portrait occupies almost the entire frame, shoulders and folded forearms create broad lower silhouette, no body below waist. Genuine transparent alpha background, no floor/contact shadow or checkerboard. Absolutely no text, logos, hats, medical equipment, weapons, flags, national symbols, identifiable national badges or watermark. Uniforms must remain clearly recognizable by tailoring and shoulder straps but do not establish any country.",
+    "reference": "public/assets/art/patients-source/patient-01.png",
+    "transparent_background": true,
+    "name": "Renata Łoza",
+    "alternative_names": [
+      "Renata Łoza",
+      "Ewa Rataj",
+      "Anna Bryła",
+      "Iwona Wyrwa",
+      "Lidia Gąsior"
+    ]
+  }
+]

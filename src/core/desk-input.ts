@@ -89,7 +89,7 @@ export function installDeskInput(stage: HTMLElement, options: DeskInputOptions):
       const control = event.target as HTMLElement;
       const attachedClip = control.id === 'control-certificate-clip' || control.id.startsWith('control-paper-clip-');
       if ((held === 'banknote' && ['control-return-bribe', 'control-accept-bribe', 'control-drawer'].includes(control.id))
-        || ((held === 'document' || held.startsWith('paper-')) && control.id === 'control-return-document')
+        || ((held === 'document' || held.startsWith('paper-')) && ['control-return-document', 'control-hand-additional-referral'].includes(control.id))
         || ((held === 'incoming-referral' || held.startsWith('paper-') || held.startsWith('clip-') || held === 'manual') && ['control-drawer', 'control-trash'].includes(control.id))
         || (held.startsWith('clip-') && (control.dataset.item?.startsWith('paper-') || control.dataset.item === 'document'))
         || ((held === 'document' || held === 'incoming-referral' || held.startsWith('paper-')) && attachedClip)) {

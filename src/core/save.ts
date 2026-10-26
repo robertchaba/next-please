@@ -1,25 +1,30 @@
 import { gameDate, isWeekend } from './calendar';
+import { ADDITIONAL_TESTS, additionalResultFor, nextWorkingDay, type AdditionalTest, type AdditionalResult, type PendingReferral } from './additional-tests';
 import { Gunzip, gzipSync, strToU8 } from 'fflate';
 import { ARRIVAL_MINUTES, CLINIC_CLOSE_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_START_MINUTES, type GameState as CurrentGameState, type Visit as CurrentVisit, type Paper as CurrentPaper, type DocumentId, type NoteEntryId } from './game';
 
 import { CHARACTER_COUNT, JOBS, disqualifyingPressure, type ExaminationId, type PressureValues, type PatientCase } from './patients';
 import { defaultReferral, directiveForDay, emptyCalls, effectivePatient, employerPhone, specialistPhone, workDayNumber, type ReferralDetails, type SpecialistCertificate, type PhoneConclusions } from './progression';
-import { BASE_INSURANCE, BASE_PAY, PATIENT_BONUS, type DaySettlement, type DailyConsequences } from './economy';
+import { BASE_INSURANCE, BASE_PAY, MODEST_WEEKEND_LIVING, PATIENT_BONUS, type DaySettlement, type DailyConsequences } from './economy';
 
 export { createInitialState } from './game';
 export type { GameState } from './game';
 
 /** Freeze the pre-progression schema so legacy validators keep exact bounds. */
-type Visit = Omit<CurrentVisit, 'referral' | 'specialist' | 'specialistTaken' | 'calls' | 'bribe' | 'noteOrder'>;
+type VisitV18 = Omit<CurrentVisit, 'startedDay' | 'additionalResult' | 'additionalTests'>;
+type PaperV18 = Exclude<CurrentPaper, { kind: 'additional-referral' | 'additional-result' }>;
+type StateV19 = Omit<CurrentGameState, 'budgetHistory'>;
+type StateV18 = Omit<StateV19, 'pendingReferrals' | 'referralsIssued' | 'visit' | 'papers'> & { visit: VisitV18 | null; papers: PaperV18[] };
+type Visit = Omit<VisitV18, 'referral' | 'specialist' | 'specialistTaken' | 'calls' | 'bribe' | 'noteOrder'>;
 type HistoricalPaper<T> = T extends { kind: 'note' } ? Omit<T, 'calls' | 'bribe' | 'noteOrder'>
   : T extends { kind: 'referral' } ? Omit<T, 'details'>
   : T extends { kind: 'letter' } ? T : never;
-type Paper = HistoricalPaper<CurrentPaper>;
-type GameState = Omit<CurrentGameState, 'ending' | 'visit' | 'papers'> & { visit: Visit | null; papers: Paper[] };
+type Paper = HistoricalPaper<PaperV18>;
+type GameState = Omit<StateV18, 'ending' | 'visit' | 'papers'> & { visit: Visit | null; papers: Paper[] };
 
-type PreJournalVisit = Omit<CurrentVisit, 'noteOrder'>;
-type PreJournalPaper = CurrentPaper extends infer T ? T extends { kind: 'note' } ? Omit<T, 'noteOrder'> : T : never;
-type PreJournalState = Omit<CurrentGameState, 'visit' | 'papers'> & { visit: PreJournalVisit | null; papers: PreJournalPaper[] };
+type PreJournalVisit = Omit<VisitV18, 'noteOrder'>;
+type PreJournalPaper = PaperV18 extends infer T ? T extends { kind: 'note' } ? Omit<T, 'noteOrder'> : T : never;
+type PreJournalState = Omit<StateV18, 'visit' | 'papers'> & { visit: PreJournalVisit | null; papers: PreJournalPaper[] };
 
 interface LegacyState {
   day: number;
@@ -31,6 +36,9 @@ const SHIFT_LENGTH = 3; // Original version 2–8 fixture limit never changes.
 const V10_CASE_LIMIT = 302;
 const V12_CASE_LIMIT = 327;
 const V14_CASE_LIMIT = 552;
+const V18_CASE_LIMIT = 2502;
+const V18_CHARACTER_COUNT = 78;
+interface ReferralValidation { pendingIds: Set<number>; referralsIssued: number; startedDay?: number }
 const V12_CHARACTER_COUNT = 53;
 type VisitV10 = Omit<Visit, 'generalTested' | 'examinationOrder' | 'pressureReadings' | 'pressureLatest'>;
 interface NoteResultsV10 {
@@ -52,9 +60,9 @@ type GameStateV5 = Omit<GameStateV8, 'visit' | 'paperClips' | 'papers' | 'drawer
 type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<VisitV10, 'certificateNamed'> | null };
 type GameStateV7 = Omit<GameStateV8, 'drawerItems'>;
 
-interface SaveV18 {
+interface SaveV20 {
   game: 'next-please';
-  version: 18;
+  version: 20;
   savedAt: string;
   state: CurrentGameState;
 }
@@ -432,7 +440,8 @@ function validateStateV8(value: unknown): GameStateV8 {
 
 /** Frozen original queue: legacy appointments retain their original positions. */
 function legacyInitialState(): GameState {
-  return { ...createInitialState(0x4e505301), visit: null, papers: [], rngState: 3477621340,
+  const { budgetHistory: _history, pendingReferrals: _pending, referralsIssued: _issued, ...initial } = createInitialState(0x4e505301);
+  return { ...initial, visit: null, papers: [], rngState: 3477621340,
     roster: [0, 1, 2, 62, 49, 75, 81, 66, 98, 4, 67, 43, 34, 28, 42, 58, 15, 21, 89, 26, 93, 52, 100, 8, 72, 86, 14, 38] };
 }
 
@@ -442,7 +451,52 @@ function migrateStateV8(state: GameStateV8): GameStateV10 {
   return { ...legacyInitialState(), ...state };
 }
 
-function validateBudgetState(value: unknown, version: 9 | 10, maxPatient = V10_CASE_LIMIT, overtime = false, maxCharacters = V12_CHARACTER_COUNT, weekendBudgets = false): GameStateV10 {
+/** Shared ledger checks for the current settlement and the saved weekend history. */
+function validateSettlement(entry: unknown, day: number, patients: number, money: number,
+  insuranceRate: number, fines: number, restDay: boolean, weekendBudgets: boolean): DaySettlement {
+  const fail = (): never => { throw new SaveError('invalid-state'); };
+  const basePay = restDay ? 0 : BASE_PAY;
+  let weekend: DaySettlement['weekend'] = null;
+  if (weekendBudgets && isRecord(entry) && entry.weekend !== null) {
+    if (!restDay || !isRecord(entry.weekend) || !hasOnlyKeys(entry.weekend, ['modest', 'sundayLivingCost'])
+      || typeof entry.weekend.modest !== 'boolean'
+      || !isIntegerInRange(entry.weekend.sundayLivingCost, 0, 800)) return fail();
+    weekend = { modest: entry.weekend.modest, sundayLivingCost: entry.weekend.sundayLivingCost };
+  }
+  const insuranceCost = weekend ? 0 : insuranceRate;
+  if (!isRecord(entry)
+    || !hasOnlyKeys(entry, ['day', 'patients', 'basePay', 'patientBonus', 'income', 'livingCost', 'insuranceCost', 'fines', 'event', 'expenses', 'openingBalance', 'closingBalance', ...(weekendBudgets ? ['weekend'] : [])])
+    || entry.day !== day || entry.patients !== patients || entry.basePay !== basePay
+    || entry.patientBonus !== patients * PATIENT_BONUS || entry.income !== basePay + patients * PATIENT_BONUS
+    || !isIntegerInRange(entry.livingCost, weekend ? 0 : 400, 800) || entry.insuranceCost !== insuranceCost || entry.fines !== fines
+    || !isIntegerInRange(entry.openingBalance, -GAME_LIMITS.money, GAME_LIMITS.money) || entry.closingBalance !== money) return fail();
+  if (weekend) {
+    if (entry.livingCost + weekend.sundayLivingCost > Math.max(0, entry.openingBalance)
+      || (weekend.modest && entry.livingCost > 200)
+      || (gameDate(day).weekday === 0 && weekend.sundayLivingCost !== 0)) return fail();
+    if (gameDate(day).weekday === 6) {
+      const ordinary = entry.livingCost >= 400 && weekend.sundayLivingCost >= 400;
+      const modest = entry.livingCost <= 200 && weekend.sundayLivingCost <= 200
+        && [entry.livingCost, entry.livingCost + 1].includes(weekend.sundayLivingCost);
+      if (weekend.modest ? !modest : !ordinary) return fail();
+    }
+  }
+  let event: DaySettlement['event'] = null;
+  const available = entry.openingBalance + (entry.income as number) - entry.livingCost - insuranceCost - fines;
+  if (entry.event !== null) {
+    if (!isRecord(entry.event) || !hasOnlyKeys(entry.event, ['kind', 'cost'])
+      || (entry.event.kind !== 'medicine' && entry.event.kind !== 'car-repair' && entry.event.kind !== 'home-repair' && entry.event.kind !== 'fur-coat' && !(restDay && (entry.event.kind === 'mountain-trip' || entry.event.kind === 'seaside-trip')))
+      || available <= 2000 || !isIntegerInRange(entry.event.cost, 200, Math.min(available - (weekend?.sundayLivingCost ?? 0), 700 + Math.floor((available - 2000) * 0.75)))) return fail();
+    event = { kind: entry.event.kind, cost: entry.event.cost };
+  }
+  const expenses = entry.livingCost + insuranceCost + fines + (event?.cost ?? 0);
+  if (entry.expenses !== expenses || entry.closingBalance !== entry.openingBalance + (entry.income as number) - expenses) return fail();
+  return { day, patients, basePay, patientBonus: patients * PATIENT_BONUS,
+    income: basePay + patients * PATIENT_BONUS, livingCost: entry.livingCost, insuranceCost,
+    fines, event, expenses, openingBalance: entry.openingBalance, closingBalance: money, weekend };
+}
+
+function validateBudgetState(value: unknown, version: 9 | 10, maxPatient = V10_CASE_LIMIT, overtime = false, maxCharacters = V12_CHARACTER_COUNT, weekendBudgets = false, referralState?: ReferralValidation): GameStateV10 {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !hasOnlyKeys(value, ['day', 'money', 'patientsProcessed', 'phase', 'introStep', 'shiftCompleted', 'clockMinutes', 'visit', 'lampOn', 'decoration', 'papers', 'nextPaperId', 'paperClips', 'drawerItems', 'rngState', 'roster', 'insuranceRate', 'daily', 'settlement', ...(version === 10 ? ['previousMonthBalance'] : [])])) return fail();
   if (!isIntegerInRange(value.day, 1, GAME_LIMITS.day) || !isIntegerInRange(value.money, -GAME_LIMITS.money, GAME_LIMITS.money)
@@ -456,7 +510,7 @@ function validateBudgetState(value: unknown, version: 9 | 10, maxPatient = V10_C
     || !isIntegerInRange(value.rngState, 0, 0xffff_ffff)
     || !isIntegerInRange(value.insuranceRate, BASE_INSURANCE, GAME_LIMITS.money) || value.insuranceRate % 50 !== 0
     || typeof value.lampOn !== 'boolean' || (value.decoration !== 'plant' && value.decoration !== 'certificate')
-    || !Array.isArray(value.roster) || !(version === 9 ? value.roster.length === 28 : [0, 28, V12_CHARACTER_COUNT, maxCharacters].includes(value.roster.length))) return fail();
+    || !Array.isArray(value.roster) || !(version === 9 ? value.roster.length === 28 : [0, 28, V12_CHARACTER_COUNT, V18_CHARACTER_COUNT, maxCharacters].includes(value.roster.length))) return fail();
   const restDay = version === 10 && value.roster.length === 0;
   const rosterLimit = value.roster.length;
   const caseLimit = rosterLimit === 28 ? 102 : rosterLimit === V12_CHARACTER_COUNT ? Math.min(V12_CASE_LIMIT, maxPatient) : maxPatient;
@@ -487,14 +541,16 @@ function validateBudgetState(value: unknown, version: 9 | 10, maxPatient = V10_C
     visit = { patientId: entry.patientId, document: entry.document, certificateTaken: entry.certificateTaken, certificateNamed: entry.certificateNamed,
       visionTested: entry.visionTested, pressureTested: entry.pressureTested, measurementsTaken: entry.measurementsTaken, decision: entry.decision };
   }
-  const minimum = visit ? SHIFT_START_MINUTES + value.shiftCompleted * 4 + (visit.document === 'desk' ? 1 : 0)
+  const minimum = visit && referralState?.startedDay !== undefined && referralState.startedDay < value.day ? SHIFT_START_MINUTES
+    : visit ? SHIFT_START_MINUTES + value.shiftCompleted * 4 + (visit.document === 'desk' ? 1 : 0)
     + (visit.visionTested ? 3 : 0) + (visit.pressureTested ? 4 : 0) + (visit.measurementsTaken ? 2 : 0) + (visit.decision ? 1 : 0)
     : value.shiftCompleted ? SHIFT_START_MINUTES + value.shiftCompleted * 4 - 1 : ARRIVAL_MINUTES;
   if (value.clockMinutes < Math.min(SHIFT_END_MINUTES, minimum)) return fail();
+  const maxConsequences = value.shiftCompleted + (referralState?.referralsIssued ?? 0);
   const rawDaily = value.daily;
   if (!isRecord(rawDaily) || !hasOnlyKeys(rawDaily, ['zusCases', 'refusals', 'fines', 'insuranceIncrease'])
-    || !isIntegerInRange(rawDaily.zusCases, 0, value.shiftCompleted) || !isIntegerInRange(rawDaily.refusals, 0, value.shiftCompleted)
-    || rawDaily.zusCases + rawDaily.refusals > value.shiftCompleted
+    || !isIntegerInRange(rawDaily.zusCases, 0, maxConsequences) || !isIntegerInRange(rawDaily.refusals, 0, value.shiftCompleted)
+    || rawDaily.zusCases + rawDaily.refusals > maxConsequences
     || rawDaily.fines !== (rawDaily.zusCases ? 100 + (rawDaily.zusCases - 1) * 400 : 0)
     || !isIntegerInRange(rawDaily.insuranceIncrease, 0, maxCharacters * 100)
     || (rawDaily.refusals === 0 ? rawDaily.insuranceIncrease !== 0
@@ -515,14 +571,14 @@ function validateBudgetState(value: unknown, version: 9 | 10, maxPatient = V10_C
     seen.add(paper.id);
     if (paper.kind !== 'note') {
       const key = `${paper.day}:${paper.patientId}:${paper.kind}`;
-      if (casePapers.has(key)) return fail();
+      if (casePapers.has(key) && !(referralState && paper.kind === 'letter')) return fail();
       casePapers.add(key);
     }
-    if (paper.day === value.day && paper.patientId !== null) {
+    if (paper.day === value.day && paper.patientId !== null && !referralState?.pendingIds.has(paper.patientId)) {
       const position = roster.indexOf(paper.patientId);
       const interrupted = overtime && value.phase === 'home' && value.clockMinutes === CLINIC_CLOSE_MINUTES;
       if (position < 0 || position > value.shiftCompleted
-        || (position === value.shiftCompleted && (paper.kind === 'letter'
+        || (position === value.shiftCompleted && ((paper.kind === 'letter' && !referralState?.referralsIssued)
           || (!interrupted && (!visit || (visit.document !== 'desk' && !(overtime && paper.kind === 'note'))))))) return fail();
       if (paper.kind === 'note' && paper.patientId === visit?.patientId
         && ((paper.results.vision !== null && !visit.visionTested) || (paper.results.pressure !== null && !visit.pressureTested)
@@ -546,45 +602,8 @@ function validateBudgetState(value: unknown, version: 9 | 10, maxPatient = V10_C
   let settlement: DaySettlement | null = null;
   if (value.phase === 'home') {
     const entry = value.settlement;
-    const basePay = restDay ? 0 : BASE_PAY;
-    let weekend: DaySettlement['weekend'] = null;
-    if (weekendBudgets && isRecord(entry) && entry.weekend !== null) {
-      if (!restDay || !isRecord(entry.weekend) || !hasOnlyKeys(entry.weekend, ['modest', 'sundayLivingCost'])
-        || typeof entry.weekend.modest !== 'boolean'
-        || !isIntegerInRange(entry.weekend.sundayLivingCost, 0, 800)) return fail();
-      weekend = { modest: entry.weekend.modest, sundayLivingCost: entry.weekend.sundayLivingCost };
-    }
-    const insuranceCost = weekend ? 0 : value.insuranceRate;
-    if (visit !== null || (overtime ? value.clockMinutes < SHIFT_END_MINUTES : value.clockMinutes !== SHIFT_END_MINUTES) || !isRecord(entry)
-      || !hasOnlyKeys(entry, ['day', 'patients', 'basePay', 'patientBonus', 'income', 'livingCost', 'insuranceCost', 'fines', 'event', 'expenses', 'openingBalance', 'closingBalance', ...(weekendBudgets ? ['weekend'] : [])])
-      || entry.day !== value.day || entry.patients !== value.shiftCompleted || entry.basePay !== basePay
-      || entry.patientBonus !== value.shiftCompleted * PATIENT_BONUS || entry.income !== basePay + value.shiftCompleted * PATIENT_BONUS
-      || !isIntegerInRange(entry.livingCost, weekend ? 0 : 400, 800) || entry.insuranceCost !== insuranceCost || entry.fines !== daily.fines
-      || !isIntegerInRange(entry.openingBalance, -GAME_LIMITS.money, GAME_LIMITS.money) || entry.closingBalance !== value.money) return fail();
-    if (weekend) {
-      if (entry.livingCost + weekend.sundayLivingCost > Math.max(0, entry.openingBalance)
-        || (weekend.modest && entry.livingCost > 200)
-        || (gameDate(value.day).weekday === 0 && weekend.sundayLivingCost !== 0)) return fail();
-      if (gameDate(value.day).weekday === 6) {
-        const ordinary = entry.livingCost >= 400 && weekend.sundayLivingCost >= 400;
-        const modest = entry.livingCost <= 200 && weekend.sundayLivingCost <= 200
-          && [entry.livingCost, entry.livingCost + 1].includes(weekend.sundayLivingCost);
-        if (weekend.modest ? !modest : !ordinary) return fail();
-      }
-    }
-    let event: DaySettlement['event'] = null;
-    const available = entry.openingBalance + (entry.income as number) - entry.livingCost - insuranceCost - daily.fines;
-    if (entry.event !== null) {
-      if (!isRecord(entry.event) || !hasOnlyKeys(entry.event, ['kind', 'cost'])
-        || (entry.event.kind !== 'medicine' && entry.event.kind !== 'car-repair' && entry.event.kind !== 'home-repair' && entry.event.kind !== 'fur-coat' && !(restDay && (entry.event.kind === 'mountain-trip' || entry.event.kind === 'seaside-trip')))
-        || available <= 2000 || !isIntegerInRange(entry.event.cost, 200, Math.min(available - (weekend?.sundayLivingCost ?? 0), 700 + Math.floor((available - 2000) * 0.75)))) return fail();
-      event = { kind: entry.event.kind, cost: entry.event.cost };
-    }
-    const expenses = entry.livingCost + insuranceCost + daily.fines + (event?.cost ?? 0);
-    if (entry.expenses !== expenses || entry.closingBalance !== entry.openingBalance + (entry.income as number) - expenses) return fail();
-    settlement = { day: value.day, patients: value.shiftCompleted, basePay, patientBonus: value.shiftCompleted * PATIENT_BONUS,
-      income: basePay + value.shiftCompleted * PATIENT_BONUS, livingCost: entry.livingCost, insuranceCost,
-      fines: daily.fines, event, expenses, openingBalance: entry.openingBalance, closingBalance: value.money, weekend };
+    if (visit !== null || (overtime ? value.clockMinutes < SHIFT_END_MINUTES : value.clockMinutes !== SHIFT_END_MINUTES)) return fail();
+    settlement = validateSettlement(entry, value.day, value.shiftCompleted, value.money, value.insuranceRate, daily.fines, restDay, weekendBudgets);
   } else if (value.settlement !== null) return fail();
   if (value.phase === 'intro' && (value.clockMinutes !== ARRIVAL_MINUTES || value.shiftCompleted !== 0 || visit !== null
     || papers.length || value.nextPaperId !== 1 || paperClips.length || value.drawerItems.manual || value.drawerItems.clips
@@ -648,8 +667,8 @@ function validatePressureReadings(value: unknown, patientId: number | null, meas
   return readings;
 }
 
-function validatePaperV11(value: unknown, day: number, version: 11 | 12 | 13 | 14 | 15, override?: PatientCase): Paper {
-  const maxPatient = version >= 15 ? PATIENTS.length - 1 : version >= 13 ? V14_CASE_LIMIT : V12_CASE_LIMIT;
+function validatePaperV11(value: unknown, day: number, version: 11 | 12 | 13 | 14 | 15, override?: PatientCase, referralState?: ReferralValidation): Paper {
+  const maxPatient = version >= 15 ? referralState ? PATIENTS.length - 1 : V18_CASE_LIMIT : version >= 13 ? V14_CASE_LIMIT : V12_CASE_LIMIT;
   if (!isRecord(value)) throw new SaveError('invalid-state');
   if (value.kind !== 'note') {
     const paper = validatePaperV7(value, day, maxPatient);
@@ -689,8 +708,8 @@ function validatePaperV11(value: unknown, day: number, version: 11 | 12 | 13 | 1
 }
 
 /** Validate new clinical data, then reuse unchanged ledger and inventory checks. */
-function validateStateV11(value: unknown, version: 11 | 12 | 13 | 14 | 15 = 11, overrides: { visit?: PatientCase; notes?: Map<number, PatientCase>; weekendBudgets?: boolean } = {}): GameState {
-  const maxPatient = version >= 15 ? PATIENTS.length - 1 : version >= 13 ? V14_CASE_LIMIT : V12_CASE_LIMIT;
+function validateStateV11(value: unknown, version: 11 | 12 | 13 | 14 | 15 = 11, overrides: { visit?: PatientCase; notes?: Map<number, PatientCase>; weekendBudgets?: boolean; referralState?: ReferralValidation } = {}): GameState {
+  const maxPatient = version >= 15 ? overrides.referralState ? PATIENTS.length - 1 : V18_CASE_LIMIT : version >= 13 ? V14_CASE_LIMIT : V12_CASE_LIMIT;
   if (!isRecord(value) || !Array.isArray(value.papers) || value.papers.length > GAME_LIMITS.papers
     || !isIntegerInRange(value.day, 1, GAME_LIMITS.day)) throw new SaveError('invalid-state');
   let oldVisit: unknown = null;
@@ -719,7 +738,7 @@ function validateStateV11(value: unknown, version: 11 | 12 | 13 | 14 | 15 = 11, 
     generalTested = general;
     oldVisit = previous;
   }
-  const papers = value.papers.map(paper => validatePaperV11(paper, value.day as number, version, isRecord(paper) && typeof paper.id === 'number' ? overrides.notes?.get(paper.id) : undefined));
+  const papers = value.papers.map(paper => validatePaperV11(paper, value.day as number, version, isRecord(paper) && typeof paper.id === 'number' ? overrides.notes?.get(paper.id) : undefined, overrides.referralState));
   const oldPapers: PaperV10[] = papers.map(paper => {
     if (paper.kind !== 'note') return paper;
     const { examinationOrder: _order, ...previous } = paper;
@@ -732,10 +751,11 @@ function validateStateV11(value: unknown, version: 11 | 12 | 13 | 14 | 15 = 11, 
         pressure: paper.results.pressure !== null && patient ? patient.pressure : null,
         weight: paper.results.weight, height: paper.results.height } };
   });
-  const previous = validateBudgetState({ ...value, visit: oldVisit, papers: oldPapers }, 10, maxPatient, version >= 12, version >= 13 ? CHARACTER_COUNT : V12_CHARACTER_COUNT, overrides.weekendBudgets);
+  const previous = validateBudgetState({ ...value, visit: oldVisit, papers: oldPapers }, 10, maxPatient, version >= 12, version >= 13 ? overrides.referralState ? CHARACTER_COUNT : V18_CHARACTER_COUNT : V12_CHARACTER_COUNT, overrides.weekendBudgets, overrides.referralState);
   const visit: Visit | null = previous.visit ? { ...previous.visit, generalTested, examinationOrder, pressureReadings, pressureLatest } : null;
   if (visit) {
-    const minimum = SHIFT_START_MINUTES + previous.shiftCompleted * 4 + (visit.document === 'desk' ? 1 : 0)
+    const minimum = overrides.referralState?.startedDay !== undefined && overrides.referralState.startedDay < previous.day ? SHIFT_START_MINUTES
+      : SHIFT_START_MINUTES + previous.shiftCompleted * 4 + (visit.document === 'desk' ? 1 : 0)
       + (visit.generalTested ? 3 : 0) + (visit.visionTested ? 3 : 0) + (visit.pressureTested ? 4 : 0)
       + (visit.measurementsTaken ? 2 : 0) + (visit.decision ? 1 : 0);
     if (previous.clockMinutes < Math.min(SHIFT_END_MINUTES, minimum)) throw new SaveError('invalid-state');
@@ -780,15 +800,15 @@ function validateReferral(value: unknown, day: number, patientId: number): Refer
   return { ageDays: value.ageDays, seal: value.seal, authentic: value.authentic, phone: value.phone as string };
 }
 
-function validateSpecialist(value: unknown, day: number, patientId: number): SpecialistCertificate {
+function validateSpecialist(value: unknown, day: number, patientId: number, expandedCatalog = false): SpecialistCertificate {
   if (!isRecord(value) || !hasOnlyKeys(value, ['jobId', 'phone']) || workDayNumber(day) < 4
-    || PATIENTS[patientId]!.pressure !== 'refer' || !isIntegerInRange(value.jobId, 0, JOBS.length - 1)
+    || PATIENTS[patientId]!.pressure !== 'refer' || !isIntegerInRange(value.jobId, 0, expandedCatalog ? JOBS.length - 1 : 44)
     || value.phone !== specialistPhone(patientId)) throw new SaveError('invalid-state');
   return { jobId: value.jobId, phone: value.phone as string };
 }
 
 /** Reuse the frozen ledger/clinical checks after validating all progression data. */
-function validateStateV16(value: unknown, weekendBudgets = false, bankruptcy = false): PreJournalState {
+function validateStateV16(value: unknown, weekendBudgets = false, bankruptcy = false, referralState?: ReferralValidation): PreJournalState {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !isIntegerInRange(value.day, 1, GAME_LIMITS.day)
     || !Array.isArray(value.papers) || value.papers.length > GAME_LIMITS.papers
@@ -806,12 +826,12 @@ function validateStateV16(value: unknown, weekendBudgets = false, bankruptcy = f
   let oldVisit: unknown = null;
   if (value.visit !== null) {
     const entry = value.visit;
-    if (!isRecord(entry) || !isIntegerInRange(entry.patientId, 0, PATIENTS.length - 1)
+    if (!isRecord(entry) || !isIntegerInRange(entry.patientId, 0, referralState ? PATIENTS.length - 1 : V18_CASE_LIMIT)
       || typeof entry.specialistTaken !== 'boolean'
       || !['none', 'offered', 'accepted', 'returned'].includes(entry.bribe as string)
       || (entry.bribe !== 'none' && workDayNumber(value.day) < 6)) return fail();
     const referral = validateReferral(entry.referral, value.day, entry.patientId);
-    const specialist = entry.specialist === null ? null : validateSpecialist(entry.specialist, value.day, entry.patientId);
+    const specialist = entry.specialist === null ? null : validateSpecialist(entry.specialist, value.day, entry.patientId, !!referralState);
     const calls = validateCalls(entry.calls, value.day, entry.patientId);
     if ((entry.specialistTaken && !specialist)
       || (calls.specialist !== null && (!specialist || !entry.specialistTaken || calls.specialist !== (specialist.jobId === PATIENTS[entry.patientId]!.jobId)))
@@ -826,7 +846,7 @@ function validateStateV16(value: unknown, weekendBudgets = false, bankruptcy = f
   const noteOverrides = new Map<number, PatientCase>();
   const referralExtras = new Map<number, ReferralDetails>();
   const letterSenders = new Map<number, 'zus' | 'employer'>();
-  const addedPapers = new Map<number, CurrentPaper>();
+  const addedPapers = new Map<number, PaperV18>();
   const paperLocations = new Map<number, 'desk' | 'drawer'>();
   const uniqueKinds = new Set<string>();
   const oldPapers: unknown[] = [];
@@ -850,14 +870,14 @@ function validateStateV16(value: unknown, weekendBudgets = false, bankruptcy = f
     if (raw.kind === 'specialist') {
       const key = `${raw.day}:${raw.patientId}:specialist`;
       if (!hasOnlyKeys(raw, ['id', 'kind', 'day', 'patientId', 'location', 'certificate'])
-        || !isIntegerInRange(raw.patientId, 0, PATIENTS.length - 1) || uniqueKinds.has(key)) return fail();
+        || !isIntegerInRange(raw.patientId, 0, referralState ? PATIENTS.length - 1 : V18_CASE_LIMIT) || uniqueKinds.has(key)) return fail();
       uniqueKinds.add(key);
-      const certificate = validateSpecialist(raw.certificate, raw.day, raw.patientId);
+      const certificate = validateSpecialist(raw.certificate, raw.day, raw.patientId, !!referralState);
       addedPapers.set(raw.id, { id: raw.id, kind: 'specialist', day: raw.day, patientId: raw.patientId, location: raw.location, certificate });
       continue;
     }
     if (raw.kind === 'note') {
-      if (typeof raw.bribe !== 'boolean' || (raw.patientId !== null && !isIntegerInRange(raw.patientId, 0, PATIENTS.length - 1))
+      if (typeof raw.bribe !== 'boolean' || (raw.patientId !== null && !isIntegerInRange(raw.patientId, 0, referralState ? PATIENTS.length - 1 : V18_CASE_LIMIT))
         || (raw.bribe && (raw.patientId === null || workDayNumber(raw.day) < 6))) return fail();
       const calls = validateCalls(raw.calls, raw.day, raw.patientId as number | null);
       noteExtras.set(raw.id, { calls, bribe: raw.bribe });
@@ -865,12 +885,12 @@ function validateStateV16(value: unknown, weekendBudgets = false, bankruptcy = f
       const { calls: _calls, bribe: _bribe, ...old } = raw;
       oldPapers.push(old);
     } else if (raw.kind === 'referral') {
-      if (!isIntegerInRange(raw.patientId, 0, PATIENTS.length - 1)) return fail();
+      if (!isIntegerInRange(raw.patientId, 0, referralState ? PATIENTS.length - 1 : V18_CASE_LIMIT)) return fail();
       referralExtras.set(raw.id, validateReferral(raw.details, raw.day, raw.patientId));
       const { details: _details, ...old } = raw;
       oldPapers.push(old);
     } else if (raw.kind === 'letter') {
-      if (!isIntegerInRange(raw.patientId, 0, PATIENTS.length - 1) || (raw.sender !== 'zus' && raw.sender !== 'employer')) return fail();
+      if (!isIntegerInRange(raw.patientId, 0, referralState ? PATIENTS.length - 1 : V18_CASE_LIMIT) || (raw.sender !== 'zus' && raw.sender !== 'employer')) return fail();
       const historicalSender = PATIENTS[raw.patientId]!.expectedDecision === 'fit' ? 'employer' : 'zus';
       if (workDayNumber(raw.day) < 3 && raw.sender !== historicalSender) return fail();
       letterSenders.set(raw.id, raw.sender);
@@ -895,7 +915,7 @@ function validateStateV16(value: unknown, weekendBudgets = false, bankruptcy = f
   });
   const oldClips = paperClips.map(group => group.filter(id => id === 'certificate' || !addedPapers.has(id))).filter(group => group.length);
   const previous = validateStateV11({ ...historicalState, visit: oldVisit, papers: oldPapers, paperClips: oldClips }, 15,
-    { visit: visitOverride, notes: noteOverrides, weekendBudgets });
+    { visit: visitOverride, notes: noteOverrides, weekendBudgets, referralState });
   if (previous.phase === 'intro' && addedPapers.size) return fail();
   const visit: PreJournalVisit | null = previous.visit && visitExtras ? { ...previous.visit, ...visitExtras } : null;
   const validatedPapers = new Map(previous.papers.map(paper => [paper.id, paper]));
@@ -909,7 +929,7 @@ function validateStateV16(value: unknown, weekendBudgets = false, bankruptcy = f
       : { ...paper, sender: letterSenders.get(id)! };
   });
   for (const paper of papers) {
-    if (paper.day !== previous.day || paper.kind === 'directive') continue;
+    if (paper.day !== previous.day || paper.kind === 'directive' || referralState?.pendingIds.has(paper.patientId!)) continue;
     if (paper.kind === 'specialist') {
       const position = previous.roster.indexOf(paper.patientId);
       const interrupted = previous.phase === 'home' && previous.clockMinutes === CLINIC_CLOSE_MINUTES;
@@ -934,13 +954,13 @@ function legacyNoteOrder(record: PreJournalVisit | Extract<PreJournalPaper, { ki
   return order;
 }
 
-function migrateNoteOrder(state: PreJournalState): CurrentGameState {
+function migrateNoteOrder(state: PreJournalState): StateV18 {
   return { ...state, visit: state.visit ? { ...state.visit, noteOrder: legacyNoteOrder(state.visit) } : null,
     papers: state.papers.map(paper => paper.kind === 'note' ? { ...paper, noteOrder: legacyNoteOrder(paper) } : paper) };
 }
 
 /** Validate the journal separately, then reuse all frozen clinical and ledger rules. */
-function validateStateV18(value: unknown): CurrentGameState {
+function validateStateV18(value: unknown, referralState?: ReferralValidation): StateV18 {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !Array.isArray(value.papers)) return fail();
   let visitOrder: unknown;
@@ -956,7 +976,7 @@ function validateStateV18(value: unknown): CurrentGameState {
     const { noteOrder, ...old } = paper;
     noteOrders.set(paper.id, noteOrder); return old;
   });
-  const previous = validateStateV16({ ...value, visit: oldVisit, papers: oldPapers }, true, true);
+  const previous = validateStateV16({ ...value, visit: oldVisit, papers: oldPapers }, true, true, referralState);
   const validateOrder = (raw: unknown, record: PreJournalVisit | Extract<PreJournalPaper, { kind: 'note' }>): NoteEntryId[] => {
     const expected = legacyNoteOrder(record);
     if (!Array.isArray(raw) || raw.length !== expected.length || new Set(raw).size !== raw.length
@@ -967,7 +987,7 @@ function validateStateV18(value: unknown): CurrentGameState {
     return [...raw] as NoteEntryId[];
   };
   const visit = previous.visit ? { ...previous.visit, noteOrder: validateOrder(visitOrder, previous.visit) } : null;
-  const papers = previous.papers.map((paper): CurrentPaper => {
+  const papers = previous.papers.map((paper): PaperV18 => {
     if (paper.kind !== 'note') return paper;
     const noteOrder = validateOrder(noteOrders.get(paper.id), paper);
     // Older partial sheets may receive missing findings later. Their own
@@ -977,12 +997,187 @@ function validateStateV18(value: unknown): CurrentGameState {
   return { ...previous, visit, papers };
 }
 
+/** Older saves keep their current appointment and acquire no invented referral. */
+function migrateAdditionalTests(state: StateV18): StateV19 {
+  return { ...state, pendingReferrals: [], referralsIssued: 0,
+    visit: state.visit ? { ...state.visit, startedDay: state.day, additionalResult: null, additionalTests: [] } : null };
+}
+
+function validateStateV19(value: unknown): StateV19 {
+  const fail = (): never => { throw new SaveError('invalid-state'); };
+  if (!isRecord(value) || !isIntegerInRange(value.day, 1, GAME_LIMITS.day)
+    || !isIntegerInRange(value.referralsIssued, 0, CHARACTER_COUNT * 4)
+    || !Array.isArray(value.pendingReferrals) || value.pendingReferrals.length > CHARACTER_COUNT
+    || !Array.isArray(value.papers) || value.papers.length > GAME_LIMITS.papers
+    || !Array.isArray(value.paperClips) || !Array.isArray(value.roster)
+    || (workDayNumber(value.day) < 7 && (value.referralsIssued !== 0 || value.pendingReferrals.length > 0))) return fail();
+  const day = value.day;
+  const isTest = (test: unknown): test is AdditionalTest => ADDITIONAL_TESTS.includes(test as AdditionalTest);
+  const visitExtras = (raw: unknown): { startedDay: number; additionalResult: AdditionalResult | null; additionalTests: AdditionalTest[]; old: Record<string, unknown> } => {
+    if (!isRecord(raw) || !isIntegerInRange(raw.patientId, 0, PATIENTS.length - 1)
+      || !isIntegerInRange(raw.startedDay, 1, day)
+      || !Array.isArray(raw.additionalTests) || raw.additionalTests.length > 4
+      || new Set(raw.additionalTests).size !== raw.additionalTests.length || !raw.additionalTests.every(isTest)
+      || ((workDayNumber(raw.startedDay) < 7 || isWeekend(raw.startedDay)) && raw.additionalTests.length)) return fail();
+    let additionalResult: AdditionalResult | null = null;
+    if (raw.additionalResult !== null) {
+      const result = raw.additionalResult;
+      if (!isRecord(result) || !hasOnlyKeys(result, ['test', 'fit']) || !isTest(result.test)
+        || !raw.additionalTests.includes(result.test) || typeof result.fit !== 'boolean'
+        || result.fit !== additionalResultFor(effectivePatient(raw.patientId, raw.bribe !== 'none'), result.test).fit) return fail();
+      additionalResult = { test: result.test, fit: result.fit };
+    }
+    if (raw.startedDay < day && !raw.additionalTests.length) return fail();
+    const { startedDay, additionalResult: _result, additionalTests, ...old } = raw;
+    return { startedDay, additionalResult, additionalTests: [...additionalTests], old };
+  };
+  const pendingIds = new Set<number>();
+  const pendingCharacters = new Set<number>();
+  const pendingReferrals: PendingReferral[] = value.pendingReferrals.map(raw => {
+    if (!isRecord(raw) || !hasOnlyKeys(raw, ['visit', 'sentDay', 'returnDay', 'returnMinute', 'returnAfterCompleted', 'test', 'fit'])
+      || !isIntegerInRange(raw.sentDay, 1, day) || workDayNumber(raw.sentDay) < 7 || isWeekend(raw.sentDay)
+      || !isIntegerInRange(raw.returnDay, raw.sentDay, Math.min(GAME_LIMITS.day, nextWorkingDay(raw.sentDay)))
+      || ![raw.sentDay, nextWorkingDay(raw.sentDay)].includes(raw.returnDay)
+      || !isIntegerInRange(raw.returnMinute, raw.returnDay === raw.sentDay ? 600 : 480, raw.returnDay === raw.sentDay ? 839 : 480)
+      || !isIntegerInRange(raw.returnAfterCompleted, 3, CHARACTER_COUNT + 3) || !isTest(raw.test) || typeof raw.fit !== 'boolean') return fail();
+    const extra = visitExtras(raw.visit), patientId = extra.old.patientId as number;
+    const characterId = PATIENTS[patientId]!.characterId;
+    if (extra.startedDay > raw.sentDay || extra.old.document !== 'desk'
+      || extra.additionalTests.at(-1) !== raw.test || pendingIds.has(patientId) || pendingCharacters.has(characterId)
+      || raw.fit !== additionalResultFor(effectivePatient(patientId, extra.old.bribe !== 'none'), raw.test).fit) return fail();
+    pendingIds.add(patientId); pendingCharacters.add(characterId);
+    const initial = migrateAdditionalTests(migrateNoteOrder(migrateStateV15(legacyInitialState())));
+    const roster = Array.from({ length: CHARACTER_COUNT }, (_, character) => PATIENTS.find(patient => patient.characterId === character)!.id);
+    const index = roster.findIndex(id => PATIENTS[id]!.characterId === characterId);
+    roster.splice(index, 1); roster.unshift(patientId);
+    const { pendingReferrals: _pending, referralsIssued: _issued, ...base } = initial;
+    const validated = validateStateV18({ ...base, day, phase: 'cabinet', introStep: 3, clockMinutes: 839,
+      roster, visit: extra.old, papers: [], paperClips: [] }, { pendingIds: new Set(), referralsIssued: 0, startedDay: extra.startedDay });
+    if (!validated.visit) return fail();
+    const visit: CurrentVisit = { ...validated.visit, startedDay: extra.startedDay,
+      additionalResult: extra.additionalResult, additionalTests: extra.additionalTests };
+    return { visit, sentDay: raw.sentDay, returnDay: raw.returnDay, returnMinute: raw.returnMinute,
+      returnAfterCompleted: raw.returnAfterCompleted, test: raw.test, fit: raw.fit };
+  });
+  const active = value.visit === null ? null : visitExtras(value.visit);
+  if (active && ((active.additionalTests.length > 0 && active.additionalResult === null) || pendingIds.has(active.old.patientId as number)
+    || pendingCharacters.has(PATIENTS[active.old.patientId as number]!.characterId))) return fail();
+  const extraPapers = new Map<number, CurrentPaper>();
+  const allIds = new Set<number>();
+  const locations = new Map<number, 'desk' | 'drawer'>();
+  for (const raw of value.papers) {
+    if (!isRecord(raw) || !isIntegerInRange(raw.id, 1, GAME_LIMITS.paperId)
+      || !isIntegerInRange(value.nextPaperId, raw.id + 1, GAME_LIMITS.paperId + 1) || allIds.has(raw.id)
+      || !isIntegerInRange(raw.day, 1, day) || (raw.location !== 'desk' && raw.location !== 'drawer')) return fail();
+    allIds.add(raw.id); locations.set(raw.id, raw.location);
+    if (raw.kind === 'directive' && raw.rule === 'additional-tests') {
+      if (!hasOnlyKeys(raw, ['id', 'kind', 'day', 'patientId', 'location', 'sender', 'rule', 'opened'])
+        || raw.patientId !== null || raw.sender !== 'chamber' || typeof raw.opened !== 'boolean'
+        || directiveForDay(raw.day) !== 'additional-tests'
+        || [...extraPapers.values()].some(paper => paper.kind === 'directive' && paper.day === raw.day)) return fail();
+      extraPapers.set(raw.id, { id: raw.id, day: raw.day, location: raw.location, kind: 'directive', patientId: null,
+        sender: 'chamber', rule: 'additional-tests', opened: raw.opened });
+    } else if (raw.kind === 'additional-referral' || raw.kind === 'additional-result') {
+      if (!hasOnlyKeys(raw, ['id', 'kind', 'day', 'patientId', 'location', 'test', ...(raw.kind === 'additional-result' ? ['fit'] : [])])
+        || !isIntegerInRange(raw.patientId, 0, PATIENTS.length - 1) || workDayNumber(raw.day) < 7
+        || !(isTest(raw.test) || (raw.kind === 'additional-referral' && raw.test === null))) return fail();
+      if (raw.day === day && !pendingIds.has(raw.patientId)) {
+        const index = value.roster.indexOf(raw.patientId);
+        if (!isIntegerInRange(value.shiftCompleted, 0, CHARACTER_COUNT) || index < 0 || index > value.shiftCompleted) return fail();
+      }
+      const base = { id: raw.id, day: raw.day, patientId: raw.patientId, location: raw.location as 'desk' | 'drawer' };
+      if (raw.kind === 'additional-result') {
+        if (!isTest(raw.test) || typeof raw.fit !== 'boolean'
+          || raw.fit !== additionalResultFor(PATIENTS[raw.patientId]!, raw.test).fit) return fail();
+        extraPapers.set(raw.id, { ...base, kind: 'additional-result', test: raw.test, fit: raw.fit });
+      } else extraPapers.set(raw.id, { ...base, kind: 'additional-referral', test: raw.test as AdditionalTest | null });
+    }
+  }
+  const rawPaperCount = value.papers.length;
+  const seenClips = new Set<DocumentId>();
+  const paperClips: DocumentId[][] = value.paperClips.map(group => {
+    if (!Array.isArray(group) || !group.length || group.length > rawPaperCount + 1) return fail();
+    let location: string | undefined;
+    return group.map((id: unknown): DocumentId => {
+      if (id !== 'certificate' && !isIntegerInRange(id, 1, GAME_LIMITS.paperId)) return fail();
+      const next = id === 'certificate' ? (active?.old.certificateTaken === true ? 'desk' : undefined) : locations.get(id);
+      if (!next || seenClips.has(id) || (location && location !== next)) return fail();
+      location = next; seenClips.add(id); return id;
+    });
+  });
+  const { pendingReferrals: _pending, referralsIssued, ...old } = value;
+  const previous = validateStateV18({ ...old, visit: active?.old ?? null,
+    papers: value.papers.filter(paper => !extraPapers.has((paper as Record<string, unknown>).id as number)),
+    paperClips: paperClips.map(group => group.filter(id => id === 'certificate' || !extraPapers.has(id))).filter(group => group.length),
+  }, { pendingIds, referralsIssued: value.referralsIssued, startedDay: active?.startedDay });
+  if (previous.phase === 'intro' && (pendingReferrals.length || extraPapers.size || referralsIssued)) return fail();
+  if (!isWeekend(day)) for (const pending of pendingReferrals) {
+    const index = previous.roster.indexOf(pending.visit.patientId);
+    if (index < previous.shiftCompleted || index < 0) return fail();
+  }
+  const validatedPapers = new Map(previous.papers.map(paper => [paper.id, paper]));
+  const papers = value.papers.map(raw => extraPapers.get((raw as Record<string, unknown>).id as number)
+    ?? validatedPapers.get((raw as Record<string, unknown>).id as number)!);
+  const visit = previous.visit && active ? { ...previous.visit, startedDay: active.startedDay,
+    additionalResult: active.additionalResult, additionalTests: active.additionalTests } : null;
+  for (const appointment of [...pendingReferrals.map(pending => pending.visit), ...(visit ? [visit] : [])]) {
+    for (const paper of papers) {
+      if (paper.patientId !== appointment.patientId || paper.day !== appointment.startedDay) continue;
+      if (paper.kind === 'referral' && JSON.stringify(paper.details) !== JSON.stringify(appointment.referral)) return fail();
+      if (paper.kind === 'specialist' && (!appointment.specialistTaken || JSON.stringify(paper.certificate) !== JSON.stringify(appointment.specialist))) return fail();
+      if (paper.kind === 'note' && (paper.bribe !== (appointment.bribe !== 'none')
+        || paper.calls.specialist !== appointment.calls.specialist || paper.calls.employer !== appointment.calls.employer
+        || (paper.results.general !== null && !appointment.generalTested)
+        || (paper.results.vision !== null && !appointment.visionTested)
+        || (paper.results.weight !== null && !appointment.measurementsTaken)
+        || (paper.results.pressure !== null && JSON.stringify(paper.results.pressureReadings) !== JSON.stringify(appointment.pressureReadings))
+        || paper.examinationOrder.some((entry, index) => appointment.examinationOrder.filter(exam => paper.examinationOrder.includes(exam))[index] !== entry))) return fail();
+    }
+  }
+  return { ...previous, referralsIssued: value.referralsIssued, pendingReferrals, papers, paperClips, visit };
+}
+
+/** Preserve actual daily ledgers; older saves never invent missing Friday costs. */
+function validateStateV20(value: unknown): CurrentGameState {
+  const fail = (): never => { throw new SaveError('invalid-state'); };
+  if (!isRecord(value) || !Array.isArray(value.budgetHistory) || value.budgetHistory.length > 2) return fail();
+  const { budgetHistory: rawHistory, ...old } = value;
+  const state = validateStateV19(old);
+  const weekday = gameDate(state.day).weekday;
+  if (rawHistory.length && (state.phase !== 'home' || state.roster.length !== 0
+    || !isWeekend(state.day) || rawHistory.length > (weekday === 6 ? 1 : 2))) return fail();
+  const budgetHistory = rawHistory.map((raw, index): DaySettlement => {
+    const day = state.day - rawHistory.length + index;
+    if (!isRecord(raw) || day < 1
+      || !isIntegerInRange(raw.patients, 0, Math.min(CHARACTER_COUNT, state.patientsProcessed))
+      || !isIntegerInRange(raw.closingBalance, 0, GAME_LIMITS.money)
+      || !isIntegerInRange(raw.insuranceCost, 0, GAME_LIMITS.money) || raw.insuranceCost % 50 !== 0
+      || !isIntegerInRange(raw.fines, 0, (CHARACTER_COUNT * 5 - 1) * 400 + 100)
+      || (raw.fines !== 0 && (raw.fines - 100) % 400 !== 0)) return fail();
+    const restDay = isWeekend(day) && raw.basePay === 0;
+    if ((restDay && (raw.patients !== 0 || raw.fines !== 0))
+      || (raw.weekend === null && raw.insuranceCost < BASE_INSURANCE)) return fail();
+    return validateSettlement(raw, day, raw.patients, raw.closingBalance, raw.insuranceCost, raw.fines, restDay, true);
+  });
+  const ledgers = [...budgetHistory, ...(state.settlement ? [state.settlement] : [])];
+  for (let index = 1; index < ledgers.length; index++) {
+    const previous = ledgers[index - 1]!, current = ledgers[index]!;
+    if (previous.closingBalance !== current.openingBalance) return fail();
+    if (gameDate(current.day).weekday === 0 && current.weekend
+      && (current.livingCost !== (previous.weekend?.sundayLivingCost ?? 0)
+        || current.weekend.modest !== (previous.weekend?.modest ?? false))) return fail();
+    if (gameDate(current.day).weekday === 6 && current.weekend?.modest
+      && current.livingCost + current.weekend.sundayLivingCost !== Math.min(current.openingBalance, Math.max(0, MODEST_WEEKEND_LIVING - previous.livingCost))) return fail();
+  }
+  return { ...state, budgetHistory };
+}
+
 export function encodeSave(state: CurrentGameState): Uint8Array {
-  const envelope: SaveV18 = {
+  const envelope: SaveV20 = {
     game: 'next-please',
-    version: 18,
+    version: 20,
     savedAt: new Date().toISOString(),
-    state: validateStateV18(state),
+    state: validateStateV20(state),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -1081,7 +1276,7 @@ export function decodeSave(bytes: Uint8Array): CurrentGameState {
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11 && envelope.version !== 12 && envelope.version !== 13 && envelope.version !== 14 && envelope.version !== 15 && envelope.version !== 16 && envelope.version !== 17 && envelope.version !== 18) throw new SaveError('unsupported-version');
+  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11 && envelope.version !== 12 && envelope.version !== 13 && envelope.version !== 14 && envelope.version !== 15 && envelope.version !== 16 && envelope.version !== 17 && envelope.version !== 18 && envelope.version !== 19 && envelope.version !== 20) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -1090,14 +1285,16 @@ export function decodeSave(bytes: Uint8Array): CurrentGameState {
   ) {
     throw new SaveError('invalid-file');
   }
-  if (envelope.version === 18) return validateStateV18(envelope.state);
+  if (envelope.version === 20) return validateStateV20(envelope.state);
+  if (envelope.version === 19) return { ...validateStateV19(envelope.state), budgetHistory: [] };
+  if (envelope.version === 18) return { ...migrateAdditionalTests(validateStateV18(envelope.state)), budgetHistory: [] };
   const state = migrateNoteOrder(envelope.version === 16 || envelope.version === 17
     ? validateStateV16(envelope.state, envelope.version === 17)
     : migrateStateV15(decodeLegacyState(envelope.state, envelope.version as number)));
   // Validate the historical schema first; preserve the ledger and prefer the
   // already established hospital ending when a legacy settlement also has debt.
-  return state.phase === 'home' && state.money < 0 && state.ending === null
-    ? { ...state, ending: 'bankruptcy' } : state;
+  return { ...migrateAdditionalTests(state.phase === 'home' && state.money < 0 && state.ending === null
+    ? { ...state, ending: 'bankruptcy' } : state), budgetHistory: [] };
 }
 
 function decodeLegacyState(value: unknown, version: number): GameState {

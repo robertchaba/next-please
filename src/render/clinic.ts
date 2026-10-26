@@ -13,7 +13,7 @@ const patientShadows = new Map<string, HTMLCanvasElement>();
 let creatorPhotograph: { image: HTMLCanvasElement; shadow: HTMLCanvasElement } | undefined;
 const introNames = ['scalpel', 'catheter', 'pen', 'stamp'] as const;
 const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate', 'clock',
-  ...new Set(PATIENTS.map(patient => patient.portraitId)), 'workstation-phone', 'workstation-clips', 'workstation-clip', 'workstation-rack', 'workstation-paper',
+  ...new Set(PATIENTS.map(patient => patient.portraitId)), 'workstation-phone', 'workstation-clips', 'workstation-clip', 'workstation-rack', 'workstation-rack-referrals', 'workstation-paper',
   'workstation-calendar', 'imprint-fit-pl', 'imprint-unfit-pl', 'imprint-fit-en', 'imprint-unfit-en', 'document-seal', 'document-seal-zus', 'document-seal-employer', 'document-signature', 'document-seal-chamber', 'document-seal-employer-unclear', 'banknote-100'] as const;
 export const PATIENT_MOTION_FRAMES = 12;
 
@@ -221,10 +221,10 @@ export function drawPaperclip(ctx: CanvasRenderingContext2D, x: number, y: numbe
 }
 
 /** Every illustrated object comes from a generated local bitmap. */
-export function drawWorkstationObjects(ctx: CanvasRenderingContext2D, _drawerCount: number): void {
+export function drawWorkstationObjects(ctx: CanvasRenderingContext2D, _drawerCount: number, additionalReferrals = false): void {
   for (const [name, bounds] of [
     ['phone', CABINET_HOTSPOTS.phone],
-    ['clips', CABINET_HOTSPOTS.clipSupply], ['rack', DOCUMENT_RACK],
+    ['clips', CABINET_HOTSPOTS.clipSupply], [additionalReferrals ? 'rack-referrals' : 'rack', DOCUMENT_RACK],
   ] as const) asset(ctx, `sprites/workstation-${name}`, bounds.x, bounds.y, bounds.w, bounds.h);
 }
 

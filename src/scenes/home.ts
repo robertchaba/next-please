@@ -25,8 +25,8 @@ function homeLines(value: string, scale: number, width = 312): string[] {
 export function homePages(state: GameState): HomePageKind[] {
   if (state.ending === 'hospital') return ['hospital'];
   if (state.ending === 'bankruptcy') return ['budget', 'bankruptcy'];
-  return ['arrival', ...(state.settlement?.event ? ['event' as const] : []), 'budget',
-    ...(!isWeekend(state.day + 1) ? ['work' as const] : [])];
+  return ['arrival', ...(state.settlement?.event ? ['event' as const] : []),
+    ...(!isWeekend(state.day + 1) ? ['budget' as const, 'work' as const] : [])];
 }
 
 export function homePage(state: GameState, locale: Locale, page: number) {
@@ -44,14 +44,20 @@ export function homePage(state: GameState, locale: Locale, page: number) {
   }
   const rest = state.roster.length === 0;
   const modest = rest && s?.weekend?.modest === true;
+  const ledgers = [...state.budgetHistory, ...(s ? [s] : [])];
+  const sum = (key: 'basePay' | 'patientBonus' | 'livingCost' | 'fines' | 'insuranceCost'): number =>
+    ledgers.reduce((total, ledger) => total + ledger[key], 0);
+  const openingBalance = ledgers[0]?.openingBalance ?? 0;
+  const extraExpenses = ledgers.reduce((total, ledger) => total + (ledger.event?.cost ?? 0), 0);
   const amount = (value: number): string => `${value.toLocaleString(locale === 'pl' ? 'pl-PL' : 'en-GB').replace(/\u00a0/g, ' ')} ${h.currency}`;
   const rows = kind === 'budget' && s ? [
-    { label: h.base, value: amount(s.basePay) },
-    { label: h.bonus, value: amount(s.patientBonus) },
-    { label: h.previousMonth, value: amount(state.previousMonthBalance) },
-    { label: h.living, value: amount(s.livingCost) },
-    { label: h.fines, value: amount(s.fines) },
-    { label: h.insurance, value: amount(s.insuranceCost) },
+    { label: h.base, value: amount(sum('basePay')) },
+    { label: h.bonus, value: amount(sum('patientBonus')) },
+    { label: state.budgetHistory.length ? h.beforeWeekend : h.previousDay, value: amount(openingBalance) },
+    { label: h.living, value: amount(sum('livingCost')) },
+    { label: h.fines, value: amount(sum('fines')) },
+    { label: h.insurance, value: amount(sum('insuranceCost')) },
+    ...(extraExpenses ? [{ label: h.extraExpenses, value: amount(extraExpenses) }] : []),
   ] : [];
   const event = s?.event?.kind;
   const title = kind === 'arrival' ? (rest ? h.weekendTitle : h.title)
@@ -60,7 +66,7 @@ export function homePage(state: GameState, locale: Locale, page: number) {
   // Reuse entropy already saved by settlement. Reading, painting or importing a
   // card cannot draw randomness, change the simulation, or reroll its comment.
   const variant = (lines: readonly string[], offset: number): string => lines[((state.rngState >>> 8) + state.day + offset) % lines.length]!;
-  const result = s ? s.closingBalance - s.openingBalance : 0;
+  const result = s ? s.closingBalance - openingBalance : 0;
   const budgetComments = result > 0 ? h.budgetComments.profit : result < 0 ? h.budgetComments.loss : h.budgetComments.even;
   const comment = kind === 'arrival' ? (modest ? h.modestRest : rest ? h.rest : variant(h.arrivalComments, 0))
     : kind === 'event' && event ? h.eventComments[event]
@@ -91,9 +97,10 @@ export function renderHome(ctx: CanvasRenderingContext2D, state: GameState, loca
   reveal(content.body).split('\n').forEach((line, index) => drawText(ctx, line, 25,
     (content.kind === 'budget' ? 79 : (content.kind === 'hospital' || content.kind === 'bankruptcy') ? 85 : 99) + index * ((content.kind === 'hospital' || content.kind === 'bankruptcy') ? 16 : 24), { color: '#ded4b4', scale: content.bodyScale }));
   content.rows.forEach((row, index) => {
-    drawText(ctx, reveal(row.label, 2), 25, 112 + index * 23, { color: '#ded4b4' });
+    const y = 112 + index * (content.rows.length > 6 ? 21 : 23);
+    drawText(ctx, reveal(row.label, 2), 25, y, { color: '#ded4b4' });
     // Align to the full amount so its left edge stays fixed during typing.
-    drawText(ctx, reveal(row.value), HOME_AMOUNT_RIGHT - measureText(row.value), 112 + index * 23, { color: '#e3d6b3' });
+    drawText(ctx, reveal(row.value), HOME_AMOUNT_RIGHT - measureText(row.value), y, { color: '#e3d6b3' });
   });
   if (content.kind === 'hospital' || content.kind === 'bankruptcy') drawText(ctx, reveal(translations[locale].progression.gameOver), 25, 237, { color: '#d39a70' });
   drawText(ctx, reveal(content.action), HOME_ACTION.x + 2, HOME_ACTION.y + 9, { color: '#d39a70' });

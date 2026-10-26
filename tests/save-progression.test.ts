@@ -5,7 +5,7 @@ import { decodeSave, encodeSave } from '../src/core/save';
 import { defaultReferral, effectivePatient } from '../src/core/progression';
 
 const act = (state: GameState, ...actions: GameAction[]): GameState => actions.reduce((next, action) => applyAction(next, action).state, state);
-const file = (state: unknown): Uint8Array => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 18, savedAt: '2026-10-26T12:00:00.000Z', state })));
+const file = (state: unknown): Uint8Array => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 20, savedAt: '2026-10-26T12:00:00.000Z', state })));
 const reject = (state: unknown): void => { expect(() => decodeSave(file(state))).toThrowError(expect.objectContaining({ code: 'invalid-state' })); };
 const hypertensive = PATIENTS.find(patient => patient.id >= 553 && patient.pressure === 'refer' && patient.general === 'pass')!;
 
@@ -96,9 +96,10 @@ describe('version 16 progression saves', () => {
   it('migrates v15 without new offences or RNG draws and keeps its schema strict', () => {
     const current = act(appointment(7, 553), 'take-document', 'take-paper', 'run-pressure');
     const historical = structuredClone(current) as unknown as Record<string, unknown>;
-    delete historical.ending;
+    delete historical.budgetHistory; delete historical.ending; delete historical.pendingReferrals; delete historical.referralsIssued;
+    historical.roster = current.roster.filter(id => PATIENTS[id]!.characterId < 78);
     const oldVisit = historical.visit as Record<string, unknown>;
-    for (const key of ['referral', 'specialist', 'specialistTaken', 'calls', 'bribe', 'noteOrder']) delete oldVisit[key];
+    for (const key of ['referral', 'specialist', 'specialistTaken', 'calls', 'bribe', 'noteOrder', 'startedDay', 'additionalResult', 'additionalTests']) delete oldVisit[key];
     for (const paper of historical.papers as Record<string, unknown>[]) {
       delete paper.noteOrder; delete paper.details; delete paper.calls; delete paper.bribe;
     }

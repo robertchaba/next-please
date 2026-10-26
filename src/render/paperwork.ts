@@ -1,4 +1,5 @@
 import { PATIENTS, type GameState, type Paper } from '../core/game';
+import { ADDITIONAL_TESTS, additionalTestForJob, type AdditionalTest } from '../core/additional-tests';
 import { referralDate, workDayNumber, effectivePatient } from '../core/progression';
 import { generalFindingIndex, patientAge, veryHighPressure, type PressureValues, type VisionValues } from '../core/patients';
 import type { Rect } from '../core/desk';
@@ -30,7 +31,9 @@ export function pressureReading(values: PressureValues): string {
 
 /** The clinical case fixes the finding; changing language only translates it. */
 export function generalReading(patientId: number, locale: Locale): string {
-  const t = translations[locale], finding = generalFindingIndex(PATIENTS[patientId]!);
+  const patient = PATIENTS[patientId]!, t = translations[locale], finding = generalFindingIndex(patient);
+  const additional = additionalTestForJob(patient);
+  if (patient.general === 'refer' && (additional === 'psychiatry' || additional === 'chest-xray')) return t.additionalTests.concerns[additional];
   return finding === null ? t.generalClear : t.generalFindings[finding]!;
 }
 
@@ -90,6 +93,15 @@ export function specialistJob(paper: Extract<Paper, { kind: 'specialist' }>, loc
   return translations[locale].patientJobs[other.id]!;
 }
 
+/** Exactly the same rows serve text, pointer hit tests and keyboard controls. */
+export function additionalTestRect(bounds: Rect, test: AdditionalTest): Rect {
+  return { x: bounds.x + 11, y: bounds.y + 56 + ADDITIONAL_TESTS.indexOf(test) * 14, w: bounds.w - 22, h: 13 };
+}
+
+export function additionalResultText(paper: Extract<Paper, { kind: 'additional-result' }>, locale: Locale): string {
+  return translations[locale].additionalTests.report[paper.test][paper.fit ? 'fit' : 'unfit'];
+}
+
 export function paperPhoneRect(bounds: Rect): Rect {
   return { x: bounds.x + 9, y: bounds.y + 128, w: 91, h: 12 };
 }
@@ -101,6 +113,12 @@ export function paperDescription(paper: Paper, locale: Locale, clipped = false):
   if (paper.kind === 'referral') {
     text = `${p.referral}. ${p.occupational}. ${referralLines(paper.patientId, locale).join('. ')}. ${q.seal[paper.details.seal]}. ${p.signed}.`;
     if (workDayNumber(paper.day) >= 5) text += ` ${q.hr}. ${q.phone} ${paper.details.phone}.`;
+  } else if (paper.kind === 'additional-referral') {
+    const a = t.additionalTests;
+    text = `${a.title}. ${name}. ${p.position}: ${t.patientJobs[paper.patientId]}. ${a.choose}: ${ADDITIONAL_TESTS.map(test => a.tests[test]).join('; ')}. ${paper.test ? `${a.selected}: ${a.tests[paper.test]}` : a.empty}. ${a.selectionHelp}`;
+  } else if (paper.kind === 'additional-result') {
+    const a = t.additionalTests;
+    text = `${a.resultTitle}. ${name}. ${p.position}: ${t.patientJobs[paper.patientId]}. ${a.tests[paper.test]}. ${additionalResultText(paper, locale)} ${a.otherChecks} ${p.signed}.`;
   } else if (paper.kind === 'specialist') {
     text = `${q.specialistTitle}. ${name}. ${q.treatment} ${q.clearance} ${p.position}: ${specialistJob(paper, locale)}. ${q.phone} ${paper.certificate.phone}. ${q.chamber}. ${p.signed}.`;
   } else if (paper.kind === 'letter' || paper.kind === 'directive') {
@@ -225,6 +243,38 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     lines.forEach((line, index) => write(line, 11, 33 + index * 8));
     authentication();
     if (workDayNumber(paper.day) >= 5) write(`${t.progression.phone} ${paper.details.phone}`, 11, 131, HANDWRITING_INK);
+  } else if (paper.kind === 'additional-referral') {
+    const a = t.additionalTests;
+    write(a.title, 11, 10);
+    dateAndReference();
+    write(t.patientNames[paper.patientId]!, 11, 33, HANDWRITING_INK);
+    write(`${p.position}: ${t.patientJobs[paper.patientId]}`, 11, 42, HANDWRITING_INK);
+    for (const test of ADDITIONAL_TESTS) {
+      const row = additionalTestRect(bounds, test);
+      drawDocumentText(ctx, a.tests[test], row.x + 5, row.y + 3, { color: ink });
+      if (paper.test === test) {
+        // A state-driven hand-marked oval, rasterized on the native pixel grid.
+        const width = measureDocumentText(a.tests[test]) + 10, height = 12;
+        const rx = width / 2, ry = height / 2;
+        for (let dx = 0; dx <= width; dx++) {
+          const dy = Math.round(ry * Math.sqrt(Math.max(0, 1 - ((dx - rx) / rx) ** 2)));
+          fill(ctx, row.x + dx, row.y + Math.round(ry) - dy, 1, 1, HANDWRITING_INK);
+          fill(ctx, row.x + dx, row.y + Math.round(ry) + dy, 1, 1, HANDWRITING_INK);
+        }
+      }
+    }
+    write(a.choose, 11, 118, muted);
+    drawDocumentSignature(ctx, x + 99, y + 126, 49, 10);
+  } else if (paper.kind === 'additional-result') {
+    const a = t.additionalTests;
+    write(a.resultTitle, 11, 10);
+    dateAndReference();
+    write(t.patientNames[paper.patientId]!, 11, 33);
+    write(a.tests[paper.test], 11, 45, muted);
+    const body = wrapDocumentLines([additionalResultText(paper, locale)], w - 22);
+    body.forEach((line, index) => write(line, 11, 58 + index * 8, paper.fit ? HANDWRITING_INK : ALERT_INK));
+    wrapDocumentLines([a.otherChecks], w - 22).forEach((line, index) => write(line, 11, 91 + index * 8, muted));
+    authentication();
   } else if (paper.kind === 'specialist') {
     write(t.progression.specialistTitle, 11, 10);
     dateAndReference();

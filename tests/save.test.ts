@@ -14,6 +14,17 @@ import {
 } from '../src/core/save';
 
 function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
+  if (typeof overrides.version === 'number' && overrides.version <= 19 && overrides.state && typeof overrides.state === 'object') {
+    const old = structuredClone(overrides.state) as Record<string, unknown>;
+    delete old.budgetHistory;
+    overrides = { ...overrides, state: old };
+  }
+  if (typeof overrides.version === 'number' && overrides.version <= 18 && overrides.state && typeof overrides.state === 'object') {
+    const old = structuredClone(overrides.state) as Record<string, unknown>;
+    delete old.pendingReferrals; delete old.referralsIssued;
+    if (old.visit && typeof old.visit === 'object') for (const key of ['startedDay', 'additionalResult', 'additionalTests']) delete (old.visit as Record<string, unknown>)[key];
+    overrides = { ...overrides, state: old };
+  }
   if (typeof overrides.version === 'number' && overrides.version <= 17 && overrides.state && typeof overrides.state === 'object') {
     const old = structuredClone(overrides.state) as Record<string, unknown>;
     if (old.visit && typeof old.visit === 'object') delete (old.visit as Record<string, unknown>).noteOrder;
@@ -71,7 +82,7 @@ function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
   }
   return gzipSync(strToU8(JSON.stringify({
     game: 'next-please',
-    version: 18,
+    version: 20,
     savedAt: '2026-10-23T12:00:00.000Z',
     state: createInitialState(),
     ...overrides,
@@ -97,7 +108,7 @@ function withLegacyProgressionDefaults(state: object, legacyRng = false): unknow
     if (paper.results.general !== null) paper.noteOrder.push('history');
   }
   return { ...current, ending: null, ...(legacyRng ? { rngState: 3477621340 } : {}),
-    visit: current.visit ? { ...current.visit, referral: defaultReferral(current.day, current.visit.patientId),
+    visit: current.visit ? { ...current.visit, startedDay: current.day, additionalResult: null, additionalTests: [], referral: defaultReferral(current.day, current.visit.patientId),
       specialist: null, specialistTaken: false, calls: { specialist: null, employer: null }, bribe: 'none' } : null,
     papers: current.papers.map(paper => paper.kind === 'referral' ? { ...paper, details: defaultReferral(paper.day, paper.patientId) }
       : paper.kind === 'note' ? { ...paper, calls: { specialist: null, employer: null }, bribe: false } : paper) };
@@ -116,7 +127,7 @@ describe('portable saves', () => {
   });
 
   it('rejects unsupported versions without interpreting their state', () => {
-    expectCode(() => decodeSave(envelope({ version: 19, state: {} })), 'unsupported-version');
+    expectCode(() => decodeSave(envelope({ version: 21, state: {} })), 'unsupported-version');
   });
 
   it('rejects a save for another game', () => {
@@ -202,7 +213,7 @@ describe('portable saves', () => {
   it('accepts gzip metadata produced by standard encoders', () => {
     const bytes = gzipSync(strToU8(JSON.stringify({
       game: 'next-please',
-      version: 16,
+      version: 20,
       savedAt: '2026-10-23T12:00:00.000Z',
       state: createInitialState(),
     })), { filename: 'save.json' });
@@ -259,11 +270,11 @@ describe('portable saves', () => {
     expectCode(() => decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), ...patch }) })), 'invalid-state');
   });
 
-  it('exports version 18 after migrating an older save', () => {
+  it('exports version 20 after migrating an older save', () => {
     const migrated = decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), introStep: 5 }) }));
     const bytes = encodeSave(migrated);
     const exported = JSON.parse(new TextDecoder().decode(gunzipSync(bytes)));
-    expect(exported).toMatchObject({ version: 18, state: { phase: 'cabinet', introStep: 3 } });
+    expect(exported).toMatchObject({ version: 20, state: { phase: 'cabinet', introStep: 3 } });
     expect(decodeSave(bytes)).toEqual(migrated);
   });
 
@@ -489,7 +500,7 @@ describe('version 6 certificate availability', () => {
     expect(migrated).toEqual(withLegacyProgressionDefaults({ ...stamped, clockMinutes: 482, visit: { ...stamped.visit, certificateNamed: true } }, true));
     expect(migrated.visit).toMatchObject({ certificateTaken: true, decision: 'fit' });
     expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(18);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(20);
     const intake = act(createInitialState(), 'skip-intro', 'call-patient', 'take-document');
     expect(decodeSave(envelope({ version: 5, state: asV5(intake) }))).toEqual(withLegacyProgressionDefaults({ ...intake, visit: { ...intake.visit, certificateTaken: true, certificateNamed: true } }, true));
     const waiting = act(createInitialState(), 'skip-intro', 'call-patient');
@@ -555,7 +566,7 @@ describe('version 7 document writing and bundles', () => {
     };
     const state = decodeSave(envelope({ version: 6, state: old }));
     expect(state.clockMinutes).toBe(495);
-    expect(state.visit).toEqual({ ...old.visit, referral: defaultReferral(1, 0), specialist: null, specialistTaken: false, calls: { specialist: null, employer: null }, bribe: 'none', certificateNamed: true, generalTested: false, noteOrder: ['vision', 'pressure'], examinationOrder: ['vision', 'pressure'], pressureReadings: [PATIENTS[0]!.pressureValues], pressureLatest: PATIENTS[0]!.pressureValues });
+    expect(state.visit).toEqual({ ...old.visit, startedDay: 1, additionalResult: null, additionalTests: [], referral: defaultReferral(1, 0), specialist: null, specialistTaken: false, calls: { specialist: null, employer: null }, bribe: 'none', certificateNamed: true, generalTested: false, noteOrder: ['vision', 'pressure'], examinationOrder: ['vision', 'pressure'], pressureReadings: [PATIENTS[0]!.pressureValues], pressureLatest: PATIENTS[0]!.pressureValues });
     expect(state.papers[1]).toMatchObject({ additionalWritten: false, results: { vision: PATIENTS[0]!.visionValues, pressure: null } });
     expect(state.paperClips).toEqual([[1], [2]]);
     expect(state.papers.every(paper => !Object.hasOwn(paper, 'clipped'))).toBe(true);
@@ -606,7 +617,7 @@ describe('version 8 drawer inventory', () => {
     expect(decoded.drawerItems).not.toBe(state.drawerItems);
     decoded.drawerItems.clips = 0;
     expect(state.drawerItems.clips).toBe(2);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(state)))).version).toBe(18);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(state)))).version).toBe(20);
   });
 
   it('migrates strictly validated v7 papers in filing order without inventing stored objects', () => {
@@ -649,7 +660,7 @@ describe('version 9 economic state', () => {
     const next = applyAction(decodeSave(encodeSave(home)), 'next-day').state;
     expect(next).toEqual(applyAction(home, 'next-day').state);
     expect(next.day).toBe(2);
-    expect(next.roster).toHaveLength(78);
+    expect(next.roster).toHaveLength(103);
     let unfit = 0;
     for (const [index, id] of next.roster.entries()) {
       if (PATIENTS[id]!.expectedDecision === 'unfit') unfit += 1;
@@ -731,7 +742,7 @@ describe('version 10 compatibility and rest-day invariants', () => {
     expect(loaded.roster).toHaveLength(28);
     expect(loaded.previousMonthBalance).toBe(0);
     expect(decodeSave(encodeSave(loaded))).toEqual(loaded);
-    expect(applyAction(loaded, 'next-day').state.roster).toHaveLength(78);
+    expect(applyAction(loaded, 'next-day').state.roster).toHaveLength(103);
   });
 
   it('keeps v9 bounds and exact keys even after the catalog grows', () => {
@@ -753,7 +764,7 @@ describe('version 10 compatibility and rest-day invariants', () => {
   });
 
   it('rejects rest days outside weekends, appointments on rest days and fabricated salaries', () => {
-    const friday = applyAction({ ...applyAction(createInitialState(41), 'skip-intro').state, day: 2, clockMinutes: 840 }, 'end-day').state;
+    const friday = applyAction({ ...applyAction(createInitialState(41), 'skip-intro').state, day: 2, money: 10000, clockMinutes: 840 }, 'end-day').state;
     const saturday = applyAction(friday, 'next-day').state;
     for (const patch of [
       { day: 5, settlement: { ...saturday.settlement, day: 5 } },
@@ -978,7 +989,7 @@ describe('version 13 patient expansion', () => {
     expect(decodeSave(encodeSave(loaded))).toEqual(withLegacyProgressionDefaults(state));
     const home = run({ ...loaded, clockMinutes: 840 }, 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document');
     const next = applyAction(home, 'next-day').state;
-    expect(next.roster).toHaveLength(78);
+    expect(next.roster).toHaveLength(103);
     expect(next.papers.filter(paper => paper.kind === 'note')).toEqual(loaded.papers.filter(paper => paper.kind === 'note'));
     expect(decodeSave(encodeSave(next))).toEqual(next);
   });

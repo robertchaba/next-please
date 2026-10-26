@@ -51,7 +51,7 @@ test('last patient leaves at closing; automatic home and six-row budget preserve
   await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'budget');
   await expect(page.locator('#screen-description')).toContainText('Dochód podst.: 1000 zł');
   await expect(page.locator('#screen-description')).toContainText('Premia za pacjentów: 50 zł');
-  await expect(page.locator('#screen-description')).toContainText('Z poprzedniego miesiąca: 0 zł');
+  await expect(page.locator('#screen-description')).toContainText('Z poprzedniego dnia: 200 zł');
   await expect(page.locator('#screen-description')).toContainText('Koszty życia:');
   await expect(page.locator('#screen-description')).not.toContainText('x 50');
   await page.screenshot({ path: info.outputPath('home-budget-pl.png') });
@@ -73,6 +73,7 @@ test('last patient leaves at closing; automatic home and six-row budget preserve
   await key(page, 'language-en');
   await key(page, 'home-next');
   await expect(page.locator('#screen-description')).toContainText('Base income: 1,000 zł');
+  await expect(page.locator('#screen-description')).toContainText('From the previous day: 200 zł');
   await expect(page.locator('#screen-description')).toContainText('Living costs:');
   await page.screenshot({ path: info.outputPath('home-budget-en.png') });
   await key(page, 'home-next');
@@ -83,7 +84,7 @@ test('last patient leaves at closing; automatic home and six-row budget preserve
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   const next = await exportState(page, info);
   expect(next.state).toMatchObject({ day: 2, money: saved.state.money, shiftCompleted: 0, clockMinutes: 477, settlement: null });
-  expect(next.state.roster).toHaveLength(78);
+  expect(next.state.roster).toHaveLength(103);
   let unfit = 0;
   for (const [index, id] of next.state.roster.entries()) {
     if (PATIENTS[id]!.expectedDecision === 'unfit') unfit += 1;
@@ -112,50 +113,74 @@ test('each home page types in, supports reveal and has full accessible text', as
   await page.screenshot({ path: info.outputPath('home-typewriter-completed.png') });
 });
 
-test('weekends stay at home, have optional resort events and lead into Monday', async ({ page }, info) => {
+test('Friday through Sunday shows one summed budget, keeps events and leads into Monday', async ({ page }, info) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  let saturday: GameState | undefined;
-  // Use a real seeded transition, so the event and accounting pass save validation.
+  let friday: GameState | undefined, saturday: GameState | undefined;
   for (let seed = 1; seed < 200; seed++) {
-    const state = applyAction(homeState(2, 10000, seed), 'next-day').state;
-    if (state.settlement?.event?.kind === 'mountain-trip') { saturday = state; break; }
+    const candidate = homeState(2, 10000, seed);
+    const state = applyAction(candidate, 'next-day').state;
+    if (state.settlement?.event?.kind === 'mountain-trip') { friday = candidate; saturday = state; break; }
   }
   expect(saturday).toBeDefined();
-  await load(page, saturday!);
-  await expect(page.locator('#screen-heading')).toHaveText('WOLNY DZIEŃ');
-  await key(page, 'home-next');
-  await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'event');
-  await expect(page.locator('#screen-heading')).toHaveText('W GÓRACH');
-  await expect(page.locator('#screen-description')).not.toContainText('zł');
-  await page.screenshot({ path: info.outputPath('weekend-mountain-pl.png') });
-  await key(page, 'home-next');
-  await expect(page.locator('#screen-heading')).toHaveText('BUDŻET WEEKENDU');
-  await expect(page.locator('#screen-description')).toContainText('Dochód podst.: 0 zł');
-  await expect(page.locator('#screen-description')).toContainText('Ubezpieczenie: 0 zł');
-  await page.screenshot({ path: info.outputPath('weekend-budget-pl.png') });
-  await key(page, 'home-next');
-  await expect(page.locator('#screen-description')).not.toContainText('06.11.1983');
-  for (let clicks = 0; clicks < 4 && await page.locator('#controls').getAttribute('data-home-kind') !== 'work'; clicks++) await key(page, 'home-next');
+  const sunday = applyAction(saturday!, 'next-day').state;
+  const ledgers = [friday!.settlement!, saturday!.settlement!, sunday.settlement!];
+  const living = ledgers.reduce((sum, day) => sum + day.livingCost, 0);
+  const extras = ledgers.reduce((sum, day) => sum + (day.event?.cost ?? 0), 0);
+  const amount = (value: number, locale: string) => value.toLocaleString(locale).replace(/\u00a0/g, ' ');
+  await load(page, friday!);
+  let budgets = 0, mountainEvents = 0;
+  for (let clicks = 0; clicks < 12; clicks++) {
+    const kind = await page.locator('#controls').getAttribute('data-home-kind');
+    if (kind === 'work') break;
+    if (kind === 'event' && await page.locator('#screen-heading').textContent() === 'W GÓRACH') {
+      mountainEvents++;
+      await expect(page.locator('#screen-description')).not.toContainText('zł');
+      await page.screenshot({ path: info.outputPath('weekend-mountain-pl.png') });
+    }
+    if (kind === 'budget') {
+      budgets++;
+      await expect(page.locator('#screen-heading')).toHaveText('BUDŻET WEEKENDU');
+      await expect(page.locator('#screen-description')).toContainText('Dochód podst.: 1000 zł');
+      await expect(page.locator('#screen-description')).toContainText('Sprzed weekendu: 10 000 zł');
+      await expect(page.locator('#screen-description')).toContainText(`Koszty życia: ${amount(living, 'pl-PL')} zł`);
+      await expect(page.locator('#screen-description')).toContainText('Ubezpieczenie: 300 zł');
+      await expect(page.locator('#screen-description')).toContainText(`Dodatkowe wydatki: ${amount(extras, 'pl-PL')} zł`);
+      await page.screenshot({ path: info.outputPath('weekend-budget-pl.png') });
+      expect((await exportState(page, info)).state).toEqual(sunday);
+      await key(page, 'back');
+      await key(page, 'language-en');
+      await expect(page.locator('#screen-description')).toContainText(`Living costs: ${amount(living, 'en-GB')} zł`);
+      await expect(page.locator('#screen-description')).toContainText(`Extra expenses: ${amount(extras, 'en-GB')} zł`);
+      await page.screenshot({ path: info.outputPath('weekend-budget-en.png') });
+      await key(page, 'language-pl');
+    }
+    await key(page, 'home-next');
+  }
+  expect(budgets).toBe(1);
+  expect(mountainEvents).toBeGreaterThanOrEqual(1);
   await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'work');
   await expect(page.locator('#screen-description')).not.toContainText('07.11.1983');
   await key(page, 'home-next');
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   const monday = await exportState(page, info);
-  expect(monday.state).toMatchObject({ day: 5, clockMinutes: 477, settlement: null });
+  expect(monday.state).toMatchObject({ day: 5, clockMinutes: 477, settlement: null, budgetHistory: [], money: sunday.money });
 });
 
 test('modest weekends show their own scene and joke in both languages and preserve the Sunday plan', async ({ page }, info) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const friday = homeState(2, 200), saturday = applyAction(friday, 'next-day').state;
-  await load(page, saturday);
+  await load(page, friday);
+  await key(page, 'home-next');
   await expect(page.locator('#screen-description')).toContainText('Wczasy pod gruszą.');
   await expect(page.locator('#screen-description')).toContainText('pusty portfel');
   await page.screenshot({ path: info.outputPath('weekend-modest-pl.png') });
   await key(page, 'language-en');
   await expect(page.locator('#screen-description')).toContainText('Enjoy the wall view.');
   await page.screenshot({ path: info.outputPath('weekend-modest-en.png') });
-  await key(page, 'home-next');
-  await expect(page.locator('#screen-description')).toContainText('Insurance: 0 zł');
+  const saturdaySave = await exportState(page, info);
+  expect(saturdaySave.state).toEqual(saturday);
+  await page.locator('#save-input').setInputFiles({ name: 'weekend.npsave', mimeType: 'application/gzip', buffer: saturdaySave.buffer });
+  await key(page, 'back');
   await key(page, 'home-next');
   await expect(page.locator('#screen-description')).toContainText('Enjoy the wall view.');
   const saved = await exportState(page, info);
@@ -163,6 +188,17 @@ test('modest weekends show their own scene and joke in both languages and preser
   expect(saved.state).toEqual(sunday);
   expect(saved.state.money).toBe(100);
   expect(saved.state.settlement!.livingCost).toBe(saturday.settlement!.weekend!.sundayLivingCost);
+  await key(page, 'back');
+  await key(page, 'home-next');
+  await expect(page.locator('#screen-description')).toContainText('Base income: 1,000 zł');
+  await expect(page.locator('#screen-description')).toContainText('Before the weekend: 200 zł');
+  await expect(page.locator('#screen-description')).toContainText('Living costs: 800 zł');
+  await expect(page.locator('#screen-description')).toContainText('Insurance: 300 zł');
+  await page.screenshot({ path: info.outputPath('weekend-modest-budget-en.png') });
+  await key(page, 'language-pl');
+  await page.screenshot({ path: info.outputPath('weekend-modest-budget-pl.png') });
+  await key(page, 'home-next');
+  await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'work');
 });
 
 test('EOD music is isolated from the workplace across mute, saves and departure', async ({ page }) => {

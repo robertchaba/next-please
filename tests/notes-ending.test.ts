@@ -9,7 +9,7 @@ import { translations } from '../src/i18n';
 
 const act = (state: GameState, ...actions: GameAction[]) => actions.reduce((s, a) => applyAction(s, a).state, state);
 const notes = (state: GameState) => state.papers.filter((p): p is Extract<Paper, { kind: 'note' }> => p.kind === 'note');
-const file = (state: unknown, version = 18) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-26T12:00:00.000Z', state })));
+const file = (state: unknown, version = 20) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-26T12:00:00.000Z', state })));
 function closed(balance: number) {
   const cabinet = act(createInitialState(17), 'skip-intro');
   const ready = { ...cabinet, clockMinutes: 840 };
@@ -51,8 +51,10 @@ describe('append-only patient notes', () => {
   });
 
   it('migrates old grouping once and appends subsequent entries after it', () => {
-    const state = act(createInitialState(5), 'skip-intro', 'call-patient', 'run-general', 'run-pressure', 'run-vision', 'take-paper');
+    const state = act({ ...createInitialState(5), roster: Array.from({ length: 78 }, (_, i) => 553 + i * 25) }, 'skip-intro', 'call-patient', 'run-general', 'run-pressure', 'run-vision', 'take-paper');
     const raw = JSON.parse(JSON.stringify(state));
+    delete raw.pendingReferrals; delete raw.referralsIssued; delete raw.budgetHistory;
+    delete raw.visit.startedDay; delete raw.visit.additionalResult; delete raw.visit.additionalTests;
     delete raw.visit.noteOrder;
     raw.papers.forEach((paper: Record<string, unknown>) => { delete paper.noteOrder; });
     const loaded = decodeSave(file(raw, 17));
@@ -99,7 +101,7 @@ describe('bankruptcy ending', () => {
       expect(act(state, 'next-day').day).toBe(2);
     }
     expect(decodeSave(encodeSave(bankrupt))).toEqual(bankrupt);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(bankrupt)))).version).toBe(18);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(bankrupt)))).version).toBe(20);
   });
 
   it('also ends at forced closing without awarding an unfinished appointment', () => {
@@ -118,15 +120,17 @@ describe('bankruptcy ending', () => {
   });
 
   it('migrates settled historical debt without changing the ledger or random state', () => {
-    const ended = closed(-20), historical = { ...ended, ending: null };
+    const ended = { ...closed(-20), roster: Array.from({ length: 78 }, (_, i) => 553 + i * 25) };
+    const { budgetHistory: _history, pendingReferrals: _pending, referralsIssued: _issued, ...legacy } = ended;
+    const historical = { ...legacy, ending: null };
     const migrated = decodeSave(file(historical, 17));
     expect(migrated).toEqual(ended);
     expect(act(migrated, 'next-day')).toBe(migrated);
-    expect(() => decodeSave(file(historical))).toThrowError(expect.objectContaining({ code: 'invalid-state' }));
+    expect(() => decodeSave(file({ ...ended, ending: null }))).toThrowError(expect.objectContaining({ code: 'invalid-state' }));
     for (const state of [{ ...ended, money: 0 }, { ...ended, phase: 'cabinet' }, { ...closed(1), ending: 'bankruptcy' }]) {
       expect(() => decodeSave(file(state))).toThrowError(expect.objectContaining({ code: 'invalid-state' }));
     }
-    expect(() => decodeSave(file(ended, 17))).toThrowError(expect.objectContaining({ code: 'invalid-state' }));
+    expect(() => decodeSave(file(legacy, 17))).toThrowError(expect.objectContaining({ code: 'invalid-state' }));
   });
 
   it('shows the final budget and a localized illustrated epilogue with a direct restart', () => {

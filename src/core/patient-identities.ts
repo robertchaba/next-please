@@ -81,4 +81,58 @@ export const IDENTITY_PROFILES = [
   [[40, 32], [42, 10], [43, 36], [45, 29], [41, 35]], // patient-73
   [[23, 4], [25, 16], [26, 19], [28, 17], [24, 28]], // patient-74
   [[46, 32], [48, 35], [49, 36], [51, 34], [47, 10]], // patient-75
+  [[23, 45], [25, 45], [26, 45], [28, 45], [24, 45]], // patient-76
+  [[30, 45], [32, 45], [33, 45], [35, 45], [31, 45]], // patient-77
+  [[37, 45], [39, 45], [40, 45], [42, 45], [38, 45]], // patient-78
+  [[44, 45], [46, 45], [47, 45], [49, 45], [45, 45]], // patient-79
+  [[51, 45], [53, 45], [54, 45], [56, 45], [52, 45]], // patient-80
+  [[27, 45], [29, 45], [30, 45], [32, 45], [28, 45]], // patient-81
+  [[34, 45], [36, 45], [37, 45], [39, 45], [35, 45]], // patient-82
+  [[41, 45], [43, 45], [44, 45], [46, 45], [42, 45]], // patient-83
+  [[48, 45], [50, 45], [51, 45], [53, 45], [49, 45]], // patient-84
+  [[56, 45], [58, 45], [59, 45], [61, 45], [57, 45]], // patient-85
+  [[26, 46], [28, 46], [29, 46], [31, 46], [27, 46]], // patient-86
+  [[33, 46], [35, 46], [36, 46], [38, 46], [34, 46]], // patient-87
+  [[40, 46], [42, 46], [43, 46], [45, 46], [41, 46]], // patient-88
+  [[47, 46], [49, 46], [50, 46], [52, 46], [48, 46]], // patient-89
+  [[54, 46], [56, 46], [57, 46], [59, 46], [55, 46]], // patient-90
+  [[29, 18], [31, 18], [32, 18], [34, 18], [30, 18]], // patient-91
+  [[25, 36], [27, 35], [28, 41], [30, 34], [26, 20]], // patient-92
+  [[42, 47], [44, 47], [45, 47], [47, 47], [43, 47]], // patient-93
+  [[36, 32], [38, 34], [39, 36], [41, 21], [37, 35]], // patient-94
+  [[55, 18], [57, 18], [58, 18], [60, 18], [56, 18]], // patient-95
+  [[44, 35], [46, 36], [47, 41], [49, 32], [45, 34]], // patient-96
+  [[32, 47], [34, 47], [35, 47], [37, 47], [33, 47]], // patient-97
+  [[50, 10], [52, 3], [53, 29], [55, 22], [51, 23]], // patient-98
+  [[59, 18], [61, 18], [62, 18], [64, 18], [60, 18]], // patient-99
+  [[39, 20], [41, 42], [42, 43], [44, 29], [40, 36]], // patient-100
+] as const;
+
+/** Append-only visual demographics for portraits without historical case records. */
+export const ADDITIONAL_PORTRAITS = [
+  { portraitId: 'patient-76', age: 25, sex: 'male', weight: 74, height: 171 },
+  { portraitId: 'patient-77', age: 32, sex: 'male', weight: 75, height: 172 },
+  { portraitId: 'patient-78', age: 39, sex: 'male', weight: 76, height: 173 },
+  { portraitId: 'patient-79', age: 46, sex: 'male', weight: 77, height: 174 },
+  { portraitId: 'patient-80', age: 53, sex: 'male', weight: 78, height: 175 },
+  { portraitId: 'patient-81', age: 29, sex: 'male', weight: 79, height: 176 },
+  { portraitId: 'patient-82', age: 36, sex: 'male', weight: 80, height: 177 },
+  { portraitId: 'patient-83', age: 43, sex: 'male', weight: 81, height: 178 },
+  { portraitId: 'patient-84', age: 50, sex: 'male', weight: 82, height: 179 },
+  { portraitId: 'patient-85', age: 58, sex: 'male', weight: 83, height: 180 },
+  { portraitId: 'patient-86', age: 28, sex: 'male', weight: 84, height: 181 },
+  { portraitId: 'patient-87', age: 35, sex: 'male', weight: 85, height: 182 },
+  { portraitId: 'patient-88', age: 42, sex: 'male', weight: 86, height: 183 },
+  { portraitId: 'patient-89', age: 49, sex: 'male', weight: 74, height: 184 },
+  { portraitId: 'patient-90', age: 56, sex: 'male', weight: 75, height: 185 },
+  { portraitId: 'patient-91', age: 31, sex: 'male', weight: 76, height: 171 },
+  { portraitId: 'patient-92', age: 27, sex: 'female', weight: 63, height: 162 },
+  { portraitId: 'patient-93', age: 44, sex: 'male', weight: 78, height: 173 },
+  { portraitId: 'patient-94', age: 38, sex: 'female', weight: 65, height: 164 },
+  { portraitId: 'patient-95', age: 57, sex: 'male', weight: 80, height: 175 },
+  { portraitId: 'patient-96', age: 46, sex: 'female', weight: 67, height: 166 },
+  { portraitId: 'patient-97', age: 34, sex: 'male', weight: 82, height: 177 },
+  { portraitId: 'patient-98', age: 52, sex: 'female', weight: 58, height: 168 },
+  { portraitId: 'patient-99', age: 61, sex: 'male', weight: 84, height: 179 },
+  { portraitId: 'patient-100', age: 41, sex: 'female', weight: 60, height: 158 },
 ] as const;

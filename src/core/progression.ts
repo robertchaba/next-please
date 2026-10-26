@@ -1,8 +1,9 @@
 import { gameDate, isWeekend } from './calendar';
+import { additionalResultFor, additionalTestForPatient } from './additional-tests';
 import { JOBS, PATIENTS, REQUIREMENTS, randomStep, type PatientCase } from './patients';
 import type { Decision, GameState, Visit } from './game';
 
-export type DirectiveRule = 'dates' | 'specialist' | 'authenticity';
+export type DirectiveRule = 'dates' | 'specialist' | 'authenticity' | 'additional-tests';
 export interface ReferralDetails {
   ageDays: number;
   seal: 'clear' | 'missing' | 'unclear';
@@ -23,7 +24,7 @@ export function workDayNumber(day: number): number {
 export function directiveForDay(day: number): DirectiveRule | null {
   if (isWeekend(day)) return null;
   const workDay = workDayNumber(day);
-  return workDay === 3 ? 'dates' : workDay === 4 ? 'specialist' : workDay === 5 ? 'authenticity' : null;
+  return workDay === 3 ? 'dates' : workDay === 4 ? 'specialist' : workDay === 5 ? 'authenticity' : workDay === 7 ? 'additional-tests' : null;
 }
 
 export const employerPhone = (patientId: number): string => `42-${String(1000 + PATIENTS[patientId]!.employerId * 137).padStart(4, '0')}`;
@@ -62,7 +63,11 @@ export function expectedVisitDecision(state: Pick<GameState, 'day' | 'visit'>): 
   const day = workDayNumber(state.day), patient = patientForAppointment(visit);
   if (day >= 3 && visit.referral.ageDays > 3) return 'unfit';
   if (day >= 5 && !visit.referral.authentic) return 'unfit';
-  if (patient.general === 'refer') return 'unfit';
+  const additional = day >= 7 ? additionalTestForPatient(patient) : null;
+  const clearsConcern = (additional === 'psychiatry' || additional === 'chest-xray')
+    && visit.additionalResult?.test === additional && visit.additionalResult.fit;
+  if (patient.general === 'refer' && !clearsConcern) return 'unfit';
+  if (additional && !additionalResultFor(patient, additional).fit) return 'unfit';
   const relevant = REQUIREMENTS[patient.requirementId].disqualifying;
   if (relevant.includes('vision') && patient.vision === 'refer') return 'unfit';
   if (relevant.includes('pressure') && patient.pressure === 'refer' && !(day >= 4 && specialistIsValid(visit))) return 'unfit';
