@@ -323,23 +323,100 @@ export const translations = {
     stampFit: 'Wybierz pieczątkę: zdolny', stampUnfit: 'Wybierz pieczątkę: odmowa',
     applyStamp: 'Przyłóż wybraną pieczątkę do orzeczenia', stampHere: 'PODBIJ TUTAJ',
     selectedStamp: 'Wybrana pieczątka', manual: 'REGULAMIN', manualTitle: 'INSTRUKCJA OBSŁUGI DYŻURU',
+    progression: {
+      "chamber": "Izba Lekarska",
+      "specialistTitle": "ZAŚWIADCZENIE SPECJALISTY",
+      "specialist": "Lekarz specjalista",
+      "hr": "Dział kadr",
+      "phone": "Tel.",
+      "takeSpecialist": "Weź zaświadczenie od specjalisty",
+      "callSpecialist": "Zadzwoń do specjalisty",
+      "callEmployer": "Zadzwoń do działu kadr",
+      "bribeNotes": {
+        "pressure": [
+          "Ciśnienie nieco ponad progiem.",
+          "Pacjent prosi o dopuszczenie."
+        ],
+        "vision": [
+          "Wada wzroku nieco ponad progiem.",
+          "Pacjent prosi o dopuszczenie."
+        ]
+      },
+      "treatment": "Pacjent jest w trakcie leczenia nadciśnienia.",
+      "clearance": "Nie stwierdzam przeciwwskazań do pracy na stanowisku wskazanym poniżej.",
+      "banknote": "Banknot 100 zł z Waryńskim",
+      "bribeHelp": "Przenieś banknot do szuflady, aby przyjąć 100 zł, albo oddaj pacjentowi.",
+      "acceptBribe": "Schowaj 100 zł w szufladzie",
+      "returnBribe": "Oddaj pacjentowi 100 zł",
+      "offer": "Stówka za pieczątkę?",
+      "seal": {
+        "clear": "Czytelna pieczęć pracodawcy",
+        "missing": "Brak pieczęci pracodawcy",
+        "unclear": "Niewyraźna pieczęć pracodawcy"
+      },
+      "notes": {
+        "specialistValid": "Specjalista: leczenie, praca bez zastrzeżeń.",
+        "specialistInvalid": "Specjalista: inne stanowisko. Nieważne.",
+        "employerValid": "Kadry: skierowanie autentyczne.",
+        "employerInvalid": "Kadry: skierowanie nieautentyczne."
+      },
+      "dialogue": {
+        "dialing": "Wybieranie numeru…",
+        "specialistQuestion": "Potwierdza pan zaświadczenie?",
+        "employerQuestion": "Czy wystawili państwo skierowanie?",
+        "specialistValid": "Tak. Leczenie trwa. Ta praca bez przeszkód.",
+        "specialistInvalid": "To zaświadczenie dotyczy innej pracy.",
+        "employerValid": "Tak, potwierdzam. To nasze skierowanie.",
+        "employerInvalid": "Nie. Nie wystawiliśmy tego skierowania."
+      },
+      "hospitalTitle": "NIESPODZIEWANY URLOP",
+      "hospitalBody": "Stówka została w kieszeni, odmowa u pacjenta. W drodze do domu zostajesz pobity. Budzisz się w szpitalu. Po leczeniu czekają cię badania medycyny pracy. Tym razem po drugiej stronie biurka.",
+      "gameOver": "KONIEC GRY",
+      "backToMenu": "DO MENU",
+      "directives": {
+        "dates": {
+          "subject": "W sprawie świeżości skierowań",
+          "body": "Od dziś należy sprawdzać datę skierowania. Starsze niż 3 dni wymaga odmowy. Uchybienia rozliczamy jak dopuszczenie osoby niezdolnej do pracy. Papier także się starzeje.",
+          "role": "Referat kontroli ZUS",
+          "signature": "Irena Stempel"
+        },
+        "specialist": {
+          "subject": "Nadciśnienie pod opieką",
+          "body": "Od dziś leczony pacjent z nadciśnieniem może pracować z zaświadczeniem specjalisty o braku przeciwwskazań dla tego stanowiska. Inny zawód unieważnia dokument. Wątpliwości wyjaśnia telefon.",
+          "role": "Sekretarz Izby Lekarskiej",
+          "signature": "dr Adam Pieczęć"
+        },
+        "authenticity": {
+          "subject": "O autentyczności skierowań",
+          "body": "Od dziś pieczęć potwierdza skierowanie. Brak pieczęci oznacza odmowę. Odcisk niewyraźny należy wyjaśnić w kadrach pod numerem na druku. Błędy podlegają zwykłej karze ZUS.",
+          "role": "Referat kontroli ZUS",
+          "signature": "Irena Stempel"
+        }
+      }
+    },
     manualPages: [
-      { title: 'Przyjęcie', lines: ['Wezwij pacjenta', 'dzwonkiem.', 'Weź skierowanie.', 'Sprawdź pracodawcę,', 'rodzaj badania', 'i wykonywaną pracę.', 'Druk orzeczenia', 'weź ze stojaka.'],
-        facingTitle: 'Dokumenty', facingLines: ['Na prawym blacie', 'kartki są czytelne.', 'Kliknij, by podnieść;', 'kliknij, by odłożyć.', 'Orzeczenie zawiera', 'nazwisko, stanowisko', 'i decyzję.', 'Wyniki są w notatce.'] },
-      { title: 'Badania', lines: ['Kliknij pacjenta:', 'to badanie ogólne.', 'Użyj tablicy wzroku', 'i ciśnieniomierza.', 'Waga mierzy też wzrost.', 'Wyniki zapisują się', 'w kolejności badań.', 'Po badaniu ogólnym', 'pióro dopisuje wywiad.'],
-        facingTitle: 'Ocena ogólna', facingLines: ['Badaj każdego pacjenta.', 'Bez uwag: brak podstaw', 'do odmowy z tego tytułu.', 'Każda nieprawidłowość', 'oznacza ODMOWĘ.', 'Dotyczy wszystkich', 'profili pracy.', 'To reguły gry,', 'nie porada medyczna.'] },
-      { title: 'Profile wymogów', lines: ['Kod jest na skierowaniu.', 'WC: wzrok i ciśnienie.', 'W: wzrok.', 'C: ciśnienie.', 'Ogólne, waga i wzrost:', 'zawsze obowiązkowe.', 'Oceń wszystkie wyniki', 'wymagane w profilu.'],
-        facingTitle: 'Wzrok', facingLines: ['Zapis: OL i OP.', 'Wartości w dioptriach.', 'Mała wada nie wyklucza.', 'Znaczna wada: co najmniej', '6 dioptrii w jednym oku', '(minus lub plus).', 'Przy wymogu wzroku', 'oznacza ODMOWĘ.'] },
-      { title: 'Ciśnienie', lines: ['Zapisz dwa pierwsze', 'pomiary. Sam oceń wynik.', 'Próg odmowy w grze:', 'skurczowe od 160', 'lub rozkurczowe od 100.', 'Dotyczy profili WC i C.', 'Jednostka: mmHg.'],
-        facingTitle: 'Czerwony zapis', facingLines: ['Bardzo wysokie:', 'skurczowe od 180', 'lub rozkurczowe od 110.', 'Taki wynik zapisujesz', 'czerwonym atramentem.', 'Brak czerwieni nie', 'oznacza wyniku w normie.', 'Sprawdź obie liczby.'] },
-      { title: 'Pieczątki', lines: ['Podnieś pieczątkę.', 'Przyłóż do orzeczenia.', 'Po odbiciu nadal', 'trzymasz ją w dłoni.', 'Odłóż na podstawkę.', 'Możesz poprawić druk,', 'dopóki pacjent czeka.'],
-        facingTitle: 'Koniec wizyty', facingLines: ['Piórem na orzeczeniu', 'wpisz nazwisko', 'i stanowisko pracy.', 'Podbij i podnieś druk.', 'Oddaj go pacjentowi.', 'To kończy wizytę.', 'Wypłata po dyżurze.', 'Błędy mogą oznaczać', 'kary i zwyżki składki.'] },
-      { title: 'Dokumentacja', lines: ['Przypnij spinacz', 'do kartki. Upuść', 'drugą na ten spinacz,', 'aby je połączyć.', 'Kliknięcie spinacza', 'rozpina dokumenty.', 'Schowaj do szuflady', 'lub wyrzuć do kosza.'],
-        facingTitle: 'Korespondencja', facingLines: ['Błędna zgoda: ZUS.', 'Błędna odmowa:', 'pismo od pracodawcy.', 'Otwórz róg koperty.', 'Przeczytaj i wyrzuć.', 'Otwórz szufladę', 'i wybierz dokument.', 'Dół zamyka szufladę.'] },
-      { title: 'Czas', lines: ['Dyżur: 08:00–14:00.', 'Czas płynie sam.', '30 s z pacjentem:', '30 minut w gabinecie.', '30 s bez pacjenta:', '5 minut w gabinecie.', 'Czynności doliczają czas.', 'O 17 sprzątaczka woła.', 'O 17:15 koniec pracy.'],
-        facingTitle: 'Obsługa', facingLines: ['Tab: wybór przedmiotu.', 'Spacja: podniesienie.', 'Strzałki: przesuwanie.', 'Shift: większy krok.', 'Enter: użyj lub odłóż.', 'Escape: cofnij ruch.', 'Enter na kartce:', 'dopisz uwagi lub czytaj.'] },
-      { title: 'Po pracy', lines: ['Zamknij gabinet.', 'W domu czeka budżet:', 'dochód podstawowy,', 'premia za pacjentów,', 'pieniądze z poprzedniego', 'miesiąca, kary', 'i ubezpieczenie.'], facingTitle: 'Korespondencja', facingLines: ['Nie wszystkie decyzje', 'przechodzą bez echa.', 'Pismo może nadejść', 'od ZUS albo pracodawcy.', 'Przeczytaj je uważnie.'] },
-      { title: 'Poza gabinetem', lines: ['Wieczory bywają różne.', 'Czasem trzeba zajrzeć', 'do apteki lub warsztatu.', 'Czasem po prostu', 'wrócić do domu.'], facingTitle: 'Wolne dni', facingLines: ['W weekend przychodnia', 'jest zamknięta.', 'Zdarza się krótki wyjazd.', 'Domowe sprawy', 'toczą się dalej.'] },
+      { title: 'Witamy w obiegu', lines: ['Dzwonek przywołuje', 'pacjenta. Westchnienie', 'nie ma tej mocy.', 'Skierowanie z podajnika', 'opowie, kto go przysłał', 'i do czego jest zdolny', 'według działu kadr.'],
+        facingTitle: 'Papier przyjmie', facingLines: ['Prawy blat powiększa', 'rangę każdej kartki.', 'Kliknij: podnieś.', 'Kliknij: odłóż.', 'Druk orzeczenia czeka', 'w stojaku. Nie rośnie', 'na skierowaniu.', 'Wyniki lubią notatki.'] },
+      { title: 'Pacjent w komplecie', lines: ['Kliknięcie pacjenta', 'uruchamia oględziny.', 'Tablica pyta o wzrok,', 'mankiet o ciśnienie,', 'waga o resztę człowieka.', 'Pióro po oględzinach', 'dopisuje wywiad.', 'Kartka pamięta kolejność.'],
+        facingTitle: 'Oględziny', facingLines: ['Każdego trzeba obejrzeć.', 'Bez uwag? Można dalej.', 'Nieprawidłowość wymaga', 'odmowy, niezależnie', 'od powagi stanowiska.', 'Tu obowiązuje regulamin', 'gry. Do leczenia służy', 'prawdziwy gabinet.'] },
+      { title: 'Alfabet zakładowy', lines: ['WC: wzrok i ciśnienie.', 'W: wzrok. C: ciśnienie.', 'Kod nosi skierowanie.', 'Oględziny, waga, wzrost', 'obowiązują wszystkich.', 'Dyrektor też ma wzrost.', 'Czasem tylko wyższe', 'mniemanie o sobie.'],
+        facingTitle: 'Dwa oczy, dwa wpisy', facingLines: ['OL i OP, w dioptriach.', 'Mała wada może przejść.', 'Od 6 dioptrii w oku,', 'na plus albo na minus,', 'przy wymogu wzroku', 'wkracza ODMOWA.', 'Mrużenie oczu nie', 'zmienia regulaminu.'] },
+      { title: 'Mankiet prawdy', lines: ['Dwa pierwsze pomiary', 'zostają w notatkach.', 'Dla WC i C granicą jest', '160 skurczowego lub', '100 rozkurczowego.', 'Jednostka: mmHg.', 'Przekroczenie wymaga', 'odmowy. Wyjątki', 'przychodzą pocztą.'],
+        facingTitle: 'Atrament alarmowy', facingLines: ['Od 180 skurczowego', 'lub 110 rozkurczowego', 'pióro widzi czerwono.', 'Zwykły kolor nie jest', 'błogosławieństwem.', 'Czytaj obie liczby.', 'Mankiet ma cierpliwość.', 'Zegar ma inne plany.'] },
+      { title: 'Władza w dłoni', lines: ['Podnieś pieczątkę', 'i przyłóż do orzeczenia.', 'Po odbiciu nadal', 'czeka w twojej dłoni.', 'Odpoczywa wyłącznie', 'na swojej podstawce.', 'Póki pacjent siedzi,', 'decyzję można poprawić.'],
+        facingTitle: 'Proszę się podpisać', facingLines: ['Pióro na orzeczeniu', 'wpisuje nazwisko', 'i stanowisko pracy.', 'Pieczątka daje decyzję.', 'Oddaj druk pacjentowi:', 'dopiero wtedy wychodzi.', 'Tacka nie jest pacjentem.', 'Sprawdzano wielokrotnie.'] },
+      { title: 'Życie spinacza', lines: ['Załóż go na kartkę.', 'Upuść drugą na spinacz:', 'powstaje rodzina akt.', 'Kliknij spinacz,', 'aby rodzinę rozdzielić.', 'Szuflada przyjmie akta.', 'Kosz przyjmie wszystko,', 'czego nie żal.'],
+        facingTitle: 'Poczta przychodząca', facingLines: ['ZUS lubi pisać po zgodzie.', 'Pracodawca po odmowie.', 'Nie każda pomyłka', 'doczeka się listu.', 'Róg otwiera kopertę.', 'Szuflada otwiera archiwum.', 'Jej dolny brzeg zamyka', 'dyskusję z archiwum.'] },
+      { title: 'Zegar nie bada', lines: ['Przyjęcia: 08–14.', 'Z pacjentem 30 sekund', 'to pół godziny dyżuru.', 'Bez niego: pięć minut.', 'Czynności kosztują czas.', 'O 17 odzywa się mop.', 'O 17:15 kończy rozmowę', 'i niezakończoną wizytę.'],
+        facingTitle: 'Palce lekarza', facingLines: ['Tab wybiera przedmiot.', 'Spacja go podnosi.', 'Strzałki przesuwają.', 'Shift wydłuża krok.', 'Enter używa lub odkłada.', 'Escape cofa ruch.', 'Enter na kartce czyta', 'lub dopisuje uwagi.'] },
+      { title: 'Starzenie papieru', lines: ['Trzeci dyżur przynosi', 'pismo o świeżości.', 'Skierowanie starsze', 'niż trzy dni potrzebuje', 'odmowy, choćby pacjent', 'był zdrów jak dzwon.', 'Liczy się data papieru,', 'nie jego zapach.'],
+        facingTitle: 'Głos specjalisty', facingLines: ['Od czwartego dyżuru', 'nadciśnienie miewa', 'pisemnego opiekuna.', 'Leczenie i brak przeszkód', 'muszą dotyczyć tej pracy.', 'Inny zawód? Inny papier.', 'Kliknij numer: lekarz', 'wyjaśni. Notatka zapamięta.'] },
+      { title: 'Odcisk instytucji', lines: ['Piąty dyżur: oglądamy', 'pieczęcie skierowań.', 'Jest: dokument ważny.', 'Nie ma: odmowa.', 'Plama: zagadka.', 'Kadry znają rozwiązanie.', 'Kliknij numer na druku.', 'ZUS nie lubi zgadywanek.'],
+        facingTitle: 'Portret w kieszeni', facingLines: ['Od szóstego dyżuru', 'bywa też pan Waryński.', 'Stówkę oddaj pacjentowi', 'albo schowaj w szufladzie.', 'Ciśnienia nie obniża.', 'Wzięte pieniądze', 'i odmowa to wyjątkowo', 'zły plan na powrót.'] },
+      { title: 'Księga domowa', lines: ['Po dyżurze czeka budżet.', 'Pensja i premie wchodzą.', 'Życie, kary i składka', 'wychodzą bez pukania.', 'Poprzedni miesiąc', 'też zostawia ślady.', 'Szuflada nie jest bankiem.', 'Choć czasem udaje.'],
+        facingTitle: 'Instytucje pamiętają', facingLines: ['ZUS zaczyna od stu.', 'Kolejne wykryte błędy', 'kosztują po czterysta.', 'Ubezpieczyciel woli', 'podnieść składkę.', 'Spokojny dzień obniża', 'ją o pięćdziesiąt,', 'aż wróci do trzystu.'] },
+      { title: 'Za progiem', lines: ['Apteka, warsztat, dom.', 'Oszczędności przyciągają', 'pilne potrzeby.', 'Potrzeby nie czytały', 'naszego regulaminu.'],
+        facingTitle: 'Wolne dni', facingLines: ['W weekend przychodnia', 'odpoczywa od ludzi.', 'Dom nie dostał pisma', 'o przerwie w wydatkach.', 'Zdarza się wyjazd.', 'Regulamin jedzie w głowie.'] },
     ],
     lamp: 'Przełącz lampę sufitową', decoration: 'Zmień dekorację: roślina lub dyplom',
     shiftDone: 'KONIEC DYŻURU', shiftDoneNote: 'Pieczątka zasłużyła na odpoczynek.',
@@ -354,7 +431,7 @@ export const translations = {
     patientSpeech: {
       greeting: 'Dzień dobry.', hello: 'Witam.', morning: 'Dobry.',
       hesitate: 'Yyy...', blurred: 'Rozmazane...', cannotRead: 'Nie odczytam.', unsure: 'Chyba... nie.', again: 'Jeszcze raz?',
-      thanks: 'Dziękuję.', goodbye: 'Do widzenia.', allRight: 'W porządku.', bye: 'Do zobaczenia.',
+      bribe: 'Stówka za pieczątkę?', thanks: 'Dziękuję.', goodbye: 'Do widzenia.', allRight: 'W porządku.', bye: 'Do zobaczenia.',
     },
     home: {
       title: 'POWRÓT DO DOMU', ledger: 'BUDŻET', weekendTitle: 'WOLNY DZIEŃ', weekendLedger: 'BUDŻET WEEKENDU', workTitle: 'DO PRACY',
@@ -432,6 +509,18 @@ export const translations = {
       resume: 'WRÓĆ DO DOMU', tomorrow: 'NASTĘPNY DZIEŃ', onward: 'DALEJ', work: 'RUSZAJ DO PRACY', enter: 'WEJDŹ DO PRZYCHODNI', reveal: 'Pokaż cały tekst',
     },
     feedback: {
+      "phone-ready": "Sygnał centrali. Kliknij numer na dokumencie, aby zadzwonić.",
+      "specialist-taken": "Zaświadczenie specjalisty w dłoni.",
+      "specialist-missing": "Pacjent nie przedstawił zaświadczenia specjalisty.",
+      "specialist-valid": "Specjalista potwierdza leczenie i brak przeciwwskazań dla tej pracy.",
+      "specialist-invalid": "Specjalista: zaświadczenie dotyczy innego stanowiska. Jest nieważne.",
+      "employer-confirmed": "Kadry potwierdzają autentyczność skierowania.",
+      "employer-denied": "Kadry nie potwierdzają skierowania. Dokument nieautentyczny.",
+      "bribe-accepted": "100 zł schowane w szufladzie.",
+      "bribe-returned": "100 zł wraca do pacjenta.",
+      "bribe-missing": "Nie ma tu banknotu.",
+      "game-over": "Koniec gry. Po leczeniu czekają cię badania medycyny pracy.",
+
       'visit-interrupted': '17:15. Przychodnia zamknięta. Wizyta przerwana.',
       'general-pass': 'Badanie ogólne: bez uwag.', 'general-refer': 'Badanie ogólne: stwierdzono nieprawidłowości.',
       'paper-unclipped': 'Spinacz odpięty. Dokumenty rozdzielone.', 'papers-joined': 'Dokumenty spięte razem.',
@@ -477,7 +566,7 @@ export const translations = {
     clinic: 'ZAKŁAD MEDYCYNY PRACY',
     subtitle: 'NASTĘPNY, PROSZĘ!', tagline: 'Każdy jest zdolny. Do czasu.',
     start: 'ROZPOCZNIJ DYŻUR', saves: 'TECZKA ZAPISÓW', credits: 'O AUTORZE',
-    motto: 'ZDROWIE TO OBOWIĄZEK.', build: 'WERSJA 0.7 / PAPIEROLOGIA',
+    motto: 'ZDROWIE TO OBOWIĄZEK.', build: 'WERSJA 0.8 / PAPIEROLOGIA',
     outer: 'MEDYCYNA PRACY. CZARNA KOMEDIA.',
     screenNote: 'PIKSEL PO PIKSELU. DRUK W TRZECH KOPIACH.', keyboard: 'TAB / ENTER — WYBÓR   ·   F — PEŁNY EKRAN',
     fullscreen: 'Pełny ekran', exitFullscreen: 'Opuść pełny ekran',
@@ -636,23 +725,100 @@ export const translations = {
     stampFit: 'Select the fit stamp', stampUnfit: 'Select the refusal stamp',
     applyStamp: 'Apply the selected stamp to the certificate', stampHere: 'STAMP HERE',
     selectedStamp: 'Selected stamp', manual: 'RULEBOOK', manualTitle: 'SHIFT OPERATING INSTRUCTIONS',
+    progression: {
+      "chamber": "Medical Chamber",
+      "specialistTitle": "SPECIALIST CERTIFICATE",
+      "specialist": "Specialist",
+      "hr": "Human resources",
+      "phone": "Tel.",
+      "takeSpecialist": "Take the specialist certificate",
+      "callSpecialist": "Call the specialist",
+      "callEmployer": "Call human resources",
+      "bribeNotes": {
+        "pressure": [
+          "Pressure just above the limit.",
+          "Patient requests clearance."
+        ],
+        "vision": [
+          "Vision defect just above the limit.",
+          "Patient requests clearance."
+        ]
+      },
+      "treatment": "The patient is receiving treatment for hypertension.",
+      "clearance": "I find no contraindications to work in the position specified below.",
+      "banknote": "100 zł banknote depicting Waryński",
+      "bribeHelp": "Move the banknote to the drawer to accept 100 zł, or give it back to the patient.",
+      "acceptBribe": "Keep 100 zł in the drawer",
+      "returnBribe": "Return 100 zł to the patient",
+      "offer": "A hundred for a stamp?",
+      "seal": {
+        "clear": "Clear employer seal",
+        "missing": "Employer seal missing",
+        "unclear": "Illegible employer seal"
+      },
+      "notes": {
+        "specialistValid": "Specialist: treatment, cleared for this job.",
+        "specialistInvalid": "Specialist: different job. Invalid.",
+        "employerValid": "HR: referral is authentic.",
+        "employerInvalid": "HR: referral is not authentic."
+      },
+      "dialogue": {
+        "dialing": "Dialing…",
+        "specialistQuestion": "Can you confirm the certificate?",
+        "employerQuestion": "Did you issue this referral?",
+        "specialistValid": "Yes. Treatment ongoing. This job is fine.",
+        "specialistInvalid": "That certificate covers a different job.",
+        "employerValid": "Yes, confirmed. We issued that referral.",
+        "employerInvalid": "No. We did not issue that referral."
+      },
+      "hospitalTitle": "UNEXPECTED LEAVE",
+      "hospitalBody": "The hundred stayed in your pocket, the refusal with the patient. You are beaten up on the way home. You wake up in hospital. After treatment, you will need an occupational health exam. This time across the desk.",
+      "gameOver": "GAME OVER",
+      "backToMenu": "MAIN MENU",
+      "directives": {
+        "dates": {
+          "subject": "On the freshness of referrals",
+          "body": "From today, check referral dates. Referrals older than 3 days require refusal. Breaches incur the same fines as approving an unfit worker. Paper ages too.",
+          "role": "ZUS inspection office",
+          "signature": "Irena Stempel"
+        },
+        "specialist": {
+          "subject": "Hypertension under supervision",
+          "body": "From today, treated hypertension may be cleared with a specialist certificate confirming no contraindications for this job. A different job invalidates it. Telephone the specialist to clarify doubts.",
+          "role": "Medical Chamber secretary",
+          "signature": "dr Adam Pieczęć"
+        },
+        "authenticity": {
+          "subject": "On authentic referrals",
+          "body": "From today, a seal validates a referral. No seal means refusal. Clarify illegible impressions with HR using the number on the form. Errors incur the standard ZUS fine.",
+          "role": "ZUS inspection office",
+          "signature": "Irena Stempel"
+        }
+      }
+    },
     manualPages: [
-      { title: 'Admission', lines: ['Call a patient', 'with the bell.', 'Take the referral.', 'Check the employer,', 'examination type', 'and work duties.', 'The certificate', 'is a separate form.'],
-        facingTitle: 'Paperwork', facingLines: ['Sheets are legible', 'on the right desk.', 'Click to pick up;', 'click to put down.', 'The certificate holds', 'name, job and decision.', 'Results appear', 'on a separate sheet.'] },
-      { title: 'Examinations', lines: ['Click the patient', 'for a general exam.', 'Use the eye chart', 'and pressure cuff.', 'The scale measures', 'weight and height.', 'Results follow test order.', 'After the general exam,', 'the pen adds history.'],
-        facingTitle: 'General findings', facingLines: ['Examine every patient.', 'No concerns: no reason', 'to refuse on this basis.', 'Any abnormal finding', 'requires REFUSAL', 'for every work profile.', 'These are game rules,', 'not medical advice.'] },
-      { title: 'Required tests', lines: ['Code on the referral:', 'WC: vision and pressure.', 'W: vision.', 'C: pressure.', 'General exam, weight', 'and height: always.', 'Assess all findings', 'required by the profile.'],
-        facingTitle: 'Vision', facingLines: ['Record LE and RE.', 'Values are in diopters.', 'Small defects qualify.', 'A significant defect:', 'at least 6 diopters', 'in either eye', '(minus or plus).', 'When vision is required,', 'this means REFUSAL.'] },
-      { title: 'Blood pressure', lines: ['Record the first two', 'readings. Assess them.', 'Game refusal threshold:', 'systolic at least 160', 'or diastolic at least 100.', 'For profiles WC and C.', 'Unit: mmHg.'],
-        facingTitle: 'Red ink', facingLines: ['Very high pressure:', 'systolic at least 180', 'or diastolic at least 110.', 'These readings appear', 'in red ink.', 'Ordinary ink does not', 'mean a normal result.', 'Check both numbers.'] },
-      { title: 'Rubber stamps', lines: ['Pick up a stamp.', 'Apply to the certificate.', 'It stays in your hand', 'after stamping.', 'Return it to its rest.', 'You may correct it', 'while the patient waits.'],
-        facingTitle: 'Ending a visit', facingLines: ['Use the certificate pen', 'to write the name', 'and job position.', 'Stamp and pick it up.', 'Give it to the patient.', 'This ends the visit.', 'Paid after the shift.', 'Errors may mean fines', 'and higher insurance.'] },
-      { title: 'Medical records', lines: ['Attach a paperclip', 'to a sheet. Drop', 'another on the clip', 'to join the sheets.', 'Click their clip', 'to separate them.', 'Keep in the drawer', 'or discard in the basket.'],
-        facingTitle: 'Correspondence', facingLines: ['Wrong approval: ZUS.', 'Wrong refusal:', 'the employer writes.', 'Open the envelope', 'at its folded corner.', 'Read, then discard.', 'Open the drawer', 'and choose a sheet.', 'The bottom closes it.'] },
-      { title: 'Time', lines: ['Shift: 08:00–14:00.', 'Time passes on its own.', '30 s with a patient:', '30 minutes in the clinic.', '30 s without a patient:', '5 minutes in the clinic.', 'Actions add more time.', 'Cleaner calls at 17.', 'Work ends at 17:15.'],
-        facingTitle: 'Controls', facingLines: ['Tab: choose an item.', 'Space: pick it up.', 'Arrows: move it.', 'Shift: larger steps.', 'Enter: use or put down.', 'Escape: cancel moving.', 'Enter on a sheet:', 'add notes or read.'] },
-      { title: 'After work', lines: ['Close the office.', 'The budget waits at home:', 'base income,', 'patient bonus,', 'money from last month,', 'fines and insurance.'], facingTitle: 'Correspondence', facingLines: ['Some decisions', 'have consequences.', 'A letter may arrive', 'from ZUS or an employer.', 'Read it carefully.'] },
-      { title: 'Outside the clinic', lines: ['Every evening differs.', 'Sometimes you visit', 'the pharmacy or garage.', 'Sometimes you simply', 'go home.'], facingTitle: 'Days off', facingLines: ['The clinic closes', 'on weekends.', 'There may be a short trip.', 'Life at home', 'carries on.'] },
+      { title: 'Welcome to the file', lines: ['The bell summons', 'a patient. Sighing', 'has no such authority.', 'The referral explains', 'who sent this person', 'and what HR thinks', 'they can do.'],
+        facingTitle: 'Paper accepts', facingLines: ['The right desk enlarges', 'the importance of paper.', 'Click to pick up.', 'Click to put down.', 'Certificates wait', 'in the rack. They do not', 'grow on referrals.', 'Results prefer notes.'] },
+      { title: 'The whole patient', lines: ['Click the patient', 'for a general exam.', 'The chart asks the eyes,', 'the cuff asks the blood,', 'the scale weighs the rest.', 'After the general exam,', 'the pen adds history.', 'Notes remember the order.'],
+        facingTitle: 'General findings', facingLines: ['Examine everyone.', 'No concerns? Carry on.', 'An abnormal finding', 'requires refusal,', 'whatever the job title.', 'These are game rules.', 'Actual treatment needs', 'an actual clinic.'] },
+      { title: 'Office alphabet', lines: ['WC: vision and pressure.', 'W: vision. C: pressure.', 'Find the referral code.', 'General exam, weight', 'and height: everyone.', 'Managers have height too.', 'Sometimes only their', 'self-esteem is taller.'],
+        facingTitle: 'Two eyes, two lines', facingLines: ['LE and RE, in diopters.', 'Small defects can pass.', 'At 6 diopters in one eye,', 'plus or minus,', 'when vision is required,', 'REFUSAL enters the room.', 'Squinting does not', 'amend the regulations.'] },
+      { title: 'The cuff of truth', lines: ['The first two readings', 'stay in the notes.', 'For WC and C the limit:', '160 systolic or', '100 diastolic.', 'Unit: mmHg.', 'At the limit: refusal.', 'Exceptions arrive', 'by official post.'],
+        facingTitle: 'Alarm ink', facingLines: ['At 180 systolic', 'or 110 diastolic,', 'the pen sees red.', 'Ordinary ink is not', 'an official blessing.', 'Read both numbers.', 'The cuff is patient.', 'The clock has plans.'] },
+      { title: 'Power in your hand', lines: ['Pick up a stamp.', 'Apply it to a certificate.', 'It stays in your hand', 'after the impression.', 'It rests only', 'in its own holder.', 'While the patient waits,', 'you may change your mind.'],
+        facingTitle: 'Sign here, please', facingLines: ['The certificate pen', 'fills the name', 'and job position.', 'The stamp decides.', 'Give it to the patient:', 'only then do they leave.', 'A tray is not a patient.', 'This has been checked.'] },
+      { title: 'Life of a paperclip', lines: ['Attach one to a sheet.', 'Drop another on the clip:', 'a family of records.', 'Click the clip', 'to separate the family.', 'The drawer accepts files.', 'The basket accepts', 'what you can part with.'],
+        facingTitle: 'Incoming post', facingLines: ['ZUS writes after approval.', 'Employers after refusal.', 'Not every mistake', 'gets its own letter.', 'The corner opens it.', 'The drawer opens files.', 'Its bottom edge closes', 'the discussion.'] },
+      { title: 'The clock does not', lines: ['Admissions: 08–14.', 'With a patient, 30 seconds', 'means half an hour.', 'Without: five minutes.', 'Actions take extra time.', 'At 17 the mop speaks.', 'At 17:15 it ends work', 'and unfinished visits.'],
+        facingTitle: 'The doctor’s fingers', facingLines: ['Tab chooses an item.', 'Space picks it up.', 'Arrows move it.', 'Shift takes bigger steps.', 'Enter uses or drops.', 'Escape cancels moving.', 'Enter on paper reads', 'or adds notes.'] },
+      { title: 'Ageing paper', lines: ['The third shift brings', 'a freshness directive.', 'Referrals older than', 'three days need refusal,', 'even if the patient', 'is in perfect health.', 'Read the issue date.', 'Do not sniff the paper.'],
+        facingTitle: 'A specialist speaks', facingLines: ['From the fourth shift,', 'high blood pressure', 'may have a paper escort.', 'Treatment and clearance', 'must cover this job.', 'Wrong job? Wrong paper.', 'Click the number to ask.', 'Your notes remember.'] },
+      { title: 'Official impressions', lines: ['Fifth shift: examine', 'the referral seal.', 'Present: valid paper.', 'Missing: refusal.', 'Smudged: a mystery.', 'HR knows the answer.', 'Click the printed number.', 'ZUS dislikes guessing.'],
+        facingTitle: 'A portrait in a pocket', facingLines: ['From the sixth shift,', 'Waryński may visit too.', 'Return the hundred', 'or put it in the drawer.', 'It lowers no pressure.', 'Taking the money', 'and refusing is a poor', 'plan for the walk home.'] },
+      { title: 'The household book', lines: ['After work: the budget.', 'Salary and bonuses enter.', 'Life, fines and insurance', 'leave without knocking.', 'Last month also leaves', 'a few fingerprints.', 'A drawer is not a bank.', 'It sometimes pretends.'],
+        facingTitle: 'Institutions remember', facingLines: ['ZUS starts at a hundred.', 'Further detected errors', 'cost four hundred each.', 'The insurer prefers', 'to raise the premium.', 'A quiet day lowers it', 'by fifty, down to', 'three hundred again.'] },
+      { title: 'Beyond the door', lines: ['Pharmacy, garage, home.', 'Savings attract', 'urgent necessities.', 'Necessities have not', 'read this handbook.'],
+        facingTitle: 'Days off', facingLines: ['The clinic rests', 'from people at weekends.', 'Home received no memo', 'suspending expenses.', 'There may be a short trip.', 'The rules come along.'] },
     ],
     lamp: 'Toggle the ceiling lamp', decoration: 'Change decoration: plant or certificate',
     shiftDone: 'SHIFT COMPLETE', shiftDoneNote: 'Even a stamp deserves a rest.',
@@ -667,7 +833,7 @@ export const translations = {
     patientSpeech: {
       greeting: 'Good morning.', hello: 'Hello.', morning: 'Morning.',
       hesitate: 'Uhh...', blurred: 'It is blurry...', cannotRead: 'Cannot read it.', unsure: 'Maybe... no.', again: 'Once more?',
-      thanks: 'Thank you.', goodbye: 'Goodbye.', allRight: 'All right.', bye: 'See you.',
+      bribe: 'A hundred for a yes?', thanks: 'Thank you.', goodbye: 'Goodbye.', allRight: 'All right.', bye: 'See you.',
     },
     home: {
       title: 'HOME AT LAST', ledger: 'BUDGET', weekendTitle: 'A DAY OFF', weekendLedger: 'WEEKEND BUDGET', workTitle: 'OFF TO WORK',
@@ -745,6 +911,18 @@ export const translations = {
       resume: 'RETURN HOME', tomorrow: 'NEXT DAY', onward: 'CONTINUE', work: 'HEAD TO WORK', enter: 'ENTER THE CLINIC', reveal: 'Reveal the complete text',
     },
     feedback: {
+      "phone-ready": "Exchange tone. Click a number on a document to call.",
+      "specialist-taken": "Specialist certificate in hand.",
+      "specialist-missing": "The patient has no specialist certificate.",
+      "specialist-valid": "Specialist confirms treatment and clearance for this job.",
+      "specialist-invalid": "Specialist: this certificate covers a different job. It is invalid.",
+      "employer-confirmed": "HR confirms the referral is authentic.",
+      "employer-denied": "HR denies issuing the referral. The document is not authentic.",
+      "bribe-accepted": "100 zł kept in the drawer.",
+      "bribe-returned": "100 zł returned to the patient.",
+      "bribe-missing": "There is no banknote here.",
+      "game-over": "Game over. After treatment, you will need an occupational health exam.",
+
       'visit-interrupted': '17:15. The clinic is closed. Appointment interrupted.',
       'general-pass': 'General examination: no concerns.', 'general-refer': 'General examination: abnormal findings.',
       'paper-unclipped': 'Paperclip removed. Documents separated.', 'papers-joined': 'Documents clipped together.',
@@ -790,7 +968,7 @@ export const translations = {
     clinic: 'OCCUPATIONAL HEALTH CLINIC',
     subtitle: 'OCCUPATIONAL HAZARD: BUREAUCRACY.', tagline: 'Everyone is fit. Until they aren’t.',
     start: 'BEGIN YOUR SHIFT', saves: 'SAVE FILES', credits: 'CREDITS',
-    motto: 'HEALTH IS YOUR DUTY.', build: 'VERSION 0.7 / PAPERWORK',
+    motto: 'HEALTH IS YOUR DUTY.', build: 'VERSION 0.8 / PAPERWORK',
     outer: 'OCCUPATIONAL HEALTH. DARK COMEDY.',
     screenNote: 'PIXEL BY PIXEL. FILED IN TRIPLICATE.', keyboard: 'TAB / ENTER — SELECT   ·   F — FULLSCREEN',
     fullscreen: 'Enter fullscreen', exitFullscreen: 'Exit fullscreen',

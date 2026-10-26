@@ -140,7 +140,7 @@ describe('separate localized paperwork', () => {
         expect(description).toContain(locale === 'pl' ? '03.11.1983' : '03/11/1983');
         expect(description).toContain(p.signed);
         expect(description).toContain(p.reference);
-        expect(description).toContain(stored.kind === 'referral' ? p.employerSeal : p.clinicSeal);
+        expect(description).toContain(stored.kind === 'referral' ? translations[locale].progression.seal.clear : p.clinicSeal);
       }
     }
   });
@@ -259,7 +259,7 @@ describe('separate localized paperwork', () => {
 
   it('writes very high pressure in red and keeps all case findings within the paper', () => {
     for (const locale of ['pl', 'en'] as const) for (const patient of PATIENTS) {
-      const note = { id: 1, day: 1, location: 'desk' as const, kind: 'note' as const, patientId: patient.id,
+      const note = { id: 1, day: 1, location: 'desk' as const, kind: 'note' as const, patientId: patient.id, calls: { specialist: null, employer: null }, bribe: false,
         examinationOrder: ['general', 'vision', 'pressure', 'measurements'] as const,
         results: { general: patient.general, vision: patient.visionValues, pressure: patient.pressureValues, pressureReadings: [{ ...patient.pressureValues }, { ...patient.pressureValues, systolic: patient.pressureValues.systolic + 1 }], weight: patient.weight, height: patient.height }, additionalWritten: true };
       const entries = noteEntries({ ...note, examinationOrder: [...note.examinationOrder] }, locale);

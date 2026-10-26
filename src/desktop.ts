@@ -1,5 +1,6 @@
 import './style.css';
 import { advanceClinicTime, applyAction, CLEANER_WARNING_MINUTES, SHIFT_END_MINUTES, PATIENTS, canEndDay, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction, type ActionResult, type GameState } from './core/game';
+import { patientForVisit } from './core/progression';
 import { ClinicClock } from './core/clock';
 import { effectsManifest } from './core/effects';
 import { choosePatientSpeech } from './core/patient-speech';
@@ -66,6 +67,8 @@ let patientExitHold = 0;
 let patientSpeech: (PatientSpeech & { remaining: number; departure: boolean }) | undefined;
 let visionSpeechAttempt = 0;
 let clinicSpeech: { comment?: ExaminationComment; speaker: 'doctor' | 'cleaner'; remaining: number } | undefined;
+let phoneCall: { kind: 'specialist' | 'employer'; valid: boolean; elapsed: number } | undefined;
+let phoneToneTimer: ReturnType<typeof setTimeout> | undefined;
 let interruptedPatient: number | undefined;
 // Delivery is presentation only: consequences and correspondence are already saved.
 const pendingLetters = new Map<number, { patientId: number; remaining: number }>();
@@ -78,16 +81,17 @@ function groupItems(id: DeskItemId): DeskItemId[] {
 }
 const isHeld = (id: DeskItemId): boolean => heldItem !== null && groupItems(heldItem).includes(id);
 const deskView = () => ({ desk: deskState, held: heldItem, heldItems: heldItem ? groupItems(heldItem) : [], patientMotion, manualOpen, manualPage, clockMinutes,
-  patientSpeech: visiblePatientSpeech(), departingPatientId: departingPatientId(),
+  phoneSpeech: phoneCallText(), patientSpeech: visiblePatientSpeech(), departingPatientId: departingPatientId(),
   clinicSpeech: clinicSpeech ? { text: clinicSpeechText(), speaker: clinicSpeech.speaker } : undefined, hiddenPaperIds: [...pendingLetters.keys()] });
 const deskRect = (id: DeskItemId) => itemRect(deskState, id, gameState.visit?.document === 'tray' && heldItem !== 'document', isHeld(id), manualOpen);
 const itemControlId = (id: DeskItemId): string => id === 'incoming-referral' ? 'take-document' : id === 'document' ? 'apply-stamp' : id;
 function deskItemHelp(id: DeskItemId): string {
   if (isHeld(id)) return t().carryingHelp;
+  if (id === 'banknote') return t().progression.bribeHelp;
   if (id === 'manual') return t().manualHelp;
   if (id.startsWith('paper-')) {
     const paper = gameState.papers.find(record => record.id === Number(id.slice(6)));
-    return paper?.kind === 'letter' && !paper.opened ? t().letterHelp : t().paperHelp;
+    return paper && (paper.kind === 'letter' || paper.kind === 'directive') && !paper.opened ? t().letterHelp : t().paperHelp;
   }
   return t().dragHelp;
 }
@@ -141,6 +145,20 @@ function playEffect(id: string): void {
   if (desktopActive && !audio.isMuted()) audio.playSound(id);
 }
 
+function stopPhone(): void {
+  clearTimeout(phoneToneTimer); phoneCall = undefined;
+  audio.stopSound('phone-tone'); audio.stopSound('phone-dial');
+}
+
+function phoneCallText(): string | undefined {
+  if (!phoneCall) return;
+  const d = t().progression.dialogue;
+  if (phoneCall.elapsed < 1500) return d.dialing;
+  if (phoneCall.elapsed < 3300) return d[phoneCall.kind === 'specialist' ? 'specialistQuestion' : 'employerQuestion'];
+  return phoneCall.kind === 'specialist' ? d[phoneCall.valid ? 'specialistValid' : 'specialistInvalid']
+    : d[phoneCall.valid ? 'employerValid' : 'employerInvalid'];
+}
+
 function typedContent(): string {
   return screen === 'home' ? homePage(gameState, locale, homePageIndex).text : t().intro[gameState.introStep].body;
 }
@@ -171,6 +189,7 @@ function advanceHome(): void {
   }
   playEffect('carriage');
   if (homePageIndex < homePages(gameState).length - 1) { homePageIndex++; startTyping(); syncControls('home-next'); }
+  else if (gameState.ending === 'hospital') { screen = 'break-room'; syncControls('restart'); }
   else handleShiftAction('next-day');
 }
 
@@ -300,6 +319,10 @@ function arrangeDocumentGroup(active: DeskItemId, held: boolean, raise = false):
 }
 
 function reconcileDeskPapers(): void {
+  if (gameState.visit?.bribe === 'offered') {
+    if (!deskState.positions.banknote) deskState = addDeskItem(deskState, 'banknote', { x: 100, y: 198 });
+    else if (!deskState.order.includes('banknote')) deskState = raiseDeskItem(deskState, 'banknote');
+  } else if (deskState.order.includes('banknote')) deskState = removeDeskItem(deskState, 'banknote');
   if (gameState.drawerItems.manual) deskState = { ...deskState, order: deskState.order.filter(id => id !== 'manual') };
   else if (!deskState.order.includes('manual')) deskState = raiseDeskItem(deskState, 'manual');
   const visible = new Set(gameState.papers.filter(paper => paper.location === 'desk' && !pendingLetters.has(paper.id)).map(paper => `paper-${paper.id}` as DeskItemId));
@@ -419,12 +442,16 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     // Calling again finishes the previous farewell so the portrait and papers
     // always belong to the same patient, even when the doctor works quickly.
     clearPatientMotion();
-    clinicSpeech = undefined;
+    stopPhone(); clinicSpeech = undefined;
     animatePatient(gameState.visit!.patientId, 'enter');
-    say(gameState.visit!.patientId, choosePatientSpeech('arrival', { day: gameState.day, patientId: gameState.visit!.patientId }));
+    say(gameState.visit!.patientId, gameState.visit!.bribe === 'offered' ? 'bribe' : choosePatientSpeech('arrival', { day: gameState.day, patientId: gameState.visit!.patientId }));
   } else if (actual === 'take-document' && result.feedback === 'document-taken') {
     playEffect('paper'); focusId = 'run-general';
     if (gameState !== previousState) newSheet = `paper-${gameState.nextPaperId - 1}`;
+  } else if (actual === 'take-specialist' && result.feedback === 'specialist-taken') {
+    playEffect('paper');
+    if (gameState !== previousState) newSheet = `paper-${gameState.nextPaperId - 1}`;
+    focusId = newSheet ?? 'take-document';
   } else if (actual === 'take-certificate' && result.feedback === 'certificate-taken') {
     playEffect('paper'); focusId = 'apply-stamp';
     if (gameState !== previousState) {
@@ -434,11 +461,11 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     }
   } else if (actual === 'run-general') {
     focusId = 'run-vision';
-    if (gameState !== previousState && gameState.visit) feedback = `${t().generalResult}: ${generalReading(gameState.visit.patientId, locale)}.`;
+    if (gameState !== previousState && gameState.visit) feedback = `${t().generalResult}: ${patientForVisit(gameState)!.general === 'pass' ? t().generalClear : generalReading(gameState.visit.patientId, locale)}.`;
   } else if (actual === 'run-vision') {
     focusId = 'run-pressure';
     if (gameState !== previousState && gameState.visit) {
-      feedback += ` ${visionReading(PATIENTS[gameState.visit.patientId]!.visionValues, locale)}.`;
+      feedback += ` ${visionReading(patientForVisit(gameState)!.visionValues, locale)}.`;
       say(gameState.visit.patientId, choosePatientSpeech(result.feedback === 'vision-pass' ? 'vision-pass' : 'vision-refer', {
         day: gameState.day, patientId: gameState.visit.patientId, visionAttempt: visionSpeechAttempt++,
       }));
@@ -461,11 +488,27 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     deskState = moveDeskItem(deskState, newSheet, DEFAULT_DOCUMENT);
     sheetSupply = CABINET_HOTSPOTS.paperSupply;
   }
-  else if (actual === 'use-phone') { playEffect('telephone'); focusId = 'use-phone'; }
+  else if (actual === 'use-phone') {
+    stopPhone();
+    if (result.feedback === 'phone-ready') {
+      playEffect('phone-tone');
+      phoneToneTimer = setTimeout(() => audio.stopSound('phone-tone'), 1200);
+    } else playEffect('telephone');
+    focusId = 'use-phone';
+  } else if ((actual === 'call-specialist' || actual === 'call-employer') && gameState !== previousState && gameState.visit) {
+    stopPhone(); playEffect('phone-dial');
+    const kind = actual === 'call-specialist' ? 'specialist' : 'employer';
+    phoneCall = { kind, valid: gameState.visit.calls[kind] === true, elapsed: 0 };
+    const paper = gameState.papers.find(paper => paper.day === gameState.day && paper.patientId === gameState.visit!.patientId && paper.kind === (kind === 'specialist' ? 'specialist' : 'referral'));
+    focusId = paper ? `${actual}-${paper.id}` : 'use-phone';
+  } else if (actual === 'accept-bribe' || actual === 'return-bribe') {
+    playEffect('paper'); focusId = 'run-general';
+  }
   else if (actual === 'write-certificate') { playEffect('paper'); focusId = 'apply-stamp'; }
   else if (actual.startsWith('stamp-') && gameState !== previousState) {
     playEffect('stamp'); focusId = 'return-document';
   } else if (actual === 'return-document' && !gameState.visit) {
+    stopPhone();
     if (clinicSpeech?.speaker !== 'cleaner') clinicSpeech = undefined;
     if (previousState.visit) {
       say(previousState.visit.patientId, choosePatientSpeech('departure', {
@@ -483,7 +526,7 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
   } else if (actual === 'end-day' && screen === 'home') {
     clearPatientMotion(); homePageIndex = 0; typingKey = ''; startTyping(); focusId = 'home-next';
   } else if (actual === 'next-day') {
-    clinicSpeech = undefined;
+    stopPhone(); clinicSpeech = undefined;
     clearPatientMotion(); clearInterval(typingTimer); homePageIndex = 0;
     clockMinutes = gameState.clockMinutes; clockTransition = undefined; focusId = 'call-patient';
     if (screen === 'home') { typingKey = ''; startTyping(); focusId = 'home-next'; }
@@ -506,6 +549,7 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
 }
 
 function handleDrawerAction(action: DrawerAction): void {
+  if (action.type === 'return-bribe') { screen = 'cabinet'; handleShiftAction('return-bribe'); return; }
   if (action.type === 'close') { closeScreen(); return; }
   if (action.type === 'page') {
     drawerPage = action.page;
@@ -564,7 +608,7 @@ function restartGame(): void {
   typingKey = ''; homePageIndex = 0;
   gameState = createInitialState(crypto.getRandomValues(new Uint32Array(1))[0]); deskState = createDeskState(); deskBeforePickup = deskState;
   clinicClock.reset(performance.now());
-  nextClipId = 1; pendingLetters.clear(); clinicSpeech = undefined; interruptedPatient = undefined;
+  nextClipId = 1; pendingLetters.clear(); stopPhone(); clinicSpeech = undefined; interruptedPatient = undefined;
   heldItem = null; selectedStamp = null; manualOpen = false; manualPage = 0; manualBeforePickup = false;
   clockMinutes = gameState.clockMinutes; clockTransition = undefined;
   status = ''; toast = ''; feedback = ''; panelReturn = 'welcome';
@@ -751,6 +795,7 @@ function syncControls(focusId?: string): void {
     document.title = t().documentTitle;
     document.querySelector('meta[name="description"]')!.setAttribute('content', t().description);
   }
+  if (screen !== 'cabinet') stopPhone();
   app.dataset.screen = screen;
   stage.dataset.carrying = String(screen === 'cabinet' && heldItem !== null);
   utilityControls.setAttribute('aria-label', t().utilityControls);
@@ -910,7 +955,7 @@ function render(): void {
   const speechText = speech ? `${t().patientNames[speech.patientId]}: ${t().patientSpeech[speech.line]}` : '';
   if (speechElement.textContent !== speechText) speechElement.textContent = speechText;
   const clinicSpeechElement = document.getElementById('clinic-speech')!;
-  const clinicText = screen === 'cabinet' && clinicSpeech ? `${t().examinationSpeech[clinicSpeech.speaker]}: ${clinicSpeechText()}` : '';
+  const clinicText = screen === 'cabinet' ? [clinicSpeech ? `${t().examinationSpeech[clinicSpeech.speaker]}: ${clinicSpeechText()}` : '', phoneCallText() ?? ''].filter(Boolean).join(' ') : '';
   if (clinicSpeechElement.textContent !== clinicText) clinicSpeechElement.textContent = clinicText;
   if (screen === 'home') {
     renderHome(ctx, gameState, locale, homePageIndex, introCharacters);
@@ -981,7 +1026,7 @@ fileInput.addEventListener('change', async () => {
     const loadedState = await importSave(file);
     if (readId !== saveReadId) return;
     deskInput.cancel(); clearPatientMotion(); deskState = createDeskState();
-    pendingLetters.clear(); clinicSpeech = undefined; interruptedPatient = undefined;
+    pendingLetters.clear(); stopPhone(); clinicSpeech = undefined; interruptedPatient = undefined;
     gameState = loadedState; homePageIndex = 0; typingKey = ''; shiftStarted = true; selectedStamp = null; feedback = '';
     clinicClock.reset(performance.now());
     nextClipId = 1; reconcileDeskPapers();
@@ -1098,6 +1143,16 @@ const deskInput = installDeskInput(stage, {
       announceDesk(t().feedback[result.feedback], itemControlId(source));
       return true;
     };
+    if (id === 'banknote') {
+      heldItem = null;
+      if (overDrawer || containsPoint(PATIENT_HANDOFF, target)) {
+        handleShiftAction(overDrawer ? 'accept-bribe' : 'return-bribe');
+      } else {
+        deskState = moveDeskItem(deskState, id, position);
+        spendTime('handle-item'); announceDesk(t().itemDropped, 'banknote');
+      }
+      return true;
+    }
     if (id === 'incoming-referral') {
       heldItem = null;
       if (containsPoint(TRAY, target) || containsPoint(PATIENT_HANDOFF, target)) {
@@ -1284,7 +1339,11 @@ window.addEventListener('pageshow', updateClinicTime);
 
 // Patient movement and brief speech advance only while the room is visible.
 setInterval(() => {
-  if (!desktopActive || screen !== 'cabinet' || document.hidden || (!patientMotion && !patientSpeech && !clinicSpeech && pendingLetters.size === 0 && gameState.phase !== 'home')) return;
+  if (!desktopActive || screen !== 'cabinet' || document.hidden || (!patientMotion && !patientSpeech && !clinicSpeech && !phoneCall && pendingLetters.size === 0 && gameState.phase !== 'home')) return;
+  if (phoneCall) {
+    phoneCall.elapsed += 60;
+    if (phoneCall.elapsed >= 7500) stopPhone();
+  }
   if (clinicSpeech) {
     clinicSpeech.remaining -= 60;
     if (clinicSpeech.remaining <= 0) clinicSpeech = undefined;
@@ -1375,6 +1434,7 @@ export function setDesktopActive(active: boolean): void {
   if (!active) {
     desktopFocus = app.contains(document.activeElement) ? document.activeElement?.id : undefined;
     deskInput.cancel();
+    stopPhone();
     desktopActive = false;
     updateClinicTime();
     audio.pauseMusic();

@@ -1,0 +1,5 @@
+Use case: precise-object-edit
+Asset type: transparent 24x24 pixel game employer seal variation.
+Input image: existing generated violet employer rubber stamp is the edit target.
+Primary request: make this same employer seal visibly UNCLEAR and partially smeared. Preserve faded violet ink color, circular silhouette and approximate size. Keep about half the outer ring with interrupted gaps; blur no pixels. Drag two small uneven dry-ink streaks across the central cog, leaving it partly recognizable but impossible to confidently authenticate. Use crisp pixel clusters and irregular broken ink, not smooth gaussian blur.
+Constraints: exactly one impression with true transparent alpha; no paper, no background, no letters, no new emblem, no other objects. Distinct from a clean complete seal and from a missing seal. At 24x24 it should look visibly patchy and smudged.

@@ -1,5 +1,5 @@
 /** Temporary desk layout. Item positions are deliberately absent from gameplay saves. */
-export type FixedDeskItemId = 'document' | 'incoming-referral' | 'stamp-fit' | 'stamp-unfit' | 'manual';
+export type FixedDeskItemId = 'document' | 'incoming-referral' | 'stamp-fit' | 'stamp-unfit' | 'manual' | 'banknote';
 export type DeskItemId = FixedDeskItemId | `paper-${number}` | `clip-${number}`;
 
 export interface Point {
@@ -47,7 +47,7 @@ export const DROP_ZONES = {
 export function dropTargetRect(target: keyof typeof DROP_ZONES, held: DeskItemId | null, carried: readonly DeskItemId[] = []): Rect {
   const includesCertificate = held === 'document' || carried.includes('document');
   const compatible = held !== null && !includesCertificate && (held === 'incoming-referral' || held.startsWith('paper-')
-    || held.startsWith('clip-') || (target === 'drawer' && held === 'manual'));
+    || held.startsWith('clip-') || (target === 'drawer' && (held === 'manual' || held === 'banknote')));
   return compatible ? { ...DROP_ZONES[target] } : { ...CABINET_HOTSPOTS[target] };
 }
 
@@ -61,6 +61,7 @@ export const MANUAL_OPEN_POSITION: Point = { x: 222, y: 144 };
 
 /** Full-size artwork on the main desk; tools also use it while carried. */
 export const ITEM_SIZES: Record<DeskItemId, Pick<Rect, 'w' | 'h'>> = {
+  banknote: { w: 92, h: 42 },
   document: { w: 188, h: 144 },
   'incoming-referral': { w: 188, h: 144 },
   'stamp-fit': { w: 48, h: 48 },
@@ -72,6 +73,7 @@ export const MANUAL_SHELF_SIZE = { w: 88, h: 48 } as const;
 const RESTING_STAMP = { w: 36, h: 36 };
 /** Papers and books shrink in hand; stamps retain their larger printing size. */
 export const CARRIED_ITEM_SIZES: Record<DeskItemId, Pick<Rect, 'w' | 'h'>> = {
+  banknote: { w: 92, h: 42 },
   document: { w: 48, h: 64 },
   'incoming-referral': { w: 28, h: 66 },
   'stamp-fit': ITEM_SIZES['stamp-fit'],
@@ -126,6 +128,7 @@ export const CARRY_BOUNDS: Rect = { x: 0, y: 0, w: 570, h: 320 };
 export function createDeskState(): DeskState {
   return {
     positions: {
+      banknote: { x: 100, y: 198 },
       document: { ...DEFAULT_DOCUMENT },
       'incoming-referral': { x: 17, y: 190 },
       'stamp-fit': { x: 520, y: 190 },
@@ -137,6 +140,7 @@ export function createDeskState(): DeskState {
 }
 
 function itemSize(id: DeskItemId, x: number, held: boolean, manualOpen: boolean, documentCarrySize?: Pick<Rect, 'w' | 'h'>): Pick<Rect, 'w' | 'h'> {
+  if (id === 'banknote') return ITEM_SIZES.banknote;
   if (id === 'incoming-referral') return held ? CARRIED_TRAY_DOCUMENT : TRAY_DOCUMENT;
   if (id.startsWith('clip-')) return fullSize(id);
   if (id.startsWith('paper-')) return held ? CARRIED_ITEM_SIZES.document : x < RIGHT_DESK_X ? SMALL_DOCUMENT : ITEM_SIZES.document;

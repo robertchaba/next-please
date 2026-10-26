@@ -1,6 +1,8 @@
 import { gameDate, isWeekend } from './calendar';
 import { PATIENTS, CHARACTER_COUNT, createRoster, randomStep, hasRequiredExaminations, disqualifyingPressure, type ExaminationId, type VisionValues, type PressureValues } from './patients';
 import { BASE_INSURANCE, emptyConsequences, settleDay, type DailyConsequences, type DaySettlement } from './economy';
+import { arrangeProgressionRoster, createAppointmentDetails, directiveForDay, emptyCalls, expectedVisitDecision, patientForAppointment, specialistIsValid, workDayNumber,
+  type BribeState, type DirectiveRule, type PhoneConclusions, type ReferralDetails, type SpecialistCertificate } from './progression';
 export type { DaySettlement, DailyConsequences } from './economy';
 
 export const INTRO_SLIDES = 4;
@@ -35,12 +37,19 @@ interface PaperBase {
   location: 'desk' | 'drawer';
 }
 export type Paper =
-  | (PaperBase & { kind: 'note'; patientId: number | null; results: NoteResults; examinationOrder: ExaminationId[]; additionalWritten: boolean })
-  | (PaperBase & { kind: 'referral'; patientId: number })
+  | (PaperBase & { kind: 'note'; patientId: number | null; results: NoteResults; examinationOrder: ExaminationId[]; additionalWritten: boolean; calls: PhoneConclusions; bribe: boolean })
+  | (PaperBase & { kind: 'referral'; patientId: number; details: ReferralDetails })
+  | (PaperBase & { kind: 'specialist'; patientId: number; certificate: SpecialistCertificate })
+  | (PaperBase & { kind: 'directive'; patientId: null; sender: 'zus' | 'chamber'; rule: DirectiveRule; opened: boolean })
   | (PaperBase & { kind: 'letter'; patientId: number; sender: 'zus' | 'employer'; opened: boolean });
 
 export interface Visit {
   patientId: number;
+  referral: ReferralDetails;
+  specialist: SpecialistCertificate | null;
+  specialistTaken: boolean;
+  calls: PhoneConclusions;
+  bribe: BribeState;
   document: 'tray' | 'desk';
   certificateTaken: boolean;
   /** The pen fills both name and job; retain this key for save compatibility. */
@@ -56,6 +65,7 @@ export interface Visit {
 }
 
 export interface GameState {
+  ending: null | 'assault-pending' | 'hospital';
   day: number;
   money: number;
   previousMonthBalance: number;
@@ -85,6 +95,7 @@ export type GameAction =
   | 'run-general' | 'run-vision' | 'run-pressure' | 'run-measurements' | 'stamp-fit' | 'stamp-unfit'
   | 'end-day' | 'return-document' | 'toggle-lamp' | 'change-decoration' | 'next-day'
   | 'handle-item' | 'read-manual' | 'take-paper' | 'use-phone'
+  | 'take-specialist' | 'call-specialist' | 'call-employer' | 'accept-bribe' | 'return-bribe'
   | { type: 'store-drawer-item' | 'retrieve-drawer-item'; item: 'manual' | 'clip' }
   | { type: 'write-note' | 'store-paper' | 'retrieve-paper' | 'trash-paper' | 'open-letter' | 'clip-paper'; paperId: number }
   | { type: 'clip-document'; documentId: DocumentId }
@@ -103,11 +114,14 @@ export type GameFeedback =
   | 'paper-wrong-patient' | 'results-needed' | 'letter-opened' | 'paper-clipped'
   | 'paper-unclipped' | 'papers-joined' | 'clip-needed' | 'certificate-in-bundle'
   | 'certificate-written' | 'certificate-name-needed'
-  | 'item-stored' | 'item-retrieved' | 'item-missing' | 'visit-interrupted';
+  | 'item-stored' | 'item-retrieved' | 'item-missing' | 'visit-interrupted'
+  | 'phone-ready' | 'specialist-taken' | 'specialist-missing' | 'specialist-valid' | 'specialist-invalid'
+  | 'employer-confirmed' | 'employer-denied' | 'bribe-accepted' | 'bribe-returned' | 'bribe-missing' | 'game-over';
 
 export function createInitialState(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0]!): GameState {
   const generated = createRoster(seed >>> 0);
   return {
+    ending: null,
     rngState: generated.seed, roster: generated.roster, insuranceRate: BASE_INSURANCE, daily: emptyConsequences(), settlement: null,
     day: 1, money: 0, previousMonthBalance: 0, patientsProcessed: 0,
     phase: 'intro', introStep: 0, shiftCompleted: 0, clockMinutes: ARRIVAL_MINUTES, visit: null,
@@ -136,7 +150,7 @@ export function isDocumentClipped(state: GameState, documentId: DocumentId): boo
 }
 
 function noteResults(visit: Visit): NoteResults {
-  const patient = PATIENTS[visit.patientId]!;
+  const patient = patientForAppointment(visit);
   return {
     general: visit.generalTested ? patient.general : null,
     vision: visit.visionTested ? { ...patient.visionValues } : null,
@@ -152,7 +166,8 @@ function recordResults(papers: Paper[], visit: Visit | null, day: number): Paper
   if (!visit) return papers;
   return papers.map(paper => paper.kind === 'note'
     && ((paper.patientId === null && paper.location === 'desk') || (paper.patientId === visit.patientId && paper.day === day))
-    ? { ...paper, patientId: visit.patientId, day, results: noteResults(visit), examinationOrder: [...visit.examinationOrder] } : paper);
+    ? { ...paper, patientId: visit.patientId, day, results: noteResults(visit), examinationOrder: [...visit.examinationOrder],
+      calls: { ...visit.calls }, bribe: visit.bribe !== 'none' } : paper);
 }
 
 export function canWriteNote(state: GameState, paper: Paper): boolean {
@@ -183,13 +198,16 @@ function finishAtClosing(state: GameState): ActionResult {
     paperClips: state.paperClips.map(group => group.filter(id => id !== 'certificate')).filter(group => group.length > 0) };
   const settlement = settleDay(closed);
   if (Math.abs(settlement.settlement.closingBalance) > GAME_LIMITS.money) return { state, feedback: 'limit-reached' };
-  return { state: { ...closed, ...settlement, phase: 'home', money: settlement.settlement.closingBalance },
+  return { state: { ...closed, ...settlement, phase: 'home', money: settlement.settlement.closingBalance,
+    ending: state.ending === 'assault-pending' ? 'hospital' : state.ending },
     feedback: state.visit ? 'visit-interrupted' : 'shift-finished' };
 }
 
 function transition(state: GameState, action: GameAction): ActionResult {
   const unchanged = (feedback: GameFeedback): ActionResult => ({ state, feedback });
   const changed = (changes: Partial<GameState>, feedback: GameFeedback): ActionResult => ({ state: { ...state, ...changes }, feedback });
+
+  if (state.ending === 'hospital') return unchanged('game-over');
 
   if (state.phase === 'intro') {
     if (action === 'skip-intro' || (action === 'advance-intro' && state.introStep === INTRO_SLIDES - 1)) {
@@ -211,15 +229,21 @@ function transition(state: GameState, action: GameAction): ActionResult {
         clockMinutes: SHIFT_END_MINUTES, daily: emptyConsequences(), money: result.settlement.closingBalance }, 'next-day');
     }
     const generated = createRoster(state.rngState);
+    const rule = directiveForDay(day);
+    if (rule && (state.papers.length >= GAME_LIMITS.papers || state.nextPaperId > GAME_LIMITS.paperId)) return unchanged('limit-reached');
+    const papers: Paper[] = rule ? [...state.papers, { id: state.nextPaperId, kind: 'directive', patientId: null, day,
+      location: 'desk', sender: rule === 'specialist' ? 'chamber' : 'zus', rule, opened: false }] : state.papers;
     return changed({ phase: 'cabinet', day, previousMonthBalance, shiftCompleted: 0, clockMinutes: ARRIVAL_MINUTES,
-      roster: generated.roster, rngState: generated.seed, daily: emptyConsequences(), settlement: null }, 'next-day');
+      roster: arrangeProgressionRoster(generated.roster, day), rngState: generated.seed, daily: emptyConsequences(), settlement: null,
+      papers, nextPaperId: state.nextPaperId + Number(rule !== null) }, 'next-day');
   }
   if (state.phase === 'home') return unchanged('none');
   if (action === 'end-day') {
     if (!canEndDay(state)) return unchanged('shift-unfinished');
     const result = settleDay(state);
     if (Math.abs(result.settlement.closingBalance) > GAME_LIMITS.money) return unchanged('limit-reached');
-    return changed({ ...result, phase: 'home', clockMinutes: Math.max(SHIFT_END_MINUTES, state.clockMinutes), money: result.settlement.closingBalance }, 'shift-finished');
+    return changed({ ...result, phase: 'home', clockMinutes: Math.max(SHIFT_END_MINUTES, state.clockMinutes), money: result.settlement.closingBalance,
+      ending: state.ending === 'assault-pending' ? 'hospital' : state.ending }, 'shift-finished');
   }
   if (action === 'advance-intro' || action === 'skip-intro') return unchanged('none');
   const spend = (minutes: number): number => Math.min(CLINIC_CLOSE_MINUTES, state.clockMinutes + minutes);
@@ -238,10 +262,11 @@ function transition(state: GameState, action: GameAction): ActionResult {
     if (!storing && clips === 0) return unchanged('item-missing');
     return changed({ drawerItems: { manual, clips: clips + (storing ? 1 : -1) }, clockMinutes: spend(ACTION_MINUTES.handling) }, storing ? 'item-stored' : 'item-retrieved');
   }
-  if (action === 'use-phone') return changed({ clockMinutes: spend(ACTION_MINUTES.handling) }, 'phone-unavailable');
+  if (action === 'use-phone') return changed({ clockMinutes: spend(ACTION_MINUTES.handling) }, workDayNumber(state.day) >= 4 ? 'phone-ready' : 'phone-unavailable');
   if (action === 'take-paper') {
     if (!canAddPaper()) return unchanged('limit-reached');
     return addPaper({ id: state.nextPaperId, kind: 'note', day: state.day, patientId: null, location: 'desk', additionalWritten: false,
+      calls: emptyCalls(), bribe: false,
       examinationOrder: [], results: { general: null, vision: null, pressure: null, pressureReadings: [], weight: null, height: null } },
     { clockMinutes: spend(ACTION_MINUTES.handling) }, 'paper-taken');
   }
@@ -299,7 +324,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
     }
     if (action.type === 'clip-paper') return applyAction(state, { type: 'clip-document', documentId: paper.id });
     if (action.type === 'open-letter') {
-      if (paper.kind !== 'letter') return unchanged('paper-missing');
+      if (paper.kind !== 'letter' && paper.kind !== 'directive') return unchanged('paper-missing');
       return paper.opened ? unchanged('letter-opened') : updatePaper({ ...paper, opened: true }, 'letter-opened');
     }
     if (paper.kind !== 'note') return unchanged('paper-missing');
@@ -309,7 +334,8 @@ function transition(state: GameState, action: GameAction): ActionResult {
     if (paper.patientId !== null && (paper.patientId !== visit.patientId || paper.day !== state.day)) return unchanged('paper-wrong-patient');
     if (!visit.generalTested) return unchanged('results-needed');
     if (paper.additionalWritten) return unchanged('paper-written');
-    return updatePaper({ ...paper, patientId: visit.patientId, day: state.day, additionalWritten: true, results: noteResults(visit), examinationOrder: [...visit.examinationOrder] }, 'paper-written');
+    return updatePaper({ ...paper, patientId: visit.patientId, day: state.day, additionalWritten: true, results: noteResults(visit), examinationOrder: [...visit.examinationOrder],
+      calls: { ...visit.calls }, bribe: visit.bribe !== 'none' }, 'paper-written');
   }
   if (action === 'handle-item' || action === 'read-manual') {
     return changed({ clockMinutes: spend(action === 'read-manual' ? ACTION_MINUTES.reading : ACTION_MINUTES.handling) }, 'none');
@@ -322,19 +348,50 @@ function transition(state: GameState, action: GameAction): ActionResult {
     if (state.visit) return unchanged('patient-waiting');
     if (isShiftFinished(state)) return unchanged('shift-finished');
     if (state.patientsProcessed === GAME_LIMITS.patients) return unchanged('limit-reached');
+    const details = createAppointmentDetails(state, state.roster[state.shiftCompleted]!);
     const visit: Visit = {
       patientId: state.roster[state.shiftCompleted]!, document: 'tray', certificateTaken: false, certificateNamed: false, generalTested: false, examinationOrder: [], visionTested: false, pressureTested: false, pressureLatest: null, pressureReadings: [], measurementsTaken: false, decision: null,
+      referral: details.referral, specialist: details.specialist, specialistTaken: false, calls: emptyCalls(), bribe: details.bribe,
     };
-    return changed({ clockMinutes: Math.max(SHIFT_START_MINUTES, spend(ACTION_MINUTES.handling)), visit,
+    return changed({ clockMinutes: Math.max(SHIFT_START_MINUTES, spend(ACTION_MINUTES.handling)), visit, rngState: details.seed,
       papers: recordResults(state.papers, visit, state.day) }, 'patient-called');
   }
 
   const visit = state.visit;
   if (!visit) return unchanged('no-patient');
+  if (action === 'accept-bribe' || action === 'return-bribe') {
+    if (visit.bribe === 'none') return unchanged('bribe-missing');
+    if (action === 'accept-bribe') {
+      if (visit.bribe === 'accepted') return unchanged('bribe-accepted');
+      if (visit.bribe !== 'offered') return unchanged('bribe-missing');
+      if (state.money > GAME_LIMITS.money - 100) return unchanged('limit-reached');
+      return changed({ money: state.money + 100, visit: { ...visit, bribe: 'accepted' }, clockMinutes: spend(ACTION_MINUTES.handling) }, 'bribe-accepted');
+    }
+    if (visit.bribe === 'returned') return unchanged('bribe-returned');
+    return changed({ money: state.money - (visit.bribe === 'accepted' ? 100 : 0), visit: { ...visit, bribe: 'returned' },
+      clockMinutes: spend(ACTION_MINUTES.handling) }, 'bribe-returned');
+  }
+  if (action === 'take-specialist') {
+    if (!visit.specialist || workDayNumber(state.day) < 4) return unchanged('specialist-missing');
+    if (visit.specialistTaken) return unchanged('specialist-taken');
+    if (!canAddPaper()) return unchanged('limit-reached');
+    return addPaper({ id: state.nextPaperId, kind: 'specialist', patientId: visit.patientId, day: state.day, location: 'desk',
+      certificate: { ...visit.specialist } }, { visit: { ...visit, specialistTaken: true }, clockMinutes: spend(ACTION_MINUTES.handling) }, 'specialist-taken');
+  }
+  if (action === 'call-specialist' || action === 'call-employer') {
+    if (workDayNumber(state.day) < (action === 'call-specialist' ? 4 : 5)) return unchanged('phone-unavailable');
+    const documentKind = action === 'call-specialist' ? 'specialist' : 'referral';
+    if (!state.papers.some(paper => paper.kind === documentKind && paper.patientId === visit.patientId
+      && paper.day === state.day && paper.location === 'desk')) return unchanged('document-needed');
+    const valid = action === 'call-specialist' ? specialistIsValid(visit) : visit.referral.authentic;
+    const updated = { ...visit, calls: { ...visit.calls, [action === 'call-specialist' ? 'specialist' : 'employer']: valid } };
+    return changed({ visit: updated, papers: recordResults(state.papers, updated, state.day), clockMinutes: spend(3) },
+      action === 'call-specialist' ? valid ? 'specialist-valid' : 'specialist-invalid' : valid ? 'employer-confirmed' : 'employer-denied');
+  }
   if (action === 'take-document') {
     if (visit.document === 'desk') return unchanged('document-taken');
     if (!canAddPaper()) return unchanged('limit-reached');
-    return addPaper({ id: state.nextPaperId, kind: 'referral', patientId: visit.patientId, day: state.day, location: 'desk' },
+    return addPaper({ id: state.nextPaperId, kind: 'referral', patientId: visit.patientId, day: state.day, location: 'desk', details: { ...visit.referral } },
       { clockMinutes: spend(ACTION_MINUTES.handling), visit: { ...visit, document: 'desk' } }, 'document-taken');
   }
   const isExamination = action === 'run-general' || action === 'run-vision' || action === 'run-pressure' || action === 'run-measurements';
@@ -343,7 +400,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
     if (visit.certificateTaken) return unchanged('certificate-taken');
     return changed({ clockMinutes: spend(ACTION_MINUTES.handling), visit: { ...visit, certificateTaken: true } }, 'certificate-taken');
   }
-  const patient = PATIENTS[visit.patientId]!;
+  const patient = patientForAppointment(visit);
   const examination = (id: ExaminationId, changes: Partial<Visit>, minutes: number, feedback: GameFeedback): ActionResult => {
     const updated = { ...visit, ...changes, examinationOrder: visit.examinationOrder.includes(id) ? [...visit.examinationOrder] : [...visit.examinationOrder, id] };
     return changed({ clockMinutes: spend(minutes), visit: updated, papers: recordResults(state.papers, updated, state.day) }, feedback);
@@ -386,15 +443,20 @@ function transition(state: GameState, action: GameAction): ActionResult {
   }
   if (!visit.decision) return unchanged('stamp-needed');
   if (!visit.certificateNamed) return unchanged('certificate-name-needed');
-  const wrongDecision = visit.decision !== patient.expectedDecision;
+  const wrongDecision = visit.decision !== expectedVisitDecision(state);
   const correct = hasRequiredExaminations(patient, visit) && !wrongDecision;
   if (state.patientsProcessed === GAME_LIMITS.patients) return unchanged('limit-reached');
   const draw = wrongDecision ? randomStep(state.rngState) : null;
-  const undetected = visit.decision === 'fit' ? 0.35 : patient.managerial ? 0.03 : 0.25;
+  // Guessing wrongly about an illegible seal is the ZUS authenticity offence,
+  // including refusing a genuine referral whose patient otherwise qualifies.
+  const authenticityMistake = wrongDecision && visit.decision === 'unfit' && workDayNumber(state.day) >= 5
+    && visit.referral.seal === 'unclear' && visit.referral.authentic;
+  const zusOffence = visit.decision === 'fit' || authenticityMistake;
+  const undetected = zusOffence ? visit.bribe !== 'none' ? 0.7 : 0.35 : patient.managerial ? 0.03 : 0.25;
   const detected = wrongDecision && draw!.value >= undetected;
   if (detected && !canAddPaper()) return unchanged('limit-reached');
   let daily = state.daily, insuranceRate = state.insuranceRate;
-  if (detected && visit.decision === 'fit') {
+  if (detected && zusOffence) {
     daily = { ...daily, zusCases: daily.zusCases + 1, fines: daily.fines + (daily.zusCases === 0 ? 100 : 400) };
   } else if (detected) {
     const increase = insuranceRate === BASE_INSURANCE ? 50 : 100;
@@ -403,6 +465,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
     daily = { ...daily, refusals: daily.refusals + 1, insuranceIncrease: daily.insuranceIncrease + increase };
   }
   const completion: Partial<GameState> = {
+    ending: visit.bribe === 'accepted' && visit.decision === 'unfit' ? 'assault-pending' : state.ending,
     visit: null,
     shiftCompleted: state.shiftCompleted + 1,
     clockMinutes: spend(ACTION_MINUTES.handling),
@@ -411,7 +474,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
     paperClips: state.paperClips.map(group => group.filter(id => id !== 'certificate')).filter(group => group.length > 0),
   };
   const completed = detected ? addPaper({ id: state.nextPaperId, kind: 'letter', patientId: visit.patientId, day: state.day,
-    location: 'desk', sender: visit.decision === 'fit' ? 'zus' : 'employer', opened: false }, completion, 'patient-error')
+    location: 'desk', sender: zusOffence ? 'zus' : 'employer', opened: false }, completion, 'patient-error')
     : changed(completion, correct ? 'patient-cleared' : 'patient-completed');
   // Finishing the last visit closes the shift immediately; the view can still
   // animate the departing patient before presenting this settled home state.

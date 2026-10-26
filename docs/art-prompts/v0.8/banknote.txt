@@ -1,0 +1,8 @@
+Use case: historical-scene
+Asset type: transparent 92 by 42 pixel game sprite for the original 570x320 game Next, Please!
+Primary request: draw one old, slightly worn 100 zloty banknote with Ludwik Warynski, recognizable from the supplied historical reference, simplified to match the supplied subdued pixel-art clinic. It is a small illustrated prop for a bribery scene, not a photograph or a facsimile.
+Input images: Image 1 is the historical banknote appearance reference only. Image 2 is the clinic palette/style reference only. Do not reproduce their backgrounds.
+Composition: complete isolated flat horizontal banknote, directly overhead, straight edges, 138:63 aspect ratio. Pale yellowed cream paper, faded rusty red/orange ornamental central field, quieter pale area on the left, unmistakable dark brown youthful bearded Warynski portrait on the right, with small round spectacles, swept hair, narrow moustache and pointed short beard. Large clearly legible 100 in the upper middle and a smaller 100 lower left. At final 92x42 size portrait, 100 and red ornamental field must remain legible. Subtle central fold and a little corner wear, no torn missing parts.
+Style: deliberate crisp square-pixel clusters, coarse old-game pixel art, limited palette of cream, warm gray, muted ochre, dusty brick red, dark umber. No blur, no anti-aliasing, no glossy material. Original stylized interpretation.
+Text: only the denomination "100" should be legible. Other historical microprinting becomes unreadable pixel marks; no place names, no new dates.
+Constraints: one single banknote only; no hands, table, UI, shadows outside paper, unrelated objects, background, extra note or reverse side. Transparent alpha outside the paper.

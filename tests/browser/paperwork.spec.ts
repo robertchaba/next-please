@@ -1,7 +1,7 @@
 import { loadKnownQueue, knownQueueState } from './fixtures';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { isDocumentClipped, PATIENTS } from '../../src/core/game';
+import { isDocumentClipped, PATIENTS, applyAction, type GameAction } from '../../src/core/game';
 import { decodeSave, encodeSave } from '../../src/core/save';
 import { CABINET_HOTSPOTS } from '../../src/core/desk';
 
@@ -104,7 +104,15 @@ test('detected wrong decisions deliver the right sender and envelopes can be ope
   await enter(page);
   // Two known detection rolls exercise both letters without relying on the
   // fresh game's entropy. Load through the same validated save UI as a player.
-  const fixture = knownQueueState();
+  let fixture = knownQueueState();
+  for (let seed = 1; seed < 1000; seed++) {
+    const candidate = { ...fixture, rngState: seed };
+    let checked = candidate;
+    for (const decision of ['stamp-unfit', 'stamp-fit'] as const) {
+      for (const action of ['call-patient', 'take-document', 'take-certificate', 'write-certificate', decision, 'return-document'] as GameAction[]) checked = applyAction(checked, action).state;
+    }
+    if (checked.daily.refusals === 1 && checked.daily.zusCases === 1) { fixture = candidate; break; }
+  }
   await activate(page, 'saves');
   await page.locator('#save-input').setInputFiles({
     name: 'reported-cases.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(fixture)),

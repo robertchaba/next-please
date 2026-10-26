@@ -14,7 +14,7 @@ let creatorPhotograph: { image: HTMLCanvasElement; shadow: HTMLCanvasElement } |
 const introNames = ['scalpel', 'catheter', 'pen', 'stamp'] as const;
 const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate', 'clock',
   ...new Set(PATIENTS.map(patient => patient.portraitId)), 'workstation-phone', 'workstation-clips', 'workstation-clip', 'workstation-rack', 'workstation-paper',
-  'workstation-calendar', 'imprint-fit-pl', 'imprint-unfit-pl', 'imprint-fit-en', 'imprint-unfit-en', 'document-seal', 'document-seal-zus', 'document-seal-employer', 'document-signature'] as const;
+  'workstation-calendar', 'imprint-fit-pl', 'imprint-unfit-pl', 'imprint-fit-en', 'imprint-unfit-en', 'document-seal', 'document-seal-zus', 'document-seal-employer', 'document-signature', 'document-seal-chamber', 'document-seal-employer-unclear', 'banknote-100'] as const;
 export const PATIENT_MOTION_FRAMES = 12;
 
 export async function loadClinicArt(): Promise<void> {
@@ -242,7 +242,7 @@ export function drawDecisionImprint(ctx: CanvasRenderingContext2D, decision: 'fi
   asset(ctx, `sprites/imprint-${decision}-${locale}`, x, y, w, h);
 }
 
-export function drawDocumentSeal(ctx: CanvasRenderingContext2D, x: number, y: number, size = 22, kind: 'clinic' | 'employer' | 'zus' = 'clinic'): void {
+export function drawDocumentSeal(ctx: CanvasRenderingContext2D, x: number, y: number, size = 22, kind: 'clinic' | 'employer' | 'zus' | 'chamber' = 'clinic'): void {
   const name = kind === 'clinic' ? 'document-seal' : `document-seal-${kind}`;
   asset(ctx, `sprites/${name}`, x, y, kind === 'zus' ? Math.round(size * 1.5) : size, size);
 }
@@ -282,4 +282,12 @@ export type HomeIllustration = 'home-evening' | 'homecoming' | 'going-to-work' |
 export function drawHomeIllustration(ctx: CanvasRenderingContext2D, scene: HomeIllustration): void {
   rect(ctx, 0, 0, 570, 320, '#171e18');
   asset(ctx, scene, 0, 0, 570, 320);
+}
+
+export function drawUnclearSeal(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  asset(ctx, 'sprites/document-seal-employer-unclear', x, y, size, size);
+}
+
+export function drawBanknote(ctx: CanvasRenderingContext2D, x: number, y: number, w = 92, h = 42): void {
+  asset(ctx, 'sprites/banknote-100', x, y, w, h);
 }

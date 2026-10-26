@@ -1,12 +1,21 @@
 import { isWeekend } from './calendar';
 import { Gunzip, gzipSync, strToU8 } from 'fflate';
-import { ARRIVAL_MINUTES, CLINIC_CLOSE_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_START_MINUTES, type GameState, type Visit, type Paper, type DocumentId } from './game';
+import { ARRIVAL_MINUTES, CLINIC_CLOSE_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_START_MINUTES, type GameState as CurrentGameState, type Visit as CurrentVisit, type Paper as CurrentPaper, type DocumentId } from './game';
 
-import { CHARACTER_COUNT, disqualifyingPressure, type ExaminationId, type PressureValues } from './patients';
+import { CHARACTER_COUNT, JOBS, disqualifyingPressure, type ExaminationId, type PressureValues, type PatientCase } from './patients';
+import { defaultReferral, directiveForDay, emptyCalls, effectivePatient, employerPhone, specialistPhone, workDayNumber, type ReferralDetails, type SpecialistCertificate, type PhoneConclusions } from './progression';
 import { BASE_INSURANCE, BASE_PAY, PATIENT_BONUS, type DaySettlement, type DailyConsequences } from './economy';
 
 export { createInitialState } from './game';
 export type { GameState } from './game';
+
+/** Freeze the pre-progression schema so legacy validators keep exact bounds. */
+type Visit = Omit<CurrentVisit, 'referral' | 'specialist' | 'specialistTaken' | 'calls' | 'bribe'>;
+type HistoricalPaper<T> = T extends { kind: 'note' } ? Omit<T, 'calls' | 'bribe'>
+  : T extends { kind: 'referral' } ? Omit<T, 'details'>
+  : T extends { kind: 'letter' } ? T : never;
+type Paper = HistoricalPaper<CurrentPaper>;
+type GameState = Omit<CurrentGameState, 'ending' | 'visit' | 'papers'> & { visit: Visit | null; papers: Paper[] };
 
 interface LegacyState {
   day: number;
@@ -39,11 +48,11 @@ type GameStateV5 = Omit<GameStateV8, 'visit' | 'paperClips' | 'papers' | 'drawer
 type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<VisitV10, 'certificateNamed'> | null };
 type GameStateV7 = Omit<GameStateV8, 'drawerItems'>;
 
-interface SaveV15 {
+interface SaveV16 {
   game: 'next-please';
-  version: 15;
+  version: 16;
   savedAt: string;
-  state: GameState;
+  state: CurrentGameState;
 }
 
 export type SaveErrorCode =
@@ -419,7 +428,7 @@ function validateStateV8(value: unknown): GameStateV8 {
 
 /** Frozen original queue: legacy appointments retain their original positions. */
 function legacyInitialState(): GameState {
-  return { ...createInitialState(0x4e505301), rngState: 3477621340,
+  return { ...createInitialState(0x4e505301), visit: null, papers: [], rngState: 3477621340,
     roster: [0, 1, 2, 62, 49, 75, 81, 66, 98, 4, 67, 43, 34, 28, 42, 58, 15, 21, 89, 26, 93, 52, 100, 8, 72, 86, 14, 38] };
 }
 
@@ -602,9 +611,9 @@ function validateExaminationOrder(value: unknown, completed: Record<ExaminationI
   return [...value] as ExaminationId[];
 }
 
-function validatePressureReadings(value: unknown, patientId: number | null, measured: boolean): PressureValues[] {
+function validatePressureReadings(value: unknown, patientId: number | null, measured: boolean, override?: PatientCase): PressureValues[] {
   if (!Array.isArray(value) || value.length > 2 || (value.length > 0) !== measured || (measured && patientId === null)) throw new SaveError('invalid-state');
-  const patient = patientId === null ? null : PATIENTS[patientId]!;
+  const patient = patientId === null ? null : override ?? PATIENTS[patientId]!;
   const readings = value.map((reading): PressureValues => {
     if (!patient || !isRecord(reading) || !hasOnlyKeys(reading, ['systolic', 'diastolic'])
       || !isIntegerInRange(reading.systolic, patient.pressureValues.systolic - 3, patient.pressureValues.systolic + 3)
@@ -616,7 +625,7 @@ function validatePressureReadings(value: unknown, patientId: number | null, meas
   return readings;
 }
 
-function validatePaperV11(value: unknown, day: number, version: 11 | 12 | 13 | 14 | 15): Paper {
+function validatePaperV11(value: unknown, day: number, version: 11 | 12 | 13 | 14 | 15, override?: PatientCase): Paper {
   const maxPatient = version >= 15 ? PATIENTS.length - 1 : version >= 13 ? V14_CASE_LIMIT : V12_CASE_LIMIT;
   if (!isRecord(value)) throw new SaveError('invalid-state');
   if (value.kind !== 'note') {
@@ -630,8 +639,8 @@ function validatePaperV11(value: unknown, day: number, version: 11 | 12 | 13 | 1
     || (value.patientId !== null && !isIntegerInRange(value.patientId, 0, maxPatient))) throw new SaveError('invalid-state');
   const results = value.results;
   if (!isRecord(results) || !hasOnlyKeys(results, ['general', 'vision', 'pressure', 'weight', 'height', ...(version >= 12 ? ['pressureReadings'] : [])])) throw new SaveError('invalid-state');
-  const patient = value.patientId === null ? null : PATIENTS[value.patientId]!;
-  const pressureReadings = version >= 12 ? validatePressureReadings(results.pressureReadings, value.patientId as number | null, results.pressure !== null)
+  const patient = value.patientId === null ? null : override ?? PATIENTS[value.patientId]!;
+  const pressureReadings = version >= 12 ? validatePressureReadings(results.pressureReadings, value.patientId as number | null, results.pressure !== null, override)
     : results.pressure !== null && patient ? [{ ...patient.pressureValues }] : [];
   const lastPressure = pressureReadings.at(-1);
   if ((results.general !== null && (!patient || results.general !== patient.general))
@@ -657,7 +666,7 @@ function validatePaperV11(value: unknown, day: number, version: 11 | 12 | 13 | 1
 }
 
 /** Validate new clinical data, then reuse unchanged ledger and inventory checks. */
-function validateStateV11(value: unknown, version: 11 | 12 | 13 | 14 | 15 = 11): GameState {
+function validateStateV11(value: unknown, version: 11 | 12 | 13 | 14 | 15 = 11, overrides: { visit?: PatientCase; notes?: Map<number, PatientCase> } = {}): GameState {
   const maxPatient = version >= 15 ? PATIENTS.length - 1 : version >= 13 ? V14_CASE_LIMIT : V12_CASE_LIMIT;
   if (!isRecord(value) || !Array.isArray(value.papers) || value.papers.length > GAME_LIMITS.papers
     || !isIntegerInRange(value.day, 1, GAME_LIMITS.day)) throw new SaveError('invalid-state');
@@ -676,10 +685,10 @@ function validateStateV11(value: unknown, version: 11 | 12 | 13 | 14 | 15 = 11):
       || (version === 11 && entry.generalTested && entry.document !== 'desk')) throw new SaveError('invalid-state');
     examinationOrder = validateExaminationOrder(entry.examinationOrder, { general: entry.generalTested,
       vision: entry.visionTested, pressure: entry.pressureTested, measurements: entry.measurementsTaken });
-    pressureReadings = version >= 12 ? validatePressureReadings(entry.pressureReadings, entry.patientId, entry.pressureTested)
+    pressureReadings = version >= 12 ? validatePressureReadings(entry.pressureReadings, entry.patientId, entry.pressureTested, overrides.visit)
       : entry.pressureTested ? [{ ...PATIENTS[entry.patientId]!.pressureValues }] : [];
     pressureLatest = version >= 12
-      ? validatePressureReadings(entry.pressureLatest === null ? [] : [entry.pressureLatest], entry.patientId, entry.pressureTested)[0] ?? null
+      ? validatePressureReadings(entry.pressureLatest === null ? [] : [entry.pressureLatest], entry.patientId, entry.pressureTested, overrides.visit)[0] ?? null
       : pressureReadings[0] ? { ...pressureReadings[0] } : null;
     if (pressureReadings.length === 1 && (pressureLatest?.systolic !== pressureReadings[0]!.systolic
       || pressureLatest.diastolic !== pressureReadings[0]!.diastolic)) throw new SaveError('invalid-state');
@@ -687,7 +696,7 @@ function validateStateV11(value: unknown, version: 11 | 12 | 13 | 14 | 15 = 11):
     generalTested = general;
     oldVisit = previous;
   }
-  const papers = value.papers.map(paper => validatePaperV11(paper, value.day as number, version));
+  const papers = value.papers.map(paper => validatePaperV11(paper, value.day as number, version, isRecord(paper) && typeof paper.id === 'number' ? overrides.notes?.get(paper.id) : undefined));
   const oldPapers: PaperV10[] = papers.map(paper => {
     if (paper.kind !== 'note') return paper;
     const { examinationOrder: _order, ...previous } = paper;
@@ -719,12 +728,182 @@ function validateStateV11(value: unknown, version: 11 | 12 | 13 | 14 | 15 = 11):
   return { ...previous, visit, papers };
 }
 
-export function encodeSave(state: GameState): Uint8Array {
-  const envelope: SaveV15 = {
+/** Legacy appointments keep valid paperwork and never acquire invented offences. */
+function migrateStateV15(state: GameState): CurrentGameState {
+  return { ...state, ending: null,
+    visit: state.visit ? { ...state.visit, referral: defaultReferral(state.day, state.visit.patientId),
+      specialist: null, specialistTaken: false, calls: emptyCalls(), bribe: 'none' } : null,
+    papers: state.papers.map((paper): CurrentPaper => paper.kind === 'referral'
+      ? { ...paper, details: defaultReferral(paper.day, paper.patientId) }
+      : paper.kind === 'note' ? { ...paper, calls: emptyCalls(), bribe: false } : paper) };
+}
+
+function validateCalls(value: unknown, day: number, patientId: number | null): PhoneConclusions {
+  if (!isRecord(value) || !hasOnlyKeys(value, ['specialist', 'employer'])
+    || (value.specialist !== null && typeof value.specialist !== 'boolean')
+    || (value.employer !== null && typeof value.employer !== 'boolean')
+    || (value.specialist !== null && (patientId === null || workDayNumber(day) < 4))
+    || (value.employer !== null && (patientId === null || workDayNumber(day) < 5))) throw new SaveError('invalid-state');
+  return { specialist: value.specialist, employer: value.employer };
+}
+
+function validateReferral(value: unknown, day: number, patientId: number): ReferralDetails {
+  if (!isRecord(value) || !hasOnlyKeys(value, ['ageDays', 'seal', 'authentic', 'phone'])
+    || !isIntegerInRange(value.ageDays, 0, 10)
+    || (value.seal !== 'clear' && value.seal !== 'missing' && value.seal !== 'unclear')
+    || typeof value.authentic !== 'boolean' || value.phone !== employerPhone(patientId)
+    || (value.seal === 'clear' && !value.authentic) || (value.seal === 'missing' && value.authentic)
+    || (workDayNumber(day) < 5 && value.seal !== 'clear')) throw new SaveError('invalid-state');
+  return { ageDays: value.ageDays, seal: value.seal, authentic: value.authentic, phone: value.phone as string };
+}
+
+function validateSpecialist(value: unknown, day: number, patientId: number): SpecialistCertificate {
+  if (!isRecord(value) || !hasOnlyKeys(value, ['jobId', 'phone']) || workDayNumber(day) < 4
+    || PATIENTS[patientId]!.pressure !== 'refer' || !isIntegerInRange(value.jobId, 0, JOBS.length - 1)
+    || value.phone !== specialistPhone(patientId)) throw new SaveError('invalid-state');
+  return { jobId: value.jobId, phone: value.phone as string };
+}
+
+/** Reuse the frozen ledger/clinical checks after validating all progression data. */
+function validateStateV16(value: unknown): CurrentGameState {
+  const fail = (): never => { throw new SaveError('invalid-state'); };
+  if (!isRecord(value) || !isIntegerInRange(value.day, 1, GAME_LIMITS.day)
+    || !Array.isArray(value.papers) || value.papers.length > GAME_LIMITS.papers
+    || !Array.isArray(value.paperClips) || value.paperClips.length > value.papers.length + 1
+    || !isIntegerInRange(value.nextPaperId, 1, GAME_LIMITS.paperId + 1)
+    || (value.ending !== null && value.ending !== 'assault-pending' && value.ending !== 'hospital')
+    || (value.ending !== null && (workDayNumber(value.day) < 6 || !isIntegerInRange(value.shiftCompleted, 1, CHARACTER_COUNT)))
+    || (value.ending === 'hospital' && value.phase !== 'home')
+    || (value.ending === 'assault-pending' && value.phase !== 'cabinet')) return fail();
+  const { ending, ...historicalState } = value;
+  let visitExtras: Pick<CurrentVisit, 'referral' | 'specialist' | 'specialistTaken' | 'calls' | 'bribe'> | null = null;
+  let visitOverride: PatientCase | undefined;
+  let oldVisit: unknown = null;
+  if (value.visit !== null) {
+    const entry = value.visit;
+    if (!isRecord(entry) || !isIntegerInRange(entry.patientId, 0, PATIENTS.length - 1)
+      || typeof entry.specialistTaken !== 'boolean'
+      || !['none', 'offered', 'accepted', 'returned'].includes(entry.bribe as string)
+      || (entry.bribe !== 'none' && workDayNumber(value.day) < 6)) return fail();
+    const referral = validateReferral(entry.referral, value.day, entry.patientId);
+    const specialist = entry.specialist === null ? null : validateSpecialist(entry.specialist, value.day, entry.patientId);
+    const calls = validateCalls(entry.calls, value.day, entry.patientId);
+    if ((entry.specialistTaken && !specialist)
+      || (calls.specialist !== null && (!specialist || !entry.specialistTaken || calls.specialist !== (specialist.jobId === PATIENTS[entry.patientId]!.jobId)))
+      || (calls.employer !== null && (entry.document !== 'desk' || calls.employer !== referral.authentic))
+      || (entry.bribe !== 'none' && (specialist !== null || referral.ageDays > 3 || referral.seal !== 'clear'))) return fail();
+    visitExtras = { referral, specialist, specialistTaken: entry.specialistTaken, calls, bribe: entry.bribe as CurrentVisit['bribe'] };
+    visitOverride = effectivePatient(entry.patientId, entry.bribe !== 'none');
+    const { referral: _referral, specialist: _specialist, specialistTaken: _taken, calls: _calls, bribe: _bribe, ...old } = entry;
+    oldVisit = old;
+  }
+  const noteExtras = new Map<number, { calls: PhoneConclusions; bribe: boolean }>();
+  const noteOverrides = new Map<number, PatientCase>();
+  const referralExtras = new Map<number, ReferralDetails>();
+  const letterSenders = new Map<number, 'zus' | 'employer'>();
+  const addedPapers = new Map<number, CurrentPaper>();
+  const paperLocations = new Map<number, 'desk' | 'drawer'>();
+  const uniqueKinds = new Set<string>();
+  const oldPapers: unknown[] = [];
+  const rawPapers = value.papers;
+  for (const raw of rawPapers) {
+    if (!isRecord(raw) || !isIntegerInRange(raw.id, 1, GAME_LIMITS.paperId) || raw.id >= value.nextPaperId
+      || paperLocations.has(raw.id) || !isIntegerInRange(raw.day, 1, value.day)
+      || (raw.location !== 'desk' && raw.location !== 'drawer')) return fail();
+    paperLocations.set(raw.id, raw.location);
+    if (raw.kind === 'directive') {
+      const key = `${raw.day}:directive`;
+      if (!hasOnlyKeys(raw, ['id', 'kind', 'day', 'patientId', 'location', 'sender', 'rule', 'opened'])
+        || raw.patientId !== null || typeof raw.opened !== 'boolean' || raw.rule !== directiveForDay(raw.day)
+        || !['dates', 'specialist', 'authenticity'].includes(raw.rule as string)
+        || raw.sender !== (raw.rule === 'specialist' ? 'chamber' : 'zus') || uniqueKinds.has(key)) return fail();
+      uniqueKinds.add(key);
+      addedPapers.set(raw.id, { id: raw.id, kind: 'directive', day: raw.day, patientId: null, location: raw.location,
+        sender: raw.sender as 'zus' | 'chamber', rule: raw.rule as 'dates' | 'specialist' | 'authenticity', opened: raw.opened });
+      continue;
+    }
+    if (raw.kind === 'specialist') {
+      const key = `${raw.day}:${raw.patientId}:specialist`;
+      if (!hasOnlyKeys(raw, ['id', 'kind', 'day', 'patientId', 'location', 'certificate'])
+        || !isIntegerInRange(raw.patientId, 0, PATIENTS.length - 1) || uniqueKinds.has(key)) return fail();
+      uniqueKinds.add(key);
+      const certificate = validateSpecialist(raw.certificate, raw.day, raw.patientId);
+      addedPapers.set(raw.id, { id: raw.id, kind: 'specialist', day: raw.day, patientId: raw.patientId, location: raw.location, certificate });
+      continue;
+    }
+    if (raw.kind === 'note') {
+      if (typeof raw.bribe !== 'boolean' || (raw.patientId !== null && !isIntegerInRange(raw.patientId, 0, PATIENTS.length - 1))
+        || (raw.bribe && (raw.patientId === null || workDayNumber(raw.day) < 6))) return fail();
+      const calls = validateCalls(raw.calls, raw.day, raw.patientId as number | null);
+      noteExtras.set(raw.id, { calls, bribe: raw.bribe });
+      if (raw.patientId !== null) noteOverrides.set(raw.id, effectivePatient(raw.patientId as number, raw.bribe));
+      const { calls: _calls, bribe: _bribe, ...old } = raw;
+      oldPapers.push(old);
+    } else if (raw.kind === 'referral') {
+      if (!isIntegerInRange(raw.patientId, 0, PATIENTS.length - 1)) return fail();
+      referralExtras.set(raw.id, validateReferral(raw.details, raw.day, raw.patientId));
+      const { details: _details, ...old } = raw;
+      oldPapers.push(old);
+    } else if (raw.kind === 'letter') {
+      if (!isIntegerInRange(raw.patientId, 0, PATIENTS.length - 1) || (raw.sender !== 'zus' && raw.sender !== 'employer')) return fail();
+      const historicalSender = PATIENTS[raw.patientId]!.expectedDecision === 'fit' ? 'employer' : 'zus';
+      if (workDayNumber(raw.day) < 3 && raw.sender !== historicalSender) return fail();
+      letterSenders.set(raw.id, raw.sender);
+      // Since day 3 documents can change fitness independently of the catalog.
+      // Preserve the original sender after the frozen inventory checks.
+      oldPapers.push({ ...raw, sender: historicalSender });
+    } else oldPapers.push(raw);
+  }
+  const clipped = new Set<DocumentId>();
+  const paperClips: DocumentId[][] = value.paperClips.map(raw => {
+    if (!Array.isArray(raw) || !raw.length || raw.length > rawPapers.length + 1) return fail();
+    let location: 'desk' | 'drawer' | undefined;
+    return raw.map((id: unknown): DocumentId => {
+      if (id !== 'certificate' && !isIntegerInRange(id, 1, GAME_LIMITS.paperId)) return fail();
+      if (clipped.has(id)) return fail();
+      clipped.add(id);
+      const nextLocation = id === 'certificate' ? (isRecord(value.visit) && value.visit.certificateTaken ? 'desk' : undefined) : paperLocations.get(id);
+      if (!nextLocation || (location && location !== nextLocation)) return fail();
+      location = nextLocation;
+      return id;
+    });
+  });
+  const oldClips = paperClips.map(group => group.filter(id => id === 'certificate' || !addedPapers.has(id))).filter(group => group.length);
+  const previous = validateStateV11({ ...historicalState, visit: oldVisit, papers: oldPapers, paperClips: oldClips }, 15,
+    { visit: visitOverride, notes: noteOverrides });
+  if (previous.phase === 'intro' && addedPapers.size) return fail();
+  const visit: CurrentVisit | null = previous.visit && visitExtras ? { ...previous.visit, ...visitExtras } : null;
+  const validatedPapers = new Map(previous.papers.map(paper => [paper.id, paper]));
+  const papers: CurrentPaper[] = rawPapers.map((raw): CurrentPaper => {
+    const id = (raw as Record<string, unknown>).id as number;
+    const added = addedPapers.get(id);
+    if (added) return added;
+    const paper = validatedPapers.get(id)!;
+    return paper.kind === 'note' ? { ...paper, ...noteExtras.get(id)! }
+      : paper.kind === 'referral' ? { ...paper, details: referralExtras.get(id)! }
+      : { ...paper, sender: letterSenders.get(id)! };
+  });
+  for (const paper of papers) {
+    if (paper.day !== previous.day || paper.kind === 'directive') continue;
+    if (paper.kind === 'specialist') {
+      const position = previous.roster.indexOf(paper.patientId);
+      const interrupted = previous.phase === 'home' && previous.clockMinutes === CLINIC_CLOSE_MINUTES;
+      if (position < 0 || position > previous.shiftCompleted || (position === previous.shiftCompleted && !visit && !interrupted)) return fail();
+      if (paper.patientId === visit?.patientId && (!visit.specialistTaken || JSON.stringify(paper.certificate) !== JSON.stringify(visit.specialist))) return fail();
+    }
+    if (paper.patientId !== visit?.patientId) continue;
+    if (paper.kind === 'referral' && JSON.stringify(paper.details) !== JSON.stringify(visit.referral)) return fail();
+    if (paper.kind === 'note' && (paper.bribe !== (visit.bribe !== 'none') || paper.calls.specialist !== visit.calls.specialist || paper.calls.employer !== visit.calls.employer)) return fail();
+  }
+  return { ...previous, ending: ending as CurrentGameState['ending'], visit, papers, paperClips };
+}
+
+export function encodeSave(state: CurrentGameState): Uint8Array {
+  const envelope: SaveV16 = {
     game: 'next-please',
-    version: 15,
+    version: 16,
     savedAt: new Date().toISOString(),
-    state: validateStateV11(state, 15),
+    state: validateStateV16(state),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -812,7 +991,7 @@ function decompressSave(bytes: Uint8Array): Uint8Array {
   return result;
 }
 
-export function decodeSave(bytes: Uint8Array): GameState {
+export function decodeSave(bytes: Uint8Array): CurrentGameState {
   const expanded = decompressSave(bytes);
   let envelope: unknown;
   try {
@@ -823,7 +1002,7 @@ export function decodeSave(bytes: Uint8Array): GameState {
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11 && envelope.version !== 12 && envelope.version !== 13 && envelope.version !== 14 && envelope.version !== 15) throw new SaveError('unsupported-version');
+  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11 && envelope.version !== 12 && envelope.version !== 13 && envelope.version !== 14 && envelope.version !== 15 && envelope.version !== 16) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -832,26 +1011,32 @@ export function decodeSave(bytes: Uint8Array): GameState {
   ) {
     throw new SaveError('invalid-file');
   }
-  if (envelope.version === 1) {
+  if (envelope.version === 16) return validateStateV16(envelope.state);
+  return migrateStateV15(decodeLegacyState(envelope.state, envelope.version as number));
+}
+
+function decodeLegacyState(value: unknown, version: number): GameState {
+  if (version === 1) {
     return {
-      ...legacyInitialState(), ...validateStateV1(envelope.state),
+      ...legacyInitialState(), ...validateStateV1(value),
       phase: 'cabinet', introStep: INTRO_SLIDES - 1,
     };
   }
-  if (envelope.version === 2) return migrateStateV10(migrateStateV8(migrateStateV7(migrateStateV6(migrateStateV5(migrateStateV4(migrateStateV3(migrateStateV2(validateStateV2(envelope.state)))))))));
-  if (envelope.version === 3) return migrateStateV10(migrateStateV8(migrateStateV7(migrateStateV6(migrateStateV5(migrateStateV4(migrateStateV3(validateStateV3(envelope.state))))))));
-  if (envelope.version === 4) return migrateStateV10(migrateStateV8(migrateStateV7(migrateStateV6(migrateStateV5(migrateStateV4(validateStateV4(envelope.state)))))));
-  if (envelope.version === 5) return migrateStateV10(migrateStateV8(migrateStateV7(migrateStateV6(migrateStateV5(validateStateV5(envelope.state))))));
-  if (envelope.version === 6) return migrateStateV10(migrateStateV8(migrateStateV7(migrateStateV6(validateStateV6(envelope.state)))));
-  if (envelope.version === 7) return migrateStateV10(migrateStateV8(migrateStateV7(validateStateV7(envelope.state))));
-  if (envelope.version === 8) return migrateStateV10(migrateStateV8(validateStateV8(envelope.state)));
-  if (envelope.version === 11) return validateStateV11(envelope.state);
-  if (envelope.version === 12 || envelope.version === 13 || envelope.version === 14 || envelope.version === 15) return validateStateV11(envelope.state, envelope.version);
-  return migrateStateV10(validateBudgetState(envelope.state, envelope.version));
+  if (version === 2) return migrateStateV10(migrateStateV8(migrateStateV7(migrateStateV6(migrateStateV5(migrateStateV4(migrateStateV3(migrateStateV2(validateStateV2(value)))))))));
+  if (version === 3) return migrateStateV10(migrateStateV8(migrateStateV7(migrateStateV6(migrateStateV5(migrateStateV4(migrateStateV3(validateStateV3(value))))))));
+  if (version === 4) return migrateStateV10(migrateStateV8(migrateStateV7(migrateStateV6(migrateStateV5(migrateStateV4(validateStateV4(value)))))));
+  if (version === 5) return migrateStateV10(migrateStateV8(migrateStateV7(migrateStateV6(migrateStateV5(validateStateV5(value))))));
+  if (version === 6) return migrateStateV10(migrateStateV8(migrateStateV7(migrateStateV6(validateStateV6(value)))));
+  if (version === 7) return migrateStateV10(migrateStateV8(migrateStateV7(validateStateV7(value))));
+  if (version === 8) return migrateStateV10(migrateStateV8(validateStateV8(value)));
+  if (version === 11) return validateStateV11(value);
+  if (version === 12 || version === 13 || version === 14 || version === 15) return validateStateV11(value, version);
+  if (version !== 9 && version !== 10) throw new SaveError('unsupported-version');
+  return migrateStateV10(validateBudgetState(value, version));
 }
 
 /** Call from a user action. Saves are downloaded; no account or server is used. */
-export function downloadSave(state: GameState): void {
+export function downloadSave(state: CurrentGameState): void {
   const bytes = new Uint8Array(encodeSave(state));
   const url = URL.createObjectURL(new Blob([bytes], { type: 'application/gzip' }));
   const link = document.createElement('a');
@@ -864,7 +1049,7 @@ export function downloadSave(state: GameState): void {
   window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
-export async function importSave(file: File): Promise<GameState> {
+export async function importSave(file: File): Promise<CurrentGameState> {
   if (file.size > MAX_SAVE_BYTES) throw new SaveError('file-too-large');
   let bytes: Uint8Array;
   try {

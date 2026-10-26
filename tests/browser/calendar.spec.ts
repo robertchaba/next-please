@@ -1,3 +1,4 @@
+import { defaultReferral } from '../../src/core/progression';
 import { expect, test, type Page } from '@playwright/test';
 import { createInitialState, encodeSave } from '../../src/core/save';
 
@@ -22,7 +23,7 @@ test('calendar starts on the agreed date, follows the saved day and preserves ol
   await activate(page, 'saves');
   const state = { ...createInitialState(), phase: 'cabinet' as const, introStep: 3, day: 28,
     patientsProcessed: 3, shiftCompleted: 3, clockMinutes: 840, nextPaperId: 2,
-    papers: [{ id: 1, kind: 'referral' as const, patientId: 0, day: 1, location: 'desk' as const }],
+    papers: [{ id: 1, kind: 'referral' as const, patientId: 0, day: 1, details: defaultReferral(1, 0), location: 'desk' as const }],
   };
   await page.locator('#save-input').setInputFiles({ name: 'calendar.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(state)) });
   await expect(page.locator('#announcement')).toContainText('Zapis wczytany');

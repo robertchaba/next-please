@@ -228,7 +228,7 @@ test('a blank certificate requires handwritten name and job before handoff', asy
   await expect(page.locator('#control-apply-stamp')).toHaveCount(0);
 });
 
-test('the rulebook keeps its cover on placement and its physical corners open and turn all eight spreads', async ({ page }) => {
+test('the rulebook keeps its cover on placement and its physical corners open and turn every spread', async ({ page }) => {
   await enterCabinet(page);
   const shelfBook = await logicalRect(page, 'manual');
   expect(shelfBook).toMatchObject({ w: 88, h: 48 });
@@ -259,7 +259,7 @@ test('the rulebook keeps its cover on placement and its physical corners open an
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'true');
   expect(await logicalRect(page, 'manual')).toMatchObject({ w: 276, h: 164 });
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', '0');
-  await expect(page.locator('#screen-description')).toContainText('Przyjęcie');
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[0]!.title);
   const book = await logicalRect(page, 'manual');
   await page.locator('#control-manual').focus();
   await page.keyboard.press('Space');

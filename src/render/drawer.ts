@@ -2,7 +2,7 @@ import { type GameState, isDocumentClipped, clippedDocuments } from '../core/gam
 import type { Rect } from '../core/desk';
 import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
-import { drawDrawerInterior, drawPaperclip } from './clinic';
+import { drawDrawerInterior, drawPaperclip, drawBanknote } from './clinic';
 import { drawManualCover } from './manual';
 import { drawPaperwork, paperDescription } from './paperwork';
 import { drawDocumentText } from './font';
@@ -12,7 +12,7 @@ export const DRAWER_BATCH_SIZE = 12;
 export const DRAWER_CLOSE: Rect = { x: 0, y: 288, w: 570, h: 32 };
 const manualBounds: Rect = { x: 444, y: 68, w: 88, h: 48 };
 const clipBounds: Rect = { x: 453, y: 157, w: 62, h: 54 };
-export type DrawerAction = { type: 'paper'; id: number } | { type: 'item'; item: 'manual' | 'clip' } | { type: 'page'; page: number } | { type: 'close' };
+export type DrawerAction = { type: 'paper'; id: number } | { type: 'item'; item: 'manual' | 'clip' } | { type: 'page'; page: number } | { type: 'close' } | { type: 'return-bribe' };
 
 export function drawerSheets(state: GameState, page: number) {
   const papers = state.papers.filter(paper => paper.location === 'drawer');
@@ -31,6 +31,7 @@ export function drawerDescription(state: GameState, locale: Locale, page: number
 export function drawerButtons(state: GameState, locale: Locale, page: number, onAction: (action: DrawerAction) => void): Button[] {
   const t = translations[locale], sheets = drawerSheets(state, page);
   return [
+    ...(state.visit?.bribe === 'accepted' ? [{ id: 'drawer-banknote', kind: 'hotspot' as const, x: 427, y: 224, w: 92, h: 42, label: t.progression.returnBribe, action: () => onAction({ type: 'return-bribe' }) }] : []),
     ...sheets.visible.map(({ paper, bounds }): Button => ({ id: `drawer-paper-${paper.id}`, kind: 'hotspot', ...bounds,
       label: `${t.drawerRetrieve}: ${paperDescription(paper, locale, isDocumentClipped(state, paper.id))}`,
       action: () => onAction({ type: 'paper', id: paper.id }),
@@ -49,6 +50,7 @@ export function drawerButtons(state: GameState, locale: Locale, page: number, on
 
 export function renderDrawer(ctx: CanvasRenderingContext2D, state: GameState, locale: Locale, page: number): void {
   drawDrawerInterior(ctx);
+  if (state.visit?.bribe === 'accepted') drawBanknote(ctx, 427, 224);
   const sheets = drawerSheets(state, page);
   for (const { paper, bounds } of sheets.visible) {
     const group = clippedDocuments(state, paper.id);

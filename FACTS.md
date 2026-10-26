@@ -7,7 +7,7 @@
 - The doctor's consulting room is number 04.
 - The doctor calls the next patient with a bell on the left side of the desk.
 - Patient order is randomized; the first day has no fixed opening sequence.
-- At most 33% of patients in a newly arranged daily queue are unfit for work. This also applies to every initial portion of that queue, so shorter working days retain the same limit. Examination criteria still determine each patient's decision.
+- At most 33% of patients in a newly arranged daily queue are unfit for work. This also applies to every initial portion of that queue, so shorter working days retain the same limit. Examination criteria and the currently applicable document rules determine each patient's decision. The scripted second patient on the sixth working day is an exception to the prefix limit.
 - New patients are admitted from 08:00 to 14:00. The player arrives shortly before 08:00; the clock continues advancing during work after admissions end.
 - A single click picks up an item, which follows the cursor; the next click puts it down or attempts to use it. Stamps can only be put away in their dedicated places.
 - Documents and books shrink when picked up from either desktop, then keep their compact size while carried; placing them on the right desktop enlarges them for reading. Stamps are the exception and grow slightly when picked up.
@@ -24,7 +24,7 @@
 - Patient birth dates are consistent across case variants and match the intended age of their portraits. Medical notes include age calculated from birth date on the date of the visit.
 - Patients bring occupational-health referrals from specific employers. Referrals distinguish initial and periodic examinations and include birth date, sex, job, work conditions, and managerial responsibility.
 - A scale with a height measure provides the patient's weight and height.
-- Clicking the patient with an empty hand performs a general examination. It records an absence of concerns or one of 18 specific abnormal findings. The finding stays the same on repeated examination of that case and is named in the notes. Any abnormal finding requires refusal for every job; specialist consultations will be added later.
+- Clicking the patient with an empty hand performs a general examination. It records an absence of concerns or one of 18 specific abnormal findings. The finding stays the same on repeated examination of that case and is named in the notes. Any abnormal general finding requires refusal for every job. The specialist exception introduced on the fourth working day concerns hypertension only.
 - Repeated blood pressure measurements vary slightly. Notes retain the first two measurements without overwriting them on later attempts; the latest result is still shown briefly. Blood pressure is recorded as measured values for the doctor to interpret. Very high values are written in red. The rulebook explains how to interpret the readings.
 - Examinations can be performed as soon as the patient arrives, before taking or reading the referral. Findings remain available for existing or later-fetched notes. Every examination briefly shows a concise result or comment in a speech balloon.
 - Vision results record a separate value for each eye. Only a significant defect disqualifies a worker in a position requiring a vision examination. There are no pilots in the current patient roster.
@@ -32,13 +32,13 @@
 - Certificate forms start with empty name and job-position fields. The doctor fills both together using the pen corner. A certificate must have both fields filled and be stamped before it is handed back.
 - Medical notes initially contain only the patient’s first name, surname and age. Sheets taken without a patient remain blank until assigned to a visit. Completed examinations add their label and value automatically, directly below the previous entry, in examination order. Unperformed examinations leave no reserved rows. The pen corner adds the patient history only after the general (physical) examination. Handwritten entries use a different ink color from printed or typewritten text.
 - A four-slot document rack on the right, above the stamps, provides blank sheets and certificate forms separately. Two slots are active initially; two remain reserved for future document types. A holder beside the telephone on the right provides paperclips. The doctor can attach a paperclip to a document.
-- The patient brings only the referral. The doctor fetches the certificate form from the rack; each sheet is carried individually from its tray or rack slot onto the main desk.
+- The patient brings a referral and, from the fourth working day, may also bring a specialist certificate concerning hypertension. The doctor fetches the certificate form from the rack; each sheet is carried individually from its tray or rack slot onto the main desk.
 - Paperwork can be kept in the desk drawer, retrieved, or discarded in the wastebasket. The drawer can be opened throughout the working day and fills the screen. Documents lie in insertion order, overlapping as the pile grows; other stored objects lie separately. Selecting an item closes the drawer and takes it out. Clicking the lower edge closes it without taking anything.
 - Formal documents carry issue dates, seals and signatures. The refusal stamp reads ODMOWA instead of NIEZDOLNY and is not limited to medical grounds.
 - Dropping a sheet onto a paperclip attached to another sheet joins the documents into one movable bundle. Clicking the attached clip separates the documents.
-- The desk telephone currently provides an exchange tone; calls are not available yet.
+- From the fourth working day, clicking the desk telephone gives an exchange tone. Clicking a telephone number on a document plays rotary dialing and connects the doctor to its issuer; the short conversation adds its conclusion to the medical notes.
 - A detected mistaken approval brings a letter from ZUS; a detected mistaken refusal brings a letter from the employer. Letters appear after a short delay, once the patient has left. The doctor can open the envelope, read the letter, and discard it.
-- ZUS and employers use visibly different seals on their documents.
+- ZUS, employers and the Medical Chamber use visibly different seals on their documents.
 - Their signed letters use varied administrative wording about proceedings, charges and insurance, rather than directly explaining the doctor's mistake.
 
 ## Work and household budget
@@ -54,11 +54,17 @@
 - A detected mistaken refusal increases insurance by 50 zł when the premium is 300 zł, or 100 zł otherwise. The increased premium persists. Every day without a new increase reduces it by 50 zł, down to a minimum of 300 zł.
 - Savings above 2000 zł increase the likelihood of unexpected expenses that consume savings. Examples include medicine, a fur coat and car repairs. The recipient of any fur coat is unspecified.
 
-## Planned mechanics
+## Gradually increasing formalities
 
-- Specialist consultations are planned as an alternative to refusal where appropriate; their rules are not yet decided.
-- Story events and bribes will be added later; their rules and narrative are not yet decided.
-- Checking the authenticity of seals, stamps, signatures and dates is planned. The rules are not yet decided.
+- New duties arrive in official letters at the start of the third, fourth and fifth **working** days. Weekends do not advance this progression. Earlier duties remain in force when later ones begin.
+- On the third working day, ZUS instructs the doctor to check the referral's issue date. A referral more than three calendar days old requires refusal; exactly three days is still valid. Dates are drawn relative to the current date, and about 5% of presented referrals are older than three days. Approving an expired referral is subject to the normal ZUS fine, with a 35% chance of no reaction.
+- On the fourth working day, a sealed letter from the Medical Chamber permits conditional approval of patients with hypertension when a specialist certifies ongoing treatment and no contraindications for the specific job under review. This does not excuse other medical contraindications or invalid referrals.
+- About 25% of patients with hypertension bring a specialist certificate. One third of these certificates name a different job and are invalid. The certificate carries the specialist's telephone number; calling clarifies its validity, and the conclusion is recorded in the medical notes.
+- On the fifth working day, ZUS adds a duty to check referral authenticity. A clear employer seal means a valid referral; a missing seal means an invalid referral requiring refusal. An unclear seal has equal chances of being authentic or inauthentic. Referrals now carry the employer's personnel-department telephone number, and calling resolves the uncertainty. An authenticity mistake is subject to the normal ZUS fine, with a 35% chance of no reaction.
+- On the sixth working day, the second patient offers a bribe of 100 zł, using the old banknote bearing Ludwik Waryński. The patient wants approval despite blood pressure or eyesight just beyond the permitted threshold.
+- From this event onward, about 10% of patients (approximately one third of those unfit for work) offer 100 zł and have such borderline medical contraindications. Approving a bribing patient carries a 30% risk of a ZUS reaction and the normal fine.
+- Returning the 100 zł and then refusing the patient brings no consequence; the completed appointment still earns the normal patient bonus.
+- Keeping the bribe and then issuing a refusal leads to the first ending: the doctor is beaten on the way home and hospitalized. The game ends with the news that, after treatment, the doctor will also need an occupational-health examination.
 
 ## To be decided
 

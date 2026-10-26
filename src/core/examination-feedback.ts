@@ -1,5 +1,5 @@
 import type { GameAction, Visit } from './game';
-import { PATIENTS } from './patients';
+import { patientForAppointment } from './progression';
 import { translations, type Locale } from '../i18n';
 
 export type ExaminationComment = { kind: 'normal' | 'concern' | 'veryHigh' }
@@ -8,7 +8,7 @@ export type ExaminationComment = { kind: 'normal' | 'concern' | 'veryHigh' }
 
 /** Snapshot a completed action; drawing never chooses or changes the result. */
 export function examinationComment(action: GameAction, visit: Visit): ExaminationComment | undefined {
-  const patient = PATIENTS[visit.patientId]!;
+  const patient = patientForAppointment(visit);
   if (action === 'run-general') return { kind: patient.general === 'pass' ? 'normal' : 'concern' };
   if (action === 'run-vision') return { kind: patient.vision === 'pass' ? 'normal' : 'concern' };
   if (action === 'run-pressure') {
