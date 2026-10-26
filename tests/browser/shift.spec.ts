@@ -95,15 +95,15 @@ test('examinations, stamping and the rulebook support keyboard visits with defer
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'true');
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.locator('#screen-description')).toContainText('INSTRUKCJA OBSŁUGI DYŻURU');
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualTitle);
   await expect(page.locator('#control-manual-prev')).toHaveAccessibleName('Zamknij regulamin');
   await useKeyboard(page, 'manual-next');
-  await expect(page.locator('#screen-description')).toContainText('Kliknięcie pacjenta uruchamia oględziny.');
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[1]!.lines.join(' '));
   await page.screenshot({ path: testInfo.outputPath('rulebook-tests-pl.png') });
   for (let index = 2; index < MANUAL_PAGE_COUNT; index++) {
     await useKeyboard(page, 'manual-next');
     await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(index));
-    if (index === 2) await expect(page.locator('#screen-description')).toContainText('WC: wzrok i ciśnienie. W: wzrok. C: ciśnienie.');
+    if (index === 2) await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[2]!.lines.join(' '));
   }
   await expect(page.locator('#control-manual-next')).toHaveCount(0);
   await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[MANUAL_PAGE_COUNT - 1]!.lines.join(' '));
@@ -114,7 +114,7 @@ test('examinations, stamping and the rulebook support keyboard visits with defer
     await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(index));
     await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[index]!.lines.join(' '));
   }
-  await expect(page.locator('#screen-description')).toContainText('Kliknij spinacz, aby rodzinę rozdzielić.');
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[5]!.lines.join(' '));
   await page.keyboard.press('Escape');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
   await expect(page.locator('#control-manual')).toBeFocused();
@@ -321,10 +321,10 @@ test('English introduction, cabinet and rulebook remain usable on a small screen
   await page.screenshot({ path: testInfo.outputPath('cabinet-mobile-en.png') });
   await useKeyboard(page, 'manual');
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.locator('#screen-description')).toContainText('SHIFT OPERATING INSTRUCTIONS');
+  await expect(page.locator('#screen-description')).toContainText(translations.en.manualTitle);
   await expect(page.locator('#control-manual-next')).toHaveAccessibleName('Next rulebook page');
   await page.locator('#control-manual-next').click();
-  await expect(page.locator('#screen-description')).toContainText('Click the patient for a general exam.');
+  await expect(page.locator('#screen-description')).toContainText(translations.en.manualPages[1]!.lines.join(' '));
   await page.screenshot({ path: testInfo.outputPath('rulebook-mobile-en.png') });
   await page.keyboard.press('Escape');
   await expect(page.locator('#control-manual')).toBeFocused();
