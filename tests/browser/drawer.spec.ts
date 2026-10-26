@@ -30,7 +30,7 @@ async function importState(page: Page, state: GameState): Promise<void> {
   await activate(page, 'back');
 }
 
-test('empty drawer opens before and during a visit, closes at the bottom or with Escape, and traps focus without spending time', async ({ page }) => {
+test('empty drawer opens before and during a visit, closes at the bottom or with Escape, and traps focus without an action cost', async ({ page }) => {
   await enter(page);
   const clock = await page.locator('#controls').getAttribute('data-clock-minutes');
   await activate(page, 'drawer');

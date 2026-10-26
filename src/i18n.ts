@@ -336,7 +336,7 @@ export const translations = {
         facingTitle: 'Koniec wizyty', facingLines: ['Piórem na orzeczeniu', 'wpisz nazwisko', 'i stanowisko pracy.', 'Podbij i podnieś druk.', 'Oddaj go pacjentowi.', 'To kończy wizytę.', 'Wypłata po dyżurze.', 'Błędy mogą oznaczać', 'kary i zwyżki składki.'] },
       { title: 'Dokumentacja', lines: ['Przypnij spinacz', 'do kartki. Upuść', 'drugą na ten spinacz,', 'aby je połączyć.', 'Kliknięcie spinacza', 'rozpina dokumenty.', 'Schowaj do szuflady', 'lub wyrzuć do kosza.'],
         facingTitle: 'Korespondencja', facingLines: ['Błędna zgoda: ZUS.', 'Błędna odmowa:', 'pismo od pracodawcy.', 'Otwórz róg koperty.', 'Przeczytaj i wyrzuć.', 'Otwórz szufladę', 'i wybierz dokument.', 'Dół zamyka szufladę.'] },
-      { title: 'Czas', lines: ['Dyżur: 08:00–14:00.', 'Czynności zabierają', 'czas. Namysł nie.', 'Telefon daje sygnał,', 'lecz jeszcze nie łączy.', 'O 14 koniec przyjęć.', 'O 17 sprzątaczka woła.', 'O 17:15 przerywa wizytę.', 'Wyjście kończy dzień.'],
+      { title: 'Czas', lines: ['Dyżur: 08:00–14:00.', 'Czas płynie sam.', '30 s z pacjentem:', '30 minut w gabinecie.', '30 s bez pacjenta:', '5 minut w gabinecie.', 'Czynności doliczają czas.', 'O 17 sprzątaczka woła.', 'O 17:15 koniec pracy.'],
         facingTitle: 'Obsługa', facingLines: ['Tab: wybór przedmiotu.', 'Spacja: podniesienie.', 'Strzałki: przesuwanie.', 'Shift: większy krok.', 'Enter: użyj lub odłóż.', 'Escape: cofnij ruch.', 'Enter na kartce:', 'dopisz uwagi lub czytaj.'] },
       { title: 'Po pracy', lines: ['Zamknij gabinet.', 'W domu czeka budżet:', 'dochód podstawowy,', 'premia za pacjentów,', 'pieniądze z poprzedniego', 'miesiąca, kary', 'i ubezpieczenie.'], facingTitle: 'Korespondencja', facingLines: ['Nie wszystkie decyzje', 'przechodzą bez echa.', 'Pismo może nadejść', 'od ZUS albo pracodawcy.', 'Przeczytaj je uważnie.'] },
       { title: 'Poza gabinetem', lines: ['Wieczory bywają różne.', 'Czasem trzeba zajrzeć', 'do apteki lub warsztatu.', 'Czasem po prostu', 'wrócić do domu.'], facingTitle: 'Wolne dni', facingLines: ['W weekend przychodnia', 'jest zamknięta.', 'Zdarza się krótki wyjazd.', 'Domowe sprawy', 'toczą się dalej.'] },
@@ -344,7 +344,7 @@ export const translations = {
     lamp: 'Przełącz lampę sufitową', decoration: 'Zmień dekorację: roślina lub dyplom',
     shiftDone: 'KONIEC DYŻURU', shiftDoneNote: 'Pieczątka zasłużyła na odpoczynek.',
     nextDay: 'KOLEJNY DYŻUR', endDay: 'DO DOMU', points: 'OSZCZĘDNOŚCI', queue: 'PRZYJĘTO',
-    cabinetHelp: 'Wezwij pacjenta dzwonkiem na lewym blacie. Przenieś regulamin z lewej na prawy blat, aby go otworzyć. Wizytę kończy oddanie orzeczenia pacjentowi.',
+    cabinetHelp: 'Wezwij pacjenta dzwonkiem na lewym blacie. Przenieś regulamin z lewej na prawy blat, aby go otworzyć. Wizytę kończy oddanie orzeczenia pacjentowi. Czas płynie także między czynnościami: 30 sekund to 30 minut z pacjentem lub 5 minut bez pacjenta.',
     patientNames: PATIENTS.map(patient => {
       const identity = patientIdentity(patient);
       return identity ? patientCopy.pl.identityNames[identity.characterId]![identity.variant]! : patientCopy.pl.names[patient.characterId]!;
@@ -649,7 +649,7 @@ export const translations = {
         facingTitle: 'Ending a visit', facingLines: ['Use the certificate pen', 'to write the name', 'and job position.', 'Stamp and pick it up.', 'Give it to the patient.', 'This ends the visit.', 'Paid after the shift.', 'Errors may mean fines', 'and higher insurance.'] },
       { title: 'Medical records', lines: ['Attach a paperclip', 'to a sheet. Drop', 'another on the clip', 'to join the sheets.', 'Click their clip', 'to separate them.', 'Keep in the drawer', 'or discard in the basket.'],
         facingTitle: 'Correspondence', facingLines: ['Wrong approval: ZUS.', 'Wrong refusal:', 'the employer writes.', 'Open the envelope', 'at its folded corner.', 'Read, then discard.', 'Open the drawer', 'and choose a sheet.', 'The bottom closes it.'] },
-      { title: 'Time', lines: ['Shift: 08:00–14:00.', 'Actions take time.', 'Thinking does not.', 'The telephone has', 'a tone, but no calls.', 'Admissions close at 14.', 'Cleaner calls at 17.', 'At 17:15 the visit ends.', 'Then it is home time.'],
+      { title: 'Time', lines: ['Shift: 08:00–14:00.', 'Time passes on its own.', '30 s with a patient:', '30 minutes in the clinic.', '30 s without a patient:', '5 minutes in the clinic.', 'Actions add more time.', 'Cleaner calls at 17.', 'Work ends at 17:15.'],
         facingTitle: 'Controls', facingLines: ['Tab: choose an item.', 'Space: pick it up.', 'Arrows: move it.', 'Shift: larger steps.', 'Enter: use or put down.', 'Escape: cancel moving.', 'Enter on a sheet:', 'add notes or read.'] },
       { title: 'After work', lines: ['Close the office.', 'The budget waits at home:', 'base income,', 'patient bonus,', 'money from last month,', 'fines and insurance.'], facingTitle: 'Correspondence', facingLines: ['Some decisions', 'have consequences.', 'A letter may arrive', 'from ZUS or an employer.', 'Read it carefully.'] },
       { title: 'Outside the clinic', lines: ['Every evening differs.', 'Sometimes you visit', 'the pharmacy or garage.', 'Sometimes you simply', 'go home.'], facingTitle: 'Days off', facingLines: ['The clinic closes', 'on weekends.', 'There may be a short trip.', 'Life at home', 'carries on.'] },
@@ -657,7 +657,7 @@ export const translations = {
     lamp: 'Toggle the ceiling lamp', decoration: 'Change decoration: plant or certificate',
     shiftDone: 'SHIFT COMPLETE', shiftDoneNote: 'Even a stamp deserves a rest.',
     nextDay: 'NEXT SHIFT', endDay: 'GO HOME', points: 'SAVINGS', queue: 'SEEN',
-    cabinetHelp: 'Call a patient with the bell on the left desk. Move the rulebook from the left to the right desk to open it. Giving the certificate to the patient ends the visit.',
+    cabinetHelp: 'Call a patient with the bell on the left desk. Move the rulebook from the left to the right desk to open it. Giving the certificate to the patient ends the visit. Time also passes between actions: 30 seconds equal 30 minutes with a patient or 5 minutes without one.',
     patientNames: PATIENTS.map(patient => {
       const identity = patientIdentity(patient);
       return identity ? patientCopy.en.identityNames[identity.characterId]![identity.variant]! : patientCopy.en.names[patient.characterId]!;

@@ -388,14 +388,19 @@ test('touch taps place the closed rulebook then open its cover corner with fract
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
 });
 
-test('clock hands animate short action costs and pointer movement consumes no additional time', async ({ page }) => {
+test('clock hands animate action costs and pointer movement adds no discrete cost', async ({ page }) => {
+  const now = new Date('2026-10-26T12:00:00Z');
+  await page.clock.install({ time: now });
+  await page.clock.pauseAt(now);
   await enterCabinet(page);
   const controls = page.locator('#controls');
   expect(await clockMinutes(page)).toBe(477);
   await activate(page, 'call-patient');
   expect(await clockMinutes(page)).toBe(480);
   await expect(controls).toHaveAttribute('data-clock-moving', 'true');
-  await expect.poll(async () => Number(await controls.getAttribute('data-clock-display'))).toBeGreaterThan(477);
+  await page.clock.runFor(400);
+  expect(Number(await controls.getAttribute('data-clock-display'))).toBeGreaterThan(477);
+  await page.clock.runFor(400);
   await expect(controls).toHaveAttribute('data-clock-moving', 'false');
   await activate(page, 'take-document');
   await activate(page, 'take-certificate');

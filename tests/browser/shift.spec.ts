@@ -111,7 +111,7 @@ test('examinations, stamping and the rulebook support keyboard visits with defer
   await useKeyboard(page, 'manual-prev');
   await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[MANUAL_PAGE_COUNT - 2]!.lines.join(' '));
   await useKeyboard(page, 'manual-prev');
-  await expect(page.locator('#screen-description')).toContainText('Czynności zabierają czas.');
+  await expect(page.locator('#screen-description')).toContainText('Czynności doliczają czas.');
   await useKeyboard(page, 'manual-prev');
   await expect(page.locator('#screen-description')).toContainText('Kliknięcie spinacza rozpina dokumenty.');
   await page.keyboard.press('Escape');

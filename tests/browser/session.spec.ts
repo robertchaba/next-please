@@ -80,8 +80,7 @@ test('MENU and Escape open the staff room, pausing and preserving the visit and 
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   await page.clock.runFor(900);
   await expect(page.locator('#controls')).toHaveAttribute('data-patient-motion', 'idle');
-  await expect(page.locator('#controls')).toHaveAttribute('data-clock-moving', 'false');
-  await expect(page.locator('#controls')).toHaveAttribute('data-clock-minutes', before.clock!);
+  await expect(page.locator('#controls')).toHaveAttribute('data-clock-minutes', String(Number(before.clock) + 1));
   await activate(page, 'apply-stamp');
   await expect(page.locator('#screen-description')).toContainText('Podbito: ZDOLNY.');
 });

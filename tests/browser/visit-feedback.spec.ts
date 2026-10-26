@@ -70,7 +70,7 @@ test('the clock progresses after 14 and the cleaner calls once at 17 with mute r
   expect(requests).toHaveLength(0);
   await page.clock.runFor(3000);
   await act(page, 'lamp');
-  await expect(page.locator('#controls')).toHaveAttribute('data-clock-minutes', '1021');
+  await expect(page.locator('#controls')).toHaveAttribute('data-clock-minutes', '1024');
   await expect(page.locator('#clinic-speech')).toBeEmpty();
 });
 

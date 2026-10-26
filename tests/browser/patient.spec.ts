@@ -32,7 +32,7 @@ async function enterCabinet(page: Page): Promise<void> {
 const portraitPixels = (page: Page) => page.locator('#game').evaluate(canvas =>
   Array.from((canvas as HTMLCanvasElement).getContext('2d')!.getImageData(0, 0, 110, 128).data));
 
-test('the left desk bell calls a patient who emerges and sits within 720 ms without spending simulated time', async ({ page }) => {
+test('the bell seats a patient within 720 ms and speech continues alongside elapsed time', async ({ page }) => {
   await enterCabinet(page);
   const empty = await portraitPixels(page);
   const bell = page.locator('#control-call-patient');
@@ -68,7 +68,7 @@ test('the left desk bell calls a patient who emerges and sits within 720 ms with
   await expect(page.locator('#patient-speech')).toHaveText('Irena Wolska: Good morning.');
   await page.clock.runFor(2400);
   await expect(page.locator('#patient-speech')).toBeEmpty();
-  expect(Number(await page.locator('#controls').getAttribute('data-clock-minutes'))).toBe(Number(minutes) + 1);
+  expect(Number(await page.locator('#controls').getAttribute('data-clock-minutes'))).toBe(Number(minutes) + 4);
 });
 
 test('patients speak sparingly, hesitate at failed vision tests and leave refusals silently', async ({ page }) => {

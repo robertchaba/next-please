@@ -10,7 +10,7 @@ export const SHIFT_START_MINUTES = 480;
 export const SHIFT_END_MINUTES = 840;
 export const CLEANER_WARNING_MINUTES = 1020;
 export const CLINIC_CLOSE_MINUTES = 1035;
-// Minutes of simulated work. Pointer movement and rendering never spend time.
+// Additional simulated minutes charged by actions, independent of elapsed time.
 export const ACTION_MINUTES = { handling: 1, reading: 1, general: 3, vision: 3, pressure: 4, measurements: 2 } as const;
 export const GAME_LIMITS = { day: 1_000_000, money: 1_000_000_000, patients: 1_000_000_000, papers: 4096, paperId: 1_000_000_000, drawerClips: 4096 } as const;
 
@@ -168,6 +168,17 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
   if (state.phase !== 'cabinet' || result.state === state || result.state.clockMinutes < CLINIC_CLOSE_MINUTES) return result;
   // A procedure which reaches closing cannot finish the appointment. Settle
   // from its prior state so it cannot award a bonus or issue a complaint.
+  return finishAtClosing(state);
+}
+
+/** Whole minutes from the live clock; no action, examination or reward is implied. */
+export function advanceClinicTime(state: GameState, minutes: number): ActionResult {
+  if (state.phase !== 'cabinet' || !Number.isSafeInteger(minutes) || minutes <= 0) return { state, feedback: 'none' };
+  if (minutes >= CLINIC_CLOSE_MINUTES - state.clockMinutes) return finishAtClosing(state);
+  return { state: { ...state, clockMinutes: state.clockMinutes + minutes }, feedback: 'none' };
+}
+
+function finishAtClosing(state: GameState): ActionResult {
   const closed = { ...state, clockMinutes: CLINIC_CLOSE_MINUTES, visit: null,
     paperClips: state.paperClips.map(group => group.filter(id => id !== 'certificate')).filter(group => group.length > 0) };
   const settlement = settleDay(closed);

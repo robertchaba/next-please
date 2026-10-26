@@ -1,5 +1,6 @@
 import './style.css';
-import { applyAction, CLEANER_WARNING_MINUTES, PATIENTS, canEndDay, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction, type ActionResult } from './core/game';
+import { advanceClinicTime, applyAction, CLEANER_WARNING_MINUTES, SHIFT_END_MINUTES, PATIENTS, canEndDay, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction, type ActionResult, type GameState } from './core/game';
+import { ClinicClock } from './core/clock';
 import { effectsManifest } from './core/effects';
 import { choosePatientSpeech } from './core/patient-speech';
 import { examinationComment, examinationCommentText, type ExaminationComment } from './core/examination-feedback';
@@ -59,6 +60,7 @@ let manualPage = 0;
 let manualBeforePickup = false;
 let clockMinutes = gameState.clockMinutes;
 let clockTransition: { from: number; to: number; elapsed: number } | undefined;
+const clinicClock = new ClinicClock(performance.now());
 let patientMotion: CabinetArtOptions['patientMotion'];
 let patientExitHold = 0;
 let patientSpeech: (PatientSpeech & { remaining: number; departure: boolean }) | undefined;
@@ -228,10 +230,20 @@ function clinicSpeechText(): string {
 
 /** Every action path, including carrying and drawer operations, observes closing. */
 function performAction(action: GameAction): ActionResult {
+  const elapsed = sampleClinicClock();
+  if (elapsed?.state.phase === 'home') return elapsed;
   const previous = gameState;
   const result = applyAction(previous, action);
+  acceptResult(previous, result);
+  if (gameState.day !== previous.day) clinicClock.reset(performance.now());
+  clinicClock.setContext(clinicClockRunning(), gameState.visit !== null);
+  return result;
+}
+
+/** Actions and elapsed time share warnings, interruption and clock animation. */
+function acceptResult(previous: GameState, result: ActionResult): void {
   gameState = result.state;
-  if (gameState === previous) return result;
+  if (gameState === previous) return;
   for (const paper of gameState.papers) {
     if (paper.kind === 'letter' && paper.id >= previous.nextPaperId) {
       pendingLetters.set(paper.id, { patientId: paper.patientId, remaining: 2000 });
@@ -243,6 +255,20 @@ function performAction(action: GameAction): ActionResult {
   }
   if (result.feedback === 'visit-interrupted') interruptedPatient = previous.visit?.patientId;
   updateClock();
+}
+
+function clinicClockRunning(): boolean {
+  return desktopActive && !document.hidden && gameState.phase === 'cabinet' && (screen === 'cabinet' || screen === 'drawer');
+}
+
+function sampleClinicClock(): ActionResult | undefined {
+  const now = performance.now();
+  const minutes = clinicClock.sample(now, clinicClockRunning(), gameState.visit !== null);
+  if (!minutes) return;
+  const previous = gameState;
+  const result = advanceClinicTime(previous, minutes);
+  acceptResult(previous, result);
+  if (gameState.phase !== 'cabinet') clinicClock.reset(now);
   return result;
 }
 
@@ -537,6 +563,7 @@ function restartGame(): void {
   saveReadId++; busy = false;
   typingKey = ''; homePageIndex = 0;
   gameState = createInitialState(crypto.getRandomValues(new Uint32Array(1))[0]); deskState = createDeskState(); deskBeforePickup = deskState;
+  clinicClock.reset(performance.now());
   nextClipId = 1; pendingLetters.clear(); clinicSpeech = undefined; interruptedPatient = undefined;
   heldItem = null; selectedStamp = null; manualOpen = false; manualPage = 0; manualBeforePickup = false;
   clockMinutes = gameState.clockMinutes; clockTransition = undefined;
@@ -688,6 +715,7 @@ function syncUtilityControls(modal: boolean): void {
 }
 
 function syncControls(focusId?: string): void {
+  sampleClinicClock();
   if (interruptedPatient !== undefined) {
     const patientId = interruptedPatient;
     interruptedPatient = undefined;
@@ -701,6 +729,10 @@ function syncControls(focusId?: string): void {
     if (screen === 'home') startTyping();
     focusId = screen === 'home' ? 'home-next' : undefined;
     document.querySelector('#announcement')!.textContent = feedback;
+  }
+  if (gameState.phase === 'home' && (screen === 'cabinet' || screen === 'drawer') && !patientMotion && departingPatientId() === undefined) {
+    deskInput.cancel(); clearPatientMotion(); clinicSpeech = undefined;
+    screen = 'home'; homePageIndex = 0; typingKey = ''; startTyping(); focusId = 'home-next';
   }
 
   // A canceled or rejected drop restores an older carry snapshot. Keep any
@@ -870,6 +902,9 @@ function renderSessionScreen(kind: 'saves' | 'break-room' | 'restart'): void {
 function render(): void {
   if (!desktopActive) return;
   ctx.imageSmoothingEnabled = false;
+  controls.dataset.clockMinutes = String(gameState.clockMinutes);
+  controls.dataset.clockDisplay = String(clockMinutes);
+  controls.dataset.clockMoving = String(clockTransition !== undefined);
   const speech = screen === 'cabinet' ? visiblePatientSpeech() : undefined;
   const speechElement = document.getElementById('patient-speech')!;
   const speechText = speech ? `${t().patientNames[speech.patientId]}: ${t().patientSpeech[speech.line]}` : '';
@@ -894,9 +929,6 @@ function render(): void {
     controls.dataset.patientFrame = String(patientMotion?.frame ?? 0);
     controls.dataset.manualOpen = String(manualOpen);
     controls.dataset.manualPage = String(manualPage);
-    controls.dataset.clockMinutes = String(gameState.clockMinutes);
-    controls.dataset.clockDisplay = String(clockMinutes);
-    controls.dataset.clockMoving = String(clockTransition !== undefined);
     buttons.forEach(drawButton); drawToast(); return;
   }
   if (screen === 'saves' || screen === 'break-room' || screen === 'restart') {
@@ -951,6 +983,7 @@ fileInput.addEventListener('change', async () => {
     deskInput.cancel(); clearPatientMotion(); deskState = createDeskState();
     pendingLetters.clear(); clinicSpeech = undefined; interruptedPatient = undefined;
     gameState = loadedState; homePageIndex = 0; typingKey = ''; shiftStarted = true; selectedStamp = null; feedback = '';
+    clinicClock.reset(performance.now());
     nextClipId = 1; reconcileDeskPapers();
     manualOpen = false; manualPage = 0; clockMinutes = gameState.clockMinutes; clockTransition = undefined;
     if (panelReturn === 'intro' || panelReturn === 'cabinet' || panelReturn === 'home') panelReturn = loadedState.phase;
@@ -1227,6 +1260,28 @@ const deskInput = installDeskInput(stage, {
   },
 });
 
+// Elapsed work time is independent of actions, rendering and reduced motion.
+function updateClinicTime(): void {
+  const previous = gameState;
+  sampleClinicClock();
+  if (previous === gameState) return;
+  if (previous.phase !== gameState.phase || canEndDay(previous) !== canEndDay(gameState)
+      || (previous.clockMinutes < SHIFT_END_MINUTES && gameState.clockMinutes >= SHIFT_END_MINUTES)) {
+    syncControls(document.activeElement?.id.replace(/^control-/, ''));
+  } else if (screen === 'cabinet') {
+    // Keep keyboard focus, held items and pointer targets intact on ordinary ticks.
+    document.querySelector('#screen-description')!.textContent = `${shiftDescription(gameState, locale, [...pendingLetters.keys()])} ${manualOpen ? manualPageDescription(locale, manualPage) : ''} ${feedback}`;
+  }
+  render();
+}
+setInterval(updateClinicTime, 100);
+document.addEventListener('visibilitychange', updateClinicTime);
+window.addEventListener('pagehide', () => {
+  updateClinicTime();
+  clinicClock.setContext(false, false);
+});
+window.addEventListener('pageshow', updateClinicTime);
+
 // Patient movement and brief speech advance only while the room is visible.
 setInterval(() => {
   if (!desktopActive || screen !== 'cabinet' || document.hidden || (!patientMotion && !patientSpeech && !clinicSpeech && pendingLetters.size === 0 && gameState.phase !== 'home')) return;
@@ -1321,6 +1376,7 @@ export function setDesktopActive(active: boolean): void {
     desktopFocus = app.contains(document.activeElement) ? document.activeElement?.id : undefined;
     deskInput.cancel();
     desktopActive = false;
+    updateClinicTime();
     audio.pauseMusic();
     for (const id of Object.keys(effectsManifest)) audio.stopSound(id);
     return;

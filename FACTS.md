@@ -14,7 +14,7 @@
 - Documents on the right may overlap the consulting room, provided at least half of each sheet remains over the desktop.
 - The player may stamp documents before conducting examinations and can make mistakes in handling a patient's case.
 - A visit ends when the doctor hands the stamped certificate to the patient. Leaving it in the tray does not end the visit.
-- Actions take a small amount of time; thinking and moving the pointer do not advance the clock.
+- Time passes continuously in the consulting room, independently of the additional time charged for actions. With a patient present, 30 real seconds equal 30 in-game minutes; with the room empty, 30 real seconds equal 5 in-game minutes. Thinking, reading the rulebook and organizing documents do not stop this flow; the rate depends on whether a patient is present.
 - Books can be read and their pages turned while they lie on the desk.
 - Books and multipage documents have covers; the first page turn opens the cover. The rulebook stays closed when placed on the desk.
 - Patients speak sparingly, using small comic speech balloons. Not everyone greets the doctor; patients refused fitness for work generally leave without speaking.
