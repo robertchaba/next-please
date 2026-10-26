@@ -1,5 +1,5 @@
 import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, drawDeskCalendar, type CabinetArtOptions } from '../render/clinic';
-import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, drawCertificate, certificateDescription, visionReading, pressureReading } from '../render/paperwork';
+import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading } from '../render/paperwork';
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
 import { drawManual, drawManualCover, manualControls, MANUAL_PAGE_COUNT } from '../render/manual';
@@ -20,6 +20,8 @@ export type DeskPresentation = {
   manualOpen: boolean; manualPage: number; clockMinutes?: number;
   patientMotion?: CabinetArtOptions['patientMotion'];
   patientSpeech?: PatientSpeech;
+  clinicSpeech?: { text: string; speaker: 'doctor' | 'cleaner' };
+  hiddenPaperIds?: readonly number[];
   departingPatientId?: number;
 };
 const documentItem = (id: DocumentId): DeskItemId => id === 'certificate' ? 'document' : `paper-${id}`;
@@ -42,15 +44,15 @@ export function clockTime(state: GameState): string {
   return `${String(Math.floor(state.clockMinutes / 60)).padStart(2, '0')}:${String(state.clockMinutes % 60).padStart(2, '0')}`;
 }
 
-export function shiftDescription(state: GameState, locale: Locale): string {
+export function shiftDescription(state: GameState, locale: Locale, hiddenPaperIds: readonly number[] = []): string {
   const t = translations[locale]; const visit = state.visit;
   const patient = visit ? PATIENTS[visit.patientId] : null;
   const date = calendarText(state.day, locale);
   return [t.cabinetHelp, `${t.clock}: ${clockTime(state)}.`, `${t.day}: ${state.day}.`, `${t.calendar.label}: ${date.day} ${date.month}.`, `${t.queue}: ${state.shiftCompleted}/${state.roster.length}.`, `${t.points}: ${state.money}.`,
-    visit && patient ? `${t.patientNames[visit.patientId]}. ${t.patientJobs[visit.patientId]}. ${visit.document === 'tray' ? t.awaitingDocument : t.document}. ${t.generalResult}: ${visit.generalTested ? (patient.general === 'pass' ? t.generalClear : t.generalConcern) : t.untested}. ${t.visionResult}: ${visit.visionTested ? visionReading(patient.visionValues, locale) : t.untested}. ${t.pressureResult}: ${visit.pressureTested ? pressureReading(patient.pressureValues) : t.untested}. ${t.paperwork.weight}: ${visit.measurementsTaken ? `${patient.weight} ${t.paperwork.kg}` : t.untested}. ${t.paperwork.height}: ${visit.measurementsTaken ? `${patient.height} ${t.paperwork.cm}` : t.untested}. ${visit.decision ? t[visit.decision] : t.stampHere}.`
+    visit && patient ? `${t.patientNames[visit.patientId]}. ${t.patientJobs[visit.patientId]}. ${visit.document === 'tray' ? t.awaitingDocument : t.document}. ${t.generalResult}: ${visit.generalTested ? generalReading(visit.patientId, locale) : t.untested}. ${t.visionResult}: ${visit.visionTested ? visionReading(patient.visionValues, locale) : t.untested}. ${t.pressureResult}: ${visit.pressureTested ? visit.pressureReadings.map(pressureReading).join('; ') : t.untested}. ${t.paperwork.weight}: ${visit.measurementsTaken ? `${patient.weight} ${t.paperwork.kg}` : t.untested}. ${t.paperwork.height}: ${visit.measurementsTaken ? `${patient.height} ${t.paperwork.cm}` : t.untested}. ${visit.decision ? t[visit.decision] : t.stampHere}.`
       : isShiftFinished(state) ? t.shiftDone : t.emptyChair,
     ...(visit?.certificateTaken ? [certificateDescription(state, locale)] : []),
-    ...state.papers.filter(paper => paper.location === 'desk').map(paper => paperDescription(paper, locale, isDocumentClipped(state, paper.id))),
+    ...state.papers.filter(paper => paper.location === 'desk' && !hiddenPaperIds.includes(paper.id)).map(paper => paperDescription(paper, locale, isDocumentClipped(state, paper.id))),
   ].join(' ');
 }
 
@@ -95,7 +97,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     hotspot('take-clip', t.takeClip, CABINET_HOTSPOTS.clipSupply, 'take-clip'),
     hotspot('drawer', `${t.drawer}: ${state.papers.filter(paper => paper.location === 'drawer').length + Number(state.drawerItems.manual) + state.drawerItems.clips}. ${t.drawerHelp}`, dropTargetRect('drawer', view.held, view.heldItems), 'drawer'),
     hotspot('trash', t.trash, dropTargetRect('trash', view.held, view.heldItems), 'trash'),
-    ...state.papers.filter(paper => paper.location === 'desk').flatMap(paper => {
+    ...state.papers.filter(paper => paper.location === 'desk' && !view.hiddenPaperIds?.includes(paper.id)).flatMap(paper => {
       const id: DeskItemId = `paper-${paper.id}`;
       const action: ShiftAction = paper.kind === 'note' ? { type: 'write-note', paperId: paper.id }
         : paper.kind === 'letter' && !paper.opened ? { type: 'open-letter', paperId: paper.id }
@@ -147,7 +149,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     }
     if (id.startsWith('paper-')) {
       const paper = state.papers.find(entry => `paper-${entry.id}` === id && entry.location === 'desk');
-      if (paper) drawPaperwork(ctx, paper, bounds, locale, lifted, visibleDocumentClip(state, paper.id, view));
+      if (paper && !view.hiddenPaperIds?.includes(paper.id)) drawPaperwork(ctx, paper, bounds, locale, lifted, visibleDocumentClip(state, paper.id, view));
       continue;
     }
     if (id.startsWith('clip-')) {
@@ -164,19 +166,24 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     if (!visit?.certificateTaken || !patient) continue;
     drawCertificate(ctx, state, bounds, locale, lifted, visibleDocumentClip(state, 'certificate', view));
   }
+  // The doctor speaks from our side of the desk, opposite the seated patient.
+  // Keep the existing balloon above paperwork, with its tail toward the player.
+  if (view.clinicSpeech) drawPatientSpeech(ctx, view.clinicSpeech.text, view.clinicSpeech.speaker === 'cleaner' ? 8 : 20, view.clinicSpeech.speaker === 'cleaner' ? 9 : 292, view.clinicSpeech.speaker === 'doctor' ? 'down' : 'left');
 }
 
 /** A little paper-colored comic balloon, sized to the actual short utterance. */
-function drawPatientSpeech(ctx: CanvasRenderingContext2D, value: string): void {
-  const x = 111, y = 49, w = measureDocumentText(value) + 14, h = 22;
+function drawPatientSpeech(ctx: CanvasRenderingContext2D, value: string, x = 111, y = 49, tail: 'left' | 'down' = 'left'): void {
+  const w = measureDocumentText(value) + 14, h = 22;
   box(ctx, x + 3, y, w - 6, h, '#30372a');
   box(ctx, x, y + 3, w, h - 6, '#30372a');
   box(ctx, x + 3, y + 1, w - 6, h - 2, '#e4dcbb');
   box(ctx, x + 1, y + 3, w - 2, h - 6, '#e4dcbb');
-  // The tapered tail points left toward the patient, staying clear of the face.
-  for (let row = 0; row < 7; row++) {
-    box(ctx, x + 6 - row, y + h - 1 + row, 8 - row, 1, '#30372a');
-    if (row < 5) box(ctx, x + 7 - row, y + h - 1 + row, 5 - row, 1, '#e4dcbb');
+  // Patient speech points toward the face. The doctor's centered tail exits
+  // the lower frame toward the player, without mirroring the localized text.
+  for (let row = 0; row < 8; row++) {
+    const left = tail === 'down' ? x + Math.floor(w / 2) - 4 + Math.floor(row / 2) : x + 6 - row;
+    box(ctx, left, y + h - 1 + row, 8 - row, 1, '#30372a');
+    if (row < 5) box(ctx, left + 1, y + h - 1 + row, 5 - row, 1, '#e4dcbb');
   }
   drawDocumentText(ctx, value, x + 7, y + 6, { color: '#30372a' });
 }

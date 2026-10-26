@@ -7,7 +7,8 @@
 - The doctor's consulting room is number 04.
 - The doctor calls the next patient with a bell on the left side of the desk.
 - Patient order is randomized; the first day has no fixed opening sequence.
-- The working day runs from 08:00 to 14:00. The player arrives shortly before 08:00.
+- At most 33% of patients in a newly arranged daily queue are unfit for work. This also applies to every initial portion of that queue, so shorter working days retain the same limit. Examination criteria still determine each patient's decision.
+- New patients are admitted from 08:00 to 14:00. The player arrives shortly before 08:00; the clock continues advancing during work after admissions end.
 - A single click picks up an item, which follows the cursor; the next click puts it down or attempts to use it. Stamps can only be put away in their dedicated places.
 - Documents and books shrink when picked up from either desktop, then keep their compact size while carried; placing them on the right desktop enlarges them for reading. Stamps are the exception and grow slightly when picked up.
 - Documents on the right may overlap the consulting room, provided at least half of each sheet remains over the desktop.
@@ -19,10 +20,12 @@
 - Patients speak sparingly, using small comic speech balloons. Not everyone greets the doctor; patients refused fitness for work generally leave without speaking.
 - The clinic has a staff room where doctors and nurses talk over coffee during a break.
 
+- Patient birth dates are consistent across case variants and match the intended age of their portraits. Medical notes include age calculated from birth date on the date of the visit.
 - Patients bring occupational-health referrals from specific employers. Referrals distinguish initial and periodic examinations and include birth date, sex, job, work conditions, and managerial responsibility.
 - A scale with a height measure provides the patient's weight and height.
-- Clicking the patient with an empty hand performs a general examination. It records an absence of concerns or an abnormal finding. Any abnormal finding requires refusal; specialist consultations will be added later.
-- Blood pressure is recorded as measured values for the doctor to interpret. Very high values are written in red. The rulebook explains how to interpret the readings.
+- Clicking the patient with an empty hand performs a general examination. It records an absence of concerns or one of 18 specific abnormal findings. The finding stays the same on repeated examination of that case and is named in the notes. Any abnormal finding requires refusal for every job; specialist consultations will be added later.
+- Repeated blood pressure measurements vary slightly. Notes retain the first two measurements without overwriting them on later attempts; the latest result is still shown briefly. Blood pressure is recorded as measured values for the doctor to interpret. Very high values are written in red. The rulebook explains how to interpret the readings.
+- Examinations can be performed as soon as the patient arrives, before taking or reading the referral. Findings remain available for existing or later-fetched notes. Every examination briefly shows a concise result or comment in a speech balloon.
 - Vision results record a separate value for each eye. Only a significant defect disqualifies a worker in a position requiring a vision examination. There are no pilots in the current patient roster.
 - The certificate communicates only approval or refusal, alongside the patient's identity. Examination findings belong in separate medical notes written by the doctor.
 - The doctor manually enters the patient's name on the certificate using its pen corner. A certificate must be named and stamped before it is handed back.
@@ -33,13 +36,13 @@
 - Formal documents carry issue dates, seals and signatures. The refusal stamp reads ODMOWA instead of NIEZDOLNY and is not limited to medical grounds.
 - Dropping a sheet onto a paperclip attached to another sheet joins the documents into one movable bundle. Clicking the attached clip separates the documents.
 - The desk telephone currently provides an exchange tone; calls are not available yet.
-- A detected mistaken approval brings a letter from ZUS; a detected mistaken refusal brings a letter from the employer. The doctor can open the envelope, read the letter, and discard it.
+- A detected mistaken approval brings a letter from ZUS; a detected mistaken refusal brings a letter from the employer. Letters appear after a short delay, once the patient has left. The doctor can open the envelope, read the letter, and discard it.
 - ZUS and employers use visibly different seals on their documents.
 - Their signed letters use varied administrative wording about proceedings, charges and insurance, rather than directly explaining the doctor's mistake.
 
 ## Work and household budget
 
-- New admissions end at 14:00. The last patient admitted before closing can complete every examination and procedure before leaving. That patient's departure ends the working day without another call.
+- New admissions end at 14:00. The last admitted patient may continue examinations and paperwork afterwards; that patient's departure ends the working day without another call. At 17:00 a cleaner calls “zamykamy już!” from the corridor. At 17:15 the clinic closes and any unfinished visit is interrupted, with no completed-visit bonus or decision penalty. Existing notes and referrals remain.
 - After work, the doctor goes home, may encounter a special event, and reviews a brief household budget before going to work again.
 - The household budget shows base income, patient bonus, money from the previous month, living costs, fines and insurance, without detailed explanations.
 - Weekend domestic scenes may differ. A special event may be a trip to an unnamed mountain or seaside resort.

@@ -14,6 +14,7 @@ export function startMobileReception(app: HTMLElement): { setActive(active: bool
   let step: Step = 'tone';
   let activeSound: string | undefined;
   let activated = false;
+  let screenAdvanceAfter = 0;
   let noteArt: HTMLImageElement | undefined;
   let balloonArt: HTMLImageElement | undefined;
   app.className = 'mobile-app';
@@ -120,6 +121,7 @@ export function startMobileReception(app: HTMLElement): { setActive(active: bool
     const index = steps.indexOf(step);
     if (index === steps.length - 1) return;
     step = steps[index + 1];
+    screenAdvanceAfter = performance.now() + 1000;
     stopPhone();
     gesture();
     render();
@@ -128,7 +130,12 @@ export function startMobileReception(app: HTMLElement): { setActive(active: bool
     if (step === 'note') note.focus({ preventScroll: true });
   }
   next.addEventListener('click', advance);
-  receiver.addEventListener('click', gesture);
+  reception.addEventListener('click', event => {
+    const target = event.target;
+    if (!(target instanceof Element) || target.closest('#mobile-settings, #mobile-next')) return;
+    if (performance.now() < screenAdvanceAfter) return;
+    advance();
+  });
   // Keyboard activation stays with native buttons; held Enter cannot skip the call.
   app.addEventListener('keydown', event => { if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault(); });
   sound.addEventListener('click', () => {

@@ -1,5 +1,5 @@
 import { gameDate, isWeekend } from './calendar';
-import { PATIENTS, CHARACTER_COUNT, createRoster, randomStep, hasRequiredExaminations, type ExaminationId, type VisionValues, type PressureValues } from './patients';
+import { PATIENTS, CHARACTER_COUNT, createRoster, randomStep, hasRequiredExaminations, disqualifyingPressure, type ExaminationId, type VisionValues, type PressureValues } from './patients';
 import { BASE_INSURANCE, emptyConsequences, settleDay, type DailyConsequences, type DaySettlement } from './economy';
 export type { DaySettlement, DailyConsequences } from './economy';
 
@@ -8,6 +8,8 @@ export const SHIFT_LENGTH = CHARACTER_COUNT;
 export const ARRIVAL_MINUTES = 477;
 export const SHIFT_START_MINUTES = 480;
 export const SHIFT_END_MINUTES = 840;
+export const CLEANER_WARNING_MINUTES = 1020;
+export const CLINIC_CLOSE_MINUTES = 1035;
 // Minutes of simulated work. Pointer movement and rendering never spend time.
 export const ACTION_MINUTES = { handling: 1, reading: 1, general: 3, vision: 3, pressure: 4, measurements: 2 } as const;
 export const GAME_LIMITS = { day: 1_000_000, money: 1_000_000_000, patients: 1_000_000_000, papers: 4096, paperId: 1_000_000_000, drawerClips: 4096 } as const;
@@ -22,6 +24,7 @@ export interface NoteResults {
   general: TestResult | null;
   vision: VisionValues | null;
   pressure: PressureValues | null;
+  pressureReadings: PressureValues[];
   weight: number | null;
   height: number | null;
 }
@@ -45,6 +48,8 @@ export interface Visit {
   examinationOrder: ExaminationId[];
   visionTested: boolean;
   pressureTested: boolean;
+  pressureLatest: PressureValues | null;
+  pressureReadings: PressureValues[];
   measurementsTaken: boolean;
   decision: Decision | null;
 }
@@ -97,7 +102,7 @@ export type GameFeedback =
   | 'paper-wrong-patient' | 'results-needed' | 'letter-opened' | 'paper-clipped'
   | 'paper-unclipped' | 'papers-joined' | 'clip-needed' | 'certificate-in-bundle'
   | 'certificate-written' | 'certificate-name-needed'
-  | 'item-stored' | 'item-retrieved' | 'item-missing';
+  | 'item-stored' | 'item-retrieved' | 'item-missing' | 'visit-interrupted';
 
 export function createInitialState(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0]!): GameState {
   const generated = createRoster(seed >>> 0);
@@ -134,7 +139,8 @@ function noteResults(visit: Visit): NoteResults {
   return {
     general: visit.generalTested ? patient.general : null,
     vision: visit.visionTested ? { ...patient.visionValues } : null,
-    pressure: visit.pressureTested ? { ...patient.pressureValues } : null,
+    pressure: visit.pressureReadings.length ? { ...visit.pressureReadings.at(-1)! } : null,
+    pressureReadings: visit.pressureReadings.map(reading => ({ ...reading })),
     weight: visit.measurementsTaken ? patient.weight : null,
     height: visit.measurementsTaken ? patient.height : null,
   };
@@ -142,7 +148,7 @@ function noteResults(visit: Visit): NoteResults {
 
 /** Examination transitions record findings, including notes kept in the drawer. */
 function recordResults(papers: Paper[], visit: Visit | null, day: number): Paper[] {
-  if (!visit || visit.document !== 'desk' || (!visit.generalTested && !visit.visionTested && !visit.pressureTested && !visit.measurementsTaken)) return papers;
+  if (!visit || (!visit.generalTested && !visit.visionTested && !visit.pressureTested && !visit.measurementsTaken)) return papers;
   return papers.map(paper => paper.kind === 'note'
     && ((paper.patientId === null && paper.location === 'desk') || (paper.patientId === visit.patientId && paper.day === day))
     ? { ...paper, patientId: visit.patientId, day, results: noteResults(visit), examinationOrder: [...visit.examinationOrder] } : paper);
@@ -150,6 +156,19 @@ function recordResults(papers: Paper[], visit: Visit | null, day: number): Paper
 
 /** Pure transitions: all results and rewards are reproducible from saved state. */
 export function applyAction(state: GameState, action: GameAction): ActionResult {
+  const result = transition(state, action);
+  if (state.phase !== 'cabinet' || result.state === state || result.state.clockMinutes < CLINIC_CLOSE_MINUTES) return result;
+  // A procedure which reaches closing cannot finish the appointment. Settle
+  // from its prior state so it cannot award a bonus or issue a complaint.
+  const closed = { ...state, clockMinutes: CLINIC_CLOSE_MINUTES, visit: null,
+    paperClips: state.paperClips.map(group => group.filter(id => id !== 'certificate')).filter(group => group.length > 0) };
+  const settlement = settleDay(closed);
+  if (Math.abs(settlement.settlement.closingBalance) > GAME_LIMITS.money) return { state, feedback: 'limit-reached' };
+  return { state: { ...closed, ...settlement, phase: 'home', money: settlement.settlement.closingBalance },
+    feedback: state.visit ? 'visit-interrupted' : 'shift-finished' };
+}
+
+function transition(state: GameState, action: GameAction): ActionResult {
   const unchanged = (feedback: GameFeedback): ActionResult => ({ state, feedback });
   const changed = (changes: Partial<GameState>, feedback: GameFeedback): ActionResult => ({ state: { ...state, ...changes }, feedback });
 
@@ -181,10 +200,10 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
     if (!canEndDay(state)) return unchanged('shift-unfinished');
     const result = settleDay(state);
     if (Math.abs(result.settlement.closingBalance) > GAME_LIMITS.money) return unchanged('limit-reached');
-    return changed({ ...result, phase: 'home', clockMinutes: SHIFT_END_MINUTES, money: result.settlement.closingBalance }, 'shift-finished');
+    return changed({ ...result, phase: 'home', clockMinutes: Math.max(SHIFT_END_MINUTES, state.clockMinutes), money: result.settlement.closingBalance }, 'shift-finished');
   }
   if (action === 'advance-intro' || action === 'skip-intro') return unchanged('none');
-  const spend = (minutes: number): number => Math.min(SHIFT_END_MINUTES, state.clockMinutes + minutes);
+  const spend = (minutes: number): number => Math.min(CLINIC_CLOSE_MINUTES, state.clockMinutes + minutes);
   const canAddPaper = (): boolean => state.papers.length < GAME_LIMITS.papers && state.nextPaperId <= GAME_LIMITS.paperId;
   const addPaper = (paper: Paper, changes: Partial<GameState>, feedback: GameFeedback): ActionResult => changed({
     ...changes, papers: recordResults([...state.papers, paper], state.visit, state.day), nextPaperId: state.nextPaperId + 1,
@@ -204,7 +223,7 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
   if (action === 'take-paper') {
     if (!canAddPaper()) return unchanged('limit-reached');
     return addPaper({ id: state.nextPaperId, kind: 'note', day: state.day, patientId: null, location: 'desk', additionalWritten: false,
-      examinationOrder: [], results: { general: null, vision: null, pressure: null, weight: null, height: null } },
+      examinationOrder: [], results: { general: null, vision: null, pressure: null, pressureReadings: [], weight: null, height: null } },
     { clockMinutes: spend(ACTION_MINUTES.handling) }, 'paper-taken');
   }
   if (typeof action === 'object' && 'documentId' in action) {
@@ -284,7 +303,7 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
     if (isShiftFinished(state)) return unchanged('shift-finished');
     if (state.patientsProcessed === GAME_LIMITS.patients) return unchanged('limit-reached');
     return changed({ clockMinutes: Math.max(SHIFT_START_MINUTES, spend(ACTION_MINUTES.handling)), visit: {
-      patientId: state.roster[state.shiftCompleted]!, document: 'tray', certificateTaken: false, certificateNamed: false, generalTested: false, examinationOrder: [], visionTested: false, pressureTested: false, measurementsTaken: false, decision: null,
+      patientId: state.roster[state.shiftCompleted]!, document: 'tray', certificateTaken: false, certificateNamed: false, generalTested: false, examinationOrder: [], visionTested: false, pressureTested: false, pressureLatest: null, pressureReadings: [], measurementsTaken: false, decision: null,
     } }, 'patient-called');
   }
 
@@ -296,7 +315,8 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
     return addPaper({ id: state.nextPaperId, kind: 'referral', patientId: visit.patientId, day: state.day, location: 'desk' },
       { clockMinutes: spend(ACTION_MINUTES.handling), visit: { ...visit, document: 'desk' } }, 'document-taken');
   }
-  if (visit.document !== 'desk') return unchanged('document-needed');
+  const isExamination = action === 'run-general' || action === 'run-vision' || action === 'run-pressure' || action === 'run-measurements';
+  if (visit.document !== 'desk' && !isExamination) return unchanged('document-needed');
   if (action === 'take-certificate') {
     if (visit.certificateTaken) return unchanged('certificate-taken');
     return changed({ clockMinutes: spend(ACTION_MINUTES.handling), visit: { ...visit, certificateTaken: true } }, 'certificate-taken');
@@ -314,8 +334,22 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
     return examination('vision', { visionTested: true }, ACTION_MINUTES.vision, feedback);
   }
   if (action === 'run-pressure') {
+    const previous = visit.pressureLatest;
+    const draw = previous ? randomStep(state.rngState) : null;
+    const baseline = patient.pressureValues;
+    // Stay near the case's established values: fluctuations never alter the
+    // fictional fitness category, and consecutive measurements always differ.
+    const candidates: PressureValues[] = [];
+    for (let systolic = -3; systolic <= 3; systolic++) for (let diastolic = -2; diastolic <= 2; diastolic++) {
+      const reading = { systolic: baseline.systolic + systolic, diastolic: baseline.diastolic + diastolic };
+      if ((!previous || reading.systolic !== previous.systolic || reading.diastolic !== previous.diastolic)
+        && disqualifyingPressure(reading) === (patient.pressure === 'refer')) candidates.push(reading);
+    }
+    const reading = draw ? candidates[Math.floor(draw.value * candidates.length)]! : { ...baseline };
     const feedback = patient.pressure === 'pass' ? 'pressure-pass' : 'pressure-refer';
-    return examination('pressure', { pressureTested: true }, ACTION_MINUTES.pressure, feedback);
+    const result = examination('pressure', { pressureTested: true, pressureLatest: reading,
+      pressureReadings: visit.pressureReadings.length < 2 ? [...visit.pressureReadings, reading] : visit.pressureReadings }, ACTION_MINUTES.pressure, feedback);
+    return { ...result, state: { ...result.state, rngState: draw?.seed ?? state.rngState } };
   }
   if (action === 'run-measurements') {
     return examination('measurements', { measurementsTaken: true }, ACTION_MINUTES.measurements, 'measurements-taken');

@@ -1,6 +1,7 @@
 import { createInitialState } from './fixtures/game';
 import { describe, expect, it } from 'vitest';
-import { applyAction, GAME_LIMITS, INTRO_SLIDES, PATIENTS, clippedDocuments, isDocumentClipped, type GameAction, type GameState } from '../src/core/game';
+import { applyAction, CLINIC_CLOSE_MINUTES, GAME_LIMITS, INTRO_SLIDES, PATIENTS, clippedDocuments, isDocumentClipped, type GameAction, type GameState } from '../src/core/game';
+import { disqualifyingPressure } from '../src/core/patients';
 
 function act(state: GameState, ...actions: GameAction[]): GameState {
   return actions.reduce((current, action) => applyAction(current, action).state, state);
@@ -46,7 +47,7 @@ describe('separate drawer objects', () => {
       state = act(state, 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document');
     }
     const closed = { ...state, phase: 'cabinet' as const, settlement: null, clockMinutes: 840 };
-    expect(applyAction(closed, { type: 'retrieve-drawer-item', item: 'clip' }).state).toMatchObject({ clockMinutes: 840, drawerItems: { manual: true, clips: 0 } });
+    expect(applyAction(closed, { type: 'retrieve-drawer-item', item: 'clip' }).state).toMatchObject({ clockMinutes: 841, drawerItems: { manual: true, clips: 0 } });
     expect(act(closed, 'end-day', 'next-day').drawerItems).toEqual({ manual: true, clips: 1 });
   });
 });
@@ -76,13 +77,13 @@ describe('career introduction', () => {
 });
 
 describe('cabinet work', () => {
-  it('requires a patient and paperwork for work, and a stamp before returning the document', () => {
+  it('requires a patient for work and referral intake before certificate handling', () => {
     let state = cabinet();
     expect(applyAction(state, 'run-vision')).toEqual({ state, feedback: 'no-patient' });
     state = act(state, 'call-patient');
     expect(state.visit?.document).toBe('tray');
     expect(applyAction(state, 'call-patient')).toEqual({ state, feedback: 'patient-waiting' });
-    for (const action of ['take-certificate', 'write-certificate', 'run-vision', 'run-pressure', 'stamp-fit', 'stamp-unfit', 'return-document'] as const) {
+    for (const action of ['take-certificate', 'write-certificate', 'stamp-fit', 'stamp-unfit', 'return-document'] as const) {
       expect(applyAction(state, action)).toEqual({ state, feedback: 'document-needed' });
     }
     state = act(state, 'take-document', 'take-certificate');
@@ -147,7 +148,8 @@ describe('cabinet work', () => {
       expect(pressure.feedback).toBe(`pressure-${patient.pressure}`);
       state = act(pressure.state, 'run-general', 'run-measurements', 'write-certificate', patient.expectedDecision === 'fit' ? 'stamp-fit' : 'stamp-unfit', 'return-document');
     }
-    expect(state).toMatchObject({ day: 1, phase: 'home', clockMinutes: 840, visit: null });
+    expect(state).toMatchObject({ day: 1, phase: 'home', visit: null });
+    expect(state.clockMinutes).toBeGreaterThanOrEqual(840);
     expect(applyAction(state, 'call-patient')).toEqual({ state, feedback: 'none' });
     state = act(state, 'end-day');
     expect(state.settlement).toMatchObject({ income: 1000 + state.shiftCompleted * 50, insuranceCost: 300, fines: 0 });
@@ -196,15 +198,15 @@ describe('cabinet work', () => {
     const empty = cabinet();
     expect(act(empty, 'run-vision', 'return-document', 'next-day').clockMinutes).toBe(477);
     const active = act(empty, 'call-patient');
-    expect(act(active, 'call-patient', 'run-pressure', 'return-document').clockMinutes).toBe(480);
+    expect(act(active, 'call-patient', 'take-certificate', 'return-document').clockMinutes).toBe(480);
   });
 
-  it('caps action time at closing without preventing completion of an active visit', () => {
+  it('continues action time beyond admissions closing while completing an active visit', () => {
     const late = { ...readyToStamp(), clockMinutes: 839 };
     const stamped = act(late, 'run-pressure', 'stamp-fit', 'handle-item', 'read-manual');
-    expect(stamped.clockMinutes).toBe(840);
+    expect(stamped.clockMinutes).toBe(846);
     const returned = applyAction(stamped, 'return-document');
-    expect(returned.state.clockMinutes).toBe(840);
+    expect(returned.state.clockMinutes).toBe(847);
     expect(returned.feedback).toBe('patient-cleared');
   });
 
@@ -442,6 +444,76 @@ describe('paperclip bundles', () => {
 
 
 describe('general examination and chronological findings', () => {
+  it('examines before referral intake and retains findings on existing, retrieved and later-fetched notes', () => {
+    let state = act(cabinet(), 'take-paper', 'take-paper', { type: 'store-paper', paperId: 2 }, 'call-patient');
+    state = act(state, 'run-general', 'run-vision', 'run-pressure', 'run-measurements');
+    expect(state.visit).toMatchObject({ document: 'tray', certificateTaken: false, decision: null,
+      generalTested: true, visionTested: true, pressureTested: true, measurementsTaken: true,
+      examinationOrder: ['general', 'vision', 'pressure', 'measurements'] });
+    expect(state.clockMinutes).toBe(493);
+    const first = state.papers[0]!;
+    expect(first).toMatchObject({ patientId: 0, results: { general: 'pass', pressure: PATIENTS[0]!.pressureValues } });
+    expect(state.papers[1]).toMatchObject({ patientId: null });
+    state = act(state, { type: 'retrieve-paper', paperId: 2 }, 'take-paper');
+    for (const note of state.papers) {
+      expect(note).toMatchObject({ patientId: 0, examinationOrder: first.kind === 'note' ? first.examinationOrder : [],
+        results: first.kind === 'note' ? first.results : {} });
+    }
+    const visitBeforeIntake = state.visit;
+    state = act(state, 'take-document');
+    expect(state.visit).toEqual({ ...visitBeforeIntake, document: 'desk' });
+    expect(state.papers.at(-1)).toMatchObject({ kind: 'referral', patientId: 0 });
+    expect(act(state, 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document')).toMatchObject({ patientsProcessed: 1, visit: null });
+  });
+
+  it('varies repeat pressure readings deterministically and keeps only the first two on all current notes', () => {
+    let state = act(cabinet(), 'call-patient', 'take-document', 'take-paper', 'run-pressure');
+    expect(state.visit!.pressureReadings).toEqual([PATIENTS[0]!.pressureValues]);
+    const first = state.visit!.pressureReadings[0];
+    state = act(state, { type: 'store-paper', paperId: 2 });
+    const replay = applyAction(state, 'run-pressure').state;
+    const repeated = applyAction(state, 'run-pressure').state;
+    expect(repeated).toEqual(replay);
+    expect(repeated.visit!.pressureReadings).toHaveLength(2);
+    expect(repeated.visit!.pressureReadings[1]).not.toEqual(first);
+    state = act(repeated, 'run-pressure', 'take-paper');
+    expect(state.visit!.pressureReadings).toHaveLength(2);
+    expect(state.visit!.pressureReadings).toEqual(repeated.visit!.pressureReadings);
+    expect(state.visit!.pressureLatest).not.toEqual(repeated.visit!.pressureLatest);
+    for (const paper of state.papers.filter(paper => paper.kind === 'note')) {
+      expect(paper).toMatchObject({ results: { pressureReadings: state.visit!.pressureReadings, pressure: state.visit!.pressureReadings[1] } });
+    }
+    expect(state.visit!.examinationOrder).toEqual(['pressure']);
+  });
+
+  it('keeps repeated readings close to every case baseline without changing its fitness category', () => {
+    for (const patient of PATIENTS) {
+      let state = act({ ...cabinet(), roster: [patient.id] }, 'call-patient', 'take-document');
+      for (let index = 0; index < 8; index++) {
+        const prior = state.visit!.pressureLatest;
+        state = act(state, 'run-pressure');
+        const reading = state.visit!.pressureLatest!;
+        expect(reading).not.toEqual(prior);
+        expect(Math.abs(reading.systolic - patient.pressureValues.systolic)).toBeLessThanOrEqual(3);
+        expect(Math.abs(reading.diastolic - patient.pressureValues.diastolic)).toBeLessThanOrEqual(2);
+        expect(disqualifyingPressure(reading)).toBe(patient.pressure === 'refer');
+      }
+    }
+  });
+
+  it.each(['run-pressure', 'return-document', 'handle-item'] as const)('interrupts at 17:15 during %s without counting or penalizing the unfinished visit', action => {
+    const prepared = act(readyToStamp(), 'take-paper', 'stamp-unfit', { type: 'clip-document', documentId: 2 },
+      { type: 'join-documents', documentId: 'certificate', targetId: 2 });
+    const late = { ...prepared, clockMinutes: CLINIC_CLOSE_MINUTES - 1 };
+    const result = applyAction(late, action);
+    expect(result.feedback).toBe('visit-interrupted');
+    expect(result.state).toMatchObject({ phase: 'home', visit: null, clockMinutes: CLINIC_CLOSE_MINUTES,
+      shiftCompleted: 0, patientsProcessed: 0, daily: late.daily, papers: late.papers,
+      paperClips: [[2]], settlement: { patients: 0, patientBonus: 0, fines: 0 } });
+    expect(applyAction(result.state, 'end-day').state).toBe(result.state);
+    expect(act(result.state, 'next-day')).toMatchObject({ phase: 'cabinet', clockMinutes: 477, visit: null });
+  });
+
   it('requires a general examination for every profile, and records findings in action order only once', () => {
     let state = act(cabinet(), 'call-patient', 'take-document', 'take-paper');
     expect(state.papers[1]).toMatchObject({ patientId: null, examinationOrder: [], results: { general: null } });

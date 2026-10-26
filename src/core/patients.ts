@@ -95,13 +95,27 @@ export interface PatientCase {
   workPatternId: WorkPatternId;
 }
 
+/** Completed years on a civil date; saved notes use their visit date, not today. */
+export function patientAge(patient: Pick<PatientCase, 'birthDate'>, date: { year: number; month: number; day: number }): number {
+  const [year, month, day] = patient.birthDate.split('-').map(Number) as [number, number, number];
+  const birthdayPending = date.month < month || (date.month === month && date.day < day);
+  return date.year - year - Number(birthdayPending);
+}
+
+export const GENERAL_FINDING_COUNT = 18;
+
+/** Fixed case findings, shared by repeats and archived notes; no random draw. */
+export function generalFindingIndex(patient: Pick<PatientCase, 'id' | 'general'>): number | null {
+  return patient.general === 'refer' ? patient.id % GENERAL_FINDING_COUNT : null;
+}
+
 export const CHARACTER_COUNT = 53;
 export const LEGACY_CASE_COUNT = 103;
 type OriginalCase = Omit<PatientCase, 'general' | 'visionValues' | 'pressureValues'>;
 const original: OriginalCase[] = [
-  { id: 0, characterId: 0, portraitId: 'patient-0', employerId: 0, jobId: 0, caseVariant: 0, conditionId: 'healthy', vision: 'pass', pressure: 'pass', expectedDecision: 'fit', birthDate: '1952-04-18', sex: 'female', examination: 'periodic', managerial: false, weight: 62, height: 164, requirementId: 'full', workPatternId: 'day' },
-  { id: 1, characterId: 1, portraitId: 'patient-1', employerId: 1, jobId: 1, caseVariant: 1, conditionId: 'vision', vision: 'refer', pressure: 'pass', expectedDecision: 'unfit', birthDate: '1947-11-06', sex: 'male', examination: 'initial', managerial: true, weight: 86, height: 178, requirementId: 'full', workPatternId: 'shifts' },
-  { id: 2, characterId: 2, portraitId: 'patient-2', employerId: 2, jobId: 2, caseVariant: 2, conditionId: 'pressure', vision: 'pass', pressure: 'refer', expectedDecision: 'unfit', birthDate: '1958-08-23', sex: 'female', examination: 'periodic', managerial: false, weight: 71, height: 169, requirementId: 'full', workPatternId: 'shifts' },
+  { id: 0, characterId: 0, portraitId: 'patient-0', employerId: 0, jobId: 0, caseVariant: 0, conditionId: 'healthy', vision: 'pass', pressure: 'pass', expectedDecision: 'fit', birthDate: '1942-04-18', sex: 'female', examination: 'periodic', managerial: false, weight: 62, height: 164, requirementId: 'full', workPatternId: 'day' },
+  { id: 1, characterId: 1, portraitId: 'patient-1', employerId: 1, jobId: 1, caseVariant: 1, conditionId: 'vision', vision: 'refer', pressure: 'pass', expectedDecision: 'unfit', birthDate: '1937-11-06', sex: 'male', examination: 'initial', managerial: true, weight: 86, height: 178, requirementId: 'full', workPatternId: 'shifts' },
+  { id: 2, characterId: 2, portraitId: 'patient-2', employerId: 2, jobId: 2, caseVariant: 2, conditionId: 'pressure', vision: 'pass', pressure: 'refer', expectedDecision: 'unfit', birthDate: '1925-08-23', sex: 'female', examination: 'periodic', managerial: false, weight: 71, height: 169, requirementId: 'full', workPatternId: 'shifts' },
 ];
 const ages = [26, 53, 41, 30, 59, 44, 33, 61, 47, 24, 38, 49, 55, 36, 22, 57, 45, 28, 63, 40, 31, 52, 43, 34, 50];
 const newAges = [32, 46, 60, 27, 39, 54, 23, 64, 48, 35, 56, 29, 42, 58, 25, 51, 37, 62, 44, 30, 55, 40, 33, 47, 59];
@@ -180,6 +194,8 @@ export const PATIENTS: readonly PatientCase[] = [
 ];
 
 const CASES_BY_CHARACTER = Array.from({ length: CHARACTER_COUNT }, (_, characterId) => PATIENTS.filter(patient => patient.characterId === characterId).map(patient => patient.id));
+const FIT_CASES_BY_CHARACTER = CASES_BY_CHARACTER.map(cases => cases.filter(id => PATIENTS[id]!.expectedDecision === 'fit'));
+const MAX_UNFIT_PERCENT = 33;
 
 /** Explicit unsigned state makes replay/import independent of browser randomness. */
 export function randomStep(seed: number): { value: number; seed: number } {
@@ -200,5 +216,37 @@ export function createRoster(seed: number, _tutorial = false): { roster: number[
     const random = randomStep(seed); seed = random.seed;
     return cases[Math.floor(random.value * cases.length)]!;
   });
+
+  // Replace excess refusals with existing fit cases of the same characters.
+  // Historical case facts and the two original, always-unfit cases stay intact.
+  let unfitCount = roster.filter(id => PATIENTS[id]!.expectedDecision === 'unfit').length;
+  const maxUnfit = Math.floor(roster.length * MAX_UNFIT_PERCENT / 100);
+  const replaceable = roster.flatMap((id, index) => PATIENTS[id]!.expectedDecision === 'unfit'
+    && FIT_CASES_BY_CHARACTER[PATIENTS[id]!.characterId]!.length > 0 ? [index] : []);
+  while (unfitCount > maxUnfit) {
+    if (replaceable.length === 0) throw new Error('Patient catalog cannot satisfy the unfit limit');
+    const selection = randomStep(seed); seed = selection.seed;
+    const index = replaceable.splice(Math.floor(selection.value * replaceable.length), 1)[0]!;
+    const patient = PATIENTS[roster[index]!]!;
+    const cases = FIT_CASES_BY_CHARACTER[patient.characterId]!;
+    const variant = randomStep(seed); seed = variant.seed;
+    roster[index] = cases[Math.floor(variant.value * cases.length)]!;
+    unfitCount -= 1;
+  }
+
+  // A workday usually ends before all 53 visits: cap every prefix as well.
+  // Advance the next fit patient only when needed, preserving the other order.
+  unfitCount = 0;
+  for (let index = 0; index < roster.length; index += 1) {
+    if (PATIENTS[roster[index]!]!.expectedDecision === 'fit') continue;
+    if ((unfitCount + 1) * 100 <= (index + 1) * MAX_UNFIT_PERCENT) {
+      unfitCount += 1;
+      continue;
+    }
+    // The full-roster cap guarantees a fit patient remains to fill this slot.
+    const nextFit = roster.findIndex((id, position) => position > index && PATIENTS[id]!.expectedDecision === 'fit');
+    const [fitId] = roster.splice(nextFit, 1);
+    roster.splice(index, 0, fitId!);
+  }
   return { roster, seed };
 }

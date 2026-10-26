@@ -1,10 +1,11 @@
 import type { GameState } from '../core/game';
-import { formatGameDate, isWeekend } from '../core/calendar';
+import { isWeekend } from '../core/calendar';
 import { translations, type Locale } from '../i18n';
 import { drawHomeIllustration, type HomeIllustration } from '../render/clinic';
 import { drawText, measureText } from '../render/font';
 
 export const HOME_ACTION = { x: 23, y: 272, w: 318, h: 30 } as const;
+export const HOME_AMOUNT_RIGHT = 319;
 export type HomePageKind = 'arrival' | 'event' | 'budget' | 'work';
 
 /** The same original face as the welcome screen, wrapped at its rendered size. */
@@ -43,20 +44,24 @@ export function homePage(state: GameState, locale: Locale, page: number) {
   const title = kind === 'arrival' ? (rest ? h.weekendTitle : h.title)
     : kind === 'event' && event ? h.events[event]
     : kind === 'work' ? h.workTitle : rest ? h.weekendLedger : h.ledger;
-  const comment = kind === 'arrival' ? (rest ? h.rest : h.arrival)
+  // Reuse entropy already saved by settlement. Reading, painting or importing a
+  // card cannot draw randomness, change the simulation, or reroll its comment.
+  const variant = (lines: readonly string[], offset: number): string => lines[((state.rngState >>> 8) + state.day + offset) % lines.length]!;
+  const result = s ? s.closingBalance - s.openingBalance : 0;
+  const budgetComments = result > 0 ? h.budgetComments.profit : result < 0 ? h.budgetComments.loss : h.budgetComments.even;
+  const comment = kind === 'arrival' ? (rest ? h.rest : variant(h.arrivalComments, 0))
     : kind === 'event' && event ? h.eventComments[event]
-    : kind === 'work' ? h.workComment : rest ? h.weekendComment : h.ledgerComment;
+    : kind === 'work' ? variant(h.workComments, 5) : variant(budgetComments, 9);
   const illustration: HomeIllustration = kind === 'work' ? 'going-to-work'
     : kind === 'event' && event === 'mountain-trip' ? 'mountain-resort'
     : kind === 'event' && event === 'seaside-trip' ? 'seaside-resort'
     : rest ? 'weekend-budget' : kind === 'arrival' ? 'homecoming' : 'home-evening';
-  const date = formatGameDate(state.day + Number(kind === 'work'), locale);
   const bodyScale = kind === 'budget' ? 1 : 2;
   const body = homeLines(comment, bodyScale).join('\n');
   const next = pages[page + 1];
-  const action = kind === 'work' ? h.enter : next === 'budget' ? h.budget : next === 'work' ? h.work : next ? h.onward : h.tomorrow;
-  const text = [title, date, body, ...rows.map(row => `${row.label}: ${row.value}`), action].join('\n');
-  return { kind, title, date, body, bodyScale, rows, action, text, illustration, description: h.illustrations[illustration] };
+  const action = kind === 'work' ? h.enter : next === 'work' ? h.work : next ? h.onward : h.tomorrow;
+  const text = [title, body, ...rows.map(row => `${row.label}: ${row.value}`), action].join('\n');
+  return { kind, title, body, bodyScale, rows, action, text, illustration, description: h.illustrations[illustration] };
 }
 
 /** Welcome-screen lettering; the cursor is supplied by presentation updates. */
@@ -70,13 +75,12 @@ export function renderHome(ctx: CanvasRenderingContext2D, state: GameState, loca
     return visible;
   };
   drawText(ctx, reveal(content.title), 24, 25, { color: '#e3d6b3', scale: 2 });
-  drawText(ctx, reveal(content.date), 25, 55, { color: '#aaa88d' });
   reveal(content.body).split('\n').forEach((line, index) => drawText(ctx, line, 25,
     (content.kind === 'budget' ? 79 : 99) + index * 24, { color: '#ded4b4', scale: content.bodyScale }));
   content.rows.forEach((row, index) => {
     drawText(ctx, reveal(row.label, 2), 25, 112 + index * 23, { color: '#ded4b4' });
     // Align to the full amount so its left edge stays fixed during typing.
-    drawText(ctx, reveal(row.value), 337 - measureText(row.value), 112 + index * 23, { color: '#e3d6b3' });
+    drawText(ctx, reveal(row.value), HOME_AMOUNT_RIGHT - measureText(row.value), 112 + index * 23, { color: '#e3d6b3' });
   });
   drawText(ctx, reveal(content.action), HOME_ACTION.x + 2, HOME_ACTION.y + 9, { color: '#d39a70' });
 }

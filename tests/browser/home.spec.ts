@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { applyAction, createInitialState, type GameState } from '../../src/core/game';
+import { applyAction, createInitialState, PATIENTS, type GameState } from '../../src/core/game';
 import { encodeSave, decodeSave } from '../../src/core/save';
 
 async function key(page: Page, id: string): Promise<void> {
@@ -45,7 +45,7 @@ test('last patient leaves at closing; automatic home and six-row budget preserve
   await expect(page.locator('#control-end-day')).toHaveCount(0);
   for (const id of ['run-general', 'run-vision', 'run-pressure', 'run-measurements', 'write-certificate', 'stamp-fit', 'apply-stamp', 'return-document']) await key(page, id);
   await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'arrival');
-  await expect(page.locator('#screen-description')).toContainText('Na dziś wystarczy pieczątek.');
+  await expect(page.locator('#screen-description')).toContainText('POWRÓT DO DOMU');
   await page.screenshot({ path: info.outputPath('home-arrival-pl.png') });
   await key(page, 'home-next');
   await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'budget');
@@ -77,24 +77,29 @@ test('last patient leaves at closing; automatic home and six-row budget preserve
   await page.screenshot({ path: info.outputPath('home-budget-en.png') });
   await key(page, 'home-next');
   await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'work');
-  await expect(page.locator('#screen-description')).toContainText('04/11/1983');
+  await expect(page.locator('#screen-description')).not.toContainText('04/11/1983');
   await page.screenshot({ path: info.outputPath('home-work-en.png') });
   await key(page, 'home-next');
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   const next = await exportState(page, info);
   expect(next.state).toMatchObject({ day: 2, money: saved.state.money, shiftCompleted: 0, clockMinutes: 477, settlement: null });
   expect(next.state.roster).toHaveLength(53);
+  let unfit = 0;
+  for (const [index, id] of next.state.roster.entries()) {
+    if (PATIENTS[id]!.expectedDecision === 'unfit') unfit += 1;
+    expect(100 * unfit).toBeLessThanOrEqual(33 * (index + 1));
+  }
   expect(errors).toEqual([]);
 });
 
 test('each home page types in, supports reveal and has full accessible text', async ({ page }, info) => {
   await load(page, homeState());
   await expect(page.locator('#control-home-next')).toHaveAccessibleName('Pokaż cały tekst');
-  await expect(page.locator('#screen-description')).toContainText('Na dziś wystarczy pieczątek.');
+  await expect(page.locator('#screen-description')).toContainText('POWRÓT DO DOMU');
   const first = await page.locator('#game').screenshot();
   await page.waitForTimeout(220);
   expect(await page.locator('#game').screenshot()).not.toEqual(first);
-  for (const [kind, action] of [['arrival', 'SPRAWDŹ BUDŻET'], ['budget', 'RUSZAJ DO PRACY'], ['work', 'WEJDŹ DO PRZYCHODNI']]) {
+  for (const [kind, action] of [['arrival', 'DALEJ'], ['budget', 'RUSZAJ DO PRACY'], ['work', 'WEJDŹ DO PRZYCHODNI']]) {
     await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', kind);
     await expect(page.locator('#control-home-next')).toHaveAccessibleName('Pokaż cały tekst');
     await key(page, 'home-next');
@@ -128,10 +133,10 @@ test('weekends stay at home, have optional resort events and lead into Monday', 
   await expect(page.locator('#screen-description')).toContainText('Dochód podst.: 0 zł');
   await page.screenshot({ path: info.outputPath('weekend-budget-pl.png') });
   await key(page, 'home-next');
-  await expect(page.locator('#screen-description')).toContainText('06.11.1983');
+  await expect(page.locator('#screen-description')).not.toContainText('06.11.1983');
   for (let clicks = 0; clicks < 4 && await page.locator('#controls').getAttribute('data-home-kind') !== 'work'; clicks++) await key(page, 'home-next');
   await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'work');
-  await expect(page.locator('#screen-description')).toContainText('07.11.1983');
+  await expect(page.locator('#screen-description')).not.toContainText('07.11.1983');
   await key(page, 'home-next');
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   const monday = await exportState(page, info);
@@ -160,7 +165,7 @@ test('enabling reduced motion immediately reveals the current page and all later
   await load(page, homeState());
   await expect(page.locator('#control-home-next')).toHaveAccessibleName('Pokaż cały tekst');
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await expect(page.locator('#control-home-next')).toHaveAccessibleName('SPRAWDŹ BUDŻET');
+  await expect(page.locator('#control-home-next')).toHaveAccessibleName('DALEJ');
   await key(page, 'home-next');
   await expect(page.locator('#control-home-next')).toHaveAccessibleName('RUSZAJ DO PRACY');
   await key(page, 'home-next');

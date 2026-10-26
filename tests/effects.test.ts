@@ -28,7 +28,7 @@ it('registers every bundled effect locally, looping only the mobile exchange ton
     const duration = (wav.length - 44) / (44100 * 2);
     expect(duration).toBeGreaterThan(0.04);
     const maximumDuration: Record<string, number> = {
-      'telephone.wav': 2.1, 'bell.wav': 0.8, 'phone-tone.wav': 1.1, 'phone-dial.wav': 4,
+      'cleaner-pl.wav': 2.5, 'cleaner-en.wav': 2.5, 'telephone.wav': 2.1, 'bell.wav': 0.8, 'phone-tone.wav': 1.1, 'phone-dial.wav': 4,
     };
     expect(duration).toBeLessThan(maximumDuration[file] ?? 0.5);
     expect(wav.readInt16LE(44)).toBe(0);

@@ -1,7 +1,8 @@
 import './style.css';
-import { applyAction, PATIENTS, canEndDay, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction } from './core/game';
+import { applyAction, CLEANER_WARNING_MINUTES, PATIENTS, canEndDay, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction, type ActionResult } from './core/game';
 import { effectsManifest } from './core/effects';
 import { choosePatientSpeech } from './core/patient-speech';
+import { examinationComment, examinationCommentText, type ExaminationComment } from './core/examination-feedback';
 import { renderCabinet, renderIntro, shiftButtons, shiftDescription, manualPageDescription, paperDescription, visibleDocumentClip, MANUAL_PAGE_COUNT, type SelectedStamp, type ShiftAction, type PatientSpeech } from './scenes/shift';
 import { homePage, homePages, renderHome, HOME_ACTION } from './scenes/home';
 import type { Button } from './ui';
@@ -9,7 +10,7 @@ import { createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, p
 import { installDeskInput } from './core/desk-input';
 import { drawCreatorPortrait, drawPaper, drawPanelIllustration, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
 import { drawText } from './render/font';
-import { paperClipRect, visionReading, pressureReading } from './render/paperwork';
+import { paperClipRect, visionReading, pressureReading, generalReading } from './render/paperwork';
 import { drawerButtons, drawerDescription, renderDrawer, type DrawerAction } from './render/drawer';
 import { installCursor, installDisplay, WIDTH, HEIGHT } from './core/display';
 import { translations, readPreferences, savePreferences, type Locale } from './i18n';
@@ -62,6 +63,10 @@ let patientMotion: CabinetArtOptions['patientMotion'];
 let patientExitHold = 0;
 let patientSpeech: (PatientSpeech & { remaining: number; departure: boolean }) | undefined;
 let visionSpeechAttempt = 0;
+let clinicSpeech: { comment?: ExaminationComment; speaker: 'doctor' | 'cleaner'; remaining: number } | undefined;
+let interruptedPatient: number | undefined;
+// Delivery is presentation only: consequences and correspondence are already saved.
+const pendingLetters = new Map<number, { patientId: number; remaining: number }>();
 const motionQueue: NonNullable<CabinetArtOptions['patientMotion']>[] = [];
 const documentId = (id: DeskItemId): DocumentId | undefined => id === 'document' ? 'certificate' : id.startsWith('paper-') ? Number(id.slice(6)) : undefined;
 const documentItem = (id: DocumentId): DeskItemId => id === 'certificate' ? 'document' : `paper-${id}`;
@@ -71,7 +76,8 @@ function groupItems(id: DeskItemId): DeskItemId[] {
 }
 const isHeld = (id: DeskItemId): boolean => heldItem !== null && groupItems(heldItem).includes(id);
 const deskView = () => ({ desk: deskState, held: heldItem, heldItems: heldItem ? groupItems(heldItem) : [], patientMotion, manualOpen, manualPage, clockMinutes,
-  patientSpeech: visiblePatientSpeech(), departingPatientId: departingPatientId() });
+  patientSpeech: visiblePatientSpeech(), departingPatientId: departingPatientId(),
+  clinicSpeech: clinicSpeech ? { text: clinicSpeechText(), speaker: clinicSpeech.speaker } : undefined, hiddenPaperIds: [...pendingLetters.keys()] });
 const deskRect = (id: DeskItemId) => itemRect(deskState, id, gameState.visit?.document === 'tray' && heldItem !== 'document', isHeld(id), manualOpen);
 const itemControlId = (id: DeskItemId): string => id === 'incoming-referral' ? 'take-document' : id === 'document' ? 'apply-stamp' : id;
 function deskItemHelp(id: DeskItemId): string {
@@ -215,10 +221,35 @@ function updateClock(): void {
   } else clockTransition = { from: clockMinutes, to: gameState.clockMinutes, elapsed: 0 };
 }
 
-function spendTime(action: 'handle-item' | 'read-manual'): void {
-  gameState = applyAction(gameState, action).state;
-  updateClock();
+function clinicSpeechText(): string {
+  return clinicSpeech?.comment ? examinationCommentText(clinicSpeech.comment, locale)
+    : clinicSpeech ? t().examinationSpeech.closing : '';
 }
+
+/** Every action path, including carrying and drawer operations, observes closing. */
+function performAction(action: GameAction): ActionResult {
+  const previous = gameState;
+  const result = applyAction(previous, action);
+  gameState = result.state;
+  if (gameState === previous) return result;
+  for (const paper of gameState.papers) {
+    if (paper.kind === 'letter' && paper.id >= previous.nextPaperId) {
+      pendingLetters.set(paper.id, { patientId: paper.patientId, remaining: 2000 });
+    }
+  }
+  if (previous.phase === 'cabinet' && previous.clockMinutes < CLEANER_WARNING_MINUTES && gameState.clockMinutes >= CLEANER_WARNING_MINUTES) {
+    clinicSpeech = { speaker: 'cleaner', remaining: 3600 };
+    playEffect(`cleaner-${locale}`);
+  }
+  if (result.feedback === 'visit-interrupted') interruptedPatient = previous.visit?.patientId;
+  updateClock();
+  return result;
+}
+
+function spendTime(action: 'handle-item' | 'read-manual'): void {
+  performAction(action);
+}
+
 
 function setManualOpen(open: boolean): void {
   manualOpen = open;
@@ -245,12 +276,12 @@ function arrangeDocumentGroup(active: DeskItemId, held: boolean, raise = false):
 function reconcileDeskPapers(): void {
   if (gameState.drawerItems.manual) deskState = { ...deskState, order: deskState.order.filter(id => id !== 'manual') };
   else if (!deskState.order.includes('manual')) deskState = raiseDeskItem(deskState, 'manual');
-  const visible = new Set(gameState.papers.filter(paper => paper.location === 'desk').map(paper => `paper-${paper.id}` as DeskItemId));
+  const visible = new Set(gameState.papers.filter(paper => paper.location === 'desk' && !pendingLetters.has(paper.id)).map(paper => `paper-${paper.id}` as DeskItemId));
   for (const id of deskState.order) {
     if (id.startsWith('paper-') && !visible.has(id)) deskState = removeDeskItem(deskState, id);
   }
   for (const paper of gameState.papers) {
-    if (paper.location !== 'desk') continue;
+    if (paper.location !== 'desk' || pendingLetters.has(paper.id)) continue;
     const id: DeskItemId = `paper-${paper.id}`;
     // Incoming paperwork stays on the left until the player carries each sheet.
     deskState = addDeskItem(deskState, id, { x: 15 + ((paper.id - 1) % 4) * 7, y: 193 + ((paper.id - 1) % 3) * 5 });
@@ -278,8 +309,9 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
       if (paper) { spendTime('read-manual'); announceDesk(paperDescription(paper, locale, isDocumentClipped(gameState, paper.id)), `paper-${paper.id}`); }
       return;
     }
-    const result = applyAction(gameState, action);
+    const result = performAction(action);
     gameState = result.state;
+    if (result.feedback === 'visit-interrupted') { syncControls(); return; }
     updateClock(); reconcileDeskPapers();
     playEffect('paper');
     const focus = 'documentId' in action ? itemControlId(documentItem(action.documentId))
@@ -338,8 +370,13 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
   }
   const actual: GameAction = action === 'apply-stamp' ? (selectedStamp === 'fit' ? 'stamp-fit' : 'stamp-unfit') : action;
   const previousState = gameState;
-  const result = applyAction(gameState, actual);
+  const result = performAction(actual);
   gameState = result.state; feedback = t().feedback[result.feedback];
+  if (result.feedback === 'visit-interrupted') { syncControls(); return; }
+  if (gameState !== previousState && gameState.visit && clinicSpeech?.speaker !== 'cleaner') {
+    const comment = examinationComment(actual, gameState.visit);
+    if (comment) clinicSpeech = { comment, speaker: 'doctor', remaining: 1900 };
+  }
   reconcileDeskPapers();
   updateClock();
   screen = gameState.phase;
@@ -356,6 +393,7 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     // Calling again finishes the previous farewell so the portrait and papers
     // always belong to the same patient, even when the doctor works quickly.
     clearPatientMotion();
+    clinicSpeech = undefined;
     animatePatient(gameState.visit!.patientId, 'enter');
     say(gameState.visit!.patientId, choosePatientSpeech('arrival', { day: gameState.day, patientId: gameState.visit!.patientId }));
   } else if (actual === 'take-document' && result.feedback === 'document-taken') {
@@ -370,6 +408,7 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     }
   } else if (actual === 'run-general') {
     focusId = 'run-vision';
+    if (gameState !== previousState && gameState.visit) feedback = `${t().generalResult}: ${generalReading(gameState.visit.patientId, locale)}.`;
   } else if (actual === 'run-vision') {
     focusId = 'run-pressure';
     if (gameState !== previousState && gameState.visit) {
@@ -381,7 +420,7 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
   }
   else if (actual === 'run-pressure') {
     focusId = 'run-measurements';
-    if (gameState !== previousState && gameState.visit) feedback += ` ${pressureReading(PATIENTS[gameState.visit.patientId]!.pressureValues)} ${t().pressureUnit}.`;
+    if (gameState !== previousState && gameState.visit) feedback += ` ${pressureReading(gameState.visit.pressureLatest!)} ${t().pressureUnit}.`;
   }
   else if (actual === 'run-measurements') {
     focusId = 'take-paper';
@@ -401,6 +440,7 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
   else if (actual.startsWith('stamp-') && gameState !== previousState) {
     playEffect('stamp'); focusId = 'return-document';
   } else if (actual === 'return-document' && !gameState.visit) {
+    if (clinicSpeech?.speaker !== 'cleaner') clinicSpeech = undefined;
     if (previousState.visit) {
       say(previousState.visit.patientId, choosePatientSpeech('departure', {
         day: previousState.day, patientId: previousState.visit.patientId, decision: previousState.visit.decision,
@@ -417,6 +457,7 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
   } else if (actual === 'end-day' && screen === 'home') {
     clearPatientMotion(); homePageIndex = 0; typingKey = ''; startTyping(); focusId = 'home-next';
   } else if (actual === 'next-day') {
+    clinicSpeech = undefined;
     clearPatientMotion(); clearInterval(typingTimer); homePageIndex = 0;
     clockMinutes = gameState.clockMinutes; clockTransition = undefined; focusId = 'call-patient';
     if (screen === 'home') { typingKey = ''; startTyping(); focusId = 'home-next'; }
@@ -446,10 +487,19 @@ function handleDrawerAction(action: DrawerAction): void {
     document.querySelector('#announcement')!.textContent = drawerDescription(gameState, locale, drawerPage);
     return;
   }
-  const result = applyAction(gameState, action.type === 'paper'
+  const result = performAction(action.type === 'paper'
     ? { type: 'retrieve-paper', paperId: action.id }
     : { type: 'retrieve-drawer-item', item: action.item });
-  if (result.state === gameState) return;
+  if (result.feedback === 'visit-interrupted') { syncControls(); return; }
+  if (gameState.phase === 'home') {
+    deskInput.cancel(); clearPatientMotion(); clinicSpeech = undefined;
+    screen = 'home'; homePageIndex = 0; typingKey = '';
+    feedback = t().feedback[result.feedback];
+    startTyping(); syncControls('home-next');
+    document.querySelector('#announcement')!.textContent = feedback;
+    return;
+  }
+  if (!['paper-retrieved', 'item-retrieved'].includes(result.feedback)) return;
   gameState = result.state;
   updateClock(); reconcileDeskPapers();
   const id: DeskItemId = action.type === 'paper' ? `paper-${action.id}` : action.item === 'manual' ? 'manual' : `clip-${nextClipId++}`;
@@ -487,7 +537,7 @@ function restartGame(): void {
   saveReadId++; busy = false;
   typingKey = ''; homePageIndex = 0;
   gameState = createInitialState(crypto.getRandomValues(new Uint32Array(1))[0]); deskState = createDeskState(); deskBeforePickup = deskState;
-  nextClipId = 1;
+  nextClipId = 1; pendingLetters.clear(); clinicSpeech = undefined; interruptedPatient = undefined;
   heldItem = null; selectedStamp = null; manualOpen = false; manualPage = 0; manualBeforePickup = false;
   clockMinutes = gameState.clockMinutes; clockTransition = undefined;
   status = ''; toast = ''; feedback = ''; panelReturn = 'welcome';
@@ -638,6 +688,25 @@ function syncUtilityControls(modal: boolean): void {
 }
 
 function syncControls(focusId?: string): void {
+  if (interruptedPatient !== undefined) {
+    const patientId = interruptedPatient;
+    interruptedPatient = undefined;
+    deskInput.cancel();
+    heldItem = null; selectedStamp = null; clinicSpeech = undefined;
+    clearPatientMotion(); reconcileDeskPapers();
+    animatePatient(patientId, 'exit');
+    feedback = t().feedback['visit-interrupted'];
+    homePageIndex = 0; typingKey = '';
+    screen = patientMotion ? 'cabinet' : 'home';
+    if (screen === 'home') startTyping();
+    focusId = screen === 'home' ? 'home-next' : undefined;
+    document.querySelector('#announcement')!.textContent = feedback;
+  }
+
+  // A canceled or rejected drop restores an older carry snapshot. Keep any
+  // correspondence delivered meanwhile present in both geometry and controls.
+  reconcileDeskPapers();
+
   // Preparing even while muted cancels pending requests from the previous scene.
   const context = gameState.phase === 'home' ? 'home' : 'work';
   if (context !== musicContext) {
@@ -666,7 +735,7 @@ function syncControls(focusId?: string): void {
     : screen === 'home' ? `${homePage(gameState, locale, homePageIndex).description} ${homePage(gameState, locale, homePageIndex).text}`
     : screen === 'drawer' ? drawerDescription(gameState, locale, drawerPage)
     : screen === 'intro' ? t().intro[gameState.introStep].body
-    : screen === 'cabinet' ? `${shiftDescription(gameState, locale)} ${manualOpen ? manualPageDescription(locale, manualPage) : ''} ${feedback}`
+    : screen === 'cabinet' ? `${shiftDescription(gameState, locale, [...pendingLetters.keys()])} ${manualOpen ? manualPageDescription(locale, manualPage) : ''} ${feedback}`
     : screen === 'saves' ? `${t().savesDescription} ${t().savesBody.join(' ')} ${t().sample}. ${t().day}: ${gameState.day}. ${t().patients}: ${gameState.patientsProcessed}. ${t().money}: ${gameState.money}.`
     : screen === 'break-room' ? t().breakRoomDescription
     : screen === 'restart' ? t().restartBody.join(' ')
@@ -805,6 +874,9 @@ function render(): void {
   const speechElement = document.getElementById('patient-speech')!;
   const speechText = speech ? `${t().patientNames[speech.patientId]}: ${t().patientSpeech[speech.line]}` : '';
   if (speechElement.textContent !== speechText) speechElement.textContent = speechText;
+  const clinicSpeechElement = document.getElementById('clinic-speech')!;
+  const clinicText = screen === 'cabinet' && clinicSpeech ? `${t().examinationSpeech[clinicSpeech.speaker]}: ${clinicSpeechText()}` : '';
+  if (clinicSpeechElement.textContent !== clinicText) clinicSpeechElement.textContent = clinicText;
   if (screen === 'home') {
     renderHome(ctx, gameState, locale, homePageIndex, introCharacters);
     if (focused === 'home-next') outline(HOME_ACTION.x, HOME_ACTION.y, HOME_ACTION.w, HOME_ACTION.h, colors.bone);
@@ -877,6 +949,7 @@ fileInput.addEventListener('change', async () => {
     const loadedState = await importSave(file);
     if (readId !== saveReadId) return;
     deskInput.cancel(); clearPatientMotion(); deskState = createDeskState();
+    pendingLetters.clear(); clinicSpeech = undefined; interruptedPatient = undefined;
     gameState = loadedState; homePageIndex = 0; typingKey = ''; shiftStarted = true; selectedStamp = null; feedback = '';
     nextClipId = 1; reconcileDeskPapers();
     manualOpen = false; manualPage = 0; clockMinutes = gameState.clockMinutes; clockTransition = undefined;
@@ -978,8 +1051,10 @@ const deskInput = installDeskInput(stage, {
       const sourceId = documentId(source), clip = clipAt();
       if (sourceId === undefined || !clip) return false;
       const targetId = documentId(clip)!;
-      const result = applyAction(gameState, { type: 'join-documents', documentId: sourceId, targetId });
-      if (result.state === gameState) return false;
+      const previous = gameState;
+      const result = performAction({ type: 'join-documents', documentId: sourceId, targetId });
+      if (result.feedback === 'visit-interrupted') { syncControls(); return true; }
+      if (result.state === previous) return false;
       const destination = { ...deskState.positions[clip] };
       gameState = result.state;
       heldItem = null;
@@ -1026,8 +1101,10 @@ const deskInput = installDeskInput(stage, {
       return true;
     }
     if ((id === 'manual' || id.startsWith('clip-')) && overDrawer) {
-      const result = applyAction(gameState, { type: 'store-drawer-item', item: id === 'manual' ? 'manual' : 'clip' });
-      if (result.state === gameState) { announceDesk(t().feedback[result.feedback], itemControlId(id)); return false; }
+      const previous = gameState;
+      const result = performAction({ type: 'store-drawer-item', item: id === 'manual' ? 'manual' : 'clip' });
+      if (result.feedback === 'visit-interrupted') { syncControls(); return true; }
+      if (result.state === previous) { announceDesk(t().feedback[result.feedback], itemControlId(id)); return false; }
       gameState = result.state; heldItem = null;
       if (id === 'manual') { manualOpen = false; deskState = { ...deskBeforePickup, order: deskBeforePickup.order.filter(item => item !== id) }; }
       else deskState = removeDeskItem(deskState, id);
@@ -1152,7 +1229,11 @@ const deskInput = installDeskInput(stage, {
 
 // Patient movement and brief speech advance only while the room is visible.
 setInterval(() => {
-  if (!desktopActive || screen !== 'cabinet' || document.hidden || (!patientMotion && !patientSpeech && gameState.phase !== 'home')) return;
+  if (!desktopActive || screen !== 'cabinet' || document.hidden || (!patientMotion && !patientSpeech && !clinicSpeech && pendingLetters.size === 0 && gameState.phase !== 'home')) return;
+  if (clinicSpeech) {
+    clinicSpeech.remaining -= 60;
+    if (clinicSpeech.remaining <= 0) clinicSpeech = undefined;
+  }
   if (patientSpeech && visiblePatientSpeech()) {
     patientSpeech.remaining -= 60;
     if (patientSpeech.remaining <= 0) patientSpeech = undefined;
@@ -1167,6 +1248,14 @@ setInterval(() => {
     }
   }
   if (patientSpeech && !patientMotion && !gameState.visit && !departingPatientId()) patientSpeech = undefined;
+  let delivered = false;
+  for (const [id, delivery] of pendingLetters) {
+    delivery.remaining -= 60;
+    const leaving = (patientMotion?.direction === 'exit' && patientMotion.patientId === delivery.patientId)
+      || (patientSpeech?.departure && patientSpeech.patientId === delivery.patientId);
+    if (delivery.remaining <= 0 && !leaving) { pendingLetters.delete(id); delivered = true; }
+  }
+  if (delivered) { reconcileDeskPapers(); syncControls(focused || undefined); }
   if (gameState.phase === 'home' && !patientMotion && departingPatientId() === undefined) {
     clearPatientMotion(); screen = 'home'; homePageIndex = 0; typingKey = ''; startTyping(); syncControls('home-next'); return;
   }

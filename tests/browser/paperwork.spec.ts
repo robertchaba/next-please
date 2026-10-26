@@ -52,9 +52,10 @@ test('referrals, measurements and written notes remain separate from the certifi
   await activate(page, 'take-document');
   await expect(page.locator('#control-paper-1')).toHaveAccessibleName(/Irena Wolska/);
   await activate(page, 'paper-1');
-  await expect(page.locator('#announcement')).toContainText('1952-04-18');
+  await expect(page.locator('#announcement')).toContainText('1942-04-18');
   for (const id of ['run-general', 'run-vision', 'run-pressure', 'run-measurements', 'take-paper']) await activate(page, id);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/62 kg/);
+  await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Wiek: 41/);
   await expect(page.locator('#control-paper-2')).not.toHaveAccessibleName(/Pozycja siedząca/);
   await expect(page.locator('#control-paper-2')).not.toHaveAccessibleName(/BRAK|NORMA|KONTROLA/);
   await page.locator('#control-paper-action-2').click();
@@ -87,6 +88,7 @@ test('referrals, measurements and written notes remain separate from the certifi
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/62 kg/);
   await activate(page, 'language-en');
   await expect(page.locator('#control-run-measurements')).toHaveAccessibleName(/height|scale/i);
+  await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Age: 41/);
   await activate(page, 'language-pl');
   await movePaperRight(page, 2);
   await page.locator('#control-language-pl').focus();
@@ -267,6 +269,28 @@ test('findings update notes without the pen and preserve supplementary writing i
     location: 'drawer', additionalWritten: true,
     results: { vision: { left: 0, right: 0 }, pressure: { systolic: 108, diastolic: 62 }, weight: 62, height: 164 },
   });
+  await activate(page, 'run-pressure');
+  await activate(page, 'drawer');
+  await activate(page, 'drawer-paper-2');
+  await placeCarried(page);
+  const firstTwo = await exportState(page, testInfo, 'first-two-pressure.npsave');
+  await activate(page, 'run-pressure');
+  await activate(page, 'run-pressure');
+  const repeated = await exportState(page, testInfo, 'repeated-pressure.npsave');
+  const readings = repeated.state.visit!.pressureReadings;
+  expect(readings).toHaveLength(2);
+  expect(readings).toEqual(firstTwo.state.visit!.pressureReadings);
+  expect(readings[0]).not.toEqual(readings[1]);
+  const note = repeated.state.papers.find(paper => paper.id === 2)!;
+  if (note.kind !== 'note') throw new Error('Expected note');
+  expect(note.results.pressureReadings).toEqual(readings);
+  await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Wiek: 41/);
+  for (const reading of readings) await expect(page.locator('#control-paper-2')).toHaveAccessibleName(new RegExp(`Ciśnienie: ${reading.systolic}/${reading.diastolic}`));
+  await activate(page, 'saves');
+  await page.locator('#save-input').setInputFiles({ name: 'repeated-pressure.npsave', mimeType: 'application/gzip', buffer: repeated.buffer });
+  await expect(page.locator('#announcement')).toContainText('Zapis wczytany');
+  await activate(page, 'back');
+  for (const reading of readings) await expect(page.locator('#control-paper-2')).toHaveAccessibleName(new RegExp(`Ciśnienie: ${reading.systolic}/${reading.diastolic}`));
 });
 
 test('notes append completed tests in order and show very high numeric pressure in red in both languages', async ({ page }, testInfo) => {

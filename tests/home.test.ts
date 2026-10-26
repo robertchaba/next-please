@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyAction, createInitialState, type GameState } from '../src/core/game';
-import { homePage, homePages } from '../src/scenes/home';
+import { HOME_AMOUNT_RIGHT, homePage, homePages } from '../src/scenes/home';
 import { measureText } from '../src/render/font';
 import { translations } from '../src/i18n';
 import type { ExpenseKind } from '../src/core/economy';
@@ -38,7 +38,7 @@ describe('localized home sequence', () => {
         expect(measureText(content.action), content.action).toBeLessThanOrEqual(314);
         expect(content.body.split('\n').length).toBeLessThanOrEqual(5);
         for (const line of content.body.split('\n')) expect(measureText(line, content.bodyScale), line).toBeLessThanOrEqual(312);
-        for (const row of content.rows) expect(measureText(row.label) + measureText(row.value) + 12).toBeLessThanOrEqual(312);
+        for (const row of content.rows) expect(measureText(row.label) + measureText(row.value) + 12).toBeLessThanOrEqual(HOME_AMOUNT_RIGHT - 25);
         expect(content.text).not.toContain('undefined');
       }
     }
@@ -48,14 +48,19 @@ describe('localized home sequence', () => {
     for (const locale of ['pl', 'en'] as const) for (const previousMonthBalance of [-999999999, 999999999]) {
       const state = { ...homeState(), previousMonthBalance };
       const content = homePage(state, locale, homePages(state).indexOf('budget'));
-      for (const row of content.rows) expect(measureText(row.label) + measureText(row.value) + 12, row.label).toBeLessThanOrEqual(312);
+      for (const row of content.rows) expect(measureText(row.label) + measureText(row.value) + 12, row.label).toBeLessThanOrEqual(HOME_AMOUNT_RIGHT - 25);
     }
   });
 
-  it('includes optional events without rerolling and shows the next workday on departure', () => {
+  it('includes optional events without rerolling and omits dates from every home page', () => {
     const state = homeState();
     expect(homePages(state)).toEqual(['arrival', 'budget', 'work']);
-    expect(homePage(state, 'pl', 2).date).toBe('04.11.1983');
+    for (const locale of ['pl', 'en'] as const) {
+      expect(homePage(state, locale, 0).action).toBe(translations[locale].home.onward);
+      for (let page = 0; page < homePages(state).length; page++) {
+        expect(homePage(state, locale, page).text).not.toMatch(/\d{2}[./]\d{2}[./]\d{4}/);
+      }
+    }
     for (const kind of eventKinds) {
       state.settlement!.event = { kind, cost: 999 };
       const before = structuredClone(state);
@@ -80,6 +85,44 @@ describe('localized home sequence', () => {
     expect(homePages(saturday)).not.toContain('work');
     const sunday = applyAction(saturday, 'next-day').state;
     expect(homePages(sunday)).toContain('work');
-    expect(homePage(sunday, 'pl', homePages(sunday).indexOf('work')).date).toBe('07.11.1983');
+    expect(homePage(sunday, 'pl', homePages(sunday).indexOf('work')).title).toBe('DO PRACY');
+  });
+
+  it('keeps all twelve daily comments stable, translated and within the narrative area', () => {
+    const state = homeState();
+    for (const locale of ['pl', 'en'] as const) {
+      const arrival = new Set<string>(), work = new Set<string>();
+      for (let index = 0; index < 12; index++) {
+        const sample = { ...state, rngState: index * 256 };
+        const before = structuredClone(sample);
+        for (const page of [0, 2]) {
+          const content = homePage(sample, locale, page);
+          (page === 0 ? arrival : work).add(content.body.replaceAll('\n', ' '));
+          expect(content.body.split('\n').length).toBeLessThanOrEqual(5);
+          for (const line of content.body.split('\n')) expect(measureText(line, 2), line).toBeLessThanOrEqual(312);
+          expect(homePage(sample, locale, page)).toEqual(content);
+        }
+        expect(sample).toEqual(before);
+      }
+      expect(arrival).toEqual(new Set(translations[locale].home.arrivalComments));
+      expect(work).toEqual(new Set(translations[locale].home.workComments));
+    }
+  });
+
+  it('chooses the budget joke from the daily result, regardless of total savings', () => {
+    const state = homeState();
+    for (const locale of ['pl', 'en'] as const) for (const result of [-100, 0, 100]) {
+      const pool = translations[locale].home.budgetComments[result < 0 ? 'loss' : result > 0 ? 'profit' : 'even'];
+      const comments = new Set<string>();
+      for (let index = 0; index < pool.length; index++) {
+        const sample = { ...state, rngState: index * 256,
+          settlement: { ...state.settlement!, openingBalance: 10000, closingBalance: 10000 + result } };
+        const content = homePage(sample, locale, 1);
+        comments.add(content.body);
+        expect(measureText(content.body), content.body).toBeLessThanOrEqual(312);
+        expect(content.body).not.toContain('\n');
+      }
+      expect(comments).toEqual(new Set(pool));
+    }
   });
 });

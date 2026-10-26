@@ -107,7 +107,10 @@ export function installDeskInput(stage: HTMLElement, options: DeskInputOptions):
     }
   });
   stage.addEventListener('focusout', event => {
-    if (!activating && held && !stage.contains(event.relatedTarget as Node | null)) cancel();
+    // Rebuilding semantic controls temporarily removes the focused node. Only
+    // a real focus destination outside the stage means leaving it; window blur
+    // and outside pointer presses retain their separate cancellation handlers.
+    if (!activating && held && event.relatedTarget && !stage.contains(event.relatedTarget as Node)) cancel();
   });
   window.addEventListener('pointerdown', event => {
     if (held && !stage.contains(event.target as Node)) cancel();

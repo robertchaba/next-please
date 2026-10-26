@@ -1,7 +1,7 @@
 import { PATIENTS, type GameState, type Paper } from '../core/game';
-import { veryHighPressure, type PressureValues, type VisionValues } from '../core/patients';
+import { generalFindingIndex, patientAge, veryHighPressure, type PressureValues, type VisionValues } from '../core/patients';
 import type { Rect } from '../core/desk';
-import { formatGameDate } from '../core/calendar';
+import { formatGameDate, gameDate } from '../core/calendar';
 import { translations, type Locale } from '../i18n';
 import { drawPaper, drawPaperclip, drawDecisionImprint, drawDocumentSeal, drawDocumentSignature } from './clinic';
 import { drawDocumentText, measureDocumentText } from './font';
@@ -27,15 +27,28 @@ export function pressureReading(values: PressureValues): string {
   return `${values.systolic}/${values.diastolic}`;
 }
 
+/** The clinical case fixes the finding; changing language only translates it. */
+export function generalReading(patientId: number, locale: Locale): string {
+  const t = translations[locale], finding = generalFindingIndex(PATIENTS[patientId]!);
+  return finding === null ? t.generalClear : t.generalFindings[finding]!;
+}
+
+/** Identity and age belong to this visit even when the sheet is read years later. */
+export function noteIdentity(paper: Extract<Paper, { kind: 'note' }>, locale: Locale): string {
+  if (paper.patientId === null) return '';
+  const t = translations[locale], age = patientAge(PATIENTS[paper.patientId]!, gameDate(paper.day));
+  return `${t.patientNames[paper.patientId]}   ${t.paperwork.age}: ${age}`;
+}
+
 /** Completed entries only, in the order retained by the examination transitions. */
 export function noteEntries(paper: Extract<Paper, { kind: 'note' }>, locale: Locale): { text: string; color: string }[] {
   if (paper.patientId === null) return [];
   const t = translations[locale], p = t.paperwork, r = paper.results;
   const rows: { text: string; color: string }[] = [];
   for (const examination of paper.examinationOrder) {
-    if (examination === 'general' && r.general !== null) rows.push({ text: `${t.generalResult}: ${r.general === 'pass' ? t.generalClear : t.generalConcern}`, color: HANDWRITING_INK });
+    if (examination === 'general' && r.general !== null) rows.push({ text: `${t.generalResult}: ${r.general === 'pass' ? t.generalClear : generalReading(paper.patientId, locale)}`, color: HANDWRITING_INK });
     if (examination === 'vision' && r.vision !== null) rows.push({ text: `${t.documentVision}: ${visionReading(r.vision, locale)}`, color: HANDWRITING_INK });
-    if (examination === 'pressure' && r.pressure !== null) rows.push({ text: `${t.documentPressure}: ${pressureReading(r.pressure)}`, color: veryHighPressure(r.pressure) ? ALERT_INK : HANDWRITING_INK });
+    if (examination === 'pressure') for (const reading of r.pressureReadings) rows.push({ text: `${t.documentPressure}: ${pressureReading(reading)}`, color: veryHighPressure(reading) ? ALERT_INK : HANDWRITING_INK });
     if (examination === 'measurements' && r.weight !== null && r.height !== null) rows.push({ text: `${p.weight} ${r.weight} ${p.kg}   ${p.height} ${r.height} ${p.cm}`, color: HANDWRITING_INK });
   }
   if (paper.additionalWritten) for (const text of t.patientNotes[paper.patientId]!) rows.push({ text, color: HANDWRITING_INK });
@@ -71,8 +84,8 @@ export function paperDescription(paper: Paper, locale: Locale, clipped = false):
       text += ` ${name}. ${letter.subject}. ${letter.body} ${letter.role}: ${letter.signature}. ${p.signed}.`;
     }
   } else {
-    text = paper.patientId === null ? p.blank : `${p.note}. ${name}. ${noteEntries(paper, locale).map(row => row.text.replace(/\.$/, '')).join('. ')}.`;
-    if (paper.results.pressure && veryHighPressure(paper.results.pressure)) text += ` ${t.documentPressure}: ${t.veryHigh}.`;
+    text = paper.patientId === null ? p.blank : `${p.note}. ${noteIdentity(paper, locale)}. ${noteEntries(paper, locale).map(row => row.text.replace(/\.$/, '')).join('. ')}.`;
+    if (paper.results.pressureReadings.some(veryHighPressure)) text += ` ${t.documentPressure}: ${t.veryHigh}.`;
   }
   if (paper.kind !== 'note') text += ` ${p.issued}: ${formatGameDate(paper.day, locale)}. ${p.reference}: ${paper.id}.`;
   if (clipped) text += ` ${p.clipped}.`;
@@ -178,7 +191,7 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     authentication();
   } else if (paper.kind === 'note') {
     if (paper.patientId !== null) {
-      write(t.patientNames[paper.patientId]!, 11, 12, HANDWRITING_INK);
+      write(noteIdentity(paper, locale), 11, 12, HANDWRITING_INK);
       let rowY = 24;
       for (const entry of noteEntries(paper, locale)) {
         for (const line of wrapDocumentLines([entry.text], w - 22)) {

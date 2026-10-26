@@ -1,6 +1,6 @@
 # Music and sound effects
 
-Twenty supplied MP3s are bundled in [music/](music/README.md): seventeen ordinary tracks and one home/day-settlement track are registered in `src/core/music.ts`, while both filenames of the identical success cue remain reserved and unregistered. Eight original effects are registered in `src/core/effects.ts`. The Howler manager in `src/core/audio.ts` provides lazy loading, separate music/effect volumes, mute, playlists, previous/next controls, and user-gesture unlocking.
+Twenty supplied MP3s are bundled in [music/](music/README.md): seventeen ordinary tracks and one home/day-settlement track are registered in `src/core/music.ts`, while both filenames of the identical success cue remain reserved and unregistered. Eight original mechanical effects and two localized corridor voice clips are registered in `src/core/effects.ts`. The Howler manager in `src/core/audio.ts` provides lazy loading, separate music/effect volumes, mute, playlists, previous/next controls, and user-gesture unlocking.
 
 ## Original effects
 
@@ -38,3 +38,12 @@ Put music MP3 files in `music/` and sound effects in this folder. Register local
 The title screen's volume slider controls music from 0–100% and saves the value separately from mute (default 40%). `getMusicVolume()` reads that setting. `isMusicAudible()` excludes pending loads, muted/zero-volume music, and suspended Web Audio playback. `getMusicLevels()` lazily observes Howler's master mix and returns three integer bar heights for the speaker's tiny meter. The UI samples outside rendering at 10 Hz while visible, skips analysis for reduced motion, and renders a static indicator when Web Audio analysis is unavailable. The meter never starts playback or creates a second output path.
 
 For every recording, document its title, creator, source URL, license identifier/version and URL, required attribution, and modifications before distribution. The supplied music is credited as AI-generated with Suno, as identified by Robert. Individual source URLs and redistribution terms remain pending in the music notes. Add any further confirmed required attribution to the game's credits.
+
+
+## Cleaner calling from the corridor
+
+`cleaner-pl.wav` (1.64 seconds) and `cleaner-en.wav` (1.87 seconds) say the localized `examinationSpeech.closing` lines from `src/i18n.ts`. They play once when an action first crosses 17:00, with a matching short caption even while muted. These are synthetic female formant voices, not recordings of an actor. The raw masters are retained in `source/cleaner-{pl,en}.wav`.
+
+Prepared on 2026-10-26 with [eSpeak NG 1.52.0](https://github.com/espeak-ng/espeak-ng/releases/tag/1.52.0), voices `pl+f3` and `en+f3`, rate 155, pitch 44. Reproduce with `python3 scripts/generate-cleaner-voice.py` after installing the offline `espeak-ng` preparation tool. The script reads the dictionary text, resamples to 44.1 kHz, gently filters above 3.6 kHz and adds three quiet corridor reflections at 83/157/241 ms; output is mono 16-bit PCM with a 44% peak. Nothing invokes synthesis or a remote service at runtime; both local clips use the existing Howler mute/unlock lifecycle.
+
+Provenance: original project text rendered by an open-source formant synthesizer; no human voice sample, named-person imitation or third-party recording. eSpeak NG software is [GPL-3.0-or-later](https://github.com/espeak-ng/espeak-ng/blob/1.52.0/COPYING); the synthesizer and its data are not distributed in the game. The [GNU output guidance](https://www.gnu.org/licenses/gpl-faq.html#WhatCaseIsOutputGPL) distinguishes generated output from copied program material. These formant-synthesized project utterances follow the project's original-asset terms, without a separate open-source license grant or required actor credit. Retain these source and preparation notes with redistribution.

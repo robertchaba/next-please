@@ -1,8 +1,8 @@
 import { isWeekend } from './calendar';
 import { Gunzip, gzipSync, strToU8 } from 'fflate';
-import { ARRIVAL_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_START_MINUTES, type GameState, type Visit, type Paper, type DocumentId } from './game';
+import { ARRIVAL_MINUTES, CLINIC_CLOSE_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_START_MINUTES, type GameState, type Visit, type Paper, type DocumentId } from './game';
 
-import { CHARACTER_COUNT, type ExaminationId } from './patients';
+import { CHARACTER_COUNT, disqualifyingPressure, type ExaminationId, type PressureValues } from './patients';
 import { BASE_INSURANCE, BASE_PAY, PATIENT_BONUS, type DaySettlement, type DailyConsequences } from './economy';
 
 export { createInitialState } from './game';
@@ -16,7 +16,7 @@ interface LegacyState {
 
 const SHIFT_LENGTH = 3; // Original version 2–8 fixture limit never changes.
 const V10_CASE_LIMIT = 302;
-type VisitV10 = Omit<Visit, 'generalTested' | 'examinationOrder'>;
+type VisitV10 = Omit<Visit, 'generalTested' | 'examinationOrder' | 'pressureReadings' | 'pressureLatest'>;
 interface NoteResultsV10 {
   vision: 'pass' | 'refer' | null;
   pressure: 'pass' | 'refer' | null;
@@ -36,9 +36,9 @@ type GameStateV5 = Omit<GameStateV8, 'visit' | 'paperClips' | 'papers' | 'drawer
 type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<VisitV10, 'certificateNamed'> | null };
 type GameStateV7 = Omit<GameStateV8, 'drawerItems'>;
 
-interface SaveV11 {
+interface SaveV12 {
   game: 'next-please';
-  version: 11;
+  version: 12;
   savedAt: string;
   state: GameState;
 }
@@ -426,7 +426,7 @@ function migrateStateV8(state: GameStateV8): GameStateV10 {
   return { ...legacyInitialState(), ...state };
 }
 
-function validateBudgetState(value: unknown, version: 9 | 10, maxPatient = V10_CASE_LIMIT): GameStateV10 {
+function validateBudgetState(value: unknown, version: 9 | 10, maxPatient = V10_CASE_LIMIT, overtime = false): GameStateV10 {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !hasOnlyKeys(value, ['day', 'money', 'patientsProcessed', 'phase', 'introStep', 'shiftCompleted', 'clockMinutes', 'visit', 'lampOn', 'decoration', 'papers', 'nextPaperId', 'paperClips', 'drawerItems', 'rngState', 'roster', 'insuranceRate', 'daily', 'settlement', ...(version === 10 ? ['previousMonthBalance'] : [])])) return fail();
   if (!isIntegerInRange(value.day, 1, GAME_LIMITS.day) || !isIntegerInRange(value.money, -GAME_LIMITS.money, GAME_LIMITS.money)
@@ -435,7 +435,8 @@ function validateBudgetState(value: unknown, version: 9 | 10, maxPatient = V10_C
     || !isIntegerInRange(value.introStep, 0, INTRO_SLIDES - 1)
     || (value.phase !== 'intro' && value.introStep !== INTRO_SLIDES - 1)
     || !isIntegerInRange(value.shiftCompleted, 0, CHARACTER_COUNT) || value.shiftCompleted > value.patientsProcessed
-    || !isIntegerInRange(value.clockMinutes, ARRIVAL_MINUTES, SHIFT_END_MINUTES)
+    || !isIntegerInRange(value.clockMinutes, ARRIVAL_MINUTES, overtime ? CLINIC_CLOSE_MINUTES : SHIFT_END_MINUTES)
+    || (overtime && value.phase === 'cabinet' && value.clockMinutes === CLINIC_CLOSE_MINUTES)
     || !isIntegerInRange(value.rngState, 0, 0xffff_ffff)
     || !isIntegerInRange(value.insuranceRate, BASE_INSURANCE, GAME_LIMITS.money) || value.insuranceRate % 50 !== 0
     || typeof value.lampOn !== 'boolean' || (value.decoration !== 'plant' && value.decoration !== 'certificate')
@@ -464,7 +465,8 @@ function validateBudgetState(value: unknown, version: 9 | 10, maxPatient = V10_C
       || typeof entry.certificateTaken !== 'boolean' || typeof entry.certificateNamed !== 'boolean'
       || typeof entry.visionTested !== 'boolean' || typeof entry.pressureTested !== 'boolean' || typeof entry.measurementsTaken !== 'boolean'
       || (entry.decision !== null && entry.decision !== 'fit' && entry.decision !== 'unfit')
-      || (entry.document === 'tray' && (entry.certificateTaken || entry.visionTested || entry.pressureTested || entry.measurementsTaken || entry.decision !== null))
+      || (entry.document === 'tray' && (entry.certificateTaken || entry.decision !== null
+        || (!overtime && (entry.visionTested || entry.pressureTested || entry.measurementsTaken))))
       || (!entry.certificateTaken && (entry.certificateNamed || entry.decision !== null))) return fail();
     visit = { patientId: entry.patientId, document: entry.document, certificateTaken: entry.certificateTaken, certificateNamed: entry.certificateNamed,
       visionTested: entry.visionTested, pressureTested: entry.pressureTested, measurementsTaken: entry.measurementsTaken, decision: entry.decision };
@@ -502,8 +504,10 @@ function validateBudgetState(value: unknown, version: 9 | 10, maxPatient = V10_C
     }
     if (paper.day === value.day && paper.patientId !== null) {
       const position = roster.indexOf(paper.patientId);
+      const interrupted = overtime && value.phase === 'home' && value.clockMinutes === CLINIC_CLOSE_MINUTES;
       if (position < 0 || position > value.shiftCompleted
-        || (position === value.shiftCompleted && (paper.kind === 'letter' || !visit || visit.document !== 'desk'))) return fail();
+        || (position === value.shiftCompleted && (paper.kind === 'letter'
+          || (!interrupted && (!visit || (visit.document !== 'desk' && !(overtime && paper.kind === 'note'))))))) return fail();
       if (paper.kind === 'note' && paper.patientId === visit?.patientId
         && ((paper.results.vision !== null && !visit.visionTested) || (paper.results.pressure !== null && !visit.pressureTested)
           || (paper.results.weight !== null && !visit.measurementsTaken))) return fail();
@@ -527,7 +531,7 @@ function validateBudgetState(value: unknown, version: 9 | 10, maxPatient = V10_C
   if (value.phase === 'home') {
     const entry = value.settlement;
     const basePay = restDay ? 0 : BASE_PAY;
-    if (visit !== null || value.clockMinutes !== SHIFT_END_MINUTES || !isRecord(entry)
+    if (visit !== null || (overtime ? value.clockMinutes < SHIFT_END_MINUTES : value.clockMinutes !== SHIFT_END_MINUTES) || !isRecord(entry)
       || !hasOnlyKeys(entry, ['day', 'patients', 'basePay', 'patientBonus', 'income', 'livingCost', 'insuranceCost', 'fines', 'event', 'expenses', 'openingBalance', 'closingBalance'])
       || entry.day !== value.day || entry.patients !== value.shiftCompleted || entry.basePay !== basePay
       || entry.patientBonus !== value.shiftCompleted * PATIENT_BONUS || entry.income !== basePay + value.shiftCompleted * PATIENT_BONUS
@@ -568,6 +572,8 @@ function legacyExaminationOrder(value: { vision: unknown; pressure: unknown; wei
 
 function migrateStateV10(state: GameStateV10): GameState {
   const visit = state.visit ? { ...state.visit, generalTested: false,
+    pressureLatest: state.visit.pressureTested ? { ...PATIENTS[state.visit.patientId]!.pressureValues } : null,
+    pressureReadings: state.visit.pressureTested ? [{ ...PATIENTS[state.visit.patientId]!.pressureValues }] : [],
     examinationOrder: legacyExaminationOrder({ vision: state.visit.visionTested ? true : null,
       pressure: state.visit.pressureTested ? true : null, weight: state.visit.measurementsTaken ? true : null }) } : null;
   const papers: Paper[] = state.papers.map(paper => {
@@ -577,6 +583,7 @@ function migrateStateV10(state: GameStateV10): GameState {
       general: null,
       vision: paper.results.vision !== null && patient ? { ...patient.visionValues } : null,
       pressure: paper.results.pressure !== null && patient ? { ...patient.pressureValues } : null,
+      pressureReadings: paper.results.pressure !== null && patient ? [{ ...patient.pressureValues }] : [],
       weight: paper.results.weight, height: paper.results.height,
     } };
   });
@@ -592,7 +599,21 @@ function validateExaminationOrder(value: unknown, completed: Record<ExaminationI
   return [...value] as ExaminationId[];
 }
 
-function validatePaperV11(value: unknown, day: number): Paper {
+function validatePressureReadings(value: unknown, patientId: number | null, measured: boolean): PressureValues[] {
+  if (!Array.isArray(value) || value.length > 2 || (value.length > 0) !== measured || (measured && patientId === null)) throw new SaveError('invalid-state');
+  const patient = patientId === null ? null : PATIENTS[patientId]!;
+  const readings = value.map((reading): PressureValues => {
+    if (!patient || !isRecord(reading) || !hasOnlyKeys(reading, ['systolic', 'diastolic'])
+      || !isIntegerInRange(reading.systolic, patient.pressureValues.systolic - 3, patient.pressureValues.systolic + 3)
+      || !isIntegerInRange(reading.diastolic, patient.pressureValues.diastolic - 2, patient.pressureValues.diastolic + 2)
+      || disqualifyingPressure({ systolic: reading.systolic, diastolic: reading.diastolic }) !== (patient.pressure === 'refer')) throw new SaveError('invalid-state');
+    return { systolic: reading.systolic, diastolic: reading.diastolic };
+  });
+  if (readings.length === 2 && readings[0]!.systolic === readings[1]!.systolic && readings[0]!.diastolic === readings[1]!.diastolic) throw new SaveError('invalid-state');
+  return readings;
+}
+
+function validatePaperV11(value: unknown, day: number, version: 11 | 12): Paper {
   if (!isRecord(value)) throw new SaveError('invalid-state');
   if (value.kind !== 'note') {
     const paper = validatePaperV7(value, day, PATIENTS.length - 1);
@@ -604,50 +625,64 @@ function validatePaperV11(value: unknown, day: number): Paper {
     || (value.location !== 'desk' && value.location !== 'drawer') || typeof value.additionalWritten !== 'boolean'
     || (value.patientId !== null && !isIntegerInRange(value.patientId, 0, PATIENTS.length - 1))) throw new SaveError('invalid-state');
   const results = value.results;
-  if (!isRecord(results) || !hasOnlyKeys(results, ['general', 'vision', 'pressure', 'weight', 'height'])) throw new SaveError('invalid-state');
+  if (!isRecord(results) || !hasOnlyKeys(results, ['general', 'vision', 'pressure', 'weight', 'height', ...(version === 12 ? ['pressureReadings'] : [])])) throw new SaveError('invalid-state');
   const patient = value.patientId === null ? null : PATIENTS[value.patientId]!;
+  const pressureReadings = version === 12 ? validatePressureReadings(results.pressureReadings, value.patientId as number | null, results.pressure !== null)
+    : results.pressure !== null && patient ? [{ ...patient.pressureValues }] : [];
+  const lastPressure = pressureReadings.at(-1);
   if ((results.general !== null && (!patient || results.general !== patient.general))
     || (results.vision !== null && (!patient || !isRecord(results.vision) || !hasOnlyKeys(results.vision, ['left', 'right'])
       || results.vision.left !== patient.visionValues.left || results.vision.right !== patient.visionValues.right))
     || (results.pressure !== null && (!patient || !isRecord(results.pressure) || !hasOnlyKeys(results.pressure, ['systolic', 'diastolic'])
-      || results.pressure.systolic !== patient.pressureValues.systolic || results.pressure.diastolic !== patient.pressureValues.diastolic))
+      || results.pressure.systolic !== lastPressure?.systolic || results.pressure.diastolic !== lastPressure?.diastolic))
     || (results.weight !== null && (!patient || results.weight !== patient.weight))
     || (results.height !== null && (!patient || results.height !== patient.height))
     || ((results.weight === null) !== (results.height === null))
     || (!patient && value.additionalWritten)
-    || (patient && !value.additionalWritten && Object.values(results).every(entry => entry === null))) throw new SaveError('invalid-state');
+    || (patient && !value.additionalWritten && Object.entries(results).filter(([key]) => key !== 'pressureReadings').every(([, entry]) => entry === null))) throw new SaveError('invalid-state');
   const examinationOrder = validateExaminationOrder(value.examinationOrder, { general: results.general !== null,
     vision: results.vision !== null, pressure: results.pressure !== null, measurements: results.weight !== null });
   return { id: value.id, kind: 'note', day: value.day, patientId: value.patientId, location: value.location,
     additionalWritten: value.additionalWritten, examinationOrder, results: {
       general: results.general as 'pass' | 'refer' | null,
       vision: results.vision !== null && patient ? { ...patient.visionValues } : null,
-      pressure: results.pressure !== null && patient ? { ...patient.pressureValues } : null,
+      pressure: lastPressure ? { ...lastPressure } : null,
+      pressureReadings,
       weight: results.weight as number | null, height: results.height as number | null,
     } };
 }
 
 /** Validate new clinical data, then reuse unchanged ledger and inventory checks. */
-function validateStateV11(value: unknown): GameState {
+function validateStateV11(value: unknown, version: 11 | 12 = 11): GameState {
   if (!isRecord(value) || !Array.isArray(value.papers) || value.papers.length > GAME_LIMITS.papers
     || !isIntegerInRange(value.day, 1, GAME_LIMITS.day)) throw new SaveError('invalid-state');
   let oldVisit: unknown = null;
   let generalTested = false;
   let examinationOrder: ExaminationId[] = [];
+  let pressureReadings: PressureValues[] = [];
+  let pressureLatest: PressureValues | null = null;
   if (value.visit !== null) {
     const entry = value.visit;
     if (!isRecord(entry) || !hasOnlyKeys(entry, ['patientId', 'document', 'certificateTaken', 'certificateNamed',
-      'generalTested', 'visionTested', 'pressureTested', 'measurementsTaken', 'examinationOrder', 'decision'])
+      'generalTested', 'visionTested', 'pressureTested', 'measurementsTaken', 'examinationOrder', 'decision', ...(version === 12 ? ['pressureReadings', 'pressureLatest'] : [])])
       || typeof entry.generalTested !== 'boolean' || typeof entry.visionTested !== 'boolean'
       || typeof entry.pressureTested !== 'boolean' || typeof entry.measurementsTaken !== 'boolean'
-      || (entry.generalTested && entry.document !== 'desk')) throw new SaveError('invalid-state');
+      || !isIntegerInRange(entry.patientId, 0, PATIENTS.length - 1)
+      || (version === 11 && entry.generalTested && entry.document !== 'desk')) throw new SaveError('invalid-state');
     examinationOrder = validateExaminationOrder(entry.examinationOrder, { general: entry.generalTested,
       vision: entry.visionTested, pressure: entry.pressureTested, measurements: entry.measurementsTaken });
-    const { generalTested: general, examinationOrder: _order, ...previous } = entry;
+    pressureReadings = version === 12 ? validatePressureReadings(entry.pressureReadings, entry.patientId, entry.pressureTested)
+      : entry.pressureTested ? [{ ...PATIENTS[entry.patientId]!.pressureValues }] : [];
+    pressureLatest = version === 12
+      ? validatePressureReadings(entry.pressureLatest === null ? [] : [entry.pressureLatest], entry.patientId, entry.pressureTested)[0] ?? null
+      : pressureReadings[0] ? { ...pressureReadings[0] } : null;
+    if (pressureReadings.length === 1 && (pressureLatest?.systolic !== pressureReadings[0]!.systolic
+      || pressureLatest.diastolic !== pressureReadings[0]!.diastolic)) throw new SaveError('invalid-state');
+    const { generalTested: general, examinationOrder: _order, pressureReadings: _readings, pressureLatest: _latest, ...previous } = entry;
     generalTested = general;
     oldVisit = previous;
   }
-  const papers = value.papers.map(paper => validatePaperV11(paper, value.day as number));
+  const papers = value.papers.map(paper => validatePaperV11(paper, value.day as number, version));
   const oldPapers: PaperV10[] = papers.map(paper => {
     if (paper.kind !== 'note') return paper;
     const { examinationOrder: _order, ...previous } = paper;
@@ -660,8 +695,8 @@ function validateStateV11(value: unknown): GameState {
         pressure: paper.results.pressure !== null && patient ? patient.pressure : null,
         weight: paper.results.weight, height: paper.results.height } };
   });
-  const previous = validateBudgetState({ ...value, visit: oldVisit, papers: oldPapers }, 10, PATIENTS.length - 1);
-  const visit: Visit | null = previous.visit ? { ...previous.visit, generalTested, examinationOrder } : null;
+  const previous = validateBudgetState({ ...value, visit: oldVisit, papers: oldPapers }, 10, PATIENTS.length - 1, version === 12);
+  const visit: Visit | null = previous.visit ? { ...previous.visit, generalTested, examinationOrder, pressureReadings, pressureLatest } : null;
   if (visit) {
     const minimum = SHIFT_START_MINUTES + previous.shiftCompleted * 4 + (visit.document === 'desk' ? 1 : 0)
       + (visit.generalTested ? 3 : 0) + (visit.visionTested ? 3 : 0) + (visit.pressureTested ? 4 : 0)
@@ -670,6 +705,7 @@ function validateStateV11(value: unknown): GameState {
     for (const paper of papers) {
       if (paper.kind !== 'note' || paper.patientId !== visit.patientId || paper.day !== previous.day) continue;
       if ((paper.results.general !== null && !visit.generalTested)
+        || (version === 12 && paper.results.pressure !== null && JSON.stringify(paper.results.pressureReadings) !== JSON.stringify(visit.pressureReadings))
         || paper.examinationOrder.some((id, index) => visit.examinationOrder.filter(exam => paper.examinationOrder.includes(exam))[index] !== id)) {
         throw new SaveError('invalid-state');
       }
@@ -679,11 +715,11 @@ function validateStateV11(value: unknown): GameState {
 }
 
 export function encodeSave(state: GameState): Uint8Array {
-  const envelope: SaveV11 = {
+  const envelope: SaveV12 = {
     game: 'next-please',
-    version: 11,
+    version: 12,
     savedAt: new Date().toISOString(),
-    state: validateStateV11(state),
+    state: validateStateV11(state, 12),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -782,7 +818,7 @@ export function decodeSave(bytes: Uint8Array): GameState {
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11) throw new SaveError('unsupported-version');
+  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11 && envelope.version !== 12) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -805,6 +841,7 @@ export function decodeSave(bytes: Uint8Array): GameState {
   if (envelope.version === 7) return migrateStateV10(migrateStateV8(migrateStateV7(validateStateV7(envelope.state))));
   if (envelope.version === 8) return migrateStateV10(migrateStateV8(validateStateV8(envelope.state)));
   if (envelope.version === 11) return validateStateV11(envelope.state);
+  if (envelope.version === 12) return validateStateV11(envelope.state, 12);
   return migrateStateV10(validateBudgetState(envelope.state, envelope.version));
 }
 

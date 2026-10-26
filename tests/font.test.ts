@@ -81,6 +81,16 @@ describe('compact original document font', () => {
     }
   });
 
+  it('fits all specific general findings within two native note lines', () => {
+    for (const t of Object.values(translations)) {
+      for (const finding of t.generalFindings) {
+        expect(measureDocumentText(finding), finding).toBeLessThanOrEqual(166);
+        // The examination label and full finding can each occupy one line.
+        expect(measureDocumentText(`${t.generalResult}:`)).toBeLessThanOrEqual(166);
+      }
+    }
+  });
+
   it('fits every brief patient reply within the speech bubble in both languages', () => {
     for (const t of Object.values(translations)) {
       for (const line of Object.values(t.patientSpeech)) expect(measureDocumentText(line), line).toBeLessThanOrEqual(79);

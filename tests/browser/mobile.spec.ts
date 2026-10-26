@@ -53,6 +53,37 @@ async function expectLargePixelControls(page: Page): Promise<void> {
 test.describe('phone reception', () => {
   test.use(phone);
 
+  test('screen taps wait one second between advances while Next and settings remain independent', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    const reception = page.locator('#mobile-reception');
+    await expect(reception).toHaveAttribute('data-step', 'tone');
+    await page.clock.pauseAt(new Date(Date.now() + 1000));
+    // Tap empty scene space, then repeat before the full second has elapsed.
+    await page.touchscreen.tap(12, 180);
+    await expect(reception).toHaveAttribute('data-step', 'dialing');
+    await page.touchscreen.tap(12, 180);
+    await page.clock.runFor(999);
+    await page.touchscreen.tap(12, 180);
+    await expect(reception).toHaveAttribute('data-step', 'dialing');
+    await page.locator('#mobile-language-en').tap();
+    await expect(reception).toHaveAttribute('data-step', 'dialing');
+    await page.clock.runFor(1);
+    await page.touchscreen.tap(12, 180);
+    await expect(reception).toHaveAttribute('data-step', 'greeting');
+    // The button ignores the scene cooldown and advances exactly once per tap.
+    await page.locator('#mobile-next').tap();
+    await expect(reception).toHaveAttribute('data-step', 'reply');
+    await page.touchscreen.tap(12, 180);
+    await expect(reception).toHaveAttribute('data-step', 'reply');
+    await page.locator('#mobile-next').tap();
+    await expect(reception).toHaveAttribute('data-step', 'note');
+    await expect(page.locator('#mobile-note')).toBeFocused();
+    await page.clock.runFor(1000);
+    await page.touchscreen.tap(12, 180);
+    await expect(reception).toHaveAttribute('data-step', 'note');
+  });
+
   test('Polish conversation advances with four taps, survives rotation, and loads only the mobile interface', async ({ page }, testInfo) => {
     const requests: string[] = [], errors: string[] = [];
     page.on('request', request => requests.push(request.url()));
@@ -70,10 +101,8 @@ test.describe('phone reception', () => {
     await expectControlsFit(page);
     await page.screenshot({ path: testInfo.outputPath('mobile-phone-pl.png') });
 
-    // Touching the receiver respects the saved mute preference.
+    // Touching the scene advances while respecting the saved mute preference.
     await page.locator('#mobile-receiver').tap();
-    await expect(reception).toHaveAttribute('data-step', 'tone');
-    await page.locator('#mobile-next').tap();
     await expect(reception).toHaveAttribute('data-step', 'dialing');
     await expect(page.locator('#mobile-status')).toContainText('Wybieranie numeru');
     await page.locator('#mobile-next').tap();
@@ -161,7 +190,8 @@ test.describe('phone reception', () => {
     expect(requestedAudio).toHaveLength(requestCount);
     expect(await playingPhoneSounds(page)).toEqual([]);
     await page.locator('#mobile-receiver').tap();
-    await expect.poll(() => playingPhoneSounds(page)).toEqual([{ src: 'phone-tone.wav', muted: false, state: 'loaded' }]);
+    await expect(page.locator('#mobile-reception')).toHaveAttribute('data-step', 'dialing');
+    await expect.poll(() => playingPhoneSounds(page)).toEqual([{ src: 'phone-dial.wav', muted: false, state: 'loaded' }]);
   });
 
   test('small portrait and short landscape keep keyboard controls usable', async ({ page }, testInfo) => {

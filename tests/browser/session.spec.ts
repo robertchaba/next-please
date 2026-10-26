@@ -130,6 +130,11 @@ test('restart can be canceled and resets progress only after confirmation, retai
   expect(restarted).toEqual({ ...createInitialState(), rngState: restarted.rngState, roster: restarted.roster });
   expect(restarted.roster).toHaveLength(CHARACTER_COUNT);
   expect(new Set(restarted.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(CHARACTER_COUNT);
+  let unfit = 0;
+  for (const [index, id] of restarted.roster.entries()) {
+    if (PATIENTS[id]!.expectedDecision === 'unfit') unfit += 1;
+    expect(100 * unfit).toBeLessThanOrEqual(33 * (index + 1));
+  }
 });
 
 for (const phase of ['intro', 'cabinet'] as const) {
