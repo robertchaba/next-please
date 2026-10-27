@@ -231,7 +231,7 @@ test('clipped sheets store together while certificate bundles and stamps retain 
 });
 
 
-test('names appear on hover or keyboard focus while the preview area stays empty', async ({ page }, info) => {
+test('names appear only on the folder label on hover or keyboard focus', async ({ page }, info) => {
   await page.clock.install();
   await enter(page);
   await page.clock.pauseAt(new Date(Date.now() + 1000));
@@ -241,17 +241,19 @@ test('names appear on hover or keyboard focus while the preview area stays empty
   for (const locale of ['pl', 'en']) {
     await activate(page, `language-${locale}`);
     await activate(page, 'drawer');
-    const pixels = (y: number, h: number) => page.locator('#game').evaluate((canvas, { y, h }) =>
-      Array.from((canvas as HTMLCanvasElement).getContext('2d')!.getImageData(280, y, 260, h).data), { y, h });
-    const blank = await pixels(40, 15), emptyPreview = await pixels(60, 166);
+    const pixels = (x: number, y: number, w: number, h: number) => page.locator('#game').evaluate((canvas, { x, y, w, h }) =>
+      Array.from((canvas as HTMLCanvasElement).getContext('2d')!.getImageData(x, y, w, h).data), { x, y, w, h });
+    const labelPixels = () => pixels(39, 45, 96, 5);
+    const rightPixels = () => pixels(280, 35, 260, 191);
+    const blank = await labelPixels(), emptyRight = await rightPixels();
     await page.locator('#control-drawer-paper-1').hover();
-    expect(await pixels(40, 15)).not.toEqual(blank);
-    expect(await pixels(60, 166)).toEqual(emptyPreview);
+    expect(await labelPixels()).not.toEqual(blank);
+    expect(await rightPixels()).toEqual(emptyRight);
     await page.mouse.move(0, 0);
-    expect(await pixels(40, 15)).toEqual(blank);
+    expect(await labelPixels()).toEqual(blank);
     await page.locator('#control-drawer-paper-1').focus();
-    expect(await pixels(40, 15)).not.toEqual(blank);
-    expect(await pixels(60, 166)).toEqual(emptyPreview);
+    expect(await labelPixels()).not.toEqual(blank);
+    expect(await rightPixels()).toEqual(emptyRight);
     await page.locator('#stage').screenshot({ path: info.outputPath(`drawer-name-${locale}.png`) });
     await page.keyboard.press('Escape');
   }

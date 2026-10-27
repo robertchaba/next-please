@@ -30,12 +30,6 @@ export function drawerSheets(state: GameState, page: number) {
   })) };
 }
 
-/** Names appear only for the cover under the pointer or keyboard focus. */
-export function drawerSelection(state: GameState, page: number, activeId = ''): Paper | undefined {
-  const { visible } = drawerSheets(state, page);
-  return visible.find(({ paper }) => activeId === `drawer-paper-${paper.id}`)?.paper;
-}
-
 function fitLabel(value: string, width: number): string {
   if (measureDocumentText(value) <= width) return value;
   let shortened = value;
@@ -88,8 +82,6 @@ export function renderDrawer(ctx: CanvasRenderingContext2D, state: GameState, lo
     if (activeId === `drawer-paper-${paper.id}`) drawDocumentText(ctx, fitLabel(coverName(paper, locale), 96), bounds.x + 9, bounds.y + 10, { color: '#385b78' });
   }
   ctx.restore();
-  const selected = drawerSelection(state, page, activeId);
-  if (selected) drawDocumentText(ctx, fitLabel(coverName(selected, locale), 250), 283, 43, { color: '#e2d8b9' });
   if (state.drawerItems.manual) drawManualCover(ctx, manualBounds, false);
   for (let index = 0; index < Math.min(8, state.drawerItems.clips); index++) {
     drawPaperclip(ctx, clipBounds.x + (index % 4) * 13, clipBounds.y + Math.floor(index / 4) * 14);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyAction, createInitialState } from '../src/core/game';
-import { drawerButtons, drawerSheets, drawerSelection, DRAWER_BATCH_SIZE, DRAWER_CLOSE } from '../src/render/drawer';
+import { drawerButtons, drawerSheets, DRAWER_BATCH_SIZE, DRAWER_CLOSE } from '../src/render/drawer';
 import { translations } from '../src/i18n';
 import { measureDocumentText, measureText } from '../src/render/font';
 
@@ -69,20 +69,10 @@ describe('drawer presentation', () => {
 
   it('fits Polish and English drawer labels without scaling text', () => {
     for (const t of Object.values(translations)) {
-      for (const name of t.patientNames) expect(measureDocumentText(name)).toBeLessThanOrEqual(250);
       expect(measureDocumentText(t.drawerClose)).toBeLessThan(400);
       expect(measureText(t.drawerPrevious)).toBeLessThanOrEqual(112);
       expect(measureText(t.drawerNext)).toBeLessThanOrEqual(112);
     }
   });
 
-  it('reveals only the hovered or focused name without changing the saved drawer', () => {
-    const state = stockedDrawer(29), snapshot = JSON.stringify(state);
-    expect(drawerSelection(state, 0, 'drawer-paper-17')?.id).toBe(17);
-    expect(drawerSelection(state, 1, 'drawer-paper-17')).toBeUndefined();
-    expect(drawerSelection(state, 0)).toBeUndefined();
-    expect(drawerSelection(state, 99, 'drawer-paper-29')?.id).toBe(29);
-    expect(drawerSelection(stockedDrawer(0), 0)).toBeUndefined();
-    expect(JSON.stringify(state)).toBe(snapshot);
-  });
 });
