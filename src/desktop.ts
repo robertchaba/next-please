@@ -19,6 +19,8 @@ import { translations, readPreferences, savePreferences, type Locale } from './i
 import { audio } from './core/audio';
 import { musicManifest, musicPlaylist, playlistForState } from './core/music';
 import { createInitialState, downloadSave, importSave, SaveError } from './core/save';
+import { sharePage } from './core/share';
+import { releaseLabel } from './core/release';
 
 type Screen = 'welcome' | 'intro' | 'cabinet' | 'credits' | 'saves' | 'break-room' | 'restart' | 'drawer' | 'home';
 const app = document.querySelector<HTMLElement>('#app')!;
@@ -97,6 +99,7 @@ function deskItemHelp(id: DeskItemId): string {
   return t().dragHelp;
 }
 let busy = false;
+let sharing = false;
 let saveReadId = 0;
 let status = '';
 let toast = '';
@@ -638,6 +641,24 @@ async function fullscreen(): Promise<void> {
   } catch { notify(t().fullscreenError); }
 }
 
+async function shareCurrentPage(): Promise<void> {
+  if (sharing) return;
+  sharing = true;
+  const control = document.getElementById('control-share');
+  control?.setAttribute('aria-busy', 'true');
+  control?.setAttribute('aria-disabled', 'true');
+  const url = window.location.href;
+  try {
+    const result = await sharePage({ title: t().sharing.title, text: t().sharing.text, url });
+    if (result === 'manual') window.prompt(t().sharing.manual, url);
+    else if (result !== 'cancelled') notify(t().sharing[result]);
+  } finally {
+    sharing = false;
+    document.getElementById('control-share')?.removeAttribute('aria-busy');
+    document.getElementById('control-share')?.removeAttribute('aria-disabled');
+  }
+}
+
 function changeTrack(direction: 'previous' | 'next'): void {
   if (!audio.isMuted()) audio.unlock();
   if (direction === 'previous') audio.previousTrack();
@@ -693,6 +714,7 @@ function getButtons(): Button[] {
     { id: 'start', label: shiftStarted ? (gameState.phase === 'home' ? t().home.resume : t().resume) : t().start, x: 32, y: 199, w: 208, h: 27, kind: 'primary', action: startShift },
     { id: 'saves', label: t().saves, x: 32, y: 233, w: 208, h: 24, action: () => openScreen('saves', 'saves') },
     { id: 'credits', label: t().credits, x: 32, y: 264, w: 91, h: 18, kind: 'text', action: () => openScreen('credits', 'credits') },
+    { id: 'share', label: t().sharing.label, x: 18, y: 296, w: 66, h: 19, kind: 'text', action: () => { void shareCurrentPage(); } },
   ];
 }
 
@@ -833,7 +855,7 @@ function syncControls(focusId?: string): void {
     : screen === 'saves' ? `${t().savesDescription} ${t().savesBody.join(' ')} ${t().sample}. ${t().day}: ${gameState.day}. ${t().patients}: ${gameState.patientsProcessed}. ${t().money}: ${gameState.money}.`
     : screen === 'break-room' ? t().breakRoomDescription
     : screen === 'restart' ? t().restartBody.join(' ')
-    : `${t().subtitle} ${t().tagline} ${t().description}`;
+    : `${t().subtitle} ${t().tagline} ${t().description} ${releaseLabel(locale)}`;
   controls.append(heading, description);
   controls.dataset.homePage = String(homePageIndex);
   controls.dataset.homeKind = screen === 'home' ? homePage(gameState, locale, homePageIndex).kind : '';
@@ -848,6 +870,10 @@ function syncControls(focusId?: string): void {
     const element = document.createElement(button.kind === 'volume' ? 'input' : button.href ? 'a' : 'button');
     element.className = 'hit-target'; element.id = `control-${button.id}`;
     element.setAttribute('aria-label', button.label);
+    if (button.id === 'share') {
+      element.setAttribute('aria-description', t().sharing.description);
+      if (sharing) { element.setAttribute('aria-busy', 'true'); element.setAttribute('aria-disabled', 'true'); }
+    }
     if (screen !== 'cabinet') element.title = button.label;
     if (button.item) {
       element.dataset.item = button.item;
@@ -1010,8 +1036,7 @@ function render(): void {
   rect(33, 151, 29, 2, colors.red);
   text(t().subtitle, 33, 160, '#bdc1a6');
   text(t().tagline, 33, 177, '#8e9b84');
-  text(t().motto, 20, 300, '#98a58c');
-  text(t().build, 550, 300, '#6f8069', 1, 'right');
+  text(releaseLabel(locale), 550, 300, '#6f8069', 1, 'right');
 
   if (screen === 'credits') {
     paper(78, 72, 414, 176, t().creditsTitle, 'NP / 002');
@@ -1026,8 +1051,9 @@ function render(): void {
 
 function drawToast(): void {
   if (toast) {
-    rect(10, 285, 550, 28, colors.ink); outline(10, 285, 550, 28, colors.line);
-    text(toast, 285, 294, colors.bone, 1, 'center');
+    const y = screen === 'welcome' ? 5 : 285;
+    rect(10, y, 550, 28, colors.ink); outline(10, y, 550, 28, colors.line);
+    text(toast, 285, y + 9, colors.bone, 1, 'center');
   }
 }
 

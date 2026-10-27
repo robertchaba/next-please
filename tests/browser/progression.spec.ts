@@ -113,12 +113,24 @@ for (const valid of [true, false]) {
       .map(sound => ({ src: String(sound._src).split('/').at(-1), muted: sound.mute(), state: sound.state() })));
     if (valid) await expect.poll(phoneSounds).toEqual([{ src: 'phone-tone.wav', muted: false, state: 'loaded' }]);
     await page.locator(`#control-call-specialist-${specialistId}`).click();
+    await expect(page.locator('#clinic-speech')).toHaveText('Trrr… cyk-cyk-cyk…');
+    await page.locator('#stage').screenshot({ path: info.outputPath('specialist-dialing-pl.png') });
+    await key(page, 'language-en');
+    await expect(page.locator('#clinic-speech')).toHaveText('Whirr… click-click…');
+    await key(page, 'language-pl');
     if (valid) {
       await expect.poll(phoneSounds).toEqual([{ src: 'phone-dial.wav', muted: false, state: 'loaded' }]);
       await key(page, 'sound');
       expect(await page.evaluate(() => window.Howler._howls.find(sound => String(sound._src).endsWith('/phone-dial.wav'))!.mute())).toBe(true);
     }
-    await page.clock.runFor(4200);
+    await page.clock.runFor(1800);
+    await expect(page.locator('#clinic-speech')).toHaveText('Czy kolega potwierdza to zaświadczenie?');
+    await page.locator('#stage').screenshot({ path: info.outputPath('specialist-question-pl.png') });
+    await key(page, 'language-en');
+    await expect(page.locator('#clinic-speech')).toHaveText('Doctor, can you confirm this certificate?');
+    await page.locator('#stage').screenshot({ path: info.outputPath('specialist-question-en.png') });
+    await key(page, 'language-pl');
+    await page.clock.runFor(2400);
     await expect(page.locator('#clinic-speech')).toContainText(valid ? 'Tak. Leczenie trwa.' : 'To zaświadczenie dotyczy innej pracy.');
     await page.locator('#stage').screenshot({ path: info.outputPath(`specialist-call-${valid ? 'valid' : 'invalid'}-pl.png`) });
     await page.clock.runFor(3300);

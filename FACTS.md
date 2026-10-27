@@ -38,6 +38,7 @@
 - Formal documents carry issue dates, seals and signatures. The refusal stamp reads ODMOWA instead of NIEZDOLNY and is not limited to medical grounds.
 - Dropping a sheet onto a paperclip attached to another sheet joins the documents into one movable bundle. Clicking the attached clip separates the documents.
 - From the fourth working day, clicking the desk telephone gives an exchange tone. Clicking a telephone number on a document plays rotary dialing and connects the doctor to its issuer; the short conversation adds its conclusion to the medical notes.
+- Doctors address fellow doctors as “kolego” in Polish dialogue, including telephone verification of specialist certificates.
 - A detected mistaken approval brings a letter from ZUS; a detected mistaken refusal brings a letter from the employer. Letters appear after a short delay, once the patient has left. The doctor can open the envelope, read the letter, and discard it.
 - ZUS, employers and the Medical Chamber use visibly different seals on their documents.
 - Their signed letters use varied administrative wording about proceedings, charges and insurance, rather than directly explaining the doctor's mistake.
