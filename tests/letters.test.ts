@@ -54,3 +54,10 @@ it('addresses report reprimands from militia headquarters, LOT or the workplace 
     expect(measureDocumentText(sender)).toBeLessThanOrEqual(166);
   }
 });
+
+it('describes records and duties without revealing sanctions in correspondence', () => {
+  for (const t of Object.values(translations)) {
+    const letters = [...Object.values(t.paperwork.letters).flat(), ...Object.values(t.progression.directives)];
+    for (const letter of letters) expect(`${letter.subject} ${letter.body}`).not.toMatch(/sankcj|kar[ayę]|nagan|upomnien|składk|potrącen|\bfines?\b|penalt|premium|reprimand|warning|tariff/i);
+  }
+});

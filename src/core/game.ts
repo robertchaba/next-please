@@ -80,6 +80,8 @@ export interface GameState {
   day: number;
   money: number;
   previousMonthBalance: number;
+  /** Net cash accepted or returned during this day, already included in money. */
+  bribeIncome: number;
   patientsProcessed: number;
   phase: 'intro' | 'cabinet' | 'home';
   rngState: number;
@@ -141,7 +143,7 @@ export function createInitialState(seed = globalThis.crypto.getRandomValues(new 
     pendingReferrals: [], referralsIssued: 0, budgetHistory: [],
     ending: null,
     rngState: generated.seed, roster: generated.roster, insuranceRate: BASE_INSURANCE, daily: emptyConsequences(), settlement: null,
-    day: 1, money: 0, previousMonthBalance: 0, patientsProcessed: 0,
+    day: 1, money: 0, bribeIncome: 0, previousMonthBalance: 0, patientsProcessed: 0,
     phase: 'intro', introStep: 0, shiftCompleted: 0, clockMinutes: ARRIVAL_MINUTES, visit: null,
     lampOn: true, decoration: 'plant', papers: [], nextPaperId: 1, paperClips: [], drawerItems: { manual: false, clips: 0 },
   };
@@ -204,6 +206,16 @@ export function applyAction(state: GameState, action: GameAction): ActionResult 
   return finishAtClosing(state);
 }
 
+/** Settle the remaining weekend once before presenting its single home sequence. */
+export function settleWeekend(state: GameState): GameState {
+  while (state.phase === 'home' && state.ending === null && isWeekend(state.day + 1)) {
+    const next = applyAction(state, 'next-day').state;
+    if (next === state) break;
+    state = next;
+  }
+  return state;
+}
+
 /** Whole minutes from the live clock; no action, examination or reward is implied. */
 export function advanceClinicTime(state: GameState, minutes: number): ActionResult {
   if (state.phase !== 'cabinet' || !Number.isSafeInteger(minutes) || minutes <= 0) return { state, feedback: 'none' };
@@ -250,7 +262,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
     if (isWeekend(day)) {
       const result = settleDay({ ...state, day, shiftCompleted: 0, daily: emptyConsequences(), restDay: true });
       if (Math.abs(result.settlement.closingBalance) > GAME_LIMITS.money) return unchanged('limit-reached');
-      return changed({ ...result, day, previousMonthBalance, phase: 'home', shiftCompleted: 0, roster: [],
+      return changed({ ...result, day, previousMonthBalance, bribeIncome: 0, phase: 'home', shiftCompleted: 0, roster: [],
         budgetHistory: [...state.budgetHistory, ...(state.settlement ? [state.settlement] : [])],
         clockMinutes: SHIFT_END_MINUTES, referralsIssued: 0, daily: emptyConsequences(), money: result.settlement.closingBalance,
         ending: settledEnding(state, result.settlement.closingBalance) }, 'next-day');
@@ -260,7 +272,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
     if (rule && (state.papers.length >= GAME_LIMITS.papers || state.nextPaperId > GAME_LIMITS.paperId)) return unchanged('limit-reached');
     const papers: Paper[] = rule ? [...state.papers, { id: state.nextPaperId, kind: 'directive', patientId: null, day,
       location: 'desk', sender: rule === 'specialist' || rule === 'additional-tests' ? 'chamber' : 'zus', rule, opened: false }] : state.papers;
-    return changed({ phase: 'cabinet', day, previousMonthBalance, shiftCompleted: 0, clockMinutes: ARRIVAL_MINUTES,
+    return changed({ phase: 'cabinet', day, previousMonthBalance, bribeIncome: 0, shiftCompleted: 0, clockMinutes: ARRIVAL_MINUTES,
       roster: arrangeProgressionRoster(generated.roster.map(id => state.pendingReferrals.find(pending => PATIENTS[pending.visit.patientId]!.characterId === PATIENTS[id]!.characterId)?.visit.patientId ?? id), day), referralsIssued: 0, rngState: generated.seed, daily: emptyConsequences(), settlement: null, budgetHistory: [],
       papers, nextPaperId: state.nextPaperId + Number(rule !== null) }, 'next-day');
   }
@@ -460,11 +472,13 @@ function transition(state: GameState, action: GameAction): ActionResult {
     if (action === 'accept-bribe') {
       if (visit.bribe === 'accepted') return unchanged('bribe-accepted');
       if (visit.bribe !== 'offered') return unchanged('bribe-missing');
-      if (state.money > GAME_LIMITS.money - 100) return unchanged('limit-reached');
-      return changed({ money: state.money + 100, visit: { ...visit, bribe: 'accepted' }, clockMinutes: spend(ACTION_MINUTES.handling) }, 'bribe-accepted');
+      if (state.money > GAME_LIMITS.money - 100 || state.bribeIncome >= CHARACTER_COUNT * 100) return unchanged('limit-reached');
+      return changed({ money: state.money + 100, bribeIncome: state.bribeIncome + 100, visit: { ...visit, bribe: 'accepted' }, clockMinutes: spend(ACTION_MINUTES.handling) }, 'bribe-accepted');
     }
     if (visit.bribe === 'returned') return unchanged('bribe-returned');
-    return changed({ money: state.money - (visit.bribe === 'accepted' ? 100 : 0), visit: { ...visit, bribe: 'returned' },
+    if (visit.bribe === 'accepted' && (state.money < -GAME_LIMITS.money + 100 || state.bribeIncome <= -CHARACTER_COUNT * 100)) return unchanged('limit-reached');
+    return changed({ money: state.money - (visit.bribe === 'accepted' ? 100 : 0),
+      bribeIncome: state.bribeIncome - (visit.bribe === 'accepted' ? 100 : 0), visit: { ...visit, bribe: 'returned' },
       clockMinutes: spend(ACTION_MINUTES.handling) }, 'bribe-returned');
   }
   if (action === 'take-specialist') {

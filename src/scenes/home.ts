@@ -25,7 +25,7 @@ function homeLines(value: string, scale: number, width = 312): string[] {
 export function homePages(state: GameState): HomePageKind[] {
   if (state.ending === 'hospital') return ['hospital'];
   if (state.ending === 'bankruptcy') return ['budget', 'bankruptcy'];
-  return ['arrival', ...(state.settlement?.event ? ['event' as const] : []),
+  return ['arrival', ...(state.roster.length > 0 && state.settlement?.event ? ['event' as const] : []),
     ...(!isWeekend(state.day + 1) ? ['budget' as const, 'work' as const] : [])];
 }
 
@@ -45,21 +45,26 @@ export function homePage(state: GameState, locale: Locale, page: number) {
   const rest = state.roster.length === 0;
   const modest = rest && s?.weekend?.modest === true;
   const ledgers = [...state.budgetHistory, ...(s ? [s] : [])];
-  const sum = (key: 'basePay' | 'patientBonus' | 'livingCost' | 'fines' | 'insuranceCost'): number =>
+  const sum = (key: 'basePay' | 'patientBonus' | 'bribeIncome' | 'livingCost' | 'fines' | 'insuranceCost'): number =>
     ledgers.reduce((total, ledger) => total + ledger[key], 0);
   const openingBalance = ledgers[0]?.openingBalance ?? 0;
   const extraExpenses = ledgers.reduce((total, ledger) => total + (ledger.event?.cost ?? 0), 0);
-  const amount = (value: number): string => `${value.toLocaleString(locale === 'pl' ? 'pl-PL' : 'en-GB').replace(/\u00a0/g, ' ')} ${h.currency}`;
+  const amount = (value: number): string => `${(value || 0).toLocaleString(locale === 'pl' ? 'pl-PL' : 'en-GB').replace(/\u00a0/g, ' ')} ${h.currency}`;
+  const row = (label: string, value: number) => ({ label, value: amount(value), negative: value < 0 });
   const rows = kind === 'budget' && s ? [
-    { label: h.base, value: amount(sum('basePay')) },
-    { label: h.bonus, value: amount(sum('patientBonus')) },
-    { label: state.budgetHistory.length ? h.beforeWeekend : h.previousDay, value: amount(openingBalance) },
-    { label: h.living, value: amount(sum('livingCost')) },
-    { label: h.fines, value: amount(sum('fines')) },
-    { label: h.insurance, value: amount(sum('insuranceCost')) },
-    ...(extraExpenses ? [{ label: h.extraExpenses, value: amount(extraExpenses) }] : []),
+    row(h.base, sum('basePay')),
+    row(h.bonus, sum('patientBonus')),
+    ...(sum('bribeIncome') ? [row(h.bribes, sum('bribeIncome'))] : []),
+    row(state.budgetHistory.length ? h.beforeWeekend : h.previousDay, openingBalance),
+    row(h.living, -sum('livingCost')),
+    row(h.fines, -sum('fines')),
+    row(h.insurance, -sum('insuranceCost')),
+    ...(extraExpenses ? [row(h.extraExpenses, -extraExpenses)] : []),
+    row(h.balance, s.closingBalance),
   ] : [];
-  const event = s?.event?.kind;
+  // One weekend illustration/comment, favouring a trip over an ordinary expense.
+  const events = ledgers.flatMap(ledger => ledger.event ? [ledger.event.kind] : []);
+  const event = rest ? events.find(kind => kind === 'mountain-trip' || kind === 'seaside-trip') ?? events[0] : s?.event?.kind;
   const title = kind === 'arrival' ? (rest ? h.weekendTitle : h.title)
     : kind === 'event' && event ? h.events[event]
     : kind === 'work' ? h.workTitle : rest ? h.weekendLedger : h.ledger;
@@ -68,12 +73,12 @@ export function homePage(state: GameState, locale: Locale, page: number) {
   const variant = (lines: readonly string[], offset: number): string => lines[((state.rngState >>> 8) + state.day + offset) % lines.length]!;
   const result = s ? s.closingBalance - openingBalance : 0;
   const budgetComments = result > 0 ? h.budgetComments.profit : result < 0 ? h.budgetComments.loss : h.budgetComments.even;
-  const comment = kind === 'arrival' ? (modest ? h.modestRest : rest ? h.rest : variant(h.arrivalComments, 0))
+  const comment = kind === 'arrival' ? (modest ? h.modestRest : rest ? event ? h.eventComments[event] : h.rest : variant(h.arrivalComments, 0))
     : kind === 'event' && event ? h.eventComments[event]
     : kind === 'work' ? variant(h.workComments, 5) : variant(budgetComments, 9);
   const illustration: HomeIllustration = kind === 'work' ? 'going-to-work'
-    : kind === 'event' && event === 'mountain-trip' ? 'mountain-resort'
-    : kind === 'event' && event === 'seaside-trip' ? 'seaside-resort'
+    : (kind === 'event' || (rest && kind === 'arrival' && !modest)) && event === 'mountain-trip' ? 'mountain-resort'
+    : (kind === 'event' || (rest && kind === 'arrival' && !modest)) && event === 'seaside-trip' ? 'seaside-resort'
     : modest && kind === 'arrival' ? 'weekend-modest' : rest ? 'weekend-budget' : kind === 'arrival' ? 'homecoming' : 'home-evening';
   const bodyScale = kind === 'budget' ? 1 : 2;
   const body = homeLines(comment, bodyScale).join('\n');
@@ -97,10 +102,10 @@ export function renderHome(ctx: CanvasRenderingContext2D, state: GameState, loca
   reveal(content.body).split('\n').forEach((line, index) => drawText(ctx, line, 25,
     (content.kind === 'budget' ? 79 : (content.kind === 'hospital' || content.kind === 'bankruptcy') ? 85 : 99) + index * ((content.kind === 'hospital' || content.kind === 'bankruptcy') ? 16 : 24), { color: '#ded4b4', scale: content.bodyScale }));
   content.rows.forEach((row, index) => {
-    const y = 112 + index * (content.rows.length > 6 ? 21 : 23);
+    const y = 112 + index * (content.rows.length > 8 ? 17 : content.rows.length > 7 ? 19 : 21);
     drawText(ctx, reveal(row.label, 2), 25, y, { color: '#ded4b4' });
     // Align to the full amount so its left edge stays fixed during typing.
-    drawText(ctx, reveal(row.value), HOME_AMOUNT_RIGHT - measureText(row.value), y, { color: '#e3d6b3' });
+    drawText(ctx, reveal(row.value), HOME_AMOUNT_RIGHT - measureText(row.value), y, { color: row.negative ? '#e18b79' : '#e3d6b3' });
   });
   if (content.kind === 'hospital' || content.kind === 'bankruptcy') drawText(ctx, reveal(translations[locale].progression.gameOver), 25, 237, { color: '#d39a70' });
   drawText(ctx, reveal(content.action), HOME_ACTION.x + 2, HOME_ACTION.y + 9, { color: '#d39a70' });

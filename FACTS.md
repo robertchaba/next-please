@@ -27,7 +27,7 @@
 - A scale with a height measure provides the patient's weight and height.
 - Clicking the patient with an empty hand performs a general examination. It records an absence of concerns, one of 18 specific physical findings, or the occupation-specific concern about mental fitness or suspected pneumoconiosis. The finding stays the same on repeated examination of that case and is named in the notes. Abnormal general findings require refusal unless the applicable specialist rule resolves that specific concern. The specialist exception introduced on the fourth working day concerns hypertension only. From the seventh working day, a relevant additional examination can resolve doubts about a militia officer’s mental fitness or a miner’s suspected pneumoconiosis; unrelated contraindications still require refusal.
 - Repeated blood pressure measurements vary slightly. Notes retain the first two measurements without overwriting them on later attempts; the latest result is still shown briefly. Blood pressure is recorded as measured values for the doctor to interpret. Very high values are written in red. The rulebook explains how to interpret the readings.
-- Examinations can be performed as soon as the patient arrives, before taking or reading the referral. Findings remain available for existing or later-fetched notes. Every examination briefly shows a concise result or comment in a speech balloon.
+- Examinations can be performed as soon as the patient arrives, before taking or reading the referral. Findings remain available for existing or later-fetched notes. Every examination briefly shows a concise result or comment in a speech balloon. Normal-result comments have several variants and never repeat on consecutive normal examinations, including across patients.
 - Vision results record a separate value for each eye. Only a significant defect disqualifies a worker in a position requiring a vision examination. Militia officers and pilots attend in uniform.
 - The certificate communicates only approval or refusal, alongside the patient's identity and job position. Examination findings belong in separate medical notes written by the doctor.
 - Certificate forms start with empty name and job-position fields. The doctor fills both together using the pen corner. A certificate must have both fields filled and be stamped before it is handed back.
@@ -41,14 +41,14 @@
 - Doctors address fellow doctors as “kolego” in Polish dialogue, including telephone verification of specialist certificates.
 - A detected mistaken approval brings a letter from ZUS; a detected mistaken refusal brings a letter from the employer. Letters appear after a short delay, once the patient has left. The doctor can open the envelope, read the letter, and discard it.
 - ZUS, employers and the Medical Chamber use visibly different seals on their documents.
-- Their signed letters use varied administrative wording about proceedings, charges and insurance, rather than directly explaining the doctor's mistake.
+- Their signed letters use varied administrative wording about proceedings, records and required duties, without describing sanctions or the consequences of failing to comply.
 
 ## Work and household budget
 
 - New admissions end at 14:00. The last admitted patient may continue examinations and paperwork afterwards; that patient's departure ends the working day without another call. At 17:00 a cleaner calls “zamykamy już!” from the corridor. At 17:15 the clinic closes and any unfinished visit is interrupted, with no completed-visit bonus or decision penalty. Existing notes and referrals remain.
 - After work, the doctor goes home, may encounter a special event, and reviews a brief household budget before going to work again.
-- The household budget shows base income, patient bonus, money from the previous day, living costs, fines, insurance and any additional expenses, without detailed explanations.
-- Friday, Saturday and Sunday share one budget summary before Monday. It combines income and expenses from all three days and shows the balance from before the weekend.
+- The household budget shows base income, patient bonus, net bribe income, money from the previous day, living costs, fines, insurance, any additional expenses and the closing balance, without detailed explanations. Expenses appear in red with a minus sign. Accepted bribes are counted once; returned money reduces bribe income.
+- Friday, Saturday and Sunday share one illustrated weekend scene with an appropriate comment, followed by one budget summary before Monday. It combines income and expenses from all three days and shows the balance from before the weekend.
 - Weekend domestic scenes may differ. A special event may be a trip to an unnamed mountain or seaside resort.
 - The daily wage is 1000 zł, plus 50 zł for every completed appointment.
 - Ordinary daily living costs apply from the first day and are randomly selected from 400–800 zł. Insurance starts at 300 zł, with penalties and additional expenses accounted for separately.

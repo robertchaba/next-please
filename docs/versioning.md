@@ -2,7 +2,7 @@
 
 The displayed game version comes directly from `package.json`. Keep the root package version in `package-lock.json` synchronized when releasing; no separate interface version needs editing. This release number is independent of the gameplay save-format version.
 
-`src/core/release.ts` supplies `releaseLabel(locale)` for the title screen and its accessible description. Its Polish and English templates and codename lists live in `src/i18n.ts`. Version **0.8.1** is **KALKA / CARBON COPY**; **0.8.0** retains **PAPIEROLOGIA / PAPERWORK**.
+`src/core/release.ts` supplies `releaseLabel(locale)` for the title screen and its accessible description. Its Polish and English templates and codename lists live in `src/i18n.ts`. Version **0.8.2** is **PIECZĄTKA / STAMP**; **0.8.1** retains **KALKA / CARBON COPY**; **0.8.0** retains **PAPIEROLOGIA / PAPERWORK**.
 
 For every character of the complete version string, calculate a polynomial hash:
 

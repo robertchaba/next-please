@@ -165,10 +165,10 @@ for (const attached of [true, false]) test(`returning worker receives ${attached
     await key(page, letter, 'Space');
     await place(page);
     await key(page, `paper-action-${state.nextPaperId}`);
-    await expect(page.locator(`#control-${letter}`)).toHaveAccessibleName(/nagan|upomnien/i);
+    await expect(page.locator(`#control-${letter}`)).toHaveAccessibleName(/wynik.*badani/i);
     await page.locator('#stage').screenshot({ path: info.outputPath('missing-result-reprimand-pl.png') });
     await key(page, 'language-en');
-    await expect(page.locator(`#control-${letter}`)).toHaveAccessibleName(/reprimand|warning/i);
+    await expect(page.locator(`#control-${letter}`)).toHaveAccessibleName(/examination report/i);
   }
   const final = await exportState(page, info);
   expect(final.visit).toBeNull();

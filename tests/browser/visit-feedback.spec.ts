@@ -51,9 +51,13 @@ test('every examination shows a short localized comment which expires and pauses
   await page.clock.runFor(1920);
   await expect(page.locator('#clinic-speech')).toBeEmpty();
   await act(page, 'run-vision');
-  await expect(page.locator('#clinic-speech')).toHaveText('Doctor: Normal.');
+  await expect(page.locator('#clinic-speech')).toHaveText('Doctor: All in order.');
   await act(page, 'run-pressure');
-  await expect(page.locator('#clinic-speech')).toHaveText('Doctor: Normal.');
+  await expect(page.locator('#clinic-speech')).toHaveText('Doctor: No problems found.');
+  await act(page, 'language-pl');
+  await expect(page.locator('#clinic-speech')).toHaveText('Lekarz: Nie stwierdzono problemów.');
+  await page.locator('#game').screenshot({ path: '/tmp/next-please-doctor-long-comment-pl.png' });
+  await act(page, 'language-en');
   await act(page, 'run-measurements');
   await expect(page.locator('#clinic-speech')).toContainText(/Doctor: \d+ kg \/ \d+ cm/);
 });

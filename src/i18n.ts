@@ -300,28 +300,28 @@ export const translations = {
       missingResultSenders: { militia: 'Komenda milicji', lot: 'Biuro LOT-u' },
       letters: {
         missingResult: [
-          { subject: 'Nagana w sprawie załączników', body: 'Udziela się nagany za niekompletne akta dopuszczenia do pracy. Wykaz brakujących załączników przekazano ubezpieczycielowi. Obowiązuje podwyższona składka.', role: 'Kierownik kadr', signature: 'Witold Krawiec' },
-          { subject: 'Uchybienie przy doręczeniu', body: 'Stwierdzono uchybienie w doręczeniu dokumentacji pracownika. Niniejsze upomnienie włącza się do akt. Ubezpieczyciel zatwierdził podwyższenie składki.', role: 'Referent osobowy', signature: 'Irena Brzozowska' },
-          { subject: 'Niekompletna teczka', body: 'Teczka pracownika dopuszczonego do pracy nie spełnia wymogów. Udziela się upomnienia w trybie służbowym. Koszt podwyższonej ochrony obciąża gabinet.', role: 'Kierownik organizacji pracy', signature: 'Jerzy Łukaszewski' },
-          { subject: 'Zastrzeżenia do akt', body: 'Wnosi się zastrzeżenia do kompletu przekazanych dokumentów. Uchybienie objęto naganą. Odpis protokołu stanowi podstawę podwyższenia składki ubezpieczenia.', role: 'Pełnomocnik zakładu', signature: 'Barbara Wierzbicka' },
-          { subject: 'Upomnienie służbowe', body: 'Weryfikacja załączników zakończyła się upomnieniem jednostki orzekającej. Sprawę zgłoszono do ubezpieczyciela. Nowa, wyższa składka obowiązuje od rozliczenia.', role: 'St. inspektor kadr', signature: 'Stefan Płatek' },
-          { subject: 'Protokół braków', body: 'Braki w aktach pracownika wpisano do protokołu. Za niedochowanie trybu przekazania udziela się nagany. Ubezpieczyciel zastosował podwyższoną taryfę.', role: 'Kierownik administracji', signature: 'Halina Orłowska' },
+          { subject: 'W sprawie załączników', body: 'Przekazana dokumentacja dopuszczenia do pracy nie zawiera kompletu załączników. Prosimy o uzupełnienie akt o wynik badania dodatkowego.', role: 'Kierownik kadr', signature: 'Witold Krawiec' },
+          { subject: 'Doręczenie dokumentacji', body: 'W aktach pracownika odnotowano brak wyniku badania dodatkowego. Prosimy przekazywać wynik razem z orzeczeniem o dopuszczeniu do pracy.', role: 'Referent osobowy', signature: 'Irena Brzozowska' },
+          { subject: 'Niekompletna teczka', body: 'Teczka pracownika dopuszczonego do pracy pozostaje niekompletna. Do orzeczenia należy dołączyć wynik właściwego badania dodatkowego.', role: 'Kierownik organizacji pracy', signature: 'Jerzy Łukaszewski' },
+          { subject: 'Zastrzeżenia do akt', body: 'Weryfikacja przekazanych dokumentów wykazała brak załącznika. Prosimy o sprawdzenie kompletu akt i doręczenie wyniku badania.', role: 'Pełnomocnik zakładu', signature: 'Barbara Wierzbicka' },
+          { subject: 'Uzupełnienie dokumentacji', body: 'Do jednostki wpłynęło orzeczenie bez wymaganego wyniku badania dodatkowego. Prosimy o uzupełnienie dokumentacji pracownika.', role: 'St. inspektor kadr', signature: 'Stefan Płatek' },
+          { subject: 'Protokół braków', body: 'Brak wyniku badania dodatkowego wpisano do protokołu odbioru akt. Przy dopuszczeniu do pracy wynik przekazuje się wraz z orzeczeniem.', role: 'Kierownik administracji', signature: 'Halina Orłowska' },
         ],
         zus: [
-          { subject: 'Wezwanie do uiszczenia opłaty', body: 'Wzywa się do uiszczenia opłaty administracyjnej w związku z rozszerzoną weryfikacją akt. Należność skierowano do potrącenia w najbliższym rozliczeniu.', role: 'St. referent rozliczeń', signature: 'Maria Jarosz' },
-          { subject: 'Uzupełnienie akt świadczenia', body: 'W toku rozpatrywania wniosku o świadczenie dołączono odpis orzeczenia z gabinetu. Koszt dodatkowych czynności ujęto na rachunku jednostki wystawiającej.', role: 'Inspektor świadczeń', signature: 'Roman Głowacki' },
-          { subject: 'Zawiadomienie o obciążeniu', body: 'Postępowanie wymagało ponownego zestawienia dokumentacji medycznej. Obciążenie z tego tytułu przekazano do księgowości. Pismo pozostaje w aktach sprawy.', role: 'Referent księgowości', signature: 'Teresa Biel' },
-          { subject: 'Nota w sprawie dokumentacji', body: 'Komisja zakończyła przegląd załączników do wniosku. Koszty trybu rozszerzonego rozlicza jednostka wydająca orzeczenie. Nie wymaga się osobnego potwierdzenia.', role: 'Sekretarz komisji', signature: 'Henryk Kulesza' },
-          { subject: 'Rozliczenie czynności', body: 'Na podstawie protokołu z przeglądu akt naliczono opłatę za czynności dodatkowe. Numer niniejszego pisma należy przywołać w ewentualnej dalszej korespondencji.', role: 'Inspektor rozliczeń', signature: 'Zofia Rudzka' },
-          { subject: 'Przekazanie do rozrachunku', body: 'Akta skierowano do rozrachunku po zakończeniu postępowania wyjaśniającego. Wykaz kosztów przekazano właściwej komórce. Odpis dołącza się do teczki gabinetu.', role: 'Kierownik referatu', signature: 'Adam Wilczyński' },
+          { subject: 'Weryfikacja dokumentacji', body: 'Akta orzeczenia przekazano do rozszerzonej weryfikacji. Prosimy o zachowanie dokumentacji badania do czasu zakończenia czynności.', role: 'St. referent rozliczeń', signature: 'Maria Jarosz' },
+          { subject: 'Uzupełnienie akt świadczenia', body: 'W toku rozpatrywania wniosku o świadczenie dołączono odpis orzeczenia z gabinetu. Prosimy o potwierdzenie kompletności dokumentacji.', role: 'Inspektor świadczeń', signature: 'Roman Głowacki' },
+          { subject: 'Zawiadomienie o przeglądzie', body: 'Postępowanie wymaga ponownego zestawienia dokumentacji medycznej. Odpis orzeczenia włączono do akt sprawy. Prosimy zachować oryginały.', role: 'Referent księgowości', signature: 'Teresa Biel' },
+          { subject: 'Nota w sprawie dokumentacji', body: 'Komisja zapoznała się z przekazanymi załącznikami. Dokumentacja pozostaje w toku weryfikacji. Osobne potwierdzenie odbioru nie jest wymagane.', role: 'Sekretarz komisji', signature: 'Henryk Kulesza' },
+          { subject: 'Zestawienie akt', body: 'Po przeglądzie akt sporządzono wykaz dokumentów wymagających wyjaśnienia. W dalszej korespondencji należy podawać numer niniejszej sprawy.', role: 'Inspektor rozliczeń', signature: 'Zofia Rudzka' },
+          { subject: 'Przekazanie sprawy', body: 'Akta przekazano do właściwego referatu celem dalszego rozpatrzenia. Odpis niniejszego pisma należy zachować w dokumentacji gabinetu.', role: 'Kierownik referatu', signature: 'Adam Wilczyński' },
         ],
         employer: [
-          { subject: 'Uruchomienie procedury', body: 'Rozpoczęto procedurę ubezpieczeniową dotyczącą przerwy w obsadzie stanowiska. Odpis dokumentacji przekazano do ponownego ustalenia składki.', role: 'Kierownik kadr', signature: 'Witold Krawiec' },
-          { subject: 'Zgłoszenie do ubezpieczyciela', body: 'W związku z przesunięciem pracownika poza grafik złożono stosowne zgłoszenie. Ubezpieczyciel prowadzi ocenę warunków ochrony jednostki orzekającej.', role: 'Referent osobowy', signature: 'Irena Brzozowska' },
-          { subject: 'Odpis z rejestru przestojów', body: 'Do rejestru wpisano nieobsadzone godziny stanowiska wskazanego w skierowaniu. Odpis trafił do ubezpieczyciela wraz z wnioskiem o aktualizację warunków.', role: 'Kierownik organizacji pracy', signature: 'Jerzy Łukaszewski' },
-          { subject: 'Sprawa przekazana dalej', body: 'Po uzgodnieniu z działem kadr dokumenty przekazano do obsługi ubezpieczenia. Zmiana taryfy zostanie uwzględniona przy najbliższym naliczeniu składki.', role: 'Pełnomocnik zakładu', signature: 'Barbara Wierzbicka' },
-          { subject: 'Zawiadomienie kadrowe', body: 'Zamknięto wewnętrzne ustalenia dotyczące ciągłości zatrudnienia. Wniosek o rewizję warunków ubezpieczenia pozostaje w toku. Dalsze pisma prześle ubezpieczyciel.', role: 'St. inspektor kadr', signature: 'Stefan Płatek' },
-          { subject: 'Aktualizacja warunków', body: 'Potwierdzamy przyjęcie sprawy do procedury ubezpieczeniowej. Wysłano zestawienie kosztów zastępstwa. Nowe warunki ochrony będą obowiązywać od kolejnego rozliczenia.', role: 'Kierownik administracji', signature: 'Halina Orłowska' },
+          { subject: 'Wszczęcie postępowania', body: 'Rozpoczęto wyjaśnianie sprawy przerwy w obsadzie stanowiska. Prosimy o zachowanie odpisu orzeczenia i dokumentacji badania pracownika.', role: 'Kierownik kadr', signature: 'Witold Krawiec' },
+          { subject: 'Zawiadomienie kadrowe', body: 'Po wykreśleniu pracownika z grafiku przekazano sprawę do działu kadr. Prosimy o potwierdzenie daty i zakresu przeprowadzonego badania.', role: 'Referent osobowy', signature: 'Irena Brzozowska' },
+          { subject: 'Wyciąg z ewidencji', body: 'W ewidencji odnotowano godziny nieobsadzonego stanowiska. Odpis skierowania dołączono do dokumentacji. Sprawa oczekuje na wyjaśnienie.', role: 'Kierownik organizacji pracy', signature: 'Jerzy Łukaszewski' },
+          { subject: 'Przekazanie dokumentów', body: 'Po konsultacji z kadrami dokumenty przekazano do dalszego rozpatrzenia. Prosimy o zachowanie kompletu akt dotyczących orzeczenia.', role: 'Pełnomocnik zakładu', signature: 'Barbara Wierzbicka' },
+          { subject: 'Ustalenia kadrowe', body: 'Zakończono wewnętrzne ustalenia dotyczące ciągłości zatrudnienia. Prosimy o sprawdzenie zgodności danych pracownika z wystawionym orzeczeniem.', role: 'St. inspektor kadr', signature: 'Stefan Płatek' },
+          { subject: 'Aktualizacja ewidencji', body: 'Potwierdzamy przyjęcie sprawy do ewidencji. Zestawienie zastępstw dołączono do akt. W dalszej korespondencji prosimy podawać numer sprawy.', role: 'Kierownik administracji', signature: 'Halina Orłowska' },
         ],
       },
     },
@@ -455,13 +455,13 @@ export const translations = {
       "directives": {
         "additional-tests": {
           "subject": "Badania dodatkowe",
-          "body": "Od dziś: hutnik — audiometria; pilot — błędnik; milicjant — psychiatra; górnik — RTG. Druki w 3. szufladzie. Zakreśl badanie. Akta zostają. Powrót z wynikiem dziś lub jutro. Inny zawód: kara ZUS zawsze. Wskazania: regulamin.",
+          "body": "Od dziś: hutnik — audiometria; pilot — błędnik; milicjant — psychiatra; górnik — RTG. Druki w 3. szufladzie. Zakreśl badanie. Akta zostają. Powrót z wynikiem dziś lub jutro. Wskazania: regulamin.",
           "role": "Sekretarz Izby Lekarskiej",
           "signature": "dr Adam Pieczęć"
         },
         "dates": {
           "subject": "W sprawie świeżości skierowań",
-          "body": "Od dziś należy sprawdzać datę skierowania. Starsze niż 3 dni wymaga odmowy. Uchybienia rozliczamy jak dopuszczenie osoby niezdolnej do pracy. Papier także się starzeje.",
+          "body": "Od dziś należy sprawdzać datę skierowania. Starsze niż 3 dni wymaga odmowy. Papier także się starzeje.",
           "role": "Referat kontroli ZUS",
           "signature": "Irena Stempel"
         },
@@ -473,7 +473,7 @@ export const translations = {
         },
         "authenticity": {
           "subject": "O autentyczności skierowań",
-          "body": "Od dziś pieczęć potwierdza skierowanie. Brak pieczęci oznacza odmowę. Odcisk niewyraźny należy wyjaśnić w kadrach pod numerem na druku. Błędy podlegają zwykłej karze ZUS.",
+          "body": "Od dziś pieczęć potwierdza skierowanie. Brak pieczęci oznacza odmowę. Odcisk niewyraźny należy wyjaśnić w kadrach pod numerem na druku.",
           "role": "Referat kontroli ZUS",
           "signature": "Irena Stempel"
         }
@@ -535,14 +535,14 @@ export const translations = {
       return identity ? patientCopy.pl.identityNames[identity.characterId]![identity.variant]! : patientCopy.pl.names[patient.characterId]!;
     }),
     patientJobs: PATIENTS.map(patient => patient.id < 3 ? ['Archiwistka', 'Operator suwnicy', 'Kierowczyni'][patient.id]! : (patientIdentity(patient) && patient.sex === 'female' ? patientCopy.pl.femaleJobs : patientCopy.pl.jobs)[patient.jobId]!),
-    examinationSpeech: { normal: 'W normie.', concern: 'Hmm...', veryHigh: 'Ojojoj...', doctor: 'Lekarz', cleaner: 'Sprzątaczka z korytarza', closing: 'Zamykamy już!' },
+    examinationSpeech: { normal: ['W normie.', 'W porządku.', 'Nie stwierdzono problemów.', 'Bez zastrzeżeń.', 'Wszystko prawidłowo.'], concern: 'Hmm...', veryHigh: 'Ojojoj...', doctor: 'Lekarz', cleaner: 'Sprzątaczka z korytarza', closing: 'Zamykamy już!' },
     patientSpeech: {
       returned: 'Mam wynik.', greeting: 'Dzień dobry.', hello: 'Witam.', morning: 'Dobry.',
       hesitate: 'Yyy...', blurred: 'Rozmazane...', cannotRead: 'Nie odczytam.', unsure: 'Chyba... nie.', again: 'Jeszcze raz?',
       bribe: 'Stówka za pieczątkę?', thanks: 'Dziękuję.', goodbye: 'Do widzenia.', allRight: 'W porządku.', bye: 'Do zobaczenia.',
     },
     home: {
-      title: 'POWRÓT DO DOMU', ledger: 'BUDŻET', weekendTitle: 'WOLNY DZIEŃ', weekendLedger: 'BUDŻET WEEKENDU', workTitle: 'DO PRACY',
+      title: 'POWRÓT DO DOMU', ledger: 'BUDŻET', weekendTitle: 'WEEKEND', weekendLedger: 'BUDŻET WEEKENDU', workTitle: 'DO PRACY',
       description: 'Powrót do domu. Płaszcz na wieszaku, ciepłe światło za otwartymi drzwiami.',
       arrivalComments: [
         'Koniec dyżuru. Kapcie nie wymagają zaświadczenia.',
@@ -615,7 +615,7 @@ export const translations = {
         'mountain-resort': 'Pensjonat w górskim kurorcie. Za drzewami pasmo gór.',
         'seaside-resort': 'Pusty nadmorski deptak, pensjonat i szare fale.',
       },
-      base: 'Dochód podst.', bonus: 'Premia za pacjentów', previousDay: 'Z poprzedniego dnia', beforeWeekend: 'Sprzed weekendu', living: 'Koszty życia', insurance: 'Ubezpieczenie', fines: 'Kary', extraExpenses: 'Dodatkowe wydatki', currency: 'zł',
+      bribes: 'Łapówki', balance: 'Saldo', base: 'Dochód podst.', bonus: 'Premia za pacjentów', previousDay: 'Z poprzedniego dnia', beforeWeekend: 'Sprzed weekendu', living: 'Koszty życia', insurance: 'Ubezpieczenie', fines: 'Kary', extraExpenses: 'Dodatkowe wydatki', currency: 'zł',
       resume: 'WRÓĆ DO DOMU', tomorrow: 'NASTĘPNY DZIEŃ', onward: 'DALEJ', work: 'RUSZAJ DO PRACY', enter: 'WEJDŹ DO PRZYCHODNI', reveal: 'Pokaż cały tekst',
     },
     feedback: {
@@ -780,28 +780,28 @@ export const translations = {
       missingResultSenders: { militia: 'Militia headquarters', lot: 'LOT office' },
       letters: {
         missingResult: [
-          { subject: 'Reprimand concerning enclosures', body: 'A reprimand is issued for incomplete work clearance records. The list of absent enclosures has been sent to the insurer. An increased premium applies.', role: 'Personnel manager', signature: 'Witold Krawiec' },
-          { subject: 'Document delivery breach', body: 'A breach in the delivery of employee records has been established. This formal warning is entered on file. The insurer has approved a premium increase.', role: 'Personnel officer', signature: 'Irena Brzozowska' },
-          { subject: 'Incomplete employee file', body: 'The cleared employee’s file fails to meet requirements. A formal warning is issued. The clinic shall bear the cost of increased insurance cover.', role: 'Work organisation manager', signature: 'Jerzy Łukaszewski' },
-          { subject: 'Objections to the records', body: 'Objections have been raised to the documents supplied. A reprimand has been recorded. A copy of the findings forms the basis of an increased insurance premium.', role: 'Company representative', signature: 'Barbara Wierzbicka' },
-          { subject: 'Formal warning', body: 'Review of the enclosures has resulted in a formal warning to the issuing unit. The case has been reported to the insurer. The higher premium applies at settlement.', role: 'Senior personnel officer', signature: 'Stefan Płatek' },
-          { subject: 'Record of omissions', body: 'Omissions in the employee’s file have been recorded. A reprimand is issued for failure to follow the delivery procedure. The insurer has applied a higher tariff.', role: 'Administration manager', signature: 'Halina Orłowska' },
+          { subject: 'Concerning enclosures', body: 'The work clearance records arrived without all required enclosures. Please complete the file with the additional examination report.', role: 'Personnel manager', signature: 'Witold Krawiec' },
+          { subject: 'Delivery of records', body: 'The employee file is missing an additional examination report. Please supply the report together with the work clearance certificate.', role: 'Personnel officer', signature: 'Irena Brzozowska' },
+          { subject: 'Incomplete employee file', body: 'The cleared employee’s file remains incomplete. The relevant additional examination report must accompany the certificate.', role: 'Work organisation manager', signature: 'Jerzy Łukaszewski' },
+          { subject: 'Objections to the records', body: 'Review of the supplied documents identified a missing enclosure. Please check the complete file and forward the examination report.', role: 'Company representative', signature: 'Barbara Wierzbicka' },
+          { subject: 'Records supplement', body: 'The certificate arrived without the required additional examination report. Please complete the employee’s documentation.', role: 'Senior personnel officer', signature: 'Stefan Płatek' },
+          { subject: 'Record of omissions', body: 'The absent examination report has been entered in the receipt log. Work clearance certificates shall be delivered with the report.', role: 'Administration manager', signature: 'Halina Orłowska' },
         ],
         zus: [
-          { subject: 'Notice of administrative fee', body: 'Payment is requested for the extended review of the file. The administrative fee has been referred for deduction at the next settlement.', role: 'Senior accounts clerk', signature: 'Maria Jarosz' },
-          { subject: 'Benefit file supplement', body: 'A copy of the clinic certificate was added during the benefit review. The issuing unit has been charged for the additional processing.', role: 'Benefits inspector', signature: 'Roman Głowacki' },
-          { subject: 'Notice of account charge', body: 'The proceedings required a fresh compilation of medical records. The resulting charge has been sent to accounts. This notice remains on file.', role: 'Accounts clerk', signature: 'Teresa Biel' },
-          { subject: 'Note concerning the records', body: 'The committee has reviewed the attachments. The issuing unit bears the cost of the extended procedure. A separate acknowledgment is not required.', role: 'Committee secretary', signature: 'Henryk Kulesza' },
-          { subject: 'Processing cost statement', body: 'A fee for additional processing has been entered following the file review. Please quote this reference in any further correspondence.', role: 'Accounts inspector', signature: 'Zofia Rudzka' },
-          { subject: 'Referred for settlement', body: 'The file has been referred for settlement following the inquiry. The cost schedule was sent to the appropriate office. A copy joins the clinic record.', role: 'Section head', signature: 'Adam Wilczyński' },
+          { subject: 'Review of documentation', body: 'The certificate file has been referred for extended review. Please retain the examination records until the review is complete.', role: 'Senior accounts clerk', signature: 'Maria Jarosz' },
+          { subject: 'Benefit file supplement', body: 'A copy of the clinic certificate was added during the benefit review. Please confirm that the examination records are complete.', role: 'Benefits inspector', signature: 'Roman Głowacki' },
+          { subject: 'Notice of file review', body: 'The proceedings require a fresh compilation of medical records. A certificate copy has joined the file. Please retain the originals.', role: 'Accounts clerk', signature: 'Teresa Biel' },
+          { subject: 'Note concerning the records', body: 'The committee has reviewed the attachments. Verification of the records continues. A separate acknowledgment is not required.', role: 'Committee secretary', signature: 'Henryk Kulesza' },
+          { subject: 'Document schedule', body: 'The file review produced a list of documents requiring clarification. Please quote this reference in any further correspondence.', role: 'Accounts inspector', signature: 'Zofia Rudzka' },
+          { subject: 'Matter referred onward', body: 'The file has been passed to the appropriate office for further review. Please retain a copy of this notice in the clinic records.', role: 'Section head', signature: 'Adam Wilczyński' },
         ],
         employer: [
-          { subject: 'Procedure initiated', body: 'An insurance procedure has begun concerning the gap in staffing. Copies of the records have been submitted for a reassessment of the premium.', role: 'Personnel manager', signature: 'Witold Krawiec' },
-          { subject: 'Notification to the insurer', body: 'A notification was filed following the removal of the worker from the rota. The insurer is reviewing cover for the certifying unit.', role: 'Personnel clerk', signature: 'Irena Brzozowska' },
-          { subject: 'Extract from the delay log', body: 'Unstaffed hours for the referred position have been logged. An extract was sent to the insurer with a request to update the terms of cover.', role: 'Work planning manager', signature: 'Jerzy Łukaszewski' },
-          { subject: 'Matter referred onward', body: 'Following consultation with personnel, the papers were passed to insurance services. A revised tariff will enter the next premium calculation.', role: 'Company representative', signature: 'Barbara Wierzbicka' },
-          { subject: 'Personnel notice', body: 'Internal findings on continuity of employment are complete. The request to review the insurance terms remains open. Further notices will come from the insurer.', role: 'Senior personnel officer', signature: 'Stefan Płatek' },
-          { subject: 'Revision of cover', body: 'The matter has entered the insurance procedure. A schedule of replacement costs has been submitted. Revised cover applies from the next settlement.', role: 'Administration manager', signature: 'Halina Orłowska' },
+          { subject: 'Procedure initiated', body: 'An inquiry has begun concerning the gap in staffing. Please retain a copy of the certificate and the employee’s examination records.', role: 'Personnel manager', signature: 'Witold Krawiec' },
+          { subject: 'Personnel notification', body: 'The matter was referred to personnel after the worker left the rota. Please confirm the date and scope of the examination.', role: 'Personnel clerk', signature: 'Irena Brzozowska' },
+          { subject: 'Extract from the rota', body: 'Unstaffed hours for the referred position have been logged. A referral copy has joined the file. The matter awaits clarification.', role: 'Work planning manager', signature: 'Jerzy Łukaszewski' },
+          { subject: 'Documents referred onward', body: 'Following consultation with personnel, the papers were passed for further review. Please retain all records relating to the certificate.', role: 'Company representative', signature: 'Barbara Wierzbicka' },
+          { subject: 'Personnel findings', body: 'Internal findings on continuity of employment are complete. Please check the employee’s details against the issued certificate.', role: 'Senior personnel officer', signature: 'Stefan Płatek' },
+          { subject: 'Register update', body: 'The matter has been entered in the register. A replacement rota has joined the file. Please quote the case reference in future letters.', role: 'Administration manager', signature: 'Halina Orłowska' },
         ],
       },
     },
@@ -935,13 +935,13 @@ export const translations = {
       "directives": {
         "additional-tests": {
           "subject": "Additional examinations",
-          "body": "From today: furnace worker — hearing; pilot — balance; militia — psychiatry; miner — X-ray. Forms: drawer 3. Circle one test. Keep the records. Results return today or tomorrow. Wrong occupation: ZUS fine, always. Indications: rulebook.",
+          "body": "From today: furnace worker — hearing; pilot — balance; militia — psychiatry; miner — X-ray. Forms: drawer 3. Circle one test. Keep the records. Results return today or tomorrow. Indications: rulebook.",
           "role": "Medical Chamber secretary",
           "signature": "dr Adam Pieczęć"
         },
         "dates": {
           "subject": "On the freshness of referrals",
-          "body": "From today, check referral dates. Referrals older than 3 days require refusal. Breaches incur the same fines as approving an unfit worker. Paper ages too.",
+          "body": "From today, check referral dates. Referrals older than 3 days require refusal. Paper ages too.",
           "role": "ZUS inspection office",
           "signature": "Irena Stempel"
         },
@@ -953,7 +953,7 @@ export const translations = {
         },
         "authenticity": {
           "subject": "On authentic referrals",
-          "body": "From today, a seal validates a referral. No seal means refusal. Clarify illegible impressions with HR using the number on the form. Errors incur the standard ZUS fine.",
+          "body": "From today, a seal validates a referral. No seal means refusal. Clarify illegible impressions with HR using the number on the form.",
           "role": "ZUS inspection office",
           "signature": "Irena Stempel"
         }
@@ -1015,14 +1015,14 @@ export const translations = {
       return identity ? patientCopy.en.identityNames[identity.characterId]![identity.variant]! : patientCopy.en.names[patient.characterId]!;
     }),
     patientJobs: PATIENTS.map(patient => patient.id < 3 ? ['Archivist', 'Crane operator', 'Driver'][patient.id]! : (patientIdentity(patient) && patient.sex === 'female' ? patientCopy.en.femaleJobs : patientCopy.en.jobs)[patient.jobId]!),
-    examinationSpeech: { normal: 'Normal.', concern: 'Hmm...', veryHigh: 'Oh dear...', doctor: 'Doctor', cleaner: 'Cleaner in the corridor', closing: 'We are closing now!' },
+    examinationSpeech: { normal: ['Normal.', 'All in order.', 'No problems found.', 'No concerns.', 'Everything looks fine.'], concern: 'Hmm...', veryHigh: 'Oh dear...', doctor: 'Doctor', cleaner: 'Cleaner in the corridor', closing: 'We are closing now!' },
     patientSpeech: {
       returned: 'My test result.', greeting: 'Good morning.', hello: 'Hello.', morning: 'Morning.',
       hesitate: 'Uhh...', blurred: 'It is blurry...', cannotRead: 'Cannot read it.', unsure: 'Maybe... no.', again: 'Once more?',
       bribe: 'A hundred for a yes?', thanks: 'Thank you.', goodbye: 'Goodbye.', allRight: 'All right.', bye: 'See you.',
     },
     home: {
-      title: 'HOME AT LAST', ledger: 'BUDGET', weekendTitle: 'A DAY OFF', weekendLedger: 'WEEKEND BUDGET', workTitle: 'OFF TO WORK',
+      title: 'HOME AT LAST', ledger: 'BUDGET', weekendTitle: 'WEEKEND', weekendLedger: 'WEEKEND BUDGET', workTitle: 'OFF TO WORK',
       description: 'Returning home. A coat on a hook and warm light beyond the open door.',
       arrivalComments: [
         'Shift over. Slippers need no certificate.',
@@ -1095,7 +1095,7 @@ export const translations = {
         'mountain-resort': 'A lodge in a mountain resort. Mountains beyond the trees.',
         'seaside-resort': 'An empty seaside promenade, a guesthouse and gray waves.',
       },
-      base: 'Base income', bonus: 'Patient bonus', previousDay: 'From the previous day', beforeWeekend: 'Before the weekend', living: 'Living costs', insurance: 'Insurance', fines: 'Fines', extraExpenses: 'Extra expenses', currency: 'zł',
+      bribes: 'Bribes', balance: 'Balance', base: 'Base income', bonus: 'Patient bonus', previousDay: 'From the previous day', beforeWeekend: 'Before the weekend', living: 'Living costs', insurance: 'Insurance', fines: 'Fines', extraExpenses: 'Extra expenses', currency: 'zł',
       resume: 'RETURN HOME', tomorrow: 'NEXT DAY', onward: 'CONTINUE', work: 'HEAD TO WORK', enter: 'ENTER THE CLINIC', reveal: 'Reveal the complete text',
     },
     feedback: {

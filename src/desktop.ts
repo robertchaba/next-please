@@ -1,5 +1,5 @@
 import './style.css';
-import { advanceClinicTime, applyAction, CLEANER_WARNING_MINUTES, SHIFT_END_MINUTES, PATIENTS, canEndDay, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction, type ActionResult, type GameState } from './core/game';
+import { advanceClinicTime, applyAction, settleWeekend, CLEANER_WARNING_MINUTES, SHIFT_END_MINUTES, PATIENTS, canEndDay, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction, type ActionResult, type GameState } from './core/game';
 import { patientForVisit } from './core/progression';
 import { ClinicClock } from './core/clock';
 import { effectsManifest } from './core/effects';
@@ -68,6 +68,7 @@ let patientMotion: CabinetArtOptions['patientMotion'];
 let patientExitHold = 0;
 let patientSpeech: (PatientSpeech & { remaining: number; departure: boolean }) | undefined;
 let visionSpeechAttempt = 0;
+let previousNormalComment = -1;
 let clinicSpeech: { comment?: ExaminationComment; speaker: 'doctor' | 'cleaner'; remaining: number } | undefined;
 let phoneCall: { kind: 'specialist' | 'employer'; valid: boolean; elapsed: number } | undefined;
 let phoneToneTimer: ReturnType<typeof setTimeout> | undefined;
@@ -168,6 +169,7 @@ function typedContent(): string {
 }
 
 function startTyping(): void {
+  if (screen === 'home') gameState = settleWeekend(gameState);
   clearInterval(typingTimer);
   const body = typedContent();
   const key = `${screen}:${gameState.day}:${gameState.introStep}:${homePageIndex}:${locale}`;
@@ -443,7 +445,8 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
   gameState = result.state; feedback = t().feedback[result.feedback];
   if (result.feedback === 'visit-interrupted') { syncControls(); return; }
   if (gameState !== previousState && gameState.visit && clinicSpeech?.speaker !== 'cleaner') {
-    const comment = examinationComment(actual, gameState.visit);
+    const comment = examinationComment(actual, gameState.visit, previousNormalComment);
+    if (comment?.kind === 'normal') previousNormalComment = comment.variant;
     if (comment) clinicSpeech = { comment, speaker: 'doctor', remaining: 1900 };
   }
   reconcileDeskPapers();

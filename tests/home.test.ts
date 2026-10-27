@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyAction, createInitialState, type GameState } from '../src/core/game';
+import { applyAction, createInitialState, settleWeekend, type GameState } from '../src/core/game';
 import { HOME_AMOUNT_RIGHT, homePage, homePages } from '../src/scenes/home';
 import { measureText } from '../src/render/font';
 import { translations } from '../src/i18n';
@@ -18,8 +18,8 @@ describe('localized home sequence', () => {
     for (const locale of ['pl', 'en'] as const) {
       const content = homePage(state, locale, homePages(state).indexOf('budget'));
       const h = translations[locale].home;
-      expect(content.rows.map(row => row.label)).toEqual([h.base, h.bonus, h.previousDay, h.living, h.fines, h.insurance]);
-      expect(content.rows.map(row => row.value)).toEqual([locale === 'pl' ? '1000 zł' : '1,000 zł', '0 zł', '200 zł', `${state.settlement!.livingCost} zł`, '0 zł', '300 zł']);
+      expect(content.rows.map(row => row.label)).toEqual([h.base, h.bonus, h.previousDay, h.living, h.fines, h.insurance, h.balance]);
+      expect(content.rows.map(row => row.value)).toEqual([locale === 'pl' ? '1000 zł' : '1,000 zł', '0 zł', '200 zł', `-${state.settlement!.livingCost} zł`, '0 zł', '-300 zł', `${state.money} zł`]);
       expect(content.text).not.toMatch(/%|x 50|400–800|minimum|Minimum|ZUS/);
     }
     expect(state.settlement!.livingCost).toBeGreaterThanOrEqual(400);
@@ -79,7 +79,7 @@ describe('localized home sequence', () => {
     const friday = homeState(2);
     expect(homePages(friday)).toEqual(['arrival']);
     const saturday = applyAction(friday, 'next-day').state;
-    expect(homePage(saturday, 'pl', 0).title).toBe('WOLNY DZIEŃ');
+    expect(homePage(saturday, 'pl', 0).title).toBe('WEEKEND');
     expect(homePages(saturday)).toEqual(['arrival']);
     const sunday = applyAction(saturday, 'next-day').state;
     expect([friday, saturday, sunday].flatMap(homePages).filter(kind => kind === 'budget')).toHaveLength(1);
@@ -87,16 +87,20 @@ describe('localized home sequence', () => {
       const h = translations[locale].home;
       const budget = homePage(sunday, locale, homePages(sunday).indexOf('budget'));
       expect(budget.illustration).toBe('weekend-budget');
-      expect(budget.rows).toEqual([
+      expect(budget.rows.map(({ label, value }) => ({ label, value }))).toEqual([
         { label: h.base, value: locale === 'pl' ? '1000 zł' : '1,000 zł' },
         { label: h.bonus, value: '0 zł' },
         { label: h.beforeWeekend, value: '200 zł' },
-        { label: h.living, value: '800 zł' },
+        { label: h.living, value: '-800 zł' },
         { label: h.fines, value: '0 zł' },
-        { label: h.insurance, value: '300 zł' },
+        { label: h.insurance, value: '-300 zł' },
+        { label: h.balance, value: '100 zł' },
       ]);
     }
-    expect(homePages(sunday)).toContain('work');
+    expect(settleWeekend(friday)).toEqual(sunday);
+    expect(settleWeekend(saturday)).toEqual(sunday);
+    expect(settleWeekend(sunday)).toBe(sunday);
+    expect(homePages(sunday)).toEqual(['arrival', 'budget', 'work']);
     expect(homePage(sunday, 'pl', homePages(sunday).indexOf('work')).title).toBe('DO PRACY');
   });
 
@@ -113,7 +117,7 @@ describe('localized home sequence', () => {
       expect(state).toEqual(before);
     }
     const comfortable = applyAction(homeState(2, 5000), 'next-day').state;
-    expect(homePage(comfortable, 'pl', 0).illustration).toBe('weekend-budget');
+    expect(homePage(comfortable, 'pl', 0).illustration).toBe('seaside-resort');
     expect(homePage(homeState(2, 200), 'pl', 0).illustration).toBe('homecoming');
     expect(homePage(sunday, 'pl', homePages(sunday).indexOf('work')).illustration).toBe('going-to-work');
   });
@@ -133,8 +137,8 @@ describe('localized home sequence', () => {
       const content = homePage(sunday, locale, homePages(sunday).indexOf('budget'));
       const values = content.rows.map(row => Number(row.value.replace(/[^\d-]/g, '')));
       expect(values).toEqual([1000, 150, 10000,
-        ledgers.reduce((sum, day) => sum + day.livingCost, 0), 100, 300,
-        ledgers.reduce((sum, day) => sum + (day.event?.cost ?? 0), 0)]);
+        -ledgers.reduce((sum, day) => sum + day.livingCost, 0), -100, -300,
+        -ledgers.reduce((sum, day) => sum + (day.event?.cost ?? 0), 0), sunday.money]);
       const result = sunday.money - friday.settlement!.openingBalance;
       expect(h.budgetComments[result > 0 ? 'profit' : result < 0 ? 'loss' : 'even']).toContain(content.body);
       for (const row of content.rows) expect(measureText(row.label) + measureText(row.value) + 12).toBeLessThanOrEqual(HOME_AMOUNT_RIGHT - 25);

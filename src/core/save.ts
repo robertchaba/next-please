@@ -5,7 +5,7 @@ import { ARRIVAL_MINUTES, CLINIC_CLOSE_MINUTES, createInitialState, GAME_LIMITS,
 
 import { CHARACTER_COUNT, JOBS, disqualifyingPressure, type ExaminationId, type PressureValues, type PatientCase } from './patients';
 import { defaultReferral, directiveForDay, emptyCalls, effectivePatient, employerPhone, specialistPhone, workDayNumber, type ReferralDetails, type SpecialistCertificate, type PhoneConclusions } from './progression';
-import { BASE_INSURANCE, BASE_PAY, MODEST_WEEKEND_LIVING, PATIENT_BONUS, type DaySettlement, type DailyConsequences } from './economy';
+import { BASE_INSURANCE, BASE_PAY, MODEST_WEEKEND_LIVING, PATIENT_BONUS, type DaySettlement as CurrentSettlement, type DailyConsequences } from './economy';
 
 export { createInitialState } from './game';
 export type { GameState } from './game';
@@ -13,7 +13,9 @@ export type { GameState } from './game';
 /** Freeze the pre-progression schema so legacy validators keep exact bounds. */
 type VisitV18 = Omit<CurrentVisit, 'startedDay' | 'additionalResult' | 'additionalTests'>;
 type PaperV18 = Exclude<CurrentPaper, { kind: 'additional-referral' | 'additional-result' }>;
-type StateV19 = Omit<CurrentGameState, 'budgetHistory'>;
+type DaySettlement = Omit<CurrentSettlement, 'bribeIncome'>;
+type StateV23 = Omit<CurrentGameState, 'bribeIncome' | 'settlement' | 'budgetHistory'> & { settlement: DaySettlement | null; budgetHistory: DaySettlement[] };
+type StateV19 = Omit<StateV23, 'budgetHistory'>;
 type StateV18 = Omit<StateV19, 'pendingReferrals' | 'referralsIssued' | 'visit' | 'papers'> & { visit: VisitV18 | null; papers: PaperV18[] };
 type Visit = Omit<VisitV18, 'referral' | 'specialist' | 'specialistTaken' | 'calls' | 'bribe' | 'noteOrder'>;
 type HistoricalPaper<T> = T extends { kind: 'note' } ? Omit<T, 'calls' | 'bribe' | 'noteOrder'>
@@ -60,9 +62,9 @@ type GameStateV5 = Omit<GameStateV8, 'visit' | 'paperClips' | 'papers' | 'drawer
 type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<VisitV10, 'certificateNamed'> | null };
 type GameStateV7 = Omit<GameStateV8, 'drawerItems'>;
 
-interface SaveV23 {
+interface SaveV24 {
   game: 'next-please';
-  version: 23;
+  version: 24;
   savedAt: string;
   state: CurrentGameState;
 }
@@ -440,8 +442,8 @@ function validateStateV8(value: unknown): GameStateV8 {
 
 /** Frozen original queue: legacy appointments retain their original positions. */
 function legacyInitialState(): GameState {
-  const { budgetHistory: _history, pendingReferrals: _pending, referralsIssued: _issued, ...initial } = createInitialState(0x4e505301);
-  return { ...initial, visit: null, papers: [], rngState: 3477621340,
+  const { bribeIncome: _bribes, settlement: _settlement, budgetHistory: _history, pendingReferrals: _pending, referralsIssued: _issued, ...initial } = createInitialState(0x4e505301);
+  return { ...initial, settlement: null, visit: null, papers: [], rngState: 3477621340,
     roster: [0, 1, 2, 62, 49, 75, 81, 66, 98, 4, 67, 43, 34, 28, 42, 58, 15, 21, 89, 26, 93, 52, 100, 8, 72, 86, 14, 38] };
 }
 
@@ -1139,7 +1141,7 @@ function validateStateV19(value: unknown, partialRoster = false, weekendDebt = f
 }
 
 /** Preserve actual daily ledgers; older saves never invent missing Friday costs. */
-function validateStateV20(value: unknown, partialRoster = false, weekendDebt = false, resultAttachments = false): CurrentGameState {
+function validateStateV20(value: unknown, partialRoster = false, weekendDebt = false, resultAttachments = false): StateV23 {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !Array.isArray(value.budgetHistory) || value.budgetHistory.length > 2) return fail();
   const { budgetHistory: rawHistory, ...old } = value;
@@ -1178,7 +1180,7 @@ function validateStateV20(value: unknown, partialRoster = false, weekendDebt = f
 }
 
 /** New correspondence is validated before passing the unchanged paper inventory through legacy checks. */
-function validateStateV23(value: unknown): CurrentGameState {
+function validateStateV23(value: unknown): StateV23 {
   if (!isRecord(value) || !Array.isArray(value.papers)) throw new SaveError('invalid-state');
   const marked = new Set<number>(), cases = new Set<string>();
   const papers = value.papers.map((raw: unknown) => {
@@ -1202,12 +1204,48 @@ function validateStateV23(value: unknown): CurrentGameState {
     ? { ...paper, reason: 'missing-result' } : paper) };
 }
 
+/** Old files never recorded a complete cash journal; preserve their paid balances. */
+function migrateBribeIncome(state: StateV23 | CurrentGameState): CurrentGameState {
+  if ('bribeIncome' in state) return state;
+  return { ...state, bribeIncome: 0,
+    settlement: state.settlement ? { ...state.settlement, bribeIncome: 0 } : null,
+    budgetHistory: state.budgetHistory.map(ledger => ({ ...ledger, bribeIncome: 0 })) };
+}
+
+function validateStateV24(value: unknown): CurrentGameState {
+  const fail = (): never => { throw new SaveError('invalid-state'); };
+  const validCash = (cash: unknown, day: unknown, rest: boolean): cash is number =>
+    isIntegerInRange(cash, -CHARACTER_COUNT * 100, CHARACTER_COUNT * 100) && cash % 100 === 0
+    && (cash === 0 || (isIntegerInRange(day, 1, GAME_LIMITS.day) && workDayNumber(day) >= 6 && !rest));
+  if (!isRecord(value) || !Array.isArray(value.budgetHistory)
+    || !validCash(value.bribeIncome, value.day, value.phase === 'intro' || (Array.isArray(value.roster) && value.roster.length === 0))) return fail();
+  const project = (raw: unknown): unknown => {
+    if (!isRecord(raw) || !validCash(raw.bribeIncome, raw.day, raw.basePay === 0)
+      || !isIntegerInRange(raw.openingBalance, -GAME_LIMITS.money, GAME_LIMITS.money)
+      || !isIntegerInRange(raw.income, -CHARACTER_COUNT * 100, BASE_PAY + CHARACTER_COUNT * 150)) return fail();
+    const { bribeIncome, ...ledger } = raw;
+    return { ...ledger, openingBalance: raw.openingBalance + bribeIncome, income: raw.income - bribeIncome };
+  };
+  const { bribeIncome, budgetHistory, ...old } = value;
+  if (value.settlement !== null && (!isRecord(value.settlement) || value.settlement.bribeIncome !== bribeIncome)) return fail();
+  const state = validateStateV23({ ...old,
+    settlement: value.settlement === null ? null : project(value.settlement),
+    budgetHistory: budgetHistory.map(project) });
+  const restore = (ledger: DaySettlement, raw: unknown): CurrentSettlement => {
+    const cash = (raw as { bribeIncome: number }).bribeIncome;
+    return { ...ledger, bribeIncome: cash, openingBalance: ledger.openingBalance - cash, income: ledger.income + cash };
+  };
+  return { ...state, bribeIncome,
+    settlement: state.settlement ? restore(state.settlement, value.settlement) : null,
+    budgetHistory: state.budgetHistory.map((ledger, index) => restore(ledger, budgetHistory[index])) };
+}
+
 export function encodeSave(state: CurrentGameState): Uint8Array {
-  const envelope: SaveV23 = {
+  const envelope: SaveV24 = {
     game: 'next-please',
-    version: 23,
+    version: 24,
     savedAt: new Date().toISOString(),
-    state: validateStateV23(state),
+    state: validateStateV24(state),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -1296,6 +1334,10 @@ function decompressSave(bytes: Uint8Array): Uint8Array {
 }
 
 export function decodeSave(bytes: Uint8Array): CurrentGameState {
+  return migrateBribeIncome(decodeState(bytes));
+}
+
+function decodeState(bytes: Uint8Array): StateV23 | CurrentGameState {
   const expanded = decompressSave(bytes);
   let envelope: unknown;
   try {
@@ -1306,7 +1348,7 @@ export function decodeSave(bytes: Uint8Array): CurrentGameState {
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11 && envelope.version !== 12 && envelope.version !== 13 && envelope.version !== 14 && envelope.version !== 15 && envelope.version !== 16 && envelope.version !== 17 && envelope.version !== 18 && envelope.version !== 19 && envelope.version !== 20 && envelope.version !== 21 && envelope.version !== 22 && envelope.version !== 23) throw new SaveError('unsupported-version');
+  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11 && envelope.version !== 12 && envelope.version !== 13 && envelope.version !== 14 && envelope.version !== 15 && envelope.version !== 16 && envelope.version !== 17 && envelope.version !== 18 && envelope.version !== 19 && envelope.version !== 20 && envelope.version !== 21 && envelope.version !== 22 && envelope.version !== 23 && envelope.version !== 24) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -1315,6 +1357,7 @@ export function decodeSave(bytes: Uint8Array): CurrentGameState {
   ) {
     throw new SaveError('invalid-file');
   }
+  if (envelope.version === 24) return validateStateV24(envelope.state);
   if (envelope.version === 23) return validateStateV23(envelope.state);
   if (envelope.version === 22) return validateStateV20(envelope.state, true, true);
   if (envelope.version === 21) return validateStateV20(envelope.state, true);

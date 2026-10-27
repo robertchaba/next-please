@@ -18,6 +18,7 @@ export interface DaySettlement {
   patients: number;
   basePay: number;
   patientBonus: number;
+  bribeIncome: number;
   income: number;
   livingCost: number;
   insuranceCost: number;
@@ -37,7 +38,7 @@ export function expenseProbability(savings: number): number {
 }
 export function settleDay(input: {
   day: number; money: number; shiftCompleted: number; insuranceRate: number; daily: DailyConsequences; rngState: number; restDay?: boolean;
-  settlement?: DaySettlement | null;
+  settlement?: DaySettlement | null; bribeIncome?: number;
 }): { settlement: DaySettlement; insuranceRate: number; rngState: number } {
   let random = randomStep(input.rngState);
   let livingCost = 400 + Math.floor(random.value * 401);
@@ -67,6 +68,7 @@ export function settleDay(input: {
   const insuranceCost = input.restDay ? 0 : insuranceRate;
   const basePay = input.restDay ? 0 : BASE_PAY;
   const patientBonus = input.restDay ? 0 : input.shiftCompleted * PATIENT_BONUS, income = basePay + patientBonus;
+  const bribeIncome = input.restDay ? 0 : input.bribeIncome ?? 0;
   const available = input.money + income - livingCost - insuranceCost - input.daily.fines;
   random = randomStep(random.seed);
   let event: DaySettlement['event'] = null;
@@ -82,8 +84,8 @@ export function settleDay(input: {
   }
   const expenses = livingCost + insuranceCost + input.daily.fines + (event?.cost ?? 0);
   return { insuranceRate, rngState: random.seed, settlement: {
-    day: input.day, patients: input.shiftCompleted, basePay, patientBonus, income,
+    day: input.day, patients: input.shiftCompleted, basePay, patientBonus, bribeIncome, income: income + bribeIncome,
     livingCost, insuranceCost, fines: input.daily.fines, event, expenses,
-    openingBalance: input.money, closingBalance: input.money + income - expenses, weekend,
+    openingBalance: input.money - bribeIncome, closingBalance: input.money + income - expenses, weekend,
   } };
 }
