@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
-import { applyAction, advanceClinicTime, createInitialState, type GameState, type GameAction } from '../src/core/game';
+import { applyAction, advanceClinicTime, createInitialState, GAME_LIMITS, type GameState, type GameAction } from '../src/core/game';
 import { ADDITIONAL_TESTS, additionalTestForJob, additionalResultFor, type AdditionalTest } from '../src/core/additional-tests';
-import { PATIENTS } from '../src/core/patients';
+import { PATIENTS, randomStep } from '../src/core/patients';
 import { expectedVisitDecision, patientForAppointment } from '../src/core/progression';
 import { decodeSave, encodeSave } from '../src/core/save';
 
@@ -174,5 +174,114 @@ describe('day seven additional examinations', () => {
     }
     expect(ADDITIONAL_TESTS).toHaveLength(4);
     expect(patientForAppointment(state.pendingReferrals[0]!.visit).jobId).toBe(46);
+  });
+});
+
+
+describe('returned examination report handoff', () => {
+  function returned(job = 46, variant = 0): GameState {
+    const state = appointment(job, variant);
+    const test = additionalTestForJob(patientForAppointment(state.visit!))!;
+    return act(returnNextWorkday(send(state, test, 1)), 'take-document', 'take-certificate', 'write-certificate');
+  }
+  function bundle(state: GameState): GameState {
+    const result = state.papers.find(paper => paper.kind === 'additional-result' && paper.patientId === state.visit!.patientId)!;
+    return act(state, { type: 'clip-document', documentId: result.id },
+      { type: 'join-documents', documentId: 'certificate', targetId: result.id });
+  }
+
+  it.each([18, 45, 46, 47])('always reprimands approval without the report for job %i', job => {
+    const ready = act(returned(job), 'stamp-fit');
+    expect(expectedVisitDecision(ready)).toBe('fit');
+    for (const seed of [0, 1, 1000, 123456, 0xffffffff]) {
+      const state = act({ ...ready, rngState: seed }, 'return-document');
+      expect(state.visit).toBeNull();
+      expect(state.daily).toEqual({ zusCases: 0, refusals: 1, fines: 0, insuranceIncrease: 50 });
+      expect(state.insuranceRate).toBe(350);
+      expect(state.rngState).toBe(seed);
+      expect(state.papers).toContainEqual(expect.objectContaining({ kind: 'letter', sender: 'employer', reason: 'missing-result', opened: false }));
+      expect(state.papers.some(paper => paper.kind === 'additional-result')).toBe(true);
+      roundTrip(state);
+    }
+    const higher = act({ ...ready, insuranceRate: 450 }, 'return-document');
+    expect(higher.insuranceRate).toBe(550);
+    expect(higher.daily.insuranceIncrease).toBe(100);
+    roundTrip(higher);
+  });
+
+  it.each(['fit', 'unfit'] as const)('hands over the clipped report with a %s certificate, retaining other records', decision => {
+    let ready = act(returned(46, decision === 'fit' ? 0 : 2), 'take-paper', `stamp-${decision}`);
+    const noteId = ready.papers.at(-1)!.id;
+    ready = bundle(ready);
+    ready = act(ready, { type: 'join-documents', documentId: noteId, targetId: 'certificate' });
+    roundTrip(ready);
+    const state = act(ready, 'return-document');
+    expect(state.papers.map(paper => paper.kind)).toEqual(['referral', 'note']);
+    expect(state.paperClips).toEqual([[noteId]]);
+    expect(state.daily).toEqual(ready.daily);
+    expect(state.insuranceRate).toBe(ready.insuranceRate);
+    expect(state.shiftCompleted).toBe(1);
+    roundTrip(state);
+  });
+
+  it('accepts a refusal without the report and leaves it with the doctor', () => {
+    const ready = act(returned(46, 2), 'stamp-unfit');
+    const state = act(ready, 'return-document');
+    expect(state.visit).toBeNull();
+    expect(state.daily).toEqual(ready.daily);
+    expect(state.papers).toEqual(ready.papers);
+    roundTrip(state);
+  });
+
+  it.each(['loose', 'filed', 'discarded', 'unclipped', 'wrong-patient', 'old-visit', 'wrong-test'] as const)('does not accept a %s report as the attachment', kind => {
+    let ready = act(returned(), 'stamp-fit');
+    const report = ready.papers.find(paper => paper.kind === 'additional-result')!;
+    if (kind === 'filed' || kind === 'discarded') ready = act(ready, { type: kind === 'filed' ? 'store-paper' : 'trash-paper', paperId: report.id });
+    if (kind === 'unclipped') ready = act(bundle(ready), { type: 'unclip-document', documentId: report.id });
+    if (kind === 'wrong-patient' || kind === 'old-visit' || kind === 'wrong-test') {
+      ready = bundle(ready);
+      ready = { ...ready, papers: ready.papers.map(paper => paper.id !== report.id || paper.kind !== 'additional-result' ? paper : { ...paper,
+        ...(kind === 'wrong-patient' ? { patientId: patientForJob(18).id } : {}),
+        ...(kind === 'old-visit' ? { day: ready.visit!.startedDay - 1 } : {}),
+        ...(kind === 'wrong-test' ? { test: 'audiometry' as const } : {}),
+      }) };
+    }
+    const state = act(ready, 'return-document');
+    expect(state.insuranceRate).toBe(350);
+    expect(state.papers.some(paper => paper.kind === 'letter' && paper.reason === 'missing-result')).toBe(true);
+    if (kind === 'wrong-patient' || kind === 'old-visit') expect(state.papers.some(paper => paper.id === report.id)).toBe(true);
+  });
+
+  it('applies the guaranteed insurance penalty alongside a detected medical approval error', () => {
+    let seed = 0;
+    while (randomStep(seed).value < 0.35) seed++;
+    const ready = { ...act(returned(46, 2), 'stamp-fit'), rngState: seed };
+    const state = act(ready, 'return-document');
+    expect(state.daily).toEqual({ zusCases: 1, refusals: 1, fines: 100, insuranceIncrease: 50 });
+    expect(state.papers.filter(paper => paper.kind === 'letter').map(paper => paper.sender)).toEqual(['zus', 'employer']);
+    roundTrip(state);
+    const old = gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 22, savedAt: '2026-10-27T12:00:00.000Z', state })));
+    expect(() => decodeSave(old)).toThrow();
+    const home = act({ ...state, clockMinutes: 840 }, 'end-day');
+    expect(home.settlement).toMatchObject({ insuranceCost: 350, fines: 100, patientBonus: 50 });
+    roundTrip(home);
+  });
+
+  it('keeps handoff atomic when insurance or letter identifiers reach their limits', () => {
+    const ready = act(returned(), 'stamp-fit');
+    for (const state of [{ ...ready, insuranceRate: GAME_LIMITS.money }, { ...ready, nextPaperId: GAME_LIMITS.paperId + 1 }]) {
+      expect(applyAction(state, 'return-document')).toEqual({ state, feedback: 'limit-reached' });
+    }
+  });
+
+  it('validates the saved reprimand reason and keeps previous saves importable', () => {
+    const before = act(returned(), 'stamp-fit');
+    const state = act(before, 'return-document');
+    const file = (candidate: unknown, version = 23) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state: candidate })));
+    expect(decodeSave(file(before, 22))).toEqual(before);
+    for (const change of [{ reason: 'unknown' }, { sender: 'zus' }, { patientId: 0 }, { day: 1 }, { surprise: true }]) {
+      const forged = { ...state, papers: state.papers.map(paper => paper.kind === 'letter' ? { ...paper, ...change } : paper) };
+      expect(() => decodeSave(file(forged))).toThrow();
+    }
   });
 });

@@ -45,7 +45,7 @@ export type Paper =
   | (PaperBase & { kind: 'additional-result'; patientId: number; test: AdditionalTest; fit: boolean })
   | (PaperBase & { kind: 'specialist'; patientId: number; certificate: SpecialistCertificate })
   | (PaperBase & { kind: 'directive'; patientId: null; sender: 'zus' | 'chamber'; rule: DirectiveRule; opened: boolean })
-  | (PaperBase & { kind: 'letter'; patientId: number; sender: 'zus' | 'employer'; opened: boolean });
+  | (PaperBase & { kind: 'letter'; patientId: number; sender: 'zus' | 'employer'; opened: boolean; reason?: 'missing-result' });
 
 export interface Visit {
   startedDay: number;
@@ -542,6 +542,14 @@ function transition(state: GameState, action: GameAction): ActionResult {
   }
   if (!visit.decision) return unchanged('stamp-needed');
   if (!visit.certificateNamed) return unchanged('certificate-name-needed');
+  const certificateBundle = state.paperClips.find(group => group.includes('certificate')) ?? [];
+  const handedResults = state.papers.filter(paper => paper.kind === 'additional-result'
+    && paper.patientId === visit.patientId && paper.day >= visit.startedDay && certificateBundle.includes(paper.id));
+  const resultMissing = visit.decision === 'fit' && visit.additionalResult !== null
+    && additionalTestForJob(patient) !== null && !handedResults.some(paper => paper.kind === 'additional-result'
+      && paper.test === additionalTestForJob(patient) && paper.test === visit.additionalResult!.test
+      && paper.fit === visit.additionalResult!.fit);
+  const handedIds = new Set<DocumentId>(['certificate', ...handedResults.map(paper => paper.id)]);
   const wrongDecision = visit.decision !== expectedVisitDecision(state);
   const requiredAdditional = workDayNumber(state.day) >= 7 ? additionalTestForPatient(patient) : null;
   const correct = hasRequiredExaminations(patient, visit) && (!requiredAdditional || visit.additionalResult?.test === requiredAdditional) && !wrongDecision;
@@ -554,11 +562,14 @@ function transition(state: GameState, action: GameAction): ActionResult {
   const zusOffence = visit.decision === 'fit' || authenticityMistake;
   const undetected = zusOffence ? visit.bribe !== 'none' ? 0.7 : 0.35 : patient.managerial ? 0.03 : 0.25;
   const detected = wrongDecision && draw!.value >= undetected;
-  if (detected && !canAddPaper()) return unchanged('limit-reached');
+  const letterCount = Number(detected) + Number(resultMissing);
+  if (state.papers.length - handedResults.length + letterCount > GAME_LIMITS.papers
+    || state.nextPaperId + letterCount > GAME_LIMITS.paperId + 1) return unchanged('limit-reached');
   let daily = state.daily, insuranceRate = state.insuranceRate;
   if (detected && zusOffence) {
     daily = { ...daily, zusCases: daily.zusCases + 1, fines: daily.fines + (daily.zusCases === 0 ? 100 : 400) };
-  } else if (detected) {
+  }
+  if ((detected && !zusOffence) || resultMissing) {
     const increase = insuranceRate === BASE_INSURANCE ? 50 : 100;
     if (insuranceRate > GAME_LIMITS.money - increase) return unchanged('limit-reached');
     insuranceRate += increase;
@@ -571,11 +582,17 @@ function transition(state: GameState, action: GameAction): ActionResult {
     clockMinutes: spend(ACTION_MINUTES.handling),
     patientsProcessed: state.patientsProcessed + 1,
     rngState: draw?.seed ?? state.rngState, daily, insuranceRate,
-    paperClips: state.paperClips.map(group => group.filter(id => id !== 'certificate')).filter(group => group.length > 0),
+    paperClips: state.paperClips.map(group => group.filter(id => !handedIds.has(id))).filter(group => group.length > 0),
   };
-  const completed = detected ? addPaper({ id: state.nextPaperId, kind: 'letter', patientId: visit.patientId, day: state.day,
-    location: 'desk', sender: zusOffence ? 'zus' : 'employer', opened: false }, completion, 'patient-error')
-    : changed(completion, correct ? 'patient-cleared' : 'patient-completed');
+  const letters: Paper[] = [];
+  if (detected) letters.push({ id: state.nextPaperId, kind: 'letter', patientId: visit.patientId, day: state.day,
+    location: 'desk', sender: zusOffence ? 'zus' : 'employer', opened: false });
+  if (resultMissing) letters.push({ id: state.nextPaperId + letters.length, kind: 'letter', patientId: visit.patientId,
+    day: state.day, location: 'desk', sender: 'employer', reason: 'missing-result', opened: false });
+  const completed = changed({ ...completion,
+    papers: recordResults([...state.papers.filter(paper => !handedIds.has(paper.id)), ...letters], visit, state.day),
+    nextPaperId: state.nextPaperId + letterCount,
+  }, letterCount ? 'patient-error' : correct ? 'patient-cleared' : 'patient-completed');
   // Finishing the last visit closes the shift immediately; the view can still
   // animate the departing patient before presenting this settled home state.
   if (canEndDay(completed.state)) {

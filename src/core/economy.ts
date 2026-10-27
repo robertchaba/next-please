@@ -8,6 +8,7 @@ export const MODEST_WEEKEND_LIVING = 800;
 export type ExpenseKind = 'medicine' | 'car-repair' | 'home-repair' | 'fur-coat' | 'mountain-trip' | 'seaside-trip';
 export interface DailyConsequences {
   zusCases: number;
+  /** Historical save key: insurance cases, including missing result attachments. */
   refusals: number;
   fines: number;
   insuranceIncrease: number;

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import type { Paper } from '../src/core/game';
+import { PATIENTS, type Paper } from '../src/core/game';
 import { translations } from '../src/i18n';
-import { letterContent, paperDescription, wrapDocumentLines } from '../src/render/paperwork';
+import { letterContent, correspondenceSender, paperDescription, wrapDocumentLines } from '../src/render/paperwork';
 import { measureDocumentText } from '../src/render/font';
 
 describe('signed administrative correspondence', () => {
   it('fits every subject, body and named signature on the sheet in both languages', () => {
-    for (const t of Object.values(translations)) for (const sender of ['zus', 'employer'] as const) {
+    for (const t of Object.values(translations)) for (const sender of ['zus', 'employer', 'missingResult'] as const) {
       const letters = t.paperwork.letters[sender];
       expect(letters.length).toBeGreaterThanOrEqual(6);
       expect(new Set(letters.map(letter => letter.body)).size).toBe(letters.length);
@@ -38,4 +38,19 @@ describe('signed administrative correspondence', () => {
       expect(seen.size).toBe(6);
     }
   });
+});
+
+
+it('addresses report reprimands from militia headquarters, LOT or the workplace in both languages', () => {
+  for (const locale of ['pl', 'en'] as const) for (const job of [18, 45, 46, 47]) {
+    const t = translations[locale], patient = PATIENTS.find(patient => patient.jobId === job)!;
+    const paper: Extract<Paper, { kind: 'letter' }> = { id: 1, day: 9, patientId: patient.id,
+      kind: 'letter', sender: 'employer', reason: 'missing-result', location: 'desk', opened: true };
+    const sender = job === 45 ? t.paperwork.missingResultSenders.militia : job === 46 ? t.paperwork.missingResultSenders.lot : t.patientReferrals[patient.id]!.employer;
+    expect(correspondenceSender(paper, locale)).toBe(sender);
+    expect(paperDescription(paper, locale)).toContain(sender);
+    expect(paperDescription(paper, locale)).toContain(letterContent(paper, locale).body);
+    expect(t.paperwork.letters.missingResult).toContainEqual(letterContent(paper, locale));
+    expect(measureDocumentText(sender)).toBeLessThanOrEqual(166);
+  }
 });

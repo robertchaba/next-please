@@ -122,3 +122,57 @@ test('third-drawer referral circles exactly one test, keeps records and restores
   expect(errors).toEqual([]);
   expect(missing).toEqual([]);
 });
+
+for (const attached of [true, false]) test(`returning worker receives ${attached ? 'a clipped report without a reprimand' : 'a guaranteed reprimand for the missing attachment'}`, async ({ page }, info) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  let state = actions(seventhDay(), 'call-patient');
+  state = { ...state, visit: { ...state.visit!, referral: { ...state.visit!.referral, ageDays: 0, seal: 'clear', authentic: true }, bribe: 'none' } };
+  state = actions(state, 'take-document', 'take-additional-referral');
+  const referralId = state.papers.at(-1)!.id;
+  state = actions({ ...state, rngState: 1 }, { type: 'select-additional-test', paperId: referralId, test: 'audiometry' }, { type: 'hand-additional-referral', paperId: referralId });
+  const returnDay = state.pendingReferrals[0]!.returnDay;
+  state = actions({ ...state, clockMinutes: 840 }, 'end-day');
+  while (state.day < returnDay) state = actions(state, 'next-day');
+  state = actions(state, 'call-patient', 'take-certificate', 'write-certificate', 'stamp-fit');
+  const report = state.papers.find(paper => paper.kind === 'additional-result')!;
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.clock.install();
+  await page.goto('/');
+  await key(page, 'start');
+  for (let index = 0; index < 4; index++) await key(page, 'intro-next');
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  await importState(page, state);
+  if (attached) {
+    await key(page, 'take-clip');
+    await key(page, 'apply-stamp');
+    await key(page, `paper-${report.id}`, 'Space');
+    await key(page, 'certificate-clip');
+    await expect(page.locator(`#control-paper-clip-${report.id}`)).toBeAttached();
+    await key(page, `paper-${report.id}`, 'Space');
+  } else await key(page, 'apply-stamp', 'Space');
+  await key(page, 'return-document');
+  await expect(page.locator('#control-apply-stamp')).toHaveCount(0);
+  if (attached) await expect(page.locator(`#control-paper-${report.id}`)).toHaveCount(0);
+  else {
+    await expect(page.locator(`#control-paper-${report.id}`)).toBeAttached();
+    await expect(page.locator(`#control-paper-${state.nextPaperId}`)).toHaveCount(0);
+  }
+  await page.clock.runFor(2100);
+  if (!attached) {
+    const letter = `paper-${state.nextPaperId}`;
+    await expect(page.locator(`#control-${letter}`)).toHaveAccessibleName(/koperta/i);
+    await key(page, letter, 'Space');
+    await place(page);
+    await key(page, `paper-action-${state.nextPaperId}`);
+    await expect(page.locator(`#control-${letter}`)).toHaveAccessibleName(/nagan|upomnien/i);
+    await page.locator('#stage').screenshot({ path: info.outputPath('missing-result-reprimand-pl.png') });
+    await key(page, 'language-en');
+    await expect(page.locator(`#control-${letter}`)).toHaveAccessibleName(/reprimand|warning/i);
+  }
+  const final = await exportState(page, info);
+  expect(final.visit).toBeNull();
+  expect(final.insuranceRate).toBe(state.insuranceRate + (attached ? 0 : state.insuranceRate === 300 ? 50 : 100));
+  expect(final.papers.filter(paper => paper.kind === 'letter' && paper.reason === 'missing-result')).toHaveLength(attached ? 0 : 1);
+  expect(errors).toEqual([]);
+});

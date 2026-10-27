@@ -107,7 +107,7 @@ describe('compact original document font', () => {
   });
 
   it('keeps every manual spread readable within its two native-pixel pages', () => {
-    expect(translations.pl.manualPages).toHaveLength(13);
+    expect(translations.pl.manualPages).toHaveLength(14);
     expect(translations.en.manualPages).toHaveLength(translations.pl.manualPages.length);
     for (const t of Object.values(translations)) {
       for (const page of t.manualPages) {

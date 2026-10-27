@@ -15,8 +15,20 @@ const ink = DOCUMENT_INK, muted = '#79785c';
 
 /** Stable archived correspondence: reading, language changes and imports never reroll it. */
 export function letterContent(paper: Extract<Paper, { kind: 'letter' }>, locale: Locale) {
-  const variants = translations[locale].paperwork.letters[paper.sender];
+  const variants = translations[locale].paperwork.letters[paper.reason === 'missing-result' ? 'missingResult' : paper.sender];
   return variants[((paper.day - 1) * 7 + paper.patientId * 5 + paper.id) % variants.length]!;
+}
+
+export function correspondenceSender(paper: Extract<Paper, { kind: 'letter' | 'directive' }>, locale: Locale): string {
+  const t = translations[locale];
+  if (paper.sender === 'zus') return t.paperwork.zus;
+  if (paper.kind === 'directive') return t.progression.chamber;
+  if (paper.reason === 'missing-result') {
+    const job = PATIENTS[paper.patientId]!.jobId;
+    if (job === 45) return t.paperwork.missingResultSenders.militia;
+    if (job === 46) return t.paperwork.missingResultSenders.lot;
+  }
+  return t.patientReferrals[paper.patientId]!.employer;
 }
 
 export function visionReading(values: VisionValues, locale: Locale): string {
@@ -122,7 +134,7 @@ export function paperDescription(paper: Paper, locale: Locale, clipped = false):
   } else if (paper.kind === 'specialist') {
     text = `${q.specialistTitle}. ${name}. ${q.treatment} ${q.clearance} ${p.position}: ${specialistJob(paper, locale)}. ${q.phone} ${paper.certificate.phone}. ${q.chamber}. ${p.signed}.`;
   } else if (paper.kind === 'letter' || paper.kind === 'directive') {
-    const sender = paper.sender === 'zus' ? p.zus : paper.kind === 'directive' ? q.chamber : t.patientReferrals[paper.patientId]!.employer;
+    const sender = correspondenceSender(paper, locale);
     text = `${paper.opened ? p.letter : p.envelope}. ${p.sender}: ${sender}.`;
     text += ` ${paper.sender === 'zus' ? p.zusSeal : paper.sender === 'chamber' ? q.chamber : p.employerSeal}.`;
     if (paper.opened) {
@@ -225,7 +237,7 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     if (full) {
       drawSeal(x + w - (seal === 'zus' ? 48 : 42), y + 15, 24);
       write(formatGameDate(paper.day, locale), 12, 50, muted);
-      write(paper.sender === 'zus' ? p.zus : paper.kind === 'directive' ? t.progression.chamber : t.patientReferrals[paper.patientId]!.employer, 12, 66);
+      write(correspondenceSender(paper, locale), 12, 66);
       write(p.recipient, 12, 84, '#625e46');
       if (showActions) drawActionCorner(ctx, bounds, false);
     } else drawSeal(x + w - (seal === 'zus' ? 26 : 20), y + h - 23, 12);
@@ -298,7 +310,7 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
   } else {
     write(p.letter, 11, 10);
     dateAndReference();
-    write(paper.sender === 'zus' ? p.zus : paper.kind === 'directive' ? t.progression.chamber : t.patientReferrals[paper.patientId]!.employer, 11, 32, muted);
+    write(correspondenceSender(paper, locale), 11, 32, muted);
     fill(ctx, x + 11, y + 42, w - 22, 1, '#b0a47e');
     if (paper.kind === 'letter') write(t.patientNames[paper.patientId]!, 11, 46);
     const letter = paper.kind === 'directive' ? t.progression.directives[paper.rule] : letterContent(paper, locale);
