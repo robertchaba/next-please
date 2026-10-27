@@ -5,7 +5,7 @@ import { ClinicClock } from './core/clock';
 import { effectsManifest } from './core/effects';
 import { choosePatientSpeech } from './core/patient-speech';
 import { examinationComment, examinationCommentText, type ExaminationComment } from './core/examination-feedback';
-import { renderCabinet, renderIntro, shiftButtons, shiftDescription, manualPageDescription, paperDescription, carriedAdditionalReferral, visibleDocumentClip, MANUAL_PAGE_COUNT, type SelectedStamp, type ShiftAction, type PatientSpeech } from './scenes/shift';
+import { renderCabinet, renderIntro, shiftButtons, shiftDescription, manualPageDescription, paperDescription, carriedAdditionalReferral, visibleDocumentClip, manualPageCount, type SelectedStamp, type ShiftAction, type PatientSpeech } from './scenes/shift';
 import { homePage, homePages, renderHome, HOME_ACTION } from './scenes/home';
 import type { Button } from './ui';
 import { createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, containsPoint, restRect, dropTargetRect, itemAnchor, TRAY, DEFAULT_DOCUMENT, PATIENT_HANDOFF, MANUAL_SHELF_SIZE, RIGHT_DESK_X, CABINET_HOTSPOTS, type DeskItemId, type Point, type Rect } from './core/desk';
@@ -414,13 +414,13 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
       else manualPage--;
     } else if (action === 'manual-next') {
       if (!manualOpen) setManualOpen(true);
-      else manualPage = Math.min(MANUAL_PAGE_COUNT - 1, manualPage + 1);
+      else manualPage = Math.min(manualPageCount(gameState.day) - 1, manualPage + 1);
     }
     else setManualOpen(action === 'manual' && !manualOpen);
     spendTime('read-manual'); playEffect('paper');
-    feedback = manualOpen ? manualPageDescription(locale, manualPage) : t().manualClosed;
+    feedback = manualOpen ? manualPageDescription(locale, manualPage, gameState.day) : t().manualClosed;
     const pageFocus = !manualOpen ? 'manual-next'
-      : action === 'manual-next' && manualPage === MANUAL_PAGE_COUNT - 1 ? 'manual-prev' : action;
+      : action === 'manual-next' && manualPage === manualPageCount(gameState.day) - 1 ? 'manual-prev' : action;
     syncControls(action === 'manual-prev' || action === 'manual-next' ? pageFocus : 'manual');
     document.querySelector('#announcement')!.textContent = feedback;
     return;
@@ -851,7 +851,7 @@ function syncControls(focusId?: string): void {
     : screen === 'home' ? `${homePage(gameState, locale, homePageIndex).description} ${homePage(gameState, locale, homePageIndex).text}`
     : screen === 'drawer' ? drawerDescription(gameState, locale, drawerPage)
     : screen === 'intro' ? t().intro[gameState.introStep].body
-    : screen === 'cabinet' ? `${shiftDescription(gameState, locale, [...pendingLetters.keys()])} ${manualOpen ? manualPageDescription(locale, manualPage) : ''} ${feedback}`
+    : screen === 'cabinet' ? `${shiftDescription(gameState, locale, [...pendingLetters.keys()])} ${manualOpen ? manualPageDescription(locale, manualPage, gameState.day) : ''} ${feedback}`
     : screen === 'saves' ? `${t().savesDescription} ${t().savesBody.join(' ')} ${t().sample}. ${t().day}: ${gameState.day}. ${t().patients}: ${gameState.patientsProcessed}. ${t().money}: ${gameState.money}.`
     : screen === 'break-room' ? t().breakRoomDescription
     : screen === 'restart' ? t().restartBody.join(' ')
@@ -1382,7 +1382,7 @@ function updateClinicTime(): void {
     syncControls(document.activeElement?.id.replace(/^control-/, ''));
   } else if (screen === 'cabinet') {
     // Keep keyboard focus, held items and pointer targets intact on ordinary ticks.
-    document.querySelector('#screen-description')!.textContent = `${shiftDescription(gameState, locale, [...pendingLetters.keys()])} ${manualOpen ? manualPageDescription(locale, manualPage) : ''} ${feedback}`;
+    document.querySelector('#screen-description')!.textContent = `${shiftDescription(gameState, locale, [...pendingLetters.keys()])} ${manualOpen ? manualPageDescription(locale, manualPage, gameState.day) : ''} ${feedback}`;
   }
   render();
 }

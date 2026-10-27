@@ -1,5 +1,5 @@
 import { translations } from '../../src/i18n';
-import { MANUAL_PAGE_COUNT } from '../../src/render/manual';
+import { manualPageCount } from '../../src/render/manual';
 import { loadKnownQueue } from './fixtures';
 import { expect, test, type Page } from '@playwright/test';
 import { PATIENT_HANDOFF, RIGHT_DESK_TOP, DESK_FRONT, TRAY, type Point, type Rect } from '../../src/core/desk';
@@ -269,30 +269,21 @@ test('the rulebook keeps its cover on placement and its physical corners open an
   await page.keyboard.press('Escape');
   expect(await logicalRect(page, 'manual')).toEqual(book);
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'true');
-  for (let pageIndex = 1; pageIndex < MANUAL_PAGE_COUNT; pageIndex++) {
+  for (let pageIndex = 1; pageIndex < manualPageCount(1); pageIndex++) {
     const next = await logicalRect(page, 'manual-next');
     expect(next.x).toBeGreaterThan(book.x + book.w / 2);
     expect(next.y).toBeGreaterThan(book.y + book.h / 2);
     await page.locator('#control-manual-next').click();
     await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(pageIndex));
-    if (pageIndex === 11) {
-      await expect(page.locator('#screen-description')).toContainText('orzeczenie spięte spinaczem');
-      await expect(page.locator('#screen-description')).toContainText('Wykrywa się 100%');
-      await page.locator('#stage').screenshot({ path: info.outputPath('report-attachment-rule-pl.png') });
-      await activate(page, 'language-en');
-      await expect(page.locator('#screen-description')).toContainText('paperclipped to the relevant');
-      await expect(page.locator('#screen-description')).toContainText('Detection applies in 100%');
-      await page.locator('#stage').screenshot({ path: info.outputPath('report-attachment-rule-en.png') });
-      await activate(page, 'language-pl');
-    }
+
     expect(await logicalRect(page, 'manual')).toEqual(book);
     await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
   }
-  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[MANUAL_PAGE_COUNT - 1]!.facingTitle);
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[manualPageCount(1) - 1]!.facingTitle);
   await expect(page.locator('#control-manual-next')).toHaveCount(0);
   await activate(page, 'manual-prev');
-  await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(MANUAL_PAGE_COUNT - 2));
-  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[MANUAL_PAGE_COUNT - 2]!.title);
+  await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(manualPageCount(1) - 2));
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[manualPageCount(1) - 2]!.title);
   await page.keyboard.press('Escape');
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'false');
   await expect(page.locator('#control-manual')).toBeFocused();
@@ -451,15 +442,15 @@ test('reduced motion skips patient and clock transitions while preserving the co
 test('rulebook page boundaries keep keyboard focus on a page control', async ({ page }) => {
   await enterCabinet(page);
   await activate(page, 'manual');
-  for (let pageIndex = 1; pageIndex < MANUAL_PAGE_COUNT; pageIndex++) {
+  for (let pageIndex = 1; pageIndex < manualPageCount(1); pageIndex++) {
     await activate(page, 'manual-next');
     await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(pageIndex));
   }
   await expect(page.locator('#control-manual-next')).toHaveCount(0);
   await expect(page.locator('#control-manual-prev')).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(MANUAL_PAGE_COUNT - 2));
-  for (let pageIndex = MANUAL_PAGE_COUNT - 3; pageIndex >= 0; pageIndex--) {
+  await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(manualPageCount(1) - 2));
+  for (let pageIndex = manualPageCount(1) - 3; pageIndex >= 0; pageIndex--) {
     await activate(page, 'manual-prev');
     await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(pageIndex));
   }

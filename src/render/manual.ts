@@ -2,14 +2,28 @@ import { drawDocumentText } from './font';
 import { drawDeskItem, drawPaper } from './clinic';
 import { translations, type Locale } from '../i18n';
 import { RIGHT_DESK_X, type Rect } from '../core/desk';
+import { manualSupplementsForDay } from '../core/manual';
 
-export const MANUAL_PAGE_COUNT = translations.pl.manualPages.length;
 const CORNER_SIZE = 9;
 
-export function manualPageDescription(locale: Locale, page: number): string {
+export function manualPagesForDay(locale: Locale, day: number) {
   const t = translations[locale];
-  const chapter = t.manualPages[page] ?? t.manualPages[0];
-  return [t.manualTitle, `${t.manualPageLabel} ${page + 1}/${MANUAL_PAGE_COUNT}.`,
+  return [
+    ...t.manualPages.map(page => ({ ...page, section: t.manualBase })),
+    ...manualSupplementsForDay(day).flatMap(id => {
+      const supplement = t.manualSupplements[id];
+      return supplement.pages.map(page => ({ ...page, section: supplement.label }));
+    }),
+  ];
+}
+
+export const manualPageCount = (day: number): number => manualPagesForDay('pl', day).length;
+
+export function manualPageDescription(locale: Locale, page: number, day: number): string {
+  const t = translations[locale];
+  const pages = manualPagesForDay(locale, day);
+  const chapter = pages[page] ?? pages[0]!;
+  return [t.manualTitle, chapter.section, `${t.manualPageLabel} ${page + 1}/${pages.length}.`,
     chapter.title, chapter.lines.join(' '), chapter.facingTitle, chapter.facingLines.join(' ')].join(' ');
 }
 
@@ -76,9 +90,10 @@ export function drawManualCover(ctx: CanvasRenderingContext2D, bounds: Rect, lif
   if (!lifted && x >= RIGHT_DESK_X) drawCorner(ctx, bounds, true, true);
 }
 
-export function drawManual(ctx: CanvasRenderingContext2D, bounds: Rect, locale: Locale, page: number): void {
+export function drawManual(ctx: CanvasRenderingContext2D, bounds: Rect, locale: Locale, page: number, day: number): void {
   const { x, y, w, h } = bounds;
-  const chapter = translations[locale].manualPages[page] ?? translations[locale].manualPages[0];
+  const pages = manualPagesForDay(locale, day);
+  const chapter = pages[page] ?? pages[0]!;
   const fill = (dx: number, dy: number, width: number, height: number, color: string): void => {
     ctx.fillStyle = color; ctx.fillRect(x + dx, y + dy, width, height);
   };
@@ -97,7 +112,8 @@ export function drawManual(ctx: CanvasRenderingContext2D, bounds: Rect, locale: 
   fill(middle + 12, 26, middle - 26, 1, '#aea27b');
   drawDocumentText(ctx, chapter.lines.join('\n'), x + 12, y + 34, { color: '#343c2c' });
   drawDocumentText(ctx, chapter.facingLines.join('\n'), x + middle + 12, y + 34, { color: '#343c2c' });
-  drawDocumentText(ctx, `${page + 1}/${MANUAL_PAGE_COUNT}`, x + middle - 12, y + h - 22, { color: '#7d7456', align: 'right' });
+  drawDocumentText(ctx, `${page + 1}/${pages.length}`, x + middle - 12, y + h - 22, { color: '#7d7456', align: 'right' });
+  drawDocumentText(ctx, chapter.section, x + middle + 12, y + h - 22, { color: '#7d7456' });
   drawCorner(ctx, bounds, false);
-  if (page < MANUAL_PAGE_COUNT - 1) drawCorner(ctx, bounds, true);
+  if (page < pages.length - 1) drawCorner(ctx, bounds, true);
 }

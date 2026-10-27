@@ -2,7 +2,7 @@ import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPa
 import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading } from '../render/paperwork';
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
-import { drawManual, drawManualCover, manualControls, MANUAL_PAGE_COUNT } from '../render/manual';
+import { drawManual, drawManualCover, manualControls, manualPageCount } from '../render/manual';
 import { INTRO_SLIDES, canEndDay, isShiftFinished, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
 import { ADDITIONAL_TESTS } from '../core/additional-tests';
 import { patientForVisit, workDayNumber } from '../core/progression';
@@ -10,7 +10,7 @@ import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
 import { calendarText } from '../core/calendar';
 import { CABINET_HOTSPOTS, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, dropTargetRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
-export { MANUAL_PAGE_COUNT, manualPageDescription } from '../render/manual';
+export { manualPageCount, manualPageDescription } from '../render/manual';
 
 export type ShiftAction = GameAction | 'select-fit' | 'select-unfit' | 'apply-stamp' | 'manual'
   | 'manual-prev' | 'manual-next' | 'manual-close' | 'put-away-fit' | 'put-away-unfit'
@@ -147,7 +147,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     ...(!state.drawerItems.manual ? [item('manual', t.manual, 'manual', 'manual')] : []),
     ...(!state.drawerItems.manual && view.held !== 'manual' && view.desk.positions.manual.x >= RIGHT_DESK_X ? [
       ...(view.manualOpen ? [hotspot('manual-prev', view.manualPage === 0 ? t.manualClose : t.manualPrevious, pageCorners.previous, 'manual-prev')] : []),
-      ...(!view.manualOpen || view.manualPage < MANUAL_PAGE_COUNT - 1
+      ...(!view.manualOpen || view.manualPage < manualPageCount(state.day) - 1
         ? [hotspot('manual-next', view.manualOpen ? t.manualNext : t.manualOpenCover, pageCorners.next, 'manual-next')] : []),
     ] : []),
     hotspot('lamp', t.lamp, CABINET_HOTSPOTS.lamp, 'toggle-lamp'),
@@ -191,7 +191,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     }
     if (id !== 'document') {
       if (id === 'manual') {
-        if (view.manualOpen && !lifted) drawManual(ctx, bounds, locale, view.manualPage);
+        if (view.manualOpen && !lifted) drawManual(ctx, bounds, locale, view.manualPage, state.day);
         else drawManualCover(ctx, bounds, lifted);
       } else if (id === 'stamp-fit' || id === 'stamp-unfit') drawDeskItem(ctx, id, x, y, lifted, w, h);
       continue;

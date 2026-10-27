@@ -1,5 +1,5 @@
 import { translations } from '../../src/i18n';
-import { MANUAL_PAGE_COUNT } from '../../src/render/manual';
+import { manualPageCount } from '../../src/render/manual';
 import { loadKnownQueue } from './fixtures';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
@@ -100,16 +100,16 @@ test('examinations, stamping and the rulebook support keyboard visits with defer
   await useKeyboard(page, 'manual-next');
   await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[1]!.lines.join(' '));
   await page.screenshot({ path: testInfo.outputPath('rulebook-tests-pl.png') });
-  for (let index = 2; index < MANUAL_PAGE_COUNT; index++) {
+  for (let index = 2; index < manualPageCount(1); index++) {
     await useKeyboard(page, 'manual-next');
     await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(index));
     if (index === 2) await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[2]!.lines.join(' '));
   }
   await expect(page.locator('#control-manual-next')).toHaveCount(0);
-  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[MANUAL_PAGE_COUNT - 1]!.lines.join(' '));
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[manualPageCount(1) - 1]!.lines.join(' '));
   await useKeyboard(page, 'manual-prev');
-  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[MANUAL_PAGE_COUNT - 2]!.lines.join(' '));
-  for (let index = MANUAL_PAGE_COUNT - 3; index >= 5; index--) {
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[manualPageCount(1) - 2]!.lines.join(' '));
+  for (let index = manualPageCount(1) - 3; index >= 5; index--) {
     await useKeyboard(page, 'manual-prev');
     await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', String(index));
     await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[index]!.lines.join(' '));

@@ -62,6 +62,7 @@
 
 ## Gradually increasing formalities
 
+- The initial rulebook covers the procedures needed at the start, without explaining duties introduced on later working days. As bureaucracy becomes more complex, new rules and exceptions may be communicated in annexes, errata and other supplements.
 - New duties arrive in official letters at the start of the third, fourth, fifth and seventh **working** days. Weekends do not advance this progression. Earlier duties remain in force when later ones begin.
 - On the third working day, ZUS instructs the doctor to check the referral's issue date. A referral more than three calendar days old requires refusal; exactly three days is still valid. Dates are drawn relative to the current date, and about 5% of presented referrals are older than three days. Approving an expired referral is subject to the normal ZUS fine, with a 35% chance of no reaction.
 - On the fourth working day, a sealed letter from the Medical Chamber permits conditional approval of patients with hypertension when a specialist certifies ongoing treatment and no contraindications for the specific job under review. This does not excuse other medical contraindications or invalid referrals.
