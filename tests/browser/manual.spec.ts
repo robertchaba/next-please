@@ -29,9 +29,9 @@ for (const locale of ['pl', 'en'] as const) {
     await key(page, `language-${locale}`);
     const t = translations[locale];
     const editions = [
-      [1, 9, t.manualBase], [5, 10, t.manualSupplements.dates.label],
-      [6, 11, t.manualSupplements.specialist.label], [7, 12, t.manualSupplements.authenticity.label],
-      [8, 13, t.manualSupplements.payments.label], [9, 16, t.manualSupplements.additionalTests.label],
+      [1, 9, t.manualBase], [2, 10, t.manualSupplements.inspection.label], [5, 11, t.manualSupplements.dates.label],
+      [6, 12, t.manualSupplements.specialist.label], [7, 13, t.manualSupplements.authenticity.label],
+      [8, 14, t.manualSupplements.payments.label], [9, 17, t.manualSupplements.additionalTests.label],
       [1, 9, t.manualBase],
     ] as const;
     for (const [day, count, label] of editions) {

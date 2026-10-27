@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
 import { applyAction, createInitialState, type GameState } from '../../src/core/game';
 import { decodeSave, encodeSave } from '../../src/core/save';
+import { DRAWER_BATCH_SIZE } from '../../src/render/drawer';
 
 async function activate(page: Page, id: string): Promise<void> {
   await page.locator(`#control-${id}`).focus();
@@ -64,8 +65,8 @@ test('documents retain filing order, selecting a covered sheet carries it out, a
   await activate(page, 'drawer');
   const paperIds = () => page.locator('[id^="control-drawer-paper-"]').evaluateAll(elements => elements.map(element => element.id));
   expect(await paperIds()).toEqual(['control-drawer-paper-1', 'control-drawer-paper-2', 'control-drawer-paper-3']);
-  // The second sheet's narrow uncovered left edge belongs to that sheet.
-  await nativeClick(page, 52, 70);
+  // The second cover's exposed label belongs to that sheet.
+  await nativeClick(page, 52, 62);
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   await expect(page.locator('#control-paper-2')).toHaveAttribute('data-held', 'true');
   await activate(page, 'drawer');
@@ -106,20 +107,22 @@ test('separate rulebook and clips persist through an import and can be retrieved
 test('large stacks can be browsed in filing order and closing leaves every sheet stored', async ({ page }) => {
   await enter(page);
   let state = applyAction(createInitialState(), 'skip-intro').state;
-  for (let id = 1; id <= 15; id++) {
+  for (let id = 1; id <= 29; id++) {
     state = applyAction(state, 'take-paper').state;
     state = applyAction(state, { type: 'store-paper', paperId: id }).state;
   }
   await importState(page, state);
   await activate(page, 'drawer');
-  await expect(page.locator('[id^="control-drawer-paper-"]')).toHaveCount(12);
+  await expect(page.locator('[id^="control-drawer-paper-"]')).toHaveCount(DRAWER_BATCH_SIZE);
+  await page.locator('#control-drawer-paper-17').hover();
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'drawer');
   await activate(page, 'drawer-next');
-  await expect(page.locator('[id^="control-drawer-paper-"]')).toHaveCount(3);
-  await expect(page.locator('#control-drawer-paper-13')).toBeAttached();
+  await expect(page.locator('[id^="control-drawer-paper-"]')).toHaveCount(5);
+  await expect(page.locator('#control-drawer-paper-25')).toBeAttached();
   await activate(page, 'drawer-previous');
   await page.keyboard.press('Escape');
   await expect(page.locator('[id^="control-paper-"]')).toHaveCount(0);
-  await expect(page.locator('#control-drawer')).toHaveAccessibleName(/^Szuflada z dokumentacją: 15\./);
+  await expect(page.locator('#control-drawer')).toHaveAccessibleName(/^Szuflada z dokumentacją: 29\./);
 });
 
 async function exportState(page: Page): Promise<GameState> {

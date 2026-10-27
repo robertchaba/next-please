@@ -12,7 +12,7 @@ import { createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, p
 import { installDeskInput } from './core/desk-input';
 import { drawCreatorPortrait, drawPaper, drawPanelIllustration, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
 import { drawText } from './render/font';
-import { paperClipRect, visionReading, pressureReading, generalReading } from './render/paperwork';
+import { paperClipRect, visionReading, pressureReading, generalReading, visiblePaperRect } from './render/paperwork';
 import { drawerButtons, drawerDescription, renderDrawer, type DrawerAction } from './render/drawer';
 import { installCursor, installDisplay, WIDTH, HEIGHT } from './core/display';
 import { translations, readPreferences, savePreferences, type Locale } from './i18n';
@@ -262,7 +262,7 @@ function performAction(action: GameAction): ActionResult {
   const result = applyAction(previous, action);
   acceptResult(previous, result);
   if (gameState.day !== previous.day) clinicClock.reset(performance.now());
-  clinicClock.setContext(clinicClockRunning(), gameState.visit !== null);
+  clinicClock.setContext(clinicClockRunning(), gameState.visit !== null || gameState.inspection !== null);
   return result;
 }
 
@@ -289,7 +289,7 @@ function clinicClockRunning(): boolean {
 
 function sampleClinicClock(): ActionResult | undefined {
   const now = performance.now();
-  const minutes = clinicClock.sample(now, clinicClockRunning(), gameState.visit !== null);
+  const minutes = clinicClock.sample(now, clinicClockRunning(), gameState.visit !== null || gameState.inspection !== null);
   if (!minutes) return;
   const previous = gameState;
   const result = advanceClinicTime(previous, minutes);
@@ -355,6 +355,17 @@ function announceDesk(message: string, focusId?: string): void {
   document.querySelector('#announcement')!.textContent = feedback;
 }
 
+function finishInspectionPresentation(previous: GameState): string | undefined {
+  if (!previous.inspection || gameState.inspection) return;
+  heldItem = null;
+  reconcileDeskPapers();
+  const notice = gameState.papers.find(paper => paper.kind === 'inspection-fine' && paper.id >= previous.nextPaperId);
+  if (notice) deskState = raiseDeskItem(moveDeskItem(deskState, `paper-${notice.id}`, DEFAULT_DOCUMENT), `paper-${notice.id}`);
+  screen = gameState.phase;
+  if (screen === 'home') { homePageIndex = 0; typingKey = ''; startTyping(); return 'home-next'; }
+  return notice ? `paper-${notice.id}` : 'call-patient';
+}
+
 function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
   if (action === 'end-day') { deskInput.cancel(); selectedStamp = null; }
   if (action === 'reserved-form') return;
@@ -371,6 +382,11 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     if (result.feedback === 'visit-interrupted') { syncControls(); return; }
     updateClock(); reconcileDeskPapers();
     playEffect('paper');
+    if (action.type === 'hand-inspection-paper') {
+      const focus = finishInspectionPresentation(previousState) ?? 'talk-inspector';
+      announceDesk(t().feedback[result.feedback], focus);
+      return;
+    }
     if (action.type === 'hand-additional-referral' && previousState.visit && !gameState.visit) {
       stopPhone(); clearPatientMotion();
       if (clinicSpeech?.speaker !== 'cleaner') clinicSpeech = undefined;
@@ -459,6 +475,13 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     playEffect('carriage');
     if (screen === 'intro') { startTyping(); focusId = 'intro-next'; }
     else { clearInterval(typingTimer); focusId = 'call-patient'; }
+  } else if (result.feedback === 'inspector-arrived') {
+    selectedStamp = null; clearPatientMotion(); stopPhone(); clinicSpeech = undefined;
+    playEffect('bell'); focusId = 'take-inspection-id';
+  } else if (actual === 'take-inspection-id' && result.feedback === 'inspection-id-taken' && gameState !== previousState) {
+    playEffect('paper'); newSheet = `paper-${gameState.nextPaperId - 1}`; focusId = newSheet;
+  } else if (actual === 'return-inspection-id' || actual === 'talk-inspector') {
+    playEffect('paper'); focusId = finishInspectionPresentation(previousState) ?? 'talk-inspector';
   } else if (actual === 'call-patient' && (result.feedback === 'patient-called' || result.feedback === 'patient-returned')) {
     selectedStamp = null; playEffect('bell'); focusId = result.feedback === 'patient-returned' ? `paper-${gameState.nextPaperId - 1}` : 'take-document';
     deskState = moveDeskItem(deskState, 'document', DEFAULT_DOCUMENT);
@@ -801,6 +824,12 @@ function syncUtilityControls(modal: boolean): void {
 }
 
 function syncControls(focusId?: string): void {
+  if (screen === 'cabinet' && focusId === 'call-patient' && gameState.inspection) {
+    const card = gameState.papers.find(paper => paper.kind === 'inspection-id' && paper.location === 'desk');
+    focusId = gameState.inspection.stage === 'identity'
+      ? gameState.inspection.idTaken ? card ? `paper-${card.id}` : 'drawer' : 'take-inspection-id'
+      : 'talk-inspector';
+  }
   sampleClinicClock();
   if (interruptedPatient !== undefined) {
     const patientId = interruptedPatient;
@@ -1012,7 +1041,7 @@ function render(): void {
     renderIntro(ctx, gameState, locale, introCharacters); buttons.forEach(drawButton); drawToast(); return;
   }
   if (screen === 'drawer') {
-    renderDrawer(ctx, gameState, locale, drawerPage); buttons.forEach(drawButton); return;
+    renderDrawer(ctx, gameState, locale, drawerPage, hovered || focused); buttons.forEach(drawButton); return;
   }
   if (screen === 'cabinet') {
     renderCabinet(ctx, gameState, locale, selectedStamp, deskView());
@@ -1158,14 +1187,15 @@ const deskInput = installDeskInput(stage, {
     const visibleItems = [...deskState.order].reverse().filter(other => !carried.includes(other)
       && (other !== 'document' || gameState.visit?.certificateTaken)
       && (other !== 'incoming-referral' || gameState.visit?.document === 'tray'));
-    const surfaceAt = (point: Point): DeskItemId | undefined => visibleItems.find(other => containsPoint(deskRect(other), point));
+    const surfaceBounds = (other: DeskItemId): Rect => visiblePaperRect(gameState.papers.find(paper => `paper-${paper.id}` === other), deskRect(other));
+    const surfaceAt = (point: Point): DeskItemId | undefined => visibleItems.find(other => containsPoint(surfaceBounds(other), point));
     const clipAt = (): DeskItemId | undefined => {
       if (targetItem) {
         const targetId = documentId(targetItem);
         return targetId !== undefined && isDocumentClipped(gameState, targetId) ? targetItem : undefined;
       }
       for (const other of visibleItems) {
-        const record = documentId(other), bounds = deskRect(other);
+        const record = documentId(other), bounds = surfaceBounds(other);
         if (record !== undefined && visibleDocumentClip(gameState, record, deskView()) && containsPoint(paperClipRect(bounds), target)) return other;
         if (containsPoint(bounds, target)) return undefined;
       }
@@ -1232,6 +1262,16 @@ const deskInput = installDeskInput(stage, {
       deskState = deskBeforePickup;
       handleShiftAction('return-document');
       syncControls(gameState.visit ? itemControlId(id) : canEndDay(gameState) ? 'end-day' : 'call-patient');
+      return true;
+    }
+    if (gameState.inspection && id.startsWith('paper-') && containsPoint(PATIENT_HANDOFF, target)) {
+      const paperId = Number(id.slice(6));
+      const paper = gameState.papers.find(paper => paper.id === paperId);
+      heldItem = null;
+      // Inspected originals return to their desk position, including a whole clip group.
+      deskState = deskBeforePickup;
+      handleShiftAction(paper?.kind === 'inspection-id' ? 'return-inspection-id' : { type: 'hand-inspection-paper', paperId });
+      reconcileDeskPapers();
       return true;
     }
     if ((id === 'manual' || id.startsWith('clip-')) && overDrawer) {

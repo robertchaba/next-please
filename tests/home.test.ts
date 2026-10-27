@@ -116,7 +116,8 @@ describe('localized home sequence', () => {
       for (const line of content.body.split('\n')) expect(measureText(line, 2), line).toBeLessThanOrEqual(312);
       expect(state).toEqual(before);
     }
-    const comfortable = applyAction(homeState(2, 5000), 'next-day').state;
+    // Fix the weekend's own random draw, independently of the patient roster size.
+    const comfortable = applyAction({ ...homeState(2, 5000), rngState: 34 }, 'next-day').state;
     expect(homePage(comfortable, 'pl', 0).illustration).toBe('seaside-resort');
     expect(homePage(homeState(2, 200), 'pl', 0).illustration).toBe('homecoming');
     expect(homePage(sunday, 'pl', homePages(sunday).indexOf('work')).illustration).toBe('going-to-work');

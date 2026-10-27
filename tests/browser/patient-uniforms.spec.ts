@@ -4,7 +4,7 @@ import { PATIENTS } from '../../src/core/patients';
 import { encodeSave } from '../../src/core/save';
 import { translations } from '../../src/i18n';
 
-test('all 25 new portraits render with matching jobs in both languages', async ({ page }) => {
+test('all 35 appended portraits render with matching jobs in both languages', async ({ page }) => {
   test.setTimeout(90_000);
   const missingAssets: string[] = [];
   page.on('response', response => {
@@ -16,7 +16,7 @@ test('all 25 new portraits render with matching jobs in both languages', async (
   for (let index = 0; index < 4; index++) await page.locator('#control-intro-next').click();
   await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
   const portraits = new Set<string>();
-  for (let person = 0; person < 25; person++) {
+  for (let person = 0; person < 35; person++) {
     const patient = PATIENTS[2503 + person * 25]!;
     const initial = createInitialState(person);
     initial.roster = [patient.id, ...initial.roster.filter(id => PATIENTS[id]!.characterId !== patient.characterId)];
@@ -38,6 +38,6 @@ test('all 25 new portraits render with matching jobs in both languages', async (
       return Array.from((canvas as HTMLCanvasElement).getContext('2d')!.getImageData(38, 32, 94, 96).data).join(',');
     }));
   }
-  expect(portraits.size).toBe(25);
+  expect(portraits.size).toBe(35);
   expect(missingAssets).toEqual([]);
 });

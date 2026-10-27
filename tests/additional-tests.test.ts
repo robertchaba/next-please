@@ -64,11 +64,12 @@ describe('day seven additional examinations', () => {
     expect(pending.returnDay).toBe(9);
     state = { ...state, clockMinutes: pending.returnMinute };
     for (let i = 0; i < 3; i++) {
-      state = act(state, 'call-patient');
+      // This test isolates the return schedule from independently tested inspections.
+      state = act({ ...state, inspectionCheckedAt: state.patientsProcessed }, 'call-patient');
       expect(state.visit!.patientId).not.toBe(pending.visit.patientId);
       state = complete(state);
     }
-    state = act(state, 'call-patient');
+    state = act({ ...state, inspectionCheckedAt: state.patientsProcessed }, 'call-patient');
     expect(state.visit!.patientId).toBe(pending.visit.patientId);
     expect(state.visit!.additionalResult).toEqual({ test, fit: true });
     expect(state.pendingReferrals).toEqual([]);
@@ -163,7 +164,7 @@ describe('day seven additional examinations', () => {
 
   it('rejects forged result, return schedule, unknown fields and duplicate pending identities', () => {
     const state = send(appointment(), 'vestibular');
-    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 24, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
+    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 25, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
     for (const change of [
       (s: GameState) => { s.pendingReferrals[0]!.fit = false; },
       (s: GameState) => { s.pendingReferrals[0]!.returnDay += 7; },
@@ -278,8 +279,9 @@ describe('returned examination report handoff', () => {
   it('validates the saved reprimand reason and keeps previous saves importable', () => {
     const before = act(returned(), 'stamp-fit');
     const state = act(before, 'return-document');
-    const file = (candidate: unknown, version = 24) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state: version < 24 ? legacyBudget(candidate) : candidate })));
-    expect(decodeSave(file(before, 22))).toEqual(before);
+    const file = (candidate: unknown, version = 25) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state: version < 24 ? legacyBudget(candidate) : candidate })));
+    const historical = { ...before, roster: before.roster.filter(id => id <= 3127) };
+    expect(decodeSave(file(historical, 22))).toEqual(historical);
     for (const change of [{ reason: 'unknown' }, { sender: 'zus' }, { patientId: 0 }, { day: 1 }, { surprise: true }]) {
       const forged = { ...state, papers: state.papers.map(paper => paper.kind === 'letter' ? { ...paper, ...change } : paper) };
       expect(() => decodeSave(file(forged))).toThrow();

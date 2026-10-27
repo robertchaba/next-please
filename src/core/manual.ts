@@ -1,6 +1,7 @@
 import { workDayNumber } from './progression';
 
 const SUPPLEMENTS = [
+  { id: 'inspection', workDay: 2 },
   { id: 'dates', workDay: 3 },
   { id: 'specialist', workDay: 4 },
   { id: 'authenticity', workDay: 5 },

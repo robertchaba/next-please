@@ -158,7 +158,7 @@ test('examinations, stamping and the rulebook support keyboard visits with defer
   expect(completed.clockMinutes).toBeGreaterThan(480);
   // Three visits are only the start of the day; their pay remains deferred.
   expect(completed.clockMinutes).toBeLessThan(840);
-  expect(completed.roster).toHaveLength(83);
+  expect(completed.roster).toHaveLength(93);
   await useKeyboard(page, 'back');
   await useKeyboard(page, 'call-patient');
   await expect(page.locator('#control-take-document')).toBeVisible();

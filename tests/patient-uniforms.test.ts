@@ -14,9 +14,9 @@ describe('uniformed patients and fourth portrait expansion', () => {
   });
 
   it('keeps every uniformed identity in its illustrated profession', () => {
-    const newIdentities = PATIENT_IDENTITIES.filter(identity => identity.characterId >= 78);
+    const newIdentities = PATIENT_IDENTITIES.filter(identity => identity.characterId >= 78 && identity.characterId < 103);
     expect(newIdentities).toHaveLength(125);
-    for (const [index, portrait] of ADDITIONAL_PORTRAITS.entries()) {
+    for (const [index, portrait] of ADDITIONAL_PORTRAITS.slice(0, 25).entries()) {
       const identities = newIdentities.filter(identity => identity.portraitId === portrait.portraitId);
       expect(identities).toHaveLength(5);
       for (const identity of identities) {
@@ -56,7 +56,7 @@ describe('uniformed patients and fourth portrait expansion', () => {
       expect(bytes.readUInt32BE(20)).toBe(96);
       hashes.add(createHash('sha256').update(bytes).digest('hex'));
     }
-    expect(portraits.size).toBe(103);
+    expect(portraits.size).toBe(113);
     expect(hashes.size).toBe(portraits.size);
   });
 });

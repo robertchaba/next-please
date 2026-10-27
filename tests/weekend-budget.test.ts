@@ -9,9 +9,9 @@ import { homePage, homePages } from '../src/scenes/home';
 const next = (state: GameState): GameState => applyAction(state, 'next-day').state;
 function friday(money: number, seed = 1, insuranceRate = 300): GameState {
   const cabinet = applyAction(createInitialState(seed), 'skip-intro').state;
-  return applyAction({ ...cabinet, day: 2, money, insuranceRate, clockMinutes: 840 }, 'end-day').state;
+  return applyAction({ ...cabinet, roster: cabinet.roster.filter(id => id <= 3127), day: 2, money, insuranceRate, clockMinutes: 840 }, 'end-day').state;
 }
-const file = (state: unknown, version = 24): Uint8Array => gzipSync(strToU8(JSON.stringify({
+const file = (state: unknown, version = 25): Uint8Array => gzipSync(strToU8(JSON.stringify({
   game: 'next-please', version, savedAt: '2026-10-26T12:00:00.000Z', state: version < 24 ? legacyBudget(state) : state,
 })));
 
@@ -151,7 +151,7 @@ describe('weekend saves', () => {
     expect(next(decodeSave(encodeSave(fri)))).toEqual(sat);
     expect(next(decodeSave(encodeSave(sat)))).toEqual(next(sat));
     expect(applyAction(decodeSave(encodeSave(sat)), 'end-day').state).toEqual(sat);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(24);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(25);
   });
 
   it('preserves the whole weekend budget through saving, month rollover and Monday', () => {
@@ -194,7 +194,7 @@ describe('weekend saves', () => {
   it('imports v19 without inventing missing costs or settling a day again', () => {
     for (const current of [friday(200), next(friday(200)), next(next(friday(200)))]) {
       const { budgetHistory: _history, ...old } = current;
-      if (old.roster.length) old.roster = createRoster(1).roster;
+      if (old.roster.length) old.roster = createRoster(1).roster.filter(id => id <= 3127);
       const loaded = decodeSave(file(old, 19));
       expect(loaded).toEqual({ ...old, budgetHistory: [] });
       expect(decodeSave(encodeSave(loaded))).toEqual(loaded);

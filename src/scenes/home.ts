@@ -102,10 +102,15 @@ export function renderHome(ctx: CanvasRenderingContext2D, state: GameState, loca
   reveal(content.body).split('\n').forEach((line, index) => drawText(ctx, line, 25,
     (content.kind === 'budget' ? 79 : (content.kind === 'hospital' || content.kind === 'bankruptcy') ? 85 : 99) + index * ((content.kind === 'hospital' || content.kind === 'bankruptcy') ? 16 : 24), { color: '#ded4b4', scale: content.bodyScale }));
   content.rows.forEach((row, index) => {
-    const y = 112 + index * (content.rows.length > 8 ? 17 : content.rows.length > 7 ? 19 : 21);
-    drawText(ctx, reveal(row.label, 2), 25, y, { color: '#ded4b4' });
+    const balance = index === content.rows.length - 1;
+    const y = 112 + index * (content.rows.length > 8 ? 17 : content.rows.length > 7 ? 19 : 21) + (balance ? 5 : 0);
+    if (balance && remaining > 0) {
+      ctx.fillStyle = '#777b5c';
+      ctx.fillRect(25, y - 6, HOME_AMOUNT_RIGHT - 25, 1);
+    }
+    drawText(ctx, reveal(row.label, 2), 25, y, { color: balance ? '#e8c58b' : '#ded4b4' });
     // Align to the full amount so its left edge stays fixed during typing.
-    drawText(ctx, reveal(row.value), HOME_AMOUNT_RIGHT - measureText(row.value), y, { color: row.negative ? '#e18b79' : '#e3d6b3' });
+    drawText(ctx, reveal(row.value), HOME_AMOUNT_RIGHT - measureText(row.value), y, { color: row.negative ? '#e18b79' : balance ? '#e8c58b' : '#e3d6b3' });
   });
   if (content.kind === 'hospital' || content.kind === 'bankruptcy') drawText(ctx, reveal(translations[locale].progression.gameOver), 25, 237, { color: '#d39a70' });
   drawText(ctx, reveal(content.action), HOME_ACTION.x + 2, HOME_ACTION.y + 9, { color: '#d39a70' });

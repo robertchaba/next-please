@@ -5,7 +5,7 @@ import { generalFindingIndex, patientAge, veryHighPressure, type PressureValues,
 import type { Rect } from '../core/desk';
 import { formatGameDate, gameDate } from '../core/calendar';
 import { translations, type Locale } from '../i18n';
-import { drawPaper, drawPaperclip, drawDecisionImprint, drawDocumentSeal, drawDocumentSignature, drawUnclearSeal } from './clinic';
+import { drawPaper, drawPaperclip, drawDecisionImprint, drawDocumentSeal, drawDocumentSignature, drawUnclearSeal, drawInspectionForm, drawInspector } from './clinic';
 import { drawDocumentText, measureDocumentText } from './font';
 
 export const DOCUMENT_INK = '#333b2b';
@@ -122,7 +122,12 @@ export function paperDescription(paper: Paper, locale: Locale, clipped = false):
   const t = translations[locale], p = t.paperwork, q = t.progression;
   const name = paper.patientId === null ? '' : t.patientNames[paper.patientId];
   let text: string;
-  if (paper.kind === 'referral') {
+  if (paper.kind === 'inspection-id') {
+    text = `${t.inspection.identity}. ${t.inspection.names[paper.inspectorId]}. ${t.inspection.role}. ${t.inspection.number}: K/${41 + paper.inspectorId}. ${t.inspection.validity}`;
+  } else if (paper.kind === 'inspection-fine') {
+    const q = t.inspection;
+    text = `${q.fineTitle}. ${q.addressee}. ${name}. ${q.visit}: ${formatGameDate(paper.targetDay, locale)}. ${paper.amount === 200 ? q.absentReason : q.partialReason} ${q.amount}: ${paper.amount} ${t.home.currency}. ${q.inspectorSignature}: ${q.names[paper.inspectorId]}. ${q.settlement}`;
+  } else if (paper.kind === 'referral') {
     text = `${p.referral}. ${p.occupational}. ${referralLines(paper.patientId, locale).join('. ')}. ${q.seal[paper.details.seal]}. ${p.signed}.`;
     if (workDayNumber(paper.day) >= 5) text += ` ${q.hr}. ${q.phone} ${paper.details.phone}.`;
   } else if (paper.kind === 'additional-referral') {
@@ -172,6 +177,13 @@ export function paperClipRect(bounds: Rect): Rect {
   return { x: bounds.x + bounds.w - 17, y: bounds.y - 2, w: 10, h: 19 };
 }
 
+/** The horizontal identity card shares the desk paper anchor, but has its own hit area. */
+export function visiblePaperRect(paper: Paper | undefined, bounds: Rect): Rect {
+  if (paper?.kind !== 'inspection-id') return bounds;
+  const h = Math.round(bounds.w * 112 / 188);
+  return { ...bounds, y: bounds.y + Math.round((bounds.h - h) / 2), h };
+}
+
 /** Native-pixel wrapping; text is never scaled or squeezed to fit a form. */
 export function wrapDocumentLines(lines: readonly string[], width: number): string[] {
   return lines.flatMap(line => {
@@ -208,6 +220,11 @@ export function drawActionCorner(ctx: CanvasRenderingContext2D, bounds: Rect, pe
 
 export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bounds: Rect, locale: Locale, lifted: boolean, clipped = false, showActions = true): void {
   const { x, y, w, h } = bounds, t = translations[locale], p = t.paperwork;
+  if (paper.kind === 'inspection-id' || paper.kind === 'inspection-fine') {
+    drawInspectionPaper(ctx, paper, bounds, locale);
+    if (clipped) { const clip = paperClipRect(visiblePaperRect(paper, bounds)); drawPaperclip(ctx, clip.x, clip.y, lifted); }
+    return;
+  }
   const full = w >= 188;
   const seal = paper.kind === 'letter' || paper.kind === 'directive' ? paper.sender : paper.kind === 'specialist' ? 'chamber' : paper.kind === 'referral' ? 'employer' : 'clinic';
   const sealed = paper.kind !== 'referral' || paper.details.seal !== 'missing';
@@ -323,6 +340,40 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     drawSeal(x + w - (seal === 'zus' ? 49 : 38), y + 115, 22);
   }
   if (clipped) { const clip = paperClipRect(bounds); drawPaperclip(ctx, clip.x, clip.y); }
+}
+
+/** Original illustrated forms provide the paper, frames and security ornament. */
+function drawInspectionPaper(ctx: CanvasRenderingContext2D, paper: Extract<Paper, { kind: 'inspection-id' | 'inspection-fine' }>, bounds: Rect, locale: Locale): void {
+  const { x, y, w, h } = bounds, t = translations[locale], q = t.inspection;
+  const full = w >= 188;
+  if (paper.kind === 'inspection-id') {
+    const { h: height, y: top } = visiblePaperRect(paper, bounds);
+    drawInspectionForm(ctx, 'id', x, top, w, height);
+    drawInspector(ctx, paper.inspectorId, x + Math.round(w * 12 / 188), top + Math.round(height * 28 / 112), Math.round(w * 42 / 188), Math.round(height * 43 / 112));
+    if (full) {
+      drawDocumentText(ctx, wrapDocumentLines([q.identity], w - 78).join('\n'), x + 65, top + 15, { color: DOCUMENT_INK });
+      drawDocumentText(ctx, q.names[paper.inspectorId]!, x + 65, top + 40, { color: HANDWRITING_INK });
+      const rows = [q.role, `${q.number}: K/${41 + paper.inspectorId}`, q.authority];
+      drawDocumentText(ctx, wrapDocumentLines(rows, w - 78).join('\n'), x + 65, top + 52, { color: DOCUMENT_INK });
+      drawDocumentText(ctx, q.validity, x + 65, top + height - 20, { color: '#615a41' });
+    }
+    return;
+  }
+  drawInspectionForm(ctx, 'fine', x, y, w, h);
+  if (!full) return;
+  const write = (value: string, dx: number, dy: number, color = DOCUMENT_INK): void => drawDocumentText(ctx, value, x + dx, y + dy, { color });
+  write(q.fineTitle, 12, 15, ALERT_INK);
+  drawDocumentText(ctx, `${t.paperwork.zus} / ${paper.id}`, x + w - 12, y + 15, { color: '#79664b', align: 'right' });
+  write(q.fineSubtitle, 12, 25);
+  write(`${t.paperwork.date}: ${formatGameDate(paper.day, locale)}`, 12, 34);
+  write(`${q.visit}: ${formatGameDate(paper.targetDay, locale)}`, 12, 44);
+  write(t.patientNames[paper.patientId]!, 12, 55, HANDWRITING_INK);
+  const reason = paper.amount === 200 ? q.absentReason : q.partialReason;
+  write(wrapDocumentLines([reason], w - 24).join('\n'), 12, 67);
+  write(`${q.amount}: ${paper.amount} ${t.home.currency}`, 12, 91, ALERT_INK);
+  write(q.names[paper.inspectorId]!, 12, 108, HANDWRITING_INK);
+  drawDocumentSignature(ctx, x + w - 66, y + 104, 49, 10);
+  write(q.settlement, 12, 117, '#79664b');
 }
 
 /** Certificate art depends only on the supplied appointment, day and language. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyAction, createInitialState } from '../src/core/game';
-import { drawerButtons, drawerSheets, DRAWER_BATCH_SIZE, DRAWER_CLOSE } from '../src/render/drawer';
+import { drawerButtons, drawerSheets, drawerPreview, DRAWER_BATCH_SIZE, DRAWER_CLOSE, DRAWER_PREVIEW } from '../src/render/drawer';
 import { translations } from '../src/i18n';
 import { measureDocumentText, measureText } from '../src/render/font';
 
@@ -14,17 +14,21 @@ function stockedDrawer(count: number) {
 }
 
 describe('drawer presentation', () => {
-  it('retains filing order across dense overlapping sections and reaches every sheet', () => {
-    const state = stockedDrawer(29), ids: number[] = [];
+  it('retains filing order across 24 exposed cover labels and reaches every sheet', () => {
+    const state = stockedDrawer(53), ids: number[] = [];
     for (let page = 0; page < 3; page++) {
       const { visible, pages } = drawerSheets(state, page);
       expect(pages).toBe(3);
       expect(visible.length).toBeLessThanOrEqual(DRAWER_BATCH_SIZE);
       for (const [index, { paper, bounds }] of visible.entries()) {
         ids.push(paper.id);
-        expect(bounds.x + bounds.w).toBeLessThanOrEqual(420);
+        expect(bounds.x + bounds.w).toBeLessThan(DRAWER_PREVIEW.x);
         expect(bounds.y + bounds.h).toBeLessThan(263);
-        if (index) expect(bounds.x).toBeLessThan(visible[index - 1]!.bounds.x + bounds.w);
+        for (const previous of visible.slice(0, index)) {
+          const overlap = bounds.x < previous.bounds.x + previous.bounds.w && bounds.x + bounds.w > previous.bounds.x
+            && bounds.y < previous.bounds.y + previous.bounds.h && bounds.y + bounds.h > previous.bounds.y;
+          expect(overlap).toBe(false);
+        }
       }
     }
     expect(ids).toEqual(state.papers.map(paper => paper.id));
@@ -41,15 +45,27 @@ describe('drawer presentation', () => {
     const state = { ...stockedDrawer(1), drawerItems: { manual: true, clips: 4 } };
     const controls = drawerButtons(state, 'pl', 0, () => {});
     expect(controls.find(button => button.id === 'drawer-close')).toMatchObject(DRAWER_CLOSE);
-    for (const id of ['drawer-manual', 'drawer-clip']) expect(controls.find(button => button.id === id)?.x).toBeGreaterThan(438);
+    for (const id of ['drawer-manual', 'drawer-clip']) {
+      expect(controls.find(button => button.id === id)?.x).toBeGreaterThan(350);
+      expect(controls.find(button => button.id === id)?.y).toBeGreaterThan(DRAWER_PREVIEW.y + DRAWER_PREVIEW.h);
+    }
     expect(drawerSheets(state, 99).current).toBe(0);
   });
 
   it('fits Polish and English drawer labels without scaling text', () => {
     for (const t of Object.values(translations)) {
       expect(measureDocumentText(t.drawerClose)).toBeLessThan(400);
-      expect(measureText(t.drawerPrevious)).toBeLessThanOrEqual(160);
-      expect(measureText(t.drawerNext)).toBeLessThanOrEqual(146);
+      expect(measureText(t.drawerPrevious)).toBeLessThanOrEqual(112);
+      expect(measureText(t.drawerNext)).toBeLessThanOrEqual(112);
     }
+  });
+
+  it('previews the hovered or focused cover without changing the saved drawer', () => {
+    const state = stockedDrawer(29), snapshot = JSON.stringify(state);
+    expect(drawerPreview(state, 0, 'drawer-paper-17')?.id).toBe(17);
+    expect(drawerPreview(state, 1, 'drawer-paper-17')?.id).toBe(25);
+    expect(drawerPreview(state, 99, 'drawer-paper-29')?.id).toBe(29);
+    expect(drawerPreview(stockedDrawer(0), 0)).toBeUndefined();
+    expect(JSON.stringify(state)).toBe(snapshot);
   });
 });

@@ -14,7 +14,8 @@ let creatorPhotograph: { image: HTMLCanvasElement; shadow: HTMLCanvasElement } |
 const introNames = ['scalpel', 'catheter', 'pen', 'stamp'] as const;
 const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate', 'clock',
   ...new Set(PATIENTS.map(patient => patient.portraitId)), 'workstation-phone', 'workstation-clips', 'workstation-clip', 'workstation-rack', 'workstation-rack-referrals', 'workstation-paper',
-  'workstation-calendar', 'imprint-fit-pl', 'imprint-unfit-pl', 'imprint-fit-en', 'imprint-unfit-en', 'document-seal', 'document-seal-zus', 'document-seal-employer', 'document-signature', 'document-seal-chamber', 'document-seal-employer-unclear', 'banknote-100'] as const;
+  'workstation-calendar', 'imprint-fit-pl', 'imprint-unfit-pl', 'imprint-fit-en', 'imprint-unfit-en', 'document-seal', 'document-seal-zus', 'document-seal-employer', 'document-signature', 'document-seal-chamber', 'document-seal-employer-unclear', 'banknote-100',
+  'zus-inspector-1', 'zus-inspector-2', 'zus-inspector-3', 'inspector-id', 'inspection-fine', 'archive-folder'] as const;
 export const PATIENT_MOTION_FRAMES = 12;
 
 export async function loadClinicArt(): Promise<void> {
@@ -121,6 +122,7 @@ export function drawCreatorPortrait(ctx: CanvasRenderingContext2D, x: number, y:
 
 export type CabinetArtOptions = {
   patientId: number | null;
+  inspectorId?: number;
   lampOn: boolean;
   decoration: 'plant' | 'certificate';
   clockMinutes: number;
@@ -153,6 +155,7 @@ export function drawCabinet(ctx: CanvasRenderingContext2D, options: CabinetArtOp
   const decoration = CABINET_HOTSPOTS.decoration;
   if (options.decoration === 'plant') asset(ctx, 'sprites/plant', decoration.x + 6, decoration.y, 45, 42);
   else asset(ctx, 'sprites/certificate', decoration.x + 11, decoration.y + 2, 36, 40);
+  if (options.inspectorId !== undefined) drawInspector(ctx, options.inspectorId, PATIENT_HANDOFF.x, PATIENT_HANDOFF.y, PATIENT_HANDOFF.w, PATIENT_HANDOFF.h);
   const motion = options.patientMotion;
   const lastFrame = PATIENT_MOTION_FRAMES - 1;
   const frame = motion ? Math.max(0, Math.min(lastFrame, Math.floor(motion.frame))) : lastFrame;
@@ -194,6 +197,18 @@ export function drawCabinet(ctx: CanvasRenderingContext2D, options: CabinetArtOp
     rect(ctx, 0, 0, LEFT_WIDTH, 128, '#111b1740');
     rect(ctx, RIGHT_DESK_X, 0, 570 - RIGHT_DESK_X, 128, '#111b1759');
   }
+}
+
+export function drawInspector(ctx: CanvasRenderingContext2D, inspectorId: number, x: number, y: number, w: number, h: number): void {
+  asset(ctx, `sprites/zus-inspector-${inspectorId + 1}`, x, y, w, h);
+}
+
+export function drawInspectionForm(ctx: CanvasRenderingContext2D, kind: 'id' | 'fine', x: number, y: number, w: number, h: number): void {
+  asset(ctx, `sprites/${kind === 'id' ? 'inspector-id' : 'inspection-fine'}`, x, y, w, h);
+}
+
+export function drawArchiveFolder(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+  asset(ctx, 'sprites/archive-folder', x, y, w, h);
 }
 
 /** The physical holders stay visible while their tools are in hand. */

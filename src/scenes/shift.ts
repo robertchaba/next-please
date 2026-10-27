@@ -1,5 +1,5 @@
-import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, drawDeskCalendar, drawBanknote, type CabinetArtOptions } from '../render/clinic';
-import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading } from '../render/paperwork';
+import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, drawDeskCalendar, drawBanknote, drawInspectionForm, type CabinetArtOptions } from '../render/clinic';
+import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading, visiblePaperRect } from '../render/paperwork';
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
 import { drawManual, drawManualCover, manualControls, manualPageCount } from '../render/manual';
@@ -8,7 +8,7 @@ import { ADDITIONAL_TESTS } from '../core/additional-tests';
 import { patientForVisit, workDayNumber } from '../core/progression';
 import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
-import { calendarText } from '../core/calendar';
+import { calendarText, formatGameDate } from '../core/calendar';
 import { CABINET_HOTSPOTS, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, dropTargetRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
 export { manualPageCount, manualPageDescription } from '../render/manual';
 
@@ -50,6 +50,16 @@ export function carriedAdditionalReferral(state: GameState, held: DeskItemId | n
 
 const c = { ink: '#293226', paper: '#ded4ae', muted: '#a6ac8e', red: '#aa5d48', green: '#4e674e' };
 
+export function inspectionDescription(state: GameState, locale: Locale): string {
+  const inspection = state.inspection, t = translations[locale], q = t.inspection;
+  if (!inspection) return '';
+  if (inspection.stage === 'identity') return inspection.idTaken ? q.idReminder : q.greeting;
+  const target = `${t.patientNames[inspection.target.patientId]}, ${formatGameDate(inspection.target.day, locale)}.`;
+  return inspection.stage === 'confirm-missing'
+    ? `${inspection.received.length ? q.partial : q.missing} ${target}`
+    : `${q.request} ${target}${inspection.received.length ? ` ${q.received}: ${inspection.received.map(kind => kind === 'note' ? t.paperwork.note : t.paperwork.referral).join(', ')}.` : ''}`;
+}
+
 function box(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string): void {
   ctx.fillStyle = color; ctx.fillRect(x, y, w, h);
 }
@@ -63,8 +73,9 @@ export function shiftDescription(state: GameState, locale: Locale, hiddenPaperId
   const patient = patientForVisit(state);
   const date = calendarText(state.day, locale);
   return [t.cabinetHelp, `${t.clock}: ${clockTime(state)}.`, `${t.day}: ${state.day}.`, `${t.calendar.label}: ${date.day} ${date.month}.`, `${t.queue}: ${state.shiftCompleted}/${state.roster.length}.`, `${t.points}: ${state.money}.`,
+    inspectionDescription(state, locale),
     visit && patient ? `${t.patientNames[visit.patientId]}. ${t.patientJobs[visit.patientId]}. ${visit.document === 'tray' ? t.awaitingDocument : t.document}. ${t.generalResult}: ${visit.generalTested ? (patient!.general === 'pass' ? t.generalClear : generalReading(visit.patientId, locale)) : t.untested}. ${t.visionResult}: ${visit.visionTested ? visionReading(patient.visionValues, locale) : t.untested}. ${t.pressureResult}: ${visit.pressureTested ? visit.pressureReadings.map(pressureReading).join('; ') : t.untested}. ${t.paperwork.weight}: ${visit.measurementsTaken ? `${patient.weight} ${t.paperwork.kg}` : t.untested}. ${t.paperwork.height}: ${visit.measurementsTaken ? `${patient.height} ${t.paperwork.cm}` : t.untested}. ${visit.decision ? t[visit.decision] : t.stampHere}.`
-      : isShiftFinished(state) ? t.shiftDone : t.emptyChair,
+      : state.inspection ? t.inspection.inspector : isShiftFinished(state) ? t.shiftDone : t.emptyChair,
     ...(visit?.certificateTaken ? [certificateDescription(state, locale)] : []),
     ...state.papers.filter(paper => paper.location === 'desk' && !hiddenPaperIds.includes(paper.id)).map(paper => paperDescription(paper, locale, isDocumentClipped(state, paper.id))),
   ].join(' ');
@@ -89,11 +100,17 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
   const certificateBounds = itemRect(view.desk, 'document', false, isLifted(view, 'document'));
   const certificateOnDesk = !isLifted(view, 'document') && certificateBounds.x >= RIGHT_DESK_X;
   const heldReferral = carriedAdditionalReferral(state, view.held, view.heldItems);
+  const heldInspectionPaper = state.inspection && view.held?.startsWith('paper-') ? state.papers.find(paper => `paper-${paper.id}` === view.held) : undefined;
   const pageCorners = manualControls(itemRect(view.desk, 'manual', false, false, view.manualOpen));
   return [
     ...(rest ? [button(restAction, restLabel, rest.x, rest.y, rest.w, rest.h, restAction)] : []),
     ...(canEndDay(state) ? [hotspot('end-day', t.endDay, CABINET_HOTSPOTS.callPatient, 'end-day')]
-      : [{ ...hotspot('call-patient', t.callPatient, CABINET_HOTSPOTS.callPatient, 'call-patient'), disabled: isShiftFinished(state) }]),
+      : [{ ...hotspot('call-patient', t.callPatient, CABINET_HOTSPOTS.callPatient, 'call-patient'), disabled: isShiftFinished(state) || state.inspection !== null }]),
+    ...(state.inspection?.stage === 'identity' && !state.inspection.idTaken
+      ? [hotspot('take-inspection-id', t.inspection.takeId, { x: 18, y: 157, w: 60, h: 36 }, 'take-inspection-id')] : []),
+    ...(state.inspection && view.held === null ? [hotspot('talk-inspector', state.inspection.stage === 'confirm-missing' ? `${t.inspection.confirm}. ${t.inspection.continueSearch}` : `${t.inspection.talk}. ${inspectionDescription(state, locale)}`, PATIENT_HANDOFF, 'talk-inspector')] : []),
+    ...(heldInspectionPaper ? [hotspot('hand-inspection-paper', heldInspectionPaper.kind === 'inspection-id' ? t.inspection.returnId : t.inspection.hand, PATIENT_HANDOFF,
+      heldInspectionPaper.kind === 'inspection-id' ? 'return-inspection-id' : { type: 'hand-inspection-paper', paperId: heldInspectionPaper.id })] : []),
     ...(state.visit?.specialist && !state.visit.specialistTaken ? [hotspot('take-specialist', t.progression.takeSpecialist, { x: 72, y: 181, w: 35, h: 66 }, 'take-specialist')] : []),
     ...(state.visit?.bribe === 'offered' ? [item('banknote', `${t.progression.banknote}. ${t.progression.bribeHelp}`, 'banknote', 'accept-bribe')] : []),
     ...(state.visit && view.held === 'banknote' ? [hotspot('return-bribe', t.progression.returnBribe, PATIENT_HANDOFF, 'return-bribe')] : []),
@@ -123,14 +140,14 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
       const id: DeskItemId = `paper-${paper.id}`;
       const action: ShiftAction = (paper.kind === 'letter' || paper.kind === 'directive') && !paper.opened ? { type: 'open-letter', paperId: paper.id }
         : { type: 'read-paper', paperId: paper.id };
-      const bounds = itemRect(view.desk, id, false, isLifted(view, id));
+      const bounds = visiblePaperRect(paper, itemRect(view.desk, id, false, isLifted(view, id)));
       const canAct = !isLifted(view, id) && bounds.x >= RIGHT_DESK_X
         && ((paper.kind === 'letter' || paper.kind === 'directive') && !paper.opened);
       const callable = !isLifted(view, id) && bounds.x >= RIGHT_DESK_X && paper.day === state.visit?.startedDay && paper.patientId === state.visit?.patientId
         && ((paper.kind === 'specialist' && workDayNumber(state.day) >= 4) || (paper.kind === 'referral' && workDayNumber(state.day) >= 5));
       const selectable = paper.kind === 'additional-referral' && paper.patientId === state.visit?.patientId && paper.day === state.visit?.startedDay
         && !isLifted(view, id) && bounds.x >= RIGHT_DESK_X;
-      return [item(id, paperDescription(paper, locale, isDocumentClipped(state, paper.id)), id, action),
+      return [{ ...item(id, paperDescription(paper, locale, isDocumentClipped(state, paper.id)), id, action), ...bounds },
         ...(selectable ? ADDITIONAL_TESTS.map(test => ({ ...hotspot(`select-additional-test-${paper.id}-${test}`,
           `${t.additionalTests.choose}: ${t.additionalTests.tests[test]}`, additionalTestRect(bounds, test),
           { type: 'select-additional-test', paperId: paper.id, test }), owner: id, pressed: paper.test === test })) : []),
@@ -165,11 +182,12 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
   const t = translations[locale], visit = state.visit;
   const patient = patientForVisit(state);
   drawCabinet(ctx, { patientId: visit?.patientId ?? view.departingPatientId ?? null, lampOn: state.lampOn, decoration: state.decoration,
-    clockMinutes: view.clockMinutes ?? state.clockMinutes, patientMotion: view.patientMotion });
+    clockMinutes: view.clockMinutes ?? state.clockMinutes, patientMotion: view.patientMotion, inspectorId: state.inspection?.inspectorId });
   if (view.patientSpeech) drawPatientSpeech(ctx, t.patientSpeech[view.patientSpeech.line]);
   drawDeskRests(ctx);
   drawWorkstationObjects(ctx, state.papers.filter(paper => paper.location === 'drawer').length, workDayNumber(state.day) >= 7);
   drawDeskCalendar(ctx, state.day, locale);
+  if (state.inspection?.stage === 'identity' && !state.inspection.idTaken) drawInspectionForm(ctx, 'id', 18, 157, 60, 36);
   if (visit?.specialist && !visit.specialistTaken) drawPaper(ctx, 72, 181, 35, 66);
   for (const id of view.desk.order) {
     const lifted = isLifted(view, id);
@@ -200,6 +218,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     drawCertificate(ctx, state, bounds, locale, lifted, visibleDocumentClip(state, 'certificate', view));
   }
   if (view.phoneSpeech) drawPatientSpeech(ctx, view.phoneSpeech, 216, 78, 'left');
+  if (state.inspection) drawPatientSpeech(ctx, inspectionDescription(state, locale), 111, 34);
   // The doctor speaks from our side of the desk, opposite the seated patient.
   // Keep the existing balloon above paperwork, with its tail toward the player.
   if (view.clinicSpeech) drawPatientSpeech(ctx, view.clinicSpeech.text, view.clinicSpeech.speaker === 'cleaner' ? 8 : 20, view.clinicSpeech.speaker === 'cleaner' ? 9 : 292, view.clinicSpeech.speaker === 'doctor' ? 'down' : 'left');

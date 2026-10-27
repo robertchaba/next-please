@@ -32,8 +32,8 @@ describe('progression follows working days', () => {
       for (const day of [1, 2, 5, 6, 7, 8]) {
         const generated = createDailyRoster(seed, day);
         expect(createDailyRoster(seed, day)).toEqual(generated);
-        expect(generated.roster).toHaveLength(83);
-        expect(new Set(generated.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(83);
+        expect(generated.roster).toHaveLength(93);
+        expect(new Set(generated.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(93);
         let unfit = 0, highestPercent = 0;
         const jobs = new Set(generated.roster.map(id => JOBS[PATIENTS[id]!.jobId]!.key));
         for (const job of reservedJobs) expect(jobs.has(job)).toBe(false);
@@ -46,7 +46,7 @@ describe('progression follows working days', () => {
       }
       for (const day of [9, 12]) {
         const { roster } = createDailyRoster(seed, day);
-        expect(roster).toHaveLength(103);
+        expect(roster).toHaveLength(113);
         const jobs = roster.map(id => JOBS[PATIENTS[id]!.jobId]!.key);
         for (const job of reservedJobs) expect(jobs).toContain(job);
         expect(jobs.filter(job => job === 'militia-officer')).toHaveLength(10);
@@ -60,7 +60,7 @@ describe('progression follows working days', () => {
       expect(state.day).toBe(day);
       expect(decodeSave(encodeSave(state))).toEqual(state);
       if (state.phase === 'cabinet') {
-        expect(state.roster).toHaveLength(day < 9 ? 83 : 103);
+        expect(state.roster).toHaveLength(day < 9 ? 93 : 113);
         if (day < 9) for (const id of state.roster) expect(reservedJobs).not.toContain(JOBS[PATIENTS[id]!.jobId]!.key);
         if (day === 8) expect(applyAction({ ...state, shiftCompleted: 1 }, 'call-patient').state.visit?.bribe).toBe('offered');
         state = act({ ...state, clockMinutes: 840 }, 'end-day');
