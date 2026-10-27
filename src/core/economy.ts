@@ -49,7 +49,8 @@ export function settleDay(input: {
       const modest = livingCost + sundayLivingCost > affordable;
       if (modest) {
         const fridayCost = input.settlement?.day === input.day - 1 ? input.settlement.livingCost : MODEST_WEEKEND_LIVING;
-        const remaining = Math.min(affordable, Math.max(0, MODEST_WEEKEND_LIVING - fridayCost));
+        // The modest allowance is a required cost, even when it causes bankruptcy.
+        const remaining = Math.max(0, MODEST_WEEKEND_LIVING - fridayCost);
         livingCost = Math.floor(remaining / 2);
         sundayLivingCost = remaining - livingCost;
       }
@@ -57,7 +58,7 @@ export function settleDay(input: {
     } else {
       // Historical Saturday ledgers have already charged at least two ordinary
       // living costs across Friday/Saturday. Do not invent another charge.
-      livingCost = Math.min(affordable, input.settlement?.day === input.day - 1 ? input.settlement.weekend?.sundayLivingCost ?? 0 : 0);
+      livingCost = input.settlement?.day === input.day - 1 ? input.settlement.weekend?.sundayLivingCost ?? 0 : 0;
       weekend = { modest: input.settlement?.weekend?.modest ?? false, sundayLivingCost: 0 };
     }
   }

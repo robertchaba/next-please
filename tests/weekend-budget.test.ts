@@ -10,11 +10,11 @@ function friday(money: number, seed = 1, insuranceRate = 300): GameState {
   const cabinet = applyAction(createInitialState(seed), 'skip-intro').state;
   return applyAction({ ...cabinet, day: 2, money, insuranceRate, clockMinutes: 840 }, 'end-day').state;
 }
-const file = (state: unknown, version = 21): Uint8Array => gzipSync(strToU8(JSON.stringify({
+const file = (state: unknown, version = 22): Uint8Array => gzipSync(strToU8(JSON.stringify({
   game: 'next-please', version, savedAt: '2026-10-26T12:00:00.000Z', state,
 })));
 
-describe('affordable weekends', () => {
+describe('weekend living costs and bankruptcy', () => {
   it('charges one premium across Friday, Saturday and Sunday while the rate still recovers', () => {
     const fri = friday(3000, 1, 500), sat = next(fri), sun = next(sat);
     expect(fri.settlement!.insuranceCost).toBe(450);
@@ -37,12 +37,41 @@ describe('affordable weekends', () => {
     }
   });
 
-  it('uses only available cash when even the modest allowance is unaffordable', () => {
+  it('ends the game when even the modest allowance is unaffordable', () => {
+    const endingDays = new Set<number>();
     for (let seed = 1; seed <= 100; seed++) {
       const fri = friday(0, seed), sat = next(fri), sun = next(sat);
-      if (fri.ending === 'bankruptcy') { expect(sat).toBe(fri); expect(sun).toBe(fri); continue; }
-      expect(sun.money).toBe(Math.min(0, fri.money));
-      expect(fri.settlement!.livingCost + sat.settlement!.livingCost + sun.settlement!.livingCost).toBeLessThanOrEqual(800);
+      expect(sun.ending).toBe('bankruptcy');
+      expect(sun.money).toBeLessThan(0);
+      expect(next(sun)).toBe(sun);
+      for (const state of [fri, sat, sun]) expect(decodeSave(encodeSave(state))).toEqual(state);
+      endingDays.add(sun.day);
+    }
+    expect(endingDays).toEqual(new Set([2, 3, 4]));
+  });
+
+  it.each([
+    { insuranceRate: 300, completed: 0, fines: 0, zusCases: 0 },
+    { insuranceRate: 500, completed: 2, fines: 500, zusCases: 2 },
+  ])('uses the full 800 plus insurance and fines, including Friday bonuses: %j', ({ insuranceRate, completed, fines, zusCases }) => {
+    const premium = Math.max(300, insuranceRate - 50), income = 1000 + 50 * completed;
+    for (let seed = 1; seed <= 50; seed++) for (const difference of [-1, 0, 1]) {
+      const cabinet = applyAction(createInitialState(seed), 'skip-intro').state;
+      const fri = applyAction({ ...cabinet, day: 2, clockMinutes: 840, insuranceRate,
+        money: 800 + premium + fines - income + difference, shiftCompleted: completed, patientsProcessed: completed,
+        daily: { ...cabinet.daily, fines, zusCases } }, 'end-day').state;
+      const sat = next(decodeSave(encodeSave(fri))), sun = next(decodeSave(encodeSave(sat)));
+      expect(sun.money).toBe(difference);
+      expect(sun.ending).toBe(difference < 0 ? 'bankruptcy' : null);
+      expect(decodeSave(encodeSave(sun))).toEqual(sun);
+      if (difference >= 0) {
+        expect(sun.day).toBe(4);
+        const ledgers = [...sun.budgetHistory, sun.settlement!];
+        expect(ledgers.reduce((sum, ledger) => sum + ledger.livingCost, 0)).toBe(800);
+        expect(ledgers.reduce((sum, ledger) => sum + ledger.insuranceCost, 0)).toBe(premium);
+        expect(ledgers.reduce((sum, ledger) => sum + ledger.fines, 0)).toBe(fines);
+        expect(next(sun)).toMatchObject({ day: 5, phase: 'cabinet', money: difference, ending: null });
+      } else expect(next(sun)).toBe(sun);
     }
   });
 
@@ -82,13 +111,46 @@ describe('affordable weekends', () => {
   });
 });
 
-describe('version 17 weekend saves', () => {
+describe('weekend saves', () => {
+  it('preserves cash-capped v21 weekends while new plans use the required allowance', async () => {
+    let checked = 0;
+    for (let seed = 1; seed <= 30; seed++) {
+      const fri = friday(0, seed);
+      if (fri.ending) continue;
+      const sat = next(fri), ledger = sat.settlement!;
+      const remaining = Math.min(fri.money, 800 - fri.settlement!.livingCost);
+      const livingCost = Math.floor(remaining / 2);
+      const oldSaturday: GameState = { ...sat, ending: null, money: fri.money - livingCost,
+        settlement: { ...ledger, livingCost, expenses: livingCost, closingBalance: fri.money - livingCost,
+          weekend: { modest: true, sundayLivingCost: remaining - livingCost } } };
+      for (const old of [oldSaturday, next(oldSaturday)]) {
+        const loaded = decodeSave(file(old, 21));
+        expect(loaded).toEqual(old);
+        expect(decodeSave(encodeSave(loaded))).toEqual(old);
+        expect(next(loaded)).toEqual(next(old));
+      }
+      expect(next(oldSaturday)).toMatchObject({ day: 4, money: 0, ending: null });
+      expect(next(decodeSave(file(fri, 21)))).toEqual(sat);
+      expect(next(sat).ending).toBe('bankruptcy');
+      // New debt-bearing plans must never pass the frozen v21 validator.
+      expect(() => decodeSave(file(sat, 21))).toThrowError(expect.objectContaining({ code: 'invalid-state' }));
+      const ended = next(sat);
+      const invalid = file({ ...ended, ending: null });
+      let live = ended;
+      await expect(importSave({ size: invalid.length, arrayBuffer: async () => invalid.buffer as ArrayBuffer } as File)
+        .then(loaded => { live = loaded; })).rejects.toMatchObject({ code: 'invalid-state' });
+      expect(live).toBe(ended);
+      checked++;
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+
   it('keeps Friday and Saturday reloads deterministic and never bills settled days twice', () => {
     const fri = friday(200), sat = next(fri);
     expect(next(decodeSave(encodeSave(fri)))).toEqual(sat);
     expect(next(decodeSave(encodeSave(sat)))).toEqual(next(sat));
     expect(applyAction(decodeSave(encodeSave(sat)), 'end-day').state).toEqual(sat);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(21);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(22);
   });
 
   it('preserves the whole weekend budget through saving, month rollover and Monday', () => {
@@ -141,7 +203,7 @@ describe('version 17 weekend saves', () => {
     }
   });
 
-  it('rejects missing, malformed and unaffordable weekend plans without replacing live state', async () => {
+  it('rejects missing, malformed and inconsistent weekend plans without replacing live state', async () => {
     const state = next(friday(200));
     for (const weekend of [undefined, {}, { modest: true, sundayLivingCost: -1 }, { modest: true, sundayLivingCost: 801 },
       { modest: true, sundayLivingCost: 10.5 }, { modest: true, sundayLivingCost: 500 },

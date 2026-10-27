@@ -201,6 +201,34 @@ test('modest weekends show their own scene and joke in both languages and preser
   await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'work');
 });
 
+for (const day of [3, 4]) test(`unaffordable modest costs cause bankruptcy on weekend day ${day}`, async ({ page }, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const friday = Array.from({ length: 100 }, (_, index) => homeState(2, 0, index + 1)).find(state => {
+    const saturday = applyAction(state, 'next-day').state;
+    const sunday = applyAction(saturday, 'next-day').state;
+    return !state.ending && sunday.day === day && sunday.ending === 'bankruptcy';
+  })!;
+  expect(friday).toBeDefined();
+  const expected = applyAction(applyAction(friday, 'next-day').state, 'next-day').state;
+  await load(page, friday);
+  for (let current = 2; current < day; current++) await key(page, 'home-next');
+  await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'budget');
+  await expect(page.locator('#screen-description')).toContainText('Sprzed weekendu: 0 zł');
+  const saved = await exportState(page, info);
+  expect(saved.state).toEqual(expected);
+  expect(saved.state.money).toBeLessThan(0);
+  await page.locator('#save-input').setInputFiles({ name: 'weekend-bankruptcy.npsave', mimeType: 'application/gzip', buffer: saved.buffer });
+  await key(page, 'back');
+  await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'budget');
+  if (day === 4) await expect(page.locator('#screen-description')).toContainText('Koszty życia: 800 zł');
+  await key(page, 'language-en');
+  await expect(page.locator('#screen-description')).toContainText('Before the weekend: 0 zł');
+  if (day === 4) await expect(page.locator('#screen-description')).toContainText('Living costs: 800 zł');
+  await key(page, 'home-next');
+  await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'bankruptcy');
+  await expect(page.locator('#control-home-next')).toHaveAccessibleName('START AGAIN');
+});
+
 test('EOD music is isolated from the workplace across mute, saves and departure', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await load(page, homeState());

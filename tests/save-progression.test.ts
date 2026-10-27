@@ -5,7 +5,7 @@ import { decodeSave, encodeSave } from '../src/core/save';
 import { defaultReferral, effectivePatient } from '../src/core/progression';
 
 const act = (state: GameState, ...actions: GameAction[]): GameState => actions.reduce((next, action) => applyAction(next, action).state, state);
-const file = (state: unknown): Uint8Array => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 21, savedAt: '2026-10-26T12:00:00.000Z', state })));
+const file = (state: unknown): Uint8Array => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 22, savedAt: '2026-10-26T12:00:00.000Z', state })));
 const reject = (state: unknown): void => { expect(() => decodeSave(file(state))).toThrowError(expect.objectContaining({ code: 'invalid-state' })); };
 const hypertensive = PATIENTS.find(patient => patient.id >= 553 && patient.pressure === 'refer' && patient.general === 'pass')!;
 
@@ -26,7 +26,7 @@ function specialistVisit(): GameState {
 
 describe('version 16 progression saves', () => {
   it('round-trips start-of-day directives and their mixed paperclip bundles', () => {
-    let state = act({ ...createInitialState(1), day: 2, clockMinutes: 840 }, 'skip-intro', 'end-day', 'next-day', 'next-day', 'next-day');
+    let state = act({ ...createInitialState(1), day: 2, money: 100, clockMinutes: 840 }, 'skip-intro', 'end-day', 'next-day', 'next-day', 'next-day');
     expect(state.day).toBe(5);
     expect(state.papers[0]).toMatchObject({ kind: 'directive', rule: 'dates', opened: false });
     state = act(state, { type: 'open-letter', paperId: 1 }, 'take-paper', { type: 'clip-document', documentId: 1 }, { type: 'join-documents', documentId: 2, targetId: 1 }, { type: 'store-paper', paperId: 1 });
