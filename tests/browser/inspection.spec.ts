@@ -55,7 +55,7 @@ async function handFromDrawer(page: Page, id: number): Promise<void> {
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
 }
 
-test('identity, drawer preview and sequential records work with mouse and keyboard across a save', async ({ page }, info) => {
+test('identity, drawer names and sequential records work with mouse and keyboard across a save', async ({ page }, info) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   const initial = inspectionFixture();
   await load(page, initial);
@@ -77,7 +77,7 @@ test('identity, drawer preview and sequential records work with mouse and keyboa
   await page.mouse.move(0, 0);
   await page.locator(`#control-drawer-paper-${note.id}`).focus();
   expect(await page.locator('#game').screenshot()).not.toEqual(first);
-  await page.locator('#stage').screenshot({ path: info.outputPath('inspection-drawer-preview.png') });
+  await page.locator('#stage').screenshot({ path: info.outputPath('inspection-drawer-name.png') });
   await key(page, `drawer-paper-${note.id}`);
   await key(page, 'hand-inspection-paper');
   const partial = await exportState(page);

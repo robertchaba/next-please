@@ -200,9 +200,10 @@ test('Enter accepts the banknote and the drawer can return it before the decisio
   await load(page, state);
   await key(page, 'banknote');
   await expect(page.locator('#control-banknote')).toHaveCount(0);
-  expect((await exportState(page, info)).money).toBe(state.money + 100);
+  expect((await exportState(page, info)).money).toBe(state.money);
   await key(page, 'drawer');
   await key(page, 'drawer-banknote');
+  await key(page, 'return-bribe');
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   const returned = await exportState(page, info);
   expect(returned.visit?.bribe).toBe('returned');
@@ -218,7 +219,7 @@ test('keeping the banknote in the drawer and refusing ends the game in hospital 
   await expect(page.locator('#control-banknote')).toHaveCount(0);
   const accepted = await exportState(page, info);
   expect(accepted.visit?.bribe).toBe('accepted');
-  expect(accepted.money).toBe(state.money + 100);
+  expect(accepted.money).toBe(state.money);
   for (const id of ['stamp-unfit', 'apply-stamp', 'return-document']) await key(page, id);
   await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'hospital');
   await expect(page.locator('#screen-description')).toContainText('Po leczeniu czekają cię badania medycyny pracy');
@@ -231,4 +232,33 @@ test('keeping the banknote in the drawer and refusing ends the game in hospital 
   await key(page, 'home-next');
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'break-room');
   expect(applyAction(finished, 'next-day').state).toEqual(finished);
+});
+
+
+test('kept cash survives the patient leaving on the desk and moves through the drawer', async ({ page }, info) => {
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  await load(page, actions(secondPatientBribe(), 'take-certificate', 'write-certificate'));
+  await page.locator('#control-banknote').click();
+  await place(page, 430, 255);
+  await expect(page.locator('#control-banknote-1')).toBeVisible();
+  const before = await exportState(page, info);
+  expect(before.banknotes).toMatchObject([{ location: 'desk', credited: false }]);
+  for (const id of ['stamp-fit', 'apply-stamp', 'return-document']) await key(page, id);
+  await expect(page.locator('#control-banknote-1')).toBeVisible();
+  const completed = await exportState(page, info);
+  expect(completed.visit).toBeNull();
+  expect(completed.money).toBe(before.money);
+  expect(completed.banknotes).toEqual(before.banknotes);
+  await page.locator('#control-banknote-1').focus();
+  await page.keyboard.press('Space');
+  await key(page, 'drawer');
+  await key(page, 'drawer');
+  await expect(page.locator('#control-drawer-banknote')).toHaveAccessibleName(/100 zł/);
+  await key(page, 'drawer-banknote');
+  await expect(page.locator('#control-banknote-1')).toHaveAttribute('data-held', 'true');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#control-banknote-1')).toHaveAttribute('data-held', 'false');
+  expect((await exportState(page, info)).banknotes[0]!.location).toBe('desk');
+  await page.locator('#stage').screenshot({ path: info.outputPath('cash-after-visit.png') });
+  expect(errors).toEqual([]);
 });

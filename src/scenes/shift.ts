@@ -3,11 +3,12 @@ import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, paperP
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
 import { drawManual, drawManualCover, manualControls, manualPageCount } from '../render/manual';
-import { INTRO_SLIDES, canEndDay, isShiftFinished, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
+import { INTRO_SLIDES, canReturnBanknote, canEndDay, isShiftFinished, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
 import { ADDITIONAL_TESTS } from '../core/additional-tests';
 import { patientForVisit, workDayNumber } from '../core/progression';
 import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
+import { drawerSheets } from '../render/drawer';
 import { calendarText, formatGameDate } from '../core/calendar';
 import { CABINET_HOTSPOTS, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, dropTargetRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
 export { manualPageCount, manualPageDescription } from '../render/manual';
@@ -99,6 +100,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
   const restLabel = view.held === 'stamp-fit' ? t.putAwayFit : t.putAwayUnfit;
   const certificateBounds = itemRect(view.desk, 'document', false, isLifted(view, 'document'));
   const certificateOnDesk = !isLifted(view, 'document') && certificateBounds.x >= RIGHT_DESK_X;
+  const heldCash = state.banknotes.find(note => view.held === `banknote-${note.id}`);
   const heldReferral = carriedAdditionalReferral(state, view.held, view.heldItems);
   const heldInspectionPaper = state.inspection && view.held?.startsWith('paper-') ? state.papers.find(paper => `paper-${paper.id}` === view.held) : undefined;
   const pageCorners = manualControls(itemRect(view.desk, 'manual', false, false, view.manualOpen));
@@ -114,6 +116,9 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     ...(state.visit?.specialist && !state.visit.specialistTaken ? [hotspot('take-specialist', t.progression.takeSpecialist, { x: 72, y: 181, w: 35, h: 66 }, 'take-specialist')] : []),
     ...(state.visit?.bribe === 'offered' ? [item('banknote', `${t.progression.banknote}. ${t.progression.bribeHelp}`, 'banknote', 'accept-bribe')] : []),
     ...(state.visit && view.held === 'banknote' ? [hotspot('return-bribe', t.progression.returnBribe, PATIENT_HANDOFF, 'return-bribe')] : []),
+    ...state.banknotes.filter(note => note.location === 'desk').map(note => item(`banknote-${note.id}`, `${t.progression.banknote}. ${t.progression.bribeHelp}`, `banknote-${note.id}`)),
+    ...(heldCash && canReturnBanknote(state, heldCash) ? [hotspot('return-bribe', t.progression.returnBribe, PATIENT_HANDOFF, { type: 'return-banknote', banknoteId: heldCash.id })] : []),
+    ...(heldCash ? [hotspot('store-banknote', t.progression.acceptBribe, dropTargetRect('drawer', view.held), { type: 'store-banknote', banknoteId: heldCash.id })] : []),
     ...(view.held === 'banknote' ? [hotspot('accept-bribe', t.progression.acceptBribe, dropTargetRect('drawer', view.held), 'accept-bribe')] : []),
     ...(heldReferral ? [hotspot('hand-additional-referral', t.additionalTests.hand, PATIENT_HANDOFF, { type: 'hand-additional-referral', paperId: heldReferral.id })] : []),
     ...(state.visit?.document === 'tray' ? [item('take-document', t.takeDocument, 'incoming-referral', 'take-document')] : []),
@@ -134,7 +139,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
       : [{ ...hotspot('reserved-form-3', `${t.reservedForm} 3`, DOCUMENT_RACK_SLOTS[2], 'reserved-form'), disabled: true }]),
     { ...hotspot('reserved-form-4', `${t.reservedForm} 4`, DOCUMENT_RACK_SLOTS[3], 'reserved-form'), disabled: true },
     hotspot('take-clip', t.takeClip, CABINET_HOTSPOTS.clipSupply, 'take-clip'),
-    hotspot('drawer', `${t.drawer}: ${state.papers.filter(paper => paper.location === 'drawer').length + Number(state.drawerItems.manual) + state.drawerItems.clips}. ${t.drawerHelp}`, dropTargetRect('drawer', view.held, view.heldItems), 'drawer'),
+    hotspot('drawer', `${t.drawer}: ${drawerSheets(state, 0).papers.length + Number(state.drawerItems.manual) + state.drawerItems.clips + state.banknotes.filter(note => note.location === 'drawer').length}. ${t.drawerHelp}`, dropTargetRect('drawer', view.held, view.heldItems), 'drawer'),
     hotspot('trash', t.trash, dropTargetRect('trash', view.held, view.heldItems), 'trash'),
     ...state.papers.filter(paper => paper.location === 'desk' && !view.hiddenPaperIds?.includes(paper.id)).flatMap(paper => {
       const id: DeskItemId = `paper-${paper.id}`;
@@ -194,6 +199,10 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     const bounds = itemRect(view.desk, id, visit?.document === 'tray' && !lifted, lifted, view.manualOpen);
     const { x, y, w, h } = bounds;
     if (id === 'banknote') { if (visit?.bribe === 'offered') drawBanknote(ctx, x, y, w, h); continue; }
+    if (id.startsWith('banknote-')) {
+      if (state.banknotes.some(note => id === `banknote-${note.id}` && note.location === 'desk')) drawBanknote(ctx, x, y, w, h);
+      continue;
+    }
     if (id === 'incoming-referral') {
       if (visit?.document === 'tray') drawPaper(ctx, x, y, w, h);
       continue;

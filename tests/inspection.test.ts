@@ -16,7 +16,7 @@ function ready(): GameState {
 }
 function inspector(): GameState { return act(ready(), 'call-patient'); }
 function records(): GameState { return act(inspector(), 'take-inspection-id', 'return-inspection-id'); }
-const file = (state: unknown, version = 25): Uint8Array => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state })));
+const file = (state: unknown, version = 26): Uint8Array => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state })));
 
 it('never calls an inspector on day one and retains the last 25 completed appointments independently of papers', () => {
   let state = act({ ...createInitialState(17), money: 5000 }, 'skip-intro');
@@ -144,16 +144,16 @@ it('validates inspection state strictly and migrates v24 without invented histor
   ];
   for (const raw of invalid) expect(() => decodeSave(file(raw))).toThrow();
   const original = { ...ready(), roster: ready().roster.filter(id => id <= 3127) };
-  const { recentVisits: _recent, inspection: _inspection, inspectionCheckedAt: _checked, inspectionFines: _fines, ...old } = original;
+  const { banknotes: _banknotes, recentVisits: _recent, inspection: _inspection, inspectionCheckedAt: _checked, inspectionFines: _fines, ...old } = original;
   const migrated = decodeSave(file(old, 24));
-  expect(migrated).toEqual({ ...old, recentVisits: [], inspection: null, inspectionCheckedAt: old.patientsProcessed, inspectionFines: 0 });
+  expect(migrated).toEqual({ ...old, banknotes: [], recentVisits: [], inspection: null, inspectionCheckedAt: old.patientsProcessed, inspectionFines: 0 });
   expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
   expect(() => decodeSave(file(original, 24))).toThrow();
 });
 
 it('keeps the expanded catalog exclusive to v25 and freezes historical cash ceilings', () => {
   const current = act(createInitialState(17), 'skip-intro');
-  const { recentVisits: _recent, inspection: _inspection, inspectionCheckedAt: _checked, inspectionFines: _fines, ...old } = current;
+  const { banknotes: _banknotes, recentVisits: _recent, inspection: _inspection, inspectionCheckedAt: _checked, inspectionFines: _fines, ...old } = current;
   expect(current.roster.some(id => id > 3127)).toBe(true);
   expect(decodeSave(encodeSave(current))).toEqual(current);
   expect(() => decodeSave(file(old, 24))).toThrow();

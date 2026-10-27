@@ -84,6 +84,15 @@ export interface Inspection {
   received: ('referral' | 'note')[];
 }
 
+export interface Banknote {
+  id: number;
+  patientId: number | null;
+  day: number;
+  location: 'desk' | 'drawer';
+  /** Only migrated cash was paid before the end of the day. */
+  credited: boolean;
+}
+
 export interface GameState {
   /** Completed appointments, independent of whether their papers still exist. */
   recentVisits: ArchivedVisit[];
@@ -98,8 +107,9 @@ export interface GameState {
   day: number;
   money: number;
   previousMonthBalance: number;
-  /** Net cash accepted or returned during this day, already included in money. */
+  /** Net cash accepted or returned during this day, reported at settlement. */
   bribeIncome: number;
+  banknotes: Banknote[];
   patientsProcessed: number;
   phase: 'intro' | 'cabinet' | 'home';
   rngState: number;
@@ -134,6 +144,8 @@ export type GameAction =
   | { type: 'select-additional-test'; paperId: number; test: AdditionalTest }
   | { type: 'hand-additional-referral'; paperId: number }
   | 'take-specialist' | 'call-specialist' | 'call-employer' | 'accept-bribe' | 'return-bribe'
+  | { type: 'accept-bribe'; location: Banknote['location'] }
+  | { type: 'store-banknote' | 'retrieve-banknote' | 'return-banknote'; banknoteId: number }
   | { type: 'store-drawer-item' | 'retrieve-drawer-item'; item: 'manual' | 'clip' }
   | { type: 'write-note' | 'store-paper' | 'retrieve-paper' | 'trash-paper' | 'open-letter' | 'clip-paper'; paperId: number }
   | { type: 'clip-document'; documentId: DocumentId }
@@ -167,7 +179,7 @@ export function createInitialState(seed = globalThis.crypto.getRandomValues(new 
     pendingReferrals: [], referralsIssued: 0, budgetHistory: [],
     ending: null,
     rngState: generated.seed, roster: generated.roster, insuranceRate: BASE_INSURANCE, daily: emptyConsequences(), settlement: null,
-    day: 1, money: 0, bribeIncome: 0, previousMonthBalance: 0, patientsProcessed: 0,
+    day: 1, money: 0, bribeIncome: 0, banknotes: [], previousMonthBalance: 0, patientsProcessed: 0,
     phase: 'intro', introStep: 0, shiftCompleted: 0, clockMinutes: ARRIVAL_MINUTES, visit: null,
     lampOn: true, decoration: 'plant', papers: [], nextPaperId: 1, paperClips: [], drawerItems: { manual: false, clips: 0 },
   };
@@ -221,6 +233,16 @@ function settledEnding(state: GameState, balance: number): GameState['ending'] {
   return state.ending === 'assault-pending' ? 'hospital' : balance < 0 ? 'bankruptcy' : state.ending;
 }
 
+export const pendingBribeCash = (state: Pick<GameState, 'banknotes'>): number => state.banknotes.filter(note => !note.credited).length * 100;
+
+export function canReturnBanknote(state: GameState, note: Banknote): boolean {
+  return state.visit?.bribe === 'accepted' && note.patientId === state.visit.patientId && note.day === state.visit.startedDay;
+}
+
+function settleClinicDay(state: GameState) {
+  return settleDay({ ...state, pendingCash: pendingBribeCash(state) });
+}
+
 /** Pure transitions: all results and rewards are reproducible from saved state. */
 export function applyAction(state: GameState, action: GameAction): ActionResult {
   const result = transition(state, action);
@@ -258,9 +280,9 @@ function finishAtClosing(state: GameState): ActionResult {
   const identityIds = new Set(state.papers.filter(paper => paper.kind === 'inspection-id').map(paper => paper.id));
   const closed = { ...state, pendingReferrals, inspection: null, papers: state.papers.filter(paper => !identityIds.has(paper.id)), clockMinutes: CLINIC_CLOSE_MINUTES, visit: null,
     paperClips: state.paperClips.map(group => group.filter(id => id !== 'certificate' && !identityIds.has(id))).filter(group => group.length > 0) };
-  const settlement = settleDay(closed);
+  const settlement = settleClinicDay(closed);
   if (Math.abs(settlement.settlement.closingBalance) > GAME_LIMITS.money) return { state, feedback: 'limit-reached' };
-  return { state: { ...closed, ...settlement, phase: 'home', money: settlement.settlement.closingBalance,
+  return { state: { ...closed, ...settlement, banknotes: [], phase: 'home', money: settlement.settlement.closingBalance,
     ending: settledEnding(state, settlement.settlement.closingBalance) },
     feedback: state.visit ? 'visit-interrupted' : 'shift-finished' };
 }
@@ -304,9 +326,9 @@ function transition(state: GameState, action: GameAction): ActionResult {
   if (state.phase === 'home') return unchanged('none');
   if (action === 'end-day') {
     if (!canEndDay(state)) return unchanged('shift-unfinished');
-    const result = settleDay(state);
+    const result = settleClinicDay(state);
     if (Math.abs(result.settlement.closingBalance) > GAME_LIMITS.money) return unchanged('limit-reached');
-    return changed({ ...result, phase: 'home', clockMinutes: Math.max(SHIFT_END_MINUTES, state.clockMinutes), money: result.settlement.closingBalance,
+    return changed({ ...result, banknotes: [], phase: 'home', clockMinutes: Math.max(SHIFT_END_MINUTES, state.clockMinutes), money: result.settlement.closingBalance,
       ending: settledEnding(state, result.settlement.closingBalance) }, 'shift-finished');
   }
   if (action === 'advance-intro' || action === 'skip-intro') return unchanged('none');
@@ -458,7 +480,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
       clockMinutes: spend(ACTION_MINUTES.handling),
     }, 'papers-joined');
   }
-  if (typeof action === 'object') {
+  if (typeof action === 'object' && 'paperId' in action) {
     const paper = state.papers.find(entry => entry.id === action.paperId);
     if (!paper) return unchanged('paper-missing');
     const updatePaper = (updated: Paper, feedback: GameFeedback): ActionResult => changed({
@@ -559,19 +581,38 @@ function transition(state: GameState, action: GameAction): ActionResult {
       papers: recordResults(state.papers, visit, state.day) }, 'patient-called');
   }
 
+  if (typeof action === 'object' && (action.type === 'store-banknote' || action.type === 'retrieve-banknote' || action.type === 'return-banknote')) {
+    const note = state.banknotes.find(note => note.id === action.banknoteId);
+    if (!note) return unchanged('bribe-missing');
+    if (action.type === 'return-banknote') {
+      if (!canReturnBanknote(state, note)) return unchanged('bribe-missing');
+      return transition(state, 'return-bribe');
+    }
+    const location = action.type === 'store-banknote' ? 'drawer' : 'desk';
+    if (note.location === location) return unchanged('none');
+    return changed({ banknotes: state.banknotes.map(entry => entry.id === note.id ? { ...entry, location } : entry),
+      clockMinutes: spend(ACTION_MINUTES.handling) }, location === 'drawer' ? 'item-stored' : 'item-retrieved');
+  }
   const visit = state.visit;
   if (!visit) return unchanged('no-patient');
-  if (action === 'accept-bribe' || action === 'return-bribe') {
+  if (action === 'accept-bribe' || action === 'return-bribe' || (typeof action === 'object' && action.type === 'accept-bribe')) {
     if (visit.bribe === 'none') return unchanged('bribe-missing');
-    if (action === 'accept-bribe') {
+    if (action !== 'return-bribe') {
       if (visit.bribe === 'accepted') return unchanged('bribe-accepted');
       if (visit.bribe !== 'offered') return unchanged('bribe-missing');
-      if (state.money > GAME_LIMITS.money - 100 || state.bribeIncome >= CHARACTER_COUNT * 100) return unchanged('limit-reached');
-      return changed({ money: state.money + 100, bribeIncome: state.bribeIncome + 100, visit: { ...visit, bribe: 'accepted' }, clockMinutes: spend(ACTION_MINUTES.handling) }, 'bribe-accepted');
+      const id = Math.max(0, ...state.banknotes.map(note => note.id)) + 1;
+      if (state.money + pendingBribeCash(state) > GAME_LIMITS.money - 100 || state.bribeIncome >= CHARACTER_COUNT * 100
+        || state.banknotes.length >= CHARACTER_COUNT || id > GAME_LIMITS.paperId) return unchanged('limit-reached');
+      return changed({ banknotes: [...state.banknotes, { id, patientId: visit.patientId, day: visit.startedDay,
+        location: typeof action === 'object' ? action.location : 'drawer', credited: false }],
+        bribeIncome: state.bribeIncome + 100, visit: { ...visit, bribe: 'accepted' }, clockMinutes: spend(ACTION_MINUTES.handling) }, 'bribe-accepted');
     }
     if (visit.bribe === 'returned') return unchanged('bribe-returned');
-    if (visit.bribe === 'accepted' && (state.money < -GAME_LIMITS.money + 100 || state.bribeIncome <= -CHARACTER_COUNT * 100)) return unchanged('limit-reached');
-    return changed({ money: state.money - (visit.bribe === 'accepted' ? 100 : 0),
+    const note = state.banknotes.find(note => canReturnBanknote(state, note));
+    const refund = visit.bribe === 'accepted' && (!note || note.credited) ? 100 : 0;
+    if (visit.bribe === 'accepted' && (state.money < -GAME_LIMITS.money + refund || state.bribeIncome <= -CHARACTER_COUNT * 100)) return unchanged('limit-reached');
+    return changed({ money: state.money - refund,
+      banknotes: state.banknotes.filter(entry => entry !== note),
       bribeIncome: state.bribeIncome - (visit.bribe === 'accepted' ? 100 : 0), visit: { ...visit, bribe: 'returned' },
       clockMinutes: spend(ACTION_MINUTES.handling) }, 'bribe-returned');
   }

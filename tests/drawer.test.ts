@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyAction, createInitialState } from '../src/core/game';
-import { drawerButtons, drawerSheets, drawerPreview, DRAWER_BATCH_SIZE, DRAWER_CLOSE, DRAWER_PREVIEW } from '../src/render/drawer';
+import { drawerButtons, drawerSheets, drawerSelection, DRAWER_BATCH_SIZE, DRAWER_CLOSE } from '../src/render/drawer';
 import { translations } from '../src/i18n';
 import { measureDocumentText, measureText } from '../src/render/font';
 
@@ -22,7 +22,7 @@ describe('drawer presentation', () => {
       expect(visible.length).toBeLessThanOrEqual(DRAWER_BATCH_SIZE);
       for (const [index, { paper, bounds }] of visible.entries()) {
         ids.push(paper.id);
-        expect(bounds.x + bounds.w).toBeLessThan(DRAWER_PREVIEW.x);
+        expect(bounds.x + bounds.w).toBeLessThan(283);
         expect(bounds.y + bounds.h).toBeLessThan(263);
         for (const previous of visible.slice(0, index)) {
           const overlap = bounds.x < previous.bounds.x + previous.bounds.w && bounds.x + bounds.w > previous.bounds.x
@@ -32,6 +32,21 @@ describe('drawer presentation', () => {
       }
     }
     expect(ids).toEqual(state.papers.map(paper => paper.id));
+  });
+
+  it('counts a clipped bundle once before pagination and retrieves every member', () => {
+    let state = stockedDrawer(25);
+    for (const id of [1, 2]) state = applyAction(state, { type: 'retrieve-paper', paperId: id }).state;
+    state = applyAction(state, { type: 'clip-document', documentId: 1 }).state;
+    state = applyAction(state, { type: 'join-documents', documentId: 2, targetId: 1 }).state;
+    state = applyAction(state, { type: 'store-paper', paperId: 2 }).state;
+    const sheets = drawerSheets(state, 0);
+    expect(sheets.pages).toBe(1);
+    expect(sheets.visible.map(({ paper }) => paper.id)).toEqual([...Array.from({ length: 23 }, (_, i) => i + 3), 1]);
+    expect(drawerButtons(state, 'pl', 0, () => {}).filter(button => button.id.startsWith('drawer-paper-'))).toHaveLength(24);
+    state = applyAction(state, { type: 'retrieve-paper', paperId: 1 }).state;
+    expect(state.papers.filter(paper => paper.location === 'desk').map(paper => paper.id)).toEqual([1, 2]);
+    expect(state.paperClips).toEqual([[1, 2]]);
   });
 
   it('refiling a retrieved sheet places it above all previously stored sheets', () => {
@@ -47,25 +62,27 @@ describe('drawer presentation', () => {
     expect(controls.find(button => button.id === 'drawer-close')).toMatchObject(DRAWER_CLOSE);
     for (const id of ['drawer-manual', 'drawer-clip']) {
       expect(controls.find(button => button.id === id)?.x).toBeGreaterThan(350);
-      expect(controls.find(button => button.id === id)?.y).toBeGreaterThan(DRAWER_PREVIEW.y + DRAWER_PREVIEW.h);
+      expect(controls.find(button => button.id === id)?.y).toBeGreaterThan(219);
     }
     expect(drawerSheets(state, 99).current).toBe(0);
   });
 
   it('fits Polish and English drawer labels without scaling text', () => {
     for (const t of Object.values(translations)) {
+      for (const name of t.patientNames) expect(measureDocumentText(name)).toBeLessThanOrEqual(250);
       expect(measureDocumentText(t.drawerClose)).toBeLessThan(400);
       expect(measureText(t.drawerPrevious)).toBeLessThanOrEqual(112);
       expect(measureText(t.drawerNext)).toBeLessThanOrEqual(112);
     }
   });
 
-  it('previews the hovered or focused cover without changing the saved drawer', () => {
+  it('reveals only the hovered or focused name without changing the saved drawer', () => {
     const state = stockedDrawer(29), snapshot = JSON.stringify(state);
-    expect(drawerPreview(state, 0, 'drawer-paper-17')?.id).toBe(17);
-    expect(drawerPreview(state, 1, 'drawer-paper-17')?.id).toBe(25);
-    expect(drawerPreview(state, 99, 'drawer-paper-29')?.id).toBe(29);
-    expect(drawerPreview(stockedDrawer(0), 0)).toBeUndefined();
+    expect(drawerSelection(state, 0, 'drawer-paper-17')?.id).toBe(17);
+    expect(drawerSelection(state, 1, 'drawer-paper-17')).toBeUndefined();
+    expect(drawerSelection(state, 0)).toBeUndefined();
+    expect(drawerSelection(state, 99, 'drawer-paper-29')?.id).toBe(29);
+    expect(drawerSelection(stockedDrawer(0), 0)).toBeUndefined();
     expect(JSON.stringify(state)).toBe(snapshot);
   });
 });

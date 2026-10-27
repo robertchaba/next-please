@@ -202,6 +202,12 @@ test('clipped sheets store together while certificate bundles and stamps retain 
   const stored = await exportState(page);
   expect(stored.papers.every(paper => paper.location === 'drawer')).toBe(true);
   expect(stored.paperClips).toEqual([[1, 2]]);
+  await activate(page, 'drawer');
+  await expect(page.locator('[id^="control-drawer-paper-"]')).toHaveCount(1);
+  await activate(page, 'drawer-paper-1');
+  await expect(page.locator('#control-paper-1')).toHaveAttribute('data-held', 'true');
+  await expect(page.locator('#control-paper-2')).toHaveAttribute('data-held', 'true');
+  await page.keyboard.press('Escape');
 
   let certificate = applyAction(createInitialState(24), 'skip-intro').state;
   for (const action of ['call-patient', 'take-document', 'take-certificate', { type: 'clip-document', documentId: 'certificate' }, { type: 'join-documents', documentId: 1, targetId: 'certificate' }] as const) certificate = applyAction(certificate, action).state;
@@ -222,4 +228,31 @@ test('clipped sheets store together while certificate bundles and stamps retain 
   await activate(page, 'put-away-unfit');
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
   expect((await exportState(page)).visit?.decision).toBeNull();
+});
+
+
+test('names appear on hover or keyboard focus while the preview area stays empty', async ({ page }, info) => {
+  await page.clock.install();
+  await enter(page);
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
+  let state = applyAction(createInitialState(37), 'skip-intro').state;
+  for (const action of ['call-patient', 'take-document', { type: 'store-paper', paperId: 1 }] as const) state = applyAction(state, action).state;
+  await importState(page, state);
+  for (const locale of ['pl', 'en']) {
+    await activate(page, `language-${locale}`);
+    await activate(page, 'drawer');
+    const pixels = (y: number, h: number) => page.locator('#game').evaluate((canvas, { y, h }) =>
+      Array.from((canvas as HTMLCanvasElement).getContext('2d')!.getImageData(280, y, 260, h).data), { y, h });
+    const blank = await pixels(40, 15), emptyPreview = await pixels(60, 166);
+    await page.locator('#control-drawer-paper-1').hover();
+    expect(await pixels(40, 15)).not.toEqual(blank);
+    expect(await pixels(60, 166)).toEqual(emptyPreview);
+    await page.mouse.move(0, 0);
+    expect(await pixels(40, 15)).toEqual(blank);
+    await page.locator('#control-drawer-paper-1').focus();
+    expect(await pixels(40, 15)).not.toEqual(blank);
+    expect(await pixels(60, 166)).toEqual(emptyPreview);
+    await page.locator('#stage').screenshot({ path: info.outputPath(`drawer-name-${locale}.png`) });
+    await page.keyboard.press('Escape');
+  }
 });

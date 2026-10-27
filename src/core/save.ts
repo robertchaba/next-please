@@ -13,7 +13,8 @@ export type { GameState } from './game';
 /** Freeze the pre-progression schema so legacy validators keep exact bounds. */
 type VisitV18 = Omit<CurrentVisit, 'startedDay' | 'additionalResult' | 'additionalTests'>;
 type PaperV24 = Exclude<CurrentPaper, { kind: 'inspection-id' | 'inspection-fine' }>;
-type StateV24 = Omit<CurrentGameState, 'recentVisits' | 'inspection' | 'inspectionCheckedAt' | 'inspectionFines' | 'papers'> & { papers: PaperV24[] };
+type StateV25 = Omit<CurrentGameState, 'banknotes'>;
+type StateV24 = Omit<StateV25, 'recentVisits' | 'inspection' | 'inspectionCheckedAt' | 'inspectionFines' | 'papers'> & { papers: PaperV24[] };
 type PaperV18 = Exclude<PaperV24, { kind: 'additional-referral' | 'additional-result' }>;
 type DaySettlement = Omit<CurrentSettlement, 'bribeIncome'>;
 type StateV23 = Omit<StateV24, 'bribeIncome' | 'settlement' | 'budgetHistory'> & { settlement: DaySettlement | null; budgetHistory: DaySettlement[] };
@@ -65,9 +66,9 @@ type GameStateV5 = Omit<GameStateV8, 'visit' | 'paperClips' | 'papers' | 'drawer
 type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<VisitV10, 'certificateNamed'> | null };
 type GameStateV7 = Omit<GameStateV8, 'drawerItems'>;
 
-interface SaveV25 {
+interface SaveV26 {
   game: 'next-please';
-  version: 25;
+  version: 26;
   savedAt: string;
   state: CurrentGameState;
 }
@@ -445,7 +446,7 @@ function validateStateV8(value: unknown): GameStateV8 {
 
 /** Frozen original queue: legacy appointments retain their original positions. */
 function legacyInitialState(): GameState {
-  const { recentVisits: _recent, inspection: _inspection, inspectionCheckedAt: _checked, inspectionFines: _fines, bribeIncome: _bribes, settlement: _settlement, budgetHistory: _history, pendingReferrals: _pending, referralsIssued: _issued, ...initial } = createInitialState(0x4e505301);
+  const { banknotes: _banknotes, recentVisits: _recent, inspection: _inspection, inspectionCheckedAt: _checked, inspectionFines: _fines, bribeIncome: _bribes, settlement: _settlement, budgetHistory: _history, pendingReferrals: _pending, referralsIssued: _issued, ...initial } = createInitialState(0x4e505301);
   return { ...initial, settlement: null, visit: null, papers: [], rngState: 3477621340,
     roster: [0, 1, 2, 62, 49, 75, 81, 66, 98, 4, 67, 43, 34, 28, 42, 58, 15, 21, 89, 26, 93, 52, 100, 8, 72, 86, 14, 38] };
 }
@@ -1210,7 +1211,7 @@ function validateStateV23(value: unknown, inspection?: InspectionValidation): St
 }
 
 /** Old files never recorded a complete cash journal; preserve their paid balances. */
-function migrateBribeIncome(state: StateV23 | StateV24 | CurrentGameState): StateV24 | CurrentGameState {
+function migrateBribeIncome(state: StateV23 | StateV24 | StateV25 | CurrentGameState): StateV24 | StateV25 | CurrentGameState {
   if ('bribeIncome' in state) return state;
   return { ...state, bribeIncome: 0,
     settlement: state.settlement ? { ...state.settlement, bribeIncome: 0 } : null,
@@ -1247,7 +1248,7 @@ function validateStateV24(value: unknown, inspection?: InspectionValidation): St
 }
 
 /** Historical files have no reliable completed-visit journal: do not invent one. */
-function migrateInspection(state: StateV24 | CurrentGameState): CurrentGameState {
+function migrateInspection(state: StateV24 | StateV25 | CurrentGameState): StateV25 | CurrentGameState {
   return 'recentVisits' in state ? state : { ...state, recentVisits: [], inspection: null,
     inspectionCheckedAt: state.patientsProcessed, inspectionFines: 0 };
 }
@@ -1268,7 +1269,7 @@ function validateHistoricalCatalog(value: unknown): void {
     || (typeof value.shiftCompleted === 'number' && value.shiftCompleted > 103)) throw new SaveError('invalid-state');
 }
 
-function validateStateV25(value: unknown): CurrentGameState {
+function validateStateV25(value: unknown): StateV25 {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !Array.isArray(value.recentVisits) || !Array.isArray(value.papers)
     || !Array.isArray(value.paperClips) || !isIntegerInRange(value.day, 1, GAME_LIMITS.day)
@@ -1360,12 +1361,53 @@ function validateStateV25(value: unknown): CurrentGameState {
   return { ...previous, recentVisits, inspection, inspectionCheckedAt, inspectionFines, papers, paperClips };
 }
 
+/** Keep historical paid cash visible without paying it a second time. */
+function migrateBanknotes(state: StateV25 | CurrentGameState): CurrentGameState {
+  if ('banknotes' in state) return state;
+  const visits = [state.visit, ...state.pendingReferrals.map(entry => entry.visit)]
+    .filter(visit => visit?.bribe === 'accepted' && visit.startedDay === state.day);
+  const count = state.phase === 'cabinet' ? Math.max(0, state.bribeIncome / 100, visits.length) : 0;
+  return { ...state, banknotes: Array.from({ length: count }, (_, index) => ({ id: index + 1,
+    patientId: visits[index]?.patientId ?? null, day: state.day, location: 'drawer', credited: true })) };
+}
+
+function validateStateV26(value: unknown): CurrentGameState {
+  const fail = (): never => { throw new SaveError('invalid-state'); };
+  if (!isRecord(value) || !Array.isArray(value.banknotes) || value.banknotes.length > CHARACTER_COUNT
+    || !isIntegerInRange(value.money, -GAME_LIMITS.money, GAME_LIMITS.money)
+    || !isIntegerInRange(value.day, 1, GAME_LIMITS.day)) return fail();
+  const ids = new Set<number>(), owners = new Set<string>();
+  const banknotes = value.banknotes.map((raw): CurrentGameState['banknotes'][number] => {
+    if (!isRecord(raw) || !hasOnlyKeys(raw, ['id', 'patientId', 'day', 'location', 'credited'])
+      || !isIntegerInRange(raw.id, 1, GAME_LIMITS.paperId) || ids.has(raw.id)
+      || !isIntegerInRange(raw.day, 1, value.day as number) || workDayNumber(raw.day) < 6
+      || (raw.patientId !== null && !isIntegerInRange(raw.patientId, 0, PATIENTS.length - 1))
+      || (raw.location !== 'desk' && raw.location !== 'drawer') || typeof raw.credited !== 'boolean'
+      || (raw.patientId === null && !raw.credited)) return fail();
+    ids.add(raw.id);
+    const owner = `${raw.day}:${raw.patientId}`;
+    if (raw.patientId !== null && owners.has(owner)) return fail();
+    if (raw.patientId !== null) owners.add(owner);
+    return { id: raw.id, patientId: raw.patientId, day: raw.day, location: raw.location, credited: raw.credited };
+  });
+  const pending = banknotes.filter(note => !note.credited).length * 100;
+  const { banknotes: _notes, ...old } = value;
+  const previous = validateStateV25({ ...old, money: value.money + pending });
+  if (banknotes.length && (previous.phase !== 'cabinet' || workDayNumber(previous.day) < 6)) return fail();
+  for (const note of banknotes) {
+    const visit = [previous.visit, ...previous.pendingReferrals.map(entry => entry.visit)]
+      .find(visit => visit?.patientId === note.patientId && visit.startedDay === note.day);
+    if (visit && visit.bribe !== 'accepted') return fail();
+  }
+  return { ...previous, money: value.money, banknotes };
+}
+
 export function encodeSave(state: CurrentGameState): Uint8Array {
-  const envelope: SaveV25 = {
+  const envelope: SaveV26 = {
     game: 'next-please',
-    version: 25,
+    version: 26,
     savedAt: new Date().toISOString(),
-    state: validateStateV25(state),
+    state: validateStateV26(state),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -1454,10 +1496,10 @@ function decompressSave(bytes: Uint8Array): Uint8Array {
 }
 
 export function decodeSave(bytes: Uint8Array): CurrentGameState {
-  return migrateInspection(migrateBribeIncome(decodeState(bytes)));
+  return migrateBanknotes(migrateInspection(migrateBribeIncome(decodeState(bytes))));
 }
 
-function decodeState(bytes: Uint8Array): StateV23 | StateV24 | CurrentGameState {
+function decodeState(bytes: Uint8Array): StateV23 | StateV24 | StateV25 | CurrentGameState {
   const expanded = decompressSave(bytes);
   let envelope: unknown;
   try {
@@ -1468,7 +1510,7 @@ function decodeState(bytes: Uint8Array): StateV23 | StateV24 | CurrentGameState 
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11 && envelope.version !== 12 && envelope.version !== 13 && envelope.version !== 14 && envelope.version !== 15 && envelope.version !== 16 && envelope.version !== 17 && envelope.version !== 18 && envelope.version !== 19 && envelope.version !== 20 && envelope.version !== 21 && envelope.version !== 22 && envelope.version !== 23 && envelope.version !== 24 && envelope.version !== 25) throw new SaveError('unsupported-version');
+  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11 && envelope.version !== 12 && envelope.version !== 13 && envelope.version !== 14 && envelope.version !== 15 && envelope.version !== 16 && envelope.version !== 17 && envelope.version !== 18 && envelope.version !== 19 && envelope.version !== 20 && envelope.version !== 21 && envelope.version !== 22 && envelope.version !== 23 && envelope.version !== 24 && envelope.version !== 25 && envelope.version !== 26) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -1477,6 +1519,7 @@ function decodeState(bytes: Uint8Array): StateV23 | StateV24 | CurrentGameState 
   ) {
     throw new SaveError('invalid-file');
   }
+  if (envelope.version === 26) return validateStateV26(envelope.state);
   if (envelope.version === 25) return validateStateV25(envelope.state);
   // Catalog expansion must not relax any historical file's accepted identities.
   if (envelope.version >= 19) validateHistoricalCatalog(envelope.state);

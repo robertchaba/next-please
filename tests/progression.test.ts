@@ -206,7 +206,8 @@ describe('borderline bribery and hospital ending', () => {
   it('pays100 once, can return it, and a refusal then earns the ordinary patient bonus without consequences', () => {
     const offered = bribeAppointment();
     const accepted = act(offered, 'accept-bribe', 'accept-bribe');
-    expect(accepted.money).toBe(offered.money + 100);
+    expect(accepted.money).toBe(offered.money);
+    expect(accepted.banknotes).toHaveLength(1);
     const returned = act(accepted, 'return-bribe', 'return-bribe');
     expect(returned.money).toBe(offered.money);
     expect(applyAction(returned, 'accept-bribe').feedback).toBe('bribe-missing');

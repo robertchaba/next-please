@@ -69,7 +69,8 @@ describe('version 16 progression saves', () => {
     let state = appointment(8, hypertensive.id, 1);
     expect(state.visit?.bribe).toBe('offered');
     state = act(state, 'take-document', 'take-paper', 'run-general', 'run-vision', 'run-pressure', 'run-pressure', 'run-pressure', 'accept-bribe');
-    expect(state.money).toBe(100);
+    expect(state.money).toBe(0);
+    expect(state.banknotes).toHaveLength(1);
     expect(decodeSave(encodeSave(state))).toEqual(state);
     const note = state.papers.find(paper => paper.kind === 'note');
     expect(note).toMatchObject({ bribe: true, results: { vision: effectivePatient(hypertensive.id, true).visionValues } });

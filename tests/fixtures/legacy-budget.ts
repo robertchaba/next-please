@@ -3,6 +3,8 @@ export function legacyBudget(state: unknown): unknown {
   if (!state || typeof state !== 'object') return state;
   const old = structuredClone(state) as Record<string, unknown>;
   delete old.recentVisits; delete old.inspection; delete old.inspectionCheckedAt; delete old.inspectionFines;
+  if (Array.isArray(old.banknotes)) old.money = Number(old.money) + old.banknotes.filter(note => !note.credited).length * 100;
+  delete old.banknotes;
   delete old.bribeIncome;
   const ledger = (value: unknown): unknown => {
     if (!value || typeof value !== 'object') return value;

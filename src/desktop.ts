@@ -1,5 +1,5 @@
 import './style.css';
-import { advanceClinicTime, applyAction, settleWeekend, CLEANER_WARNING_MINUTES, SHIFT_END_MINUTES, PATIENTS, canEndDay, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction, type ActionResult, type GameState } from './core/game';
+import { advanceClinicTime, applyAction, settleWeekend, CLEANER_WARNING_MINUTES, SHIFT_END_MINUTES, PATIENTS, canEndDay, canReturnBanknote, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction, type ActionResult, type GameState } from './core/game';
 import { patientForVisit } from './core/progression';
 import { ClinicClock } from './core/clock';
 import { effectsManifest } from './core/effects';
@@ -90,7 +90,7 @@ const deskRect = (id: DeskItemId) => itemRect(deskState, id, gameState.visit?.do
 const itemControlId = (id: DeskItemId): string => id === 'incoming-referral' ? 'take-document' : id === 'document' ? 'apply-stamp' : id;
 function deskItemHelp(id: DeskItemId): string {
   if (isHeld(id)) return t().carryingHelp;
-  if (id === 'banknote') return t().progression.bribeHelp;
+  if (id === 'banknote' || id.startsWith('banknote-')) return t().progression.bribeHelp;
   if (id === 'manual') return t().manualHelp;
   if (id.startsWith('paper-')) {
     const paper = gameState.papers.find(record => record.id === Number(id.slice(6)));
@@ -330,6 +330,11 @@ function reconcileDeskPapers(): void {
     if (!deskState.positions.banknote) deskState = addDeskItem(deskState, 'banknote', { x: 100, y: 198 });
     else if (!deskState.order.includes('banknote')) deskState = raiseDeskItem(deskState, 'banknote');
   } else if (deskState.order.includes('banknote')) deskState = removeDeskItem(deskState, 'banknote');
+  const cash = new Set(gameState.banknotes.filter(note => note.location === 'desk').map(note => `banknote-${note.id}`));
+  for (const id of deskState.order) if (id.startsWith('banknote-') && !cash.has(id)) deskState = removeDeskItem(deskState, id);
+  for (const note of gameState.banknotes) if (note.location === 'desk') {
+    deskState = addDeskItem(deskState, `banknote-${note.id}`, { x: 100, y: 190 + (note.id % 5) * 8 });
+  }
   if (gameState.drawerItems.manual) deskState = { ...deskState, order: deskState.order.filter(id => id !== 'manual') };
   else if (!deskState.order.includes('manual')) deskState = raiseDeskItem(deskState, 'manual');
   const visible = new Set(gameState.papers.filter(paper => paper.location === 'desk' && !pendingLetters.has(paper.id)).map(paper => `paper-${paper.id}` as DeskItemId));
@@ -595,7 +600,6 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
 }
 
 function handleDrawerAction(action: DrawerAction): void {
-  if (action.type === 'return-bribe') { screen = 'cabinet'; handleShiftAction('return-bribe'); return; }
   if (action.type === 'close') { closeScreen(); return; }
   if (action.type === 'page') {
     drawerPage = action.page;
@@ -605,6 +609,7 @@ function handleDrawerAction(action: DrawerAction): void {
   }
   const result = performAction(action.type === 'paper'
     ? { type: 'retrieve-paper', paperId: action.id }
+    : action.type === 'banknote' ? { type: 'retrieve-banknote', banknoteId: action.id }
     : { type: 'retrieve-drawer-item', item: action.item });
   if (result.feedback === 'visit-interrupted') { syncControls(); return; }
   if (gameState.phase === 'home') {
@@ -618,7 +623,7 @@ function handleDrawerAction(action: DrawerAction): void {
   if (!['paper-retrieved', 'item-retrieved'].includes(result.feedback)) return;
   gameState = result.state;
   updateClock(); reconcileDeskPapers();
-  const id: DeskItemId = action.type === 'paper' ? `paper-${action.id}` : action.item === 'manual' ? 'manual' : `clip-${nextClipId++}`;
+  const id: DeskItemId = action.type === 'paper' ? `paper-${action.id}` : action.type === 'banknote' ? `banknote-${action.id}` : action.item === 'manual' ? 'manual' : `clip-${nextClipId++}`;
   if (id.startsWith('clip-')) deskState = addDeskItem(deskState, id, { x: 304, y: 155 });
   screen = 'cabinet';
   deskInput.pickUp(id, false);
@@ -906,7 +911,7 @@ function syncControls(focusId?: string): void {
       element.setAttribute('aria-description', t().sharing.description);
       if (sharing) { element.setAttribute('aria-busy', 'true'); element.setAttribute('aria-disabled', 'true'); }
     }
-    if (screen !== 'cabinet') element.title = button.label;
+    if (screen !== 'cabinet' && screen !== 'drawer') element.title = button.label;
     if (button.item) {
       element.dataset.item = button.item;
       element.dataset.held = String(isHeld(button.item));
@@ -1219,13 +1224,27 @@ const deskInput = installDeskInput(stage, {
       announceDesk(t().feedback[result.feedback], itemControlId(source));
       return true;
     };
-    if (id === 'banknote') {
-      heldItem = null;
-      if (overDrawer || containsPoint(PATIENT_HANDOFF, target)) {
-        handleShiftAction(overDrawer ? 'accept-bribe' : 'return-bribe');
+    if (id === 'banknote' || id.startsWith('banknote-')) {
+      const cash = gameState.banknotes.find(note => id === `banknote-${note.id}`);
+      if (containsPoint(PATIENT_HANDOFF, target)) {
+        if (cash && !canReturnBanknote(gameState, cash)) {
+          announceDesk(t().feedback['bribe-missing'], id); return false;
+        }
+        heldItem = null;
+        handleShiftAction(cash ? { type: 'return-banknote', banknoteId: cash.id } : 'return-bribe');
+      } else if (overDrawer) {
+        heldItem = null;
+        handleShiftAction(cash ? { type: 'store-banknote', banknoteId: cash.id } : 'accept-bribe');
       } else {
-        deskState = moveDeskItem(deskState, id, position);
-        spendTime('handle-item'); announceDesk(t().itemDropped, 'banknote');
+        heldItem = null;
+        if (!cash) handleShiftAction({ type: 'accept-bribe', location: 'desk' });
+        else spendTime('handle-item');
+        const placed = cash ?? gameState.banknotes.find(note => canReturnBanknote(gameState, note));
+        if (placed && gameState.phase === 'cabinet') {
+          const placedId = `banknote-${placed.id}` as const;
+          deskState = raiseDeskItem(moveDeskItem(deskState, placedId, position), placedId);
+          announceDesk(t().itemDropped, placedId);
+        }
       }
       return true;
     }

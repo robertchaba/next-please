@@ -1,6 +1,6 @@
 /** Temporary desk layout. Item positions are deliberately absent from gameplay saves. */
 export type FixedDeskItemId = 'document' | 'incoming-referral' | 'stamp-fit' | 'stamp-unfit' | 'manual' | 'banknote';
-export type DeskItemId = FixedDeskItemId | `paper-${number}` | `clip-${number}`;
+export type DeskItemId = FixedDeskItemId | `paper-${number}` | `clip-${number}` | `banknote-${number}`;
 
 export interface Point {
   x: number;
@@ -48,7 +48,7 @@ export const DROP_ZONES = {
 export function dropTargetRect(target: keyof typeof DROP_ZONES, held: DeskItemId | null, carried: readonly DeskItemId[] = []): Rect {
   const includesCertificate = held === 'document' || carried.includes('document');
   const compatible = held !== null && !includesCertificate && (held === 'incoming-referral' || held.startsWith('paper-')
-    || held.startsWith('clip-') || (target === 'drawer' && (held === 'manual' || held === 'banknote')));
+    || held.startsWith('clip-') || (target === 'drawer' && (held === 'manual' || held === 'banknote' || held.startsWith('banknote-'))));
   return compatible ? { ...DROP_ZONES[target] } : { ...CABINET_HOTSPOTS[target] };
 }
 
@@ -102,6 +102,7 @@ export function itemAnchor(id: DeskItemId, size: Pick<Rect, 'w' | 'h'> = fullSiz
 }
 
 function fullSize(id: DeskItemId): Pick<Rect, 'w' | 'h'> {
+  if (id.startsWith('banknote-')) return ITEM_SIZES.banknote;
   if (id.startsWith('paper-')) return ITEM_SIZES.document;
   if (id.startsWith('clip-')) return { w: 14, h: 19 };
   return ITEM_SIZES[id];
@@ -141,7 +142,7 @@ export function createDeskState(): DeskState {
 }
 
 function itemSize(id: DeskItemId, x: number, held: boolean, manualOpen: boolean, documentCarrySize?: Pick<Rect, 'w' | 'h'>): Pick<Rect, 'w' | 'h'> {
-  if (id === 'banknote') return ITEM_SIZES.banknote;
+  if (id === 'banknote' || id.startsWith('banknote-')) return ITEM_SIZES.banknote;
   if (id === 'incoming-referral') return held ? CARRIED_TRAY_DOCUMENT : TRAY_DOCUMENT;
   if (id.startsWith('clip-')) return fullSize(id);
   if (id.startsWith('paper-')) return held ? CARRIED_ITEM_SIZES.document : x < RIGHT_DESK_X ? SMALL_DOCUMENT : ITEM_SIZES.document;
