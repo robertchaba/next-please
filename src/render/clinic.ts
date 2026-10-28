@@ -15,7 +15,10 @@ const introNames = ['scalpel', 'catheter', 'pen', 'stamp'] as const;
 const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate', 'clock',
   ...new Set(PATIENTS.map(patient => patient.portraitId)), 'workstation-phone', 'workstation-clips', 'workstation-clip', 'workstation-rack', 'workstation-rack-referrals', 'workstation-paper',
   'workstation-calendar', 'imprint-fit-pl', 'imprint-unfit-pl', 'imprint-fit-en', 'imprint-unfit-en', 'document-seal', 'document-seal-zus', 'document-seal-employer', 'document-signature', 'document-seal-chamber', 'document-seal-employer-unclear', 'banknote-100',
-  'zus-inspector-1', 'zus-inspector-2', 'zus-inspector-3', 'inspector-id', 'inspection-fine', 'archive-folder'] as const;
+  'zus-inspector-1', 'zus-inspector-2', 'zus-inspector-3', 'inspector-id', 'inspection-fine', 'archive-folder',
+  'manual-cover-v083', 'manual-spread-v083', 'manual-corner-left-v083', 'manual-corner-right-v083',
+  'paper-referral-v083', 'paper-militia-v083', 'paper-lot-v083', 'paper-certificate-v083', 'paper-clinical-v083', 'paper-envelope-v083',
+  'seal-militia-v083', 'seal-lot-v083'] as const;
 export const PATIENT_MOTION_FRAMES = 12;
 
 export async function loadClinicArt(): Promise<void> {
@@ -247,6 +250,15 @@ export function drawPaper(ctx: CanvasRenderingContext2D, x: number, y: number, w
   asset(ctx, 'sprites/workstation-paper', x, y, w, h);
 }
 
+export function drawManualArt(ctx: CanvasRenderingContext2D, kind: 'cover' | 'spread' | 'corner-left' | 'corner-right', x: number, y: number, w: number, h: number): void {
+  asset(ctx, `sprites/manual-${kind}-v083`, x, y, w, h);
+}
+
+export type StationeryKind = 'referral' | 'militia' | 'lot' | 'certificate' | 'clinical' | 'envelope';
+export function drawStationery(ctx: CanvasRenderingContext2D, kind: StationeryKind, x: number, y: number, w: number, h: number): void {
+  asset(ctx, `sprites/paper-${kind}-v083`, x, y, w, h);
+}
+
 export function drawDrawerInterior(ctx: CanvasRenderingContext2D): void {
   asset(ctx, 'drawer-interior', 0, 0, 570, 320);
 }
@@ -257,9 +269,9 @@ export function drawDecisionImprint(ctx: CanvasRenderingContext2D, decision: 'fi
   asset(ctx, `sprites/imprint-${decision}-${locale}`, x, y, w, h);
 }
 
-export function drawDocumentSeal(ctx: CanvasRenderingContext2D, x: number, y: number, size = 22, kind: 'clinic' | 'employer' | 'zus' | 'chamber' = 'clinic'): void {
-  const name = kind === 'clinic' ? 'document-seal' : `document-seal-${kind}`;
-  asset(ctx, `sprites/${name}`, x, y, kind === 'zus' ? Math.round(size * 1.5) : size, size);
+export function drawDocumentSeal(ctx: CanvasRenderingContext2D, x: number, y: number, size = 22, kind: 'clinic' | 'employer' | 'zus' | 'chamber' | 'militia' | 'lot' = 'clinic'): void {
+  const name = kind === 'militia' || kind === 'lot' ? `seal-${kind}-v083` : kind === 'clinic' ? 'document-seal' : `document-seal-${kind}`;
+  asset(ctx, `sprites/${name}`, x, y, kind === 'zus' ? Math.round(size * 1.5) : kind === 'lot' ? Math.round(size * 64 / 44) : size, size);
 }
 
 export function drawDocumentSignature(ctx: CanvasRenderingContext2D, x: number, y: number, w = 46, h = 12): void {

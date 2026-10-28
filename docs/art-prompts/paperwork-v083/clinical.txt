@@ -1,0 +1,6 @@
+Use case: stylized-concept
+Asset type: one blank medical report stationery sprite for Next, Please!, directly overhead, native 188x144.
+Primary request: create an original warm ivory 1983 medical specialist report sheet with a very restrained muted sage-green double border and tiny ornate engraved corner rosettes in the outermost five native pixels. Quiet subtle paper fibers, gently worn edges, matching subdued olive/cream clinic pixel art. Width-to-height 188:144, flat rectangle, minimal transparent outer margin.
+Layout: entire interior from x=9 to179 and y=6 to138 must be completely blank. No rules across the page, no dots, no ruled rows, no prefilled field lines. All report titles, results, signatures, seals will be overlaid separately. The decorative border ONLY along the outermost 5 pixels can contain ornament. Low contrast small printed rosettes. Bright pale paper center for tiny dark-blue text. No text, letters, numbers, logos, national symbols, medicine icons, clip, writing tool, watermarks.
+Style: crisp low resolution pixel art with deliberate square clusters and sparse grain, no antialiasing, no photograph, no glossy UI. True transparent exterior.
+Reference image: approved clinic screenshot only for palette and pixel-art style. Do not recreate the scene.

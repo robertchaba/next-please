@@ -1,11 +1,13 @@
 import { legacyBudget } from './fixtures/legacy-budget';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
-import { applyAction, advanceClinicTime, createInitialState, GAME_LIMITS, type GameState, type GameAction } from '../src/core/game';
-import { ADDITIONAL_TESTS, additionalTestForJob, additionalResultFor, type AdditionalTest } from '../src/core/additional-tests';
+import { applyAction, advanceClinicTime, createInitialState, GAME_LIMITS, type GameState, type GameAction, type NoteEntryId } from '../src/core/game';
+import { ADDITIONAL_TESTS, additionalNoteEntry, additionalNoteResult, additionalTestForJob, additionalResultFor, type AdditionalTest } from '../src/core/additional-tests';
 import { PATIENTS, randomStep } from '../src/core/patients';
 import { expectedVisitDecision, patientForAppointment } from '../src/core/progression';
 import { decodeSave, encodeSave } from '../src/core/save';
+import { noteEntries, paperDescription } from '../src/render/paperwork';
+import { translations } from '../src/i18n';
 
 const act = (state: GameState, ...actions: GameAction[]): GameState => actions.reduce((s, action) => applyAction(s, action).state, state);
 const patientForJob = (jobId: number, variant = 0) => PATIENTS.find(patient => patient.id >= 2503 && patient.jobId === jobId && patient.caseVariant === variant)!;
@@ -164,7 +166,7 @@ describe('day seven additional examinations', () => {
 
   it('rejects forged result, return schedule, unknown fields and duplicate pending identities', () => {
     const state = send(appointment(), 'vestibular');
-    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 25, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
+    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 27, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
     for (const change of [
       (s: GameState) => { s.pendingReferrals[0]!.fit = false; },
       (s: GameState) => { s.pendingReferrals[0]!.returnDay += 7; },
@@ -279,12 +281,95 @@ describe('returned examination report handoff', () => {
   it('validates the saved reprimand reason and keeps previous saves importable', () => {
     const before = act(returned(), 'stamp-fit');
     const state = act(before, 'return-document');
-    const file = (candidate: unknown, version = 25) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state: version < 24 ? legacyBudget(candidate) : candidate })));
+    const file = (candidate: unknown, version = 27) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state: version < 24 ? legacyBudget(withoutAdditionalNotes(candidate as GameState)) : candidate })));
     const historical = { ...before, roster: before.roster.filter(id => id <= 3127) };
     expect(decodeSave(file(historical, 22))).toEqual(historical);
     for (const change of [{ reason: 'unknown' }, { sender: 'zus' }, { patientId: 0 }, { day: 1 }, { surprise: true }]) {
       const forged = { ...state, papers: state.papers.map(paper => paper.kind === 'letter' ? { ...paper, ...change } : paper) };
       expect(() => decodeSave(file(forged))).toThrow();
     }
+  });
+});
+
+
+function withoutAdditionalNotes(state: GameState): GameState {
+  const strip = <T extends { noteOrder: NoteEntryId[] }>(value: T): T =>
+    ({ ...value, noteOrder: value.noteOrder.filter(entry => !additionalNoteResult(entry)) });
+  return { ...state, visit: state.visit ? strip(state.visit) : null,
+    pendingReferrals: state.pendingReferrals.map(pending => ({ ...pending, visit: strip(pending.visit) })),
+    papers: state.papers.map(paper => paper.kind === 'note' ? strip(paper) : paper) };
+}
+
+describe('additional examination entries in medical notes', () => {
+  const notes = (state: GameState) => state.papers.filter(paper => paper.kind === 'note');
+  const file = (state: unknown, version = 27) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-28T12:00:00.000Z', state })));
+
+  it.each([true, false])('appends the received %s finding after earlier entries and retains it after the report leaves', fit => {
+    const patient = PATIENTS.find(patient => patient.jobId === 46 && additionalResultFor(patient, 'vestibular').fit === fit)!;
+    let state = act(appointment(46, 0, 9, patient.id), 'take-document', 'run-general', 'run-pressure', 'take-paper');
+    const before = notes(state)[0]!;
+    state = act(state, { type: 'store-paper', paperId: before.id });
+    state = returnNextWorkday(send(state, 'vestibular', 1));
+    const result = state.visit!.additionalResult!, entry = additionalNoteEntry(result);
+    expect(result.fit).toBe(fit);
+    expect(state.visit!.noteOrder.at(-1)).toBe(entry);
+    for (const locale of ['pl', 'en'] as const) {
+      const oldRows = noteEntries(before, locale), rows = noteEntries(notes(state)[0]!, locale);
+      expect(rows.slice(0, oldRows.length)).toEqual(oldRows);
+      expect(rows.at(-1)!.text).toBe(`${translations[locale].additionalTests.tests.vestibular}: ${translations[locale].additionalTests.notes.vestibular[fit ? 'fit' : 'unfit']}`);
+      expect(paperDescription(notes(state)[0]!, locale)).toContain(rows.at(-1)!.text);
+    }
+    state = act(state, 'run-vision', 'take-paper');
+    expect(notes(state).map(note => note.noteOrder)).toEqual([state.visit!.noteOrder, state.visit!.noteOrder]);
+    const report = state.papers.find(paper => paper.kind === 'additional-result')!;
+    state = act(state, 'take-certificate', 'write-certificate', fit ? 'stamp-fit' : 'stamp-unfit',
+      { type: 'clip-document', documentId: report.id }, { type: 'join-documents', documentId: 'certificate', targetId: report.id }, 'return-document');
+    expect(state.papers.some(paper => paper.kind === 'additional-result')).toBe(false);
+    expect(notes(state).every(note => note.noteOrder.includes(entry))).toBe(true);
+    roundTrip(state);
+  });
+
+  it('retains each finding across several returns, later notes and interrupted follow-up without duplication', () => {
+    let state = appointment();
+    for (const test of ['vestibular', 'audiometry'] as const) {
+      state = returnNextWorkday(send(state, test, 1));
+      roundTrip(state);
+    }
+    state = act(state, 'take-paper');
+    const entries = state.visit!.noteOrder.filter(additionalNoteResult);
+    expect(entries).toEqual(['additional:vestibular:fit', 'additional:audiometry:fit']);
+    expect(notes(state)[0]!.noteOrder).toEqual(entries);
+    state = advanceClinicTime(state, 1035 - state.clockMinutes).state;
+    roundTrip(state);
+    state = act(state, 'next-day', 'call-patient');
+    expect(state.visit!.noteOrder).toEqual(entries);
+    roundTrip(state);
+  });
+
+  it('migrates evidenced old findings once, without treating an outstanding request as a result', () => {
+    let state = act(appointment(), 'take-document', 'run-pressure', 'take-paper');
+    const pending = send(state, 'vestibular', 1);
+    expect(decodeSave(file(withoutAdditionalNotes(pending), 26))).toEqual(pending);
+    state = returnNextWorkday(pending);
+    expect(decodeSave(file(withoutAdditionalNotes(state), 26))).toEqual(state);
+    state = send(state, 'audiometry', 1);
+    expect(decodeSave(file(withoutAdditionalNotes(state), 26))).toEqual(state);
+    roundTrip(decodeSave(file(withoutAdditionalNotes(state), 26)));
+  });
+
+  it('rejects changed, duplicate, missing, unknown and premature journal results atomically', () => {
+    const state = act(returnNextWorkday(send(appointment(), 'vestibular', 1)), 'take-paper');
+    const before = structuredClone(state);
+    for (const replace of [[], ['additional:vestibular:unfit'], ['additional:vestibular:fit', 'additional:vestibular:fit'],
+      ['additional:unknown:fit'], ['additional:vestibular:fit:extra'], ['additional:audiometry:fit']]) {
+      const forged = { ...state, visit: { ...state.visit!, noteOrder: replace } };
+      expect(() => decodeSave(file(forged))).toThrow();
+    }
+    const wrongNote = { ...state, papers: state.papers.map(paper => paper.kind === 'note' ? { ...paper, noteOrder: [] } : paper) };
+    expect(() => decodeSave(file(wrongNote))).toThrow();
+    const waiting = send(appointment(), 'vestibular', 1);
+    waiting.pendingReferrals[0]!.visit.noteOrder.push('additional:vestibular:fit');
+    expect(() => decodeSave(file(waiting))).toThrow();
+    expect(state).toEqual(before);
   });
 });

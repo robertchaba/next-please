@@ -110,11 +110,13 @@ test('third-drawer referral circles exactly one test, keeps records and restores
   await expect(page.locator('#announcement')).toContainText('Pacjent wrócił z wynikiem');
   const resultId = later.nextPaperId;
   await expect(page.locator(`#control-paper-${resultId}`)).toHaveAccessibleName(new RegExp(translations.pl.additionalTests.report.audiometry.fit));
+  await expect(page.locator(`#control-paper-${noteId}`)).toHaveAccessibleName(/Audiometria tonalna: słuch w normie/);
   await key(page, `paper-${resultId}`, 'Space');
   await place(page);
   await page.locator('#stage').screenshot({ path: info.outputPath('additional-result-pl.png') });
   await key(page, 'language-en');
   await expect(page.locator(`#control-paper-${resultId}`)).toHaveAccessibleName(/Hearing is normal/);
+  await expect(page.locator(`#control-paper-${noteId}`)).toHaveAccessibleName(/Pure-tone audiometry: normal hearing/);
   const returned = await exportState(page, info);
   expect(returned.visit).toMatchObject({ patientId, generalTested: true, startedDay: before.day, additionalResult: { test: 'audiometry', fit: true } });
   expect(returned.pendingReferrals).toHaveLength(0);

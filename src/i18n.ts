@@ -318,6 +318,7 @@ export const translations = {
       resultsHeading: 'Wyniki badań', additionalHeading: 'Dodatkowe informacje',
       certificatePurpose: 'Zdolność do pracy na stanowisku', decisionHeading: 'Orzeczenie lekarza', reference: 'Nr akt',
       missingResultSenders: { militia: 'Komenda milicji', lot: 'Biuro LOT-u' },
+      stationery: { militia: 'Milicja', lot: 'LOT' },
       letters: {
         missingResult: [
           { subject: 'W sprawie załączników', body: 'Przekazana dokumentacja dopuszczenia do pracy nie zawiera kompletu załączników. Prosimy o uzupełnienie akt o wynik badania dodatkowego.', role: 'Kierownik kadr', signature: 'Witold Krawiec' },
@@ -362,6 +363,7 @@ export const translations = {
     manualHelp: 'Przenieś regulamin na prawy blat i kliknij zagięty róg okładki. Kartkuj rogami stron; cofnięcie pierwszej strony zamyka okładkę. Enter otwiera lub zamyka, spacja podnosi.',
     manualOpened: 'Regulamin otwarty na biurku.', manualClosed: 'Regulamin zamknięty.',
     manualPrevious: 'Poprzednia strona regulaminu', manualNext: 'Następna strona regulaminu',
+    notePagination: { previous: 'Poprzednia strona notatek', next: 'Następna strona notatek', page: 'Strona notatek', help: 'Dalsze wpisy znajdują się na kolejnych stronach. Kartkuj zagiętymi rogami.' },
     manualClose: 'Zamknij regulamin', manualOpenCover: 'Otwórz okładkę regulaminu', manualPageLabel: 'Strona',
     itemDropped: 'Przedmiot odłożony.', moveCancelled: 'Przedmiot wrócił na poprzednie miejsce.',
     // Fixed optotypes embedded in the generated chart, shared by both locales.
@@ -410,6 +412,12 @@ export const translations = {
       selectionHelp: 'Na prawym blacie zakreśl jedno badanie. Podnieś skierowanie i oddaj je pacjentowi.',
       tests: { audiometry: 'Audiometria tonalna', vestibular: 'Badanie błędnika', psychiatry: 'Konsultacja psychiatryczna', 'chest-xray': 'RTG klatki piersiowej' },
       concerns: { psychiatry: 'Wątpliwości co do stanu psychicznego.', 'chest-xray': 'Zmiany sugerujące pylicę płuc.' },
+      notes: {
+        audiometry: { fit: 'słuch w normie.', unfit: 'ubytek słuchu.' },
+        vestibular: { fit: 'równowaga prawidłowa.', unfit: 'zaburzenia równowagi.' },
+        psychiatry: { fit: 'bez zaburzeń.', unfit: 'zaburzenia psychiczne.' },
+        'chest-xray': { fit: 'bez cech pylicy.', unfit: 'pylica potwierdzona.' },
+      },
       report: {
         audiometry: { fit: 'Słuch w normie. Brak przeciwwskazań do pracy hutnika.', unfit: 'Ubytek słuchu uniemożliwia pracę hutnika. Wymagana odmowa.' },
         vestibular: { fit: 'Układ równowagi sprawny. Brak przeciwwskazań do pracy pilota.', unfit: 'Zaburzenia równowagi wykluczają pracę pilota. Wymagana odmowa.' },
@@ -828,6 +836,7 @@ export const translations = {
       resultsHeading: 'Examination results', additionalHeading: 'Supplementary information',
       certificatePurpose: 'Fitness for the stated position', decisionHeading: 'Doctor’s decision', reference: 'File no.',
       missingResultSenders: { militia: 'Militia headquarters', lot: 'LOT office' },
+      stationery: { militia: 'Militia', lot: 'LOT' },
       letters: {
         missingResult: [
           { subject: 'Concerning enclosures', body: 'The work clearance records arrived without all required enclosures. Please complete the file with the additional examination report.', role: 'Personnel manager', signature: 'Witold Krawiec' },
@@ -872,6 +881,7 @@ export const translations = {
     manualHelp: 'Move the rulebook to the right desk and click its folded cover corner. Turn pages by their corners; turning back the first page closes the cover. Enter opens or closes it; Space picks it up.',
     manualOpened: 'Rulebook open on the desk.', manualClosed: 'Rulebook closed.',
     manualPrevious: 'Previous rulebook page', manualNext: 'Next rulebook page',
+    notePagination: { previous: 'Previous notes page', next: 'Next notes page', page: 'Notes page', help: 'Further entries continue on the following pages. Turn the folded corners to read them.' },
     manualClose: 'Close the rulebook', manualOpenCover: 'Open the rulebook cover', manualPageLabel: 'Page',
     itemDropped: 'Item put down.', moveCancelled: 'Item returned to its previous position.',
     // Fixed optotypes embedded in the generated chart, shared by both locales.
@@ -920,6 +930,12 @@ export const translations = {
       selectionHelp: 'Circle one examination on the right desk. Pick up the referral and give it to the patient.',
       tests: { audiometry: 'Pure-tone audiometry', vestibular: 'Vestibular examination', psychiatry: 'Psychiatric consultation', 'chest-xray': 'Chest X-ray' },
       concerns: { psychiatry: 'Doubts about mental fitness.', 'chest-xray': 'Findings suggest pneumoconiosis.' },
+      notes: {
+        audiometry: { fit: 'normal hearing.', unfit: 'hearing loss.' },
+        vestibular: { fit: 'normal balance.', unfit: 'balance disorder.' },
+        psychiatry: { fit: 'no disorder found.', unfit: 'mental disorder.' },
+        'chest-xray': { fit: 'no pneumoconiosis.', unfit: 'pneumoconiosis confirmed.' },
+      },
       report: {
         audiometry: { fit: 'Hearing is normal. No contraindications to furnace work.', unfit: 'Hearing loss rules out furnace work. Refusal required.' },
         vestibular: { fit: 'Balance function is normal. No contraindications to work as a pilot.', unfit: 'Balance disorder rules out work as a pilot. Refusal required.' },

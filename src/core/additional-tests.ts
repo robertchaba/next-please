@@ -5,6 +5,17 @@ import type { Visit } from './game';
 export const ADDITIONAL_TESTS = ['audiometry', 'vestibular', 'psychiatry', 'chest-xray'] as const;
 export type AdditionalTest = typeof ADDITIONAL_TESTS[number];
 export interface AdditionalResult { test: AdditionalTest; fit: boolean }
+/** The journal stores the received finding even after its separate report leaves. */
+export type AdditionalNoteEntry = `additional:${AdditionalTest}:${'fit' | 'unfit'}`;
+export function additionalNoteEntry(result: AdditionalResult): AdditionalNoteEntry {
+  return `additional:${result.test}:${result.fit ? 'fit' : 'unfit'}`;
+}
+export function additionalNoteResult(entry: string): AdditionalResult | null {
+  const [prefix, test, outcome, extra] = entry.split(':');
+  if (prefix !== 'additional' || !ADDITIONAL_TESTS.includes(test as AdditionalTest)
+    || (outcome !== 'fit' && outcome !== 'unfit') || extra !== undefined) return null;
+  return { test: test as AdditionalTest, fit: outcome === 'fit' };
+}
 export interface PendingReferral {
   visit: Visit;
   sentDay: number;

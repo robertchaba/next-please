@@ -1,0 +1,6 @@
+Use case: stylized-concept
+Asset type: one tiny turned paper corner sprite, intended runtime size 9 x 9 pixels.
+Primary request: a single warm cream page corner gently folded up at the LOWER RIGHT of an old clinic rulebook. A square piece of yellowed ivory paper with its lower right triangular corner folded diagonally upward-left, exposing a soft ochre underside and dark olive fold shadow. Crisp square pixel clusters and clean diagonal steps readable at 9x9 native pixels; subdued analog institutional book palette.
+Composition: isolated small square corner crop, straight overhead, only the paper corner and its folded tip; full frame, no margin. Upper left of square is cream paper, bottom and right edge cut diagonally away to transparent alpha where the fold lifted.
+Text: none. No icon, arrow, letter, number, border, symbol or user interface.
+Background: genuine transparent alpha outside the paper corner, no matte or checkerboard.

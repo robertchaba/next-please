@@ -12,7 +12,8 @@ import { createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, p
 import { installDeskInput } from './core/desk-input';
 import { drawCreatorPortrait, drawPaper, drawPanelIllustration, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
 import { drawText } from './render/font';
-import { paperClipRect, visionReading, pressureReading, generalReading, visiblePaperRect } from './render/paperwork';
+import { paperClipRect, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries } from './render/paperwork';
+import { paginateNoteEntries, notePageLabel } from './render/note-pages';
 import { drawerButtons, drawerDescription, renderDrawer, type DrawerAction } from './render/drawer';
 import { installCursor, installDisplay, WIDTH, HEIGHT } from './core/display';
 import { translations, readPreferences, savePreferences, type Locale } from './i18n';
@@ -60,6 +61,7 @@ let drawerPage = 0;
 let deskBeforePickup = deskState;
 let manualOpen = false;
 let manualPage = 0;
+let notePages: Record<number, number> = {};
 let manualBeforePickup = false;
 let clockMinutes = gameState.clockMinutes;
 let clockTransition: { from: number; to: number; elapsed: number } | undefined;
@@ -83,7 +85,7 @@ function groupItems(id: DeskItemId): DeskItemId[] {
   return record === undefined ? [id] : clippedDocuments(gameState, record).map(documentItem);
 }
 const isHeld = (id: DeskItemId): boolean => heldItem !== null && groupItems(heldItem).includes(id);
-const deskView = () => ({ desk: deskState, held: heldItem, heldItems: heldItem ? groupItems(heldItem) : [], patientMotion, manualOpen, manualPage, clockMinutes,
+const deskView = () => ({ desk: deskState, held: heldItem, heldItems: heldItem ? groupItems(heldItem) : [], patientMotion, manualOpen, manualPage, notePages, clockMinutes,
   phoneSpeech: phoneCallText(), patientSpeech: visiblePatientSpeech(), departingPatientId: departingPatientId(),
   clinicSpeech: clinicSpeech ? { text: clinicSpeechText(), speaker: clinicSpeech.speaker } : undefined, hiddenPaperIds: [...pendingLetters.keys()] });
 const deskRect = (id: DeskItemId) => itemRect(deskState, id, gameState.visit?.document === 'tray' && heldItem !== 'document', isHeld(id), manualOpen);
@@ -377,6 +379,18 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
   if (typeof action === 'object') {
     if (action.type === 'store-drawer-item' || action.type === 'retrieve-drawer-item') return;
     const paper = 'paperId' in action ? gameState.papers.find(record => record.id === action.paperId) : undefined;
+    if (action.type === 'note-page') {
+      if (paper?.kind !== 'note' || paper.location !== 'desk' || heldItem !== null || deskRect(`paper-${paper.id}`).x < RIGHT_DESK_X) return;
+      const entries = noteEntries(paper, locale);
+      const current = paginateNoteEntries(entries, 166, notePages[paper.id]);
+      const next = paginateNoteEntries(entries, 166, current.page + action.direction);
+      if (next.page === current.page) return;
+      notePages[paper.id] = next.page;
+      spendTime('read-manual'); playEffect('paper');
+      const direction = next.page === next.count - 1 ? 'prev' : next.page === 0 ? 'next' : action.direction === 1 ? 'next' : 'prev';
+      announceDesk(`${t().paperwork.note}. ${notePageLabel(locale, next.page, next.count)}. ${next.lines.map(line => line.text).join(' ')}`, `note-${direction}-${paper.id}`);
+      return;
+    }
     if (action.type === 'read-paper') {
       if (paper) { spendTime('read-manual'); announceDesk(paperDescription(paper, locale, isDocumentClipped(gameState, paper.id)), `paper-${paper.id}`); }
       return;
@@ -660,7 +674,7 @@ function restartGame(): void {
   gameState = createInitialState(crypto.getRandomValues(new Uint32Array(1))[0]); deskState = createDeskState(); deskBeforePickup = deskState;
   clinicClock.reset(performance.now());
   nextClipId = 1; pendingLetters.clear(); stopPhone(); clinicSpeech = undefined; interruptedPatient = undefined;
-  heldItem = null; selectedStamp = null; manualOpen = false; manualPage = 0; manualBeforePickup = false;
+  heldItem = null; selectedStamp = null; manualOpen = false; manualPage = 0; notePages = {}; manualBeforePickup = false;
   clockMinutes = gameState.clockMinutes; clockTransition = undefined;
   status = ''; toast = ''; feedback = ''; panelReturn = 'welcome';
   startShift();
@@ -1110,7 +1124,7 @@ fileInput.addEventListener('change', async () => {
     gameState = loadedState; homePageIndex = 0; typingKey = ''; shiftStarted = true; selectedStamp = null; feedback = '';
     clinicClock.reset(performance.now());
     nextClipId = 1; reconcileDeskPapers();
-    manualOpen = false; manualPage = 0; clockMinutes = gameState.clockMinutes; clockTransition = undefined;
+    manualOpen = false; manualPage = 0; notePages = {}; clockMinutes = gameState.clockMinutes; clockTransition = undefined;
     if (panelReturn === 'intro' || panelReturn === 'cabinet' || panelReturn === 'home') panelReturn = loadedState.phase;
     // File reads can finish after the player closes the archive. Reconcile the
     // active scene as well as the saved data before rebuilding its controls.

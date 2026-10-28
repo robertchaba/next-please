@@ -1,5 +1,5 @@
 import { gameDate, isWeekend } from './calendar';
-import { ADDITIONAL_TESTS, additionalResultFor, additionalTestForJob, nextWorkingDay, type AdditionalTest, type AdditionalResult, type PendingReferral } from './additional-tests';
+import { ADDITIONAL_TESTS, additionalNoteEntry, additionalNoteResult, additionalResultFor, additionalTestForJob, nextWorkingDay, type AdditionalTest, type AdditionalResult, type PendingReferral } from './additional-tests';
 import { Gunzip, gzipSync, strToU8 } from 'fflate';
 import { ARRIVAL_MINUTES, CLINIC_CLOSE_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_START_MINUTES, type GameState as CurrentGameState, type Visit as CurrentVisit, type Paper as CurrentPaper, type DocumentId, type NoteEntryId } from './game';
 
@@ -66,9 +66,9 @@ type GameStateV5 = Omit<GameStateV8, 'visit' | 'paperClips' | 'papers' | 'drawer
 type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<VisitV10, 'certificateNamed'> | null };
 type GameStateV7 = Omit<GameStateV8, 'drawerItems'>;
 
-interface SaveV26 {
+interface SaveV27 {
   game: 'next-please';
-  version: 26;
+  version: 27;
   savedAt: string;
   state: CurrentGameState;
 }
@@ -1402,12 +1402,92 @@ function validateStateV26(value: unknown): CurrentGameState {
   return { ...previous, money: value.money, banknotes };
 }
 
+/** Old journals can only recover results evidenced by returned visits or retained reports. */
+function migrateAdditionalNotes(state: CurrentGameState): CurrentGameState {
+  const append = (order: NoteEntryId[], results: AdditionalResult[]): NoteEntryId[] => [
+    ...order, ...new Set(results.map(additionalNoteEntry).filter(entry => !order.includes(entry))),
+  ];
+  const migrateVisit = (visit: CurrentVisit, pending?: PendingReferral): CurrentVisit => {
+    const received = pending ? visit.additionalTests.filter((test, index) => index < visit.additionalTests.length - 1
+      || visit.additionalResult?.test === test
+      || state.papers.some(paper => paper.kind === 'additional-result' && paper.patientId === visit.patientId
+        && paper.test === test && paper.day >= pending.sentDay)) : visit.additionalTests;
+    return { ...visit, noteOrder: append(visit.noteOrder, received.map(test => additionalResultFor(effectivePatient(visit.patientId, visit.bribe !== 'none'), test))) };
+  };
+  const visit = state.visit ? migrateVisit(state.visit) : null;
+  const pendingReferrals = state.pendingReferrals.map(pending => ({ ...pending, visit: migrateVisit(pending.visit, pending) }));
+  const appointments = [...(visit ? [visit] : []), ...pendingReferrals.map(pending => pending.visit)];
+  const papers = state.papers.map((paper): CurrentPaper => {
+    if (paper.kind !== 'note' || paper.patientId === null) return paper;
+    const appointment = appointments.find(entry => entry.patientId === paper.patientId && entry.startedDay === paper.day);
+    // A completed historical report stores its issue day, not its original visit.
+    // Only a same-day match is unambiguous without a surviving appointment.
+    const results = appointment ? appointment.noteOrder.flatMap(entry => {
+      const result = additionalNoteResult(entry); return result ? [result] : [];
+    }) : state.papers.flatMap(report => report.kind === 'additional-result' && report.patientId === paper.patientId
+      && report.day === paper.day ? [{ test: report.test, fit: report.fit }] : []);
+    return { ...paper, noteOrder: append(paper.noteOrder, results) };
+  });
+  return { ...state, visit, pendingReferrals, papers };
+}
+
+/** v27 adds result-bearing journal entries; the v26 state schema stays frozen. */
+function validateStateV27(value: unknown): CurrentGameState {
+  const fail = (): never => { throw new SaveError('invalid-state'); };
+  if (!isRecord(value) || !Array.isArray(value.papers) || !Array.isArray(value.pendingReferrals)) return fail();
+  const orders = new Map<string, NoteEntryId[]>();
+  const strip = (raw: unknown, key: string): unknown => {
+    if (!isRecord(raw) || !Array.isArray(raw.noteOrder) || raw.noteOrder.length > 12
+      || raw.noteOrder.some(entry => typeof entry !== 'string')) return fail();
+    const additional = raw.noteOrder.filter(entry => entry.startsWith('additional:'));
+    if (additional.some(entry => !additionalNoteResult(entry))) return fail();
+    orders.set(key, [...raw.noteOrder] as NoteEntryId[]);
+    return { ...raw, noteOrder: raw.noteOrder.filter(entry => !entry.startsWith('additional:')) };
+  };
+  const previous = validateStateV26({ ...value,
+    visit: value.visit === null ? null : strip(value.visit, 'visit'),
+    papers: value.papers.map(paper => isRecord(paper) && paper.kind === 'note' ? strip(paper, `paper:${paper.id}`) : paper),
+    pendingReferrals: value.pendingReferrals.map((pending, index) => {
+      if (!isRecord(pending)) return fail();
+      return { ...pending, visit: strip(pending.visit, `pending:${index}`) };
+    }),
+  });
+  const restore = <T extends CurrentVisit | Extract<CurrentPaper, { kind: 'note' }>>(record: T, key: string, pending = false): T => {
+    const noteOrder = orders.get(key)!;
+    const results = noteOrder.flatMap(entry => { const result = additionalNoteResult(entry); return result ? [result] : []; });
+    const tests = results.map(result => result.test);
+    const day = 'startedDay' in record ? record.startedDay : record.day;
+    if (new Set(tests).size !== tests.length || (results.length && (record.patientId === null || workDayNumber(day) < 7))
+      || results.some(result => result.fit !== additionalResultFor(effectivePatient(record.patientId!, record.bribe !== false && record.bribe !== 'none'), result.test).fit)) return fail();
+    if ('additionalTests' in record) {
+      const expected = record.additionalTests;
+      if (results.length < expected.length - Number(pending) || results.length > expected.length
+        || tests.some((test, index) => test !== expected[index])
+        || (record.additionalResult && !noteOrder.includes(additionalNoteEntry(record.additionalResult)))
+        || (!record.additionalResult && results.length > 0)) return fail();
+    }
+    return { ...record, noteOrder };
+  };
+  const visit = previous.visit ? restore(previous.visit, 'visit') : null;
+  const pendingReferrals = previous.pendingReferrals.map((pending, index) => ({ ...pending, visit: restore(pending.visit, `pending:${index}`, true) }));
+  const appointments = [...(visit ? [visit] : []), ...pendingReferrals.map(pending => pending.visit)];
+  const papers = previous.papers.map((paper): CurrentPaper => {
+    if (paper.kind !== 'note') return paper;
+    const restored = restore(paper, `paper:${paper.id}`);
+    const appointment = appointments.find(entry => entry.patientId === paper.patientId && entry.startedDay === paper.day);
+    if (appointment && JSON.stringify(restored.noteOrder.filter(additionalNoteResult))
+      !== JSON.stringify(appointment.noteOrder.filter(additionalNoteResult))) return fail();
+    return restored;
+  });
+  return { ...previous, visit, pendingReferrals, papers };
+}
+
 export function encodeSave(state: CurrentGameState): Uint8Array {
-  const envelope: SaveV26 = {
+  const envelope: SaveV27 = {
     game: 'next-please',
-    version: 26,
+    version: 27,
     savedAt: new Date().toISOString(),
-    state: validateStateV26(state),
+    state: validateStateV27(state),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -1496,10 +1576,12 @@ function decompressSave(bytes: Uint8Array): Uint8Array {
 }
 
 export function decodeSave(bytes: Uint8Array): CurrentGameState {
-  return migrateBanknotes(migrateInspection(migrateBribeIncome(decodeState(bytes))));
+  const migration = { additionalNotes: false };
+  const state = migrateBanknotes(migrateInspection(migrateBribeIncome(decodeState(bytes, migration))));
+  return migration.additionalNotes ? migrateAdditionalNotes(state) : state;
 }
 
-function decodeState(bytes: Uint8Array): StateV23 | StateV24 | StateV25 | CurrentGameState {
+function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean }): StateV23 | StateV24 | StateV25 | CurrentGameState {
   const expanded = decompressSave(bytes);
   let envelope: unknown;
   try {
@@ -1510,7 +1592,7 @@ function decodeState(bytes: Uint8Array): StateV23 | StateV24 | StateV25 | Curren
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11 && envelope.version !== 12 && envelope.version !== 13 && envelope.version !== 14 && envelope.version !== 15 && envelope.version !== 16 && envelope.version !== 17 && envelope.version !== 18 && envelope.version !== 19 && envelope.version !== 20 && envelope.version !== 21 && envelope.version !== 22 && envelope.version !== 23 && envelope.version !== 24 && envelope.version !== 25 && envelope.version !== 26) throw new SaveError('unsupported-version');
+  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11 && envelope.version !== 12 && envelope.version !== 13 && envelope.version !== 14 && envelope.version !== 15 && envelope.version !== 16 && envelope.version !== 17 && envelope.version !== 18 && envelope.version !== 19 && envelope.version !== 20 && envelope.version !== 21 && envelope.version !== 22 && envelope.version !== 23 && envelope.version !== 24 && envelope.version !== 25 && envelope.version !== 26 && envelope.version !== 27) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -1519,6 +1601,8 @@ function decodeState(bytes: Uint8Array): StateV23 | StateV24 | StateV25 | Curren
   ) {
     throw new SaveError('invalid-file');
   }
+  migration.additionalNotes = (envelope.version as number) < 27;
+  if (envelope.version === 27) return validateStateV27(envelope.state);
   if (envelope.version === 26) return validateStateV26(envelope.state);
   if (envelope.version === 25) return validateStateV25(envelope.state);
   // Catalog expansion must not relax any historical file's accepted identities.

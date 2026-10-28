@@ -1,10 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { PATIENTS, type Paper } from '../src/core/game';
 import { translations } from '../src/i18n';
-import { letterContent, correspondenceSender, paperDescription, wrapDocumentLines } from '../src/render/paperwork';
+import { letterContent, correspondenceSender, paperDescription, wrapDocumentLines, employerStationery } from '../src/render/paperwork';
 import { measureDocumentText } from '../src/render/font';
 
 describe('signed administrative correspondence', () => {
+  it('fits every sender on the generated envelope label and keeps service headers separate', () => {
+    for (const locale of ['pl', 'en'] as const) {
+      const t = translations[locale];
+      for (const patient of PATIENTS) {
+        const paper: Extract<Paper, { kind: 'letter' }> = { id: 1, day: 9, patientId: patient.id, kind: 'letter', sender: 'employer', location: 'desk', opened: false };
+        const rows = wrapDocumentLines([correspondenceSender(paper, locale)], 118);
+        expect(rows.length).toBeLessThanOrEqual(3);
+        for (const row of rows) expect(measureDocumentText(row, 'typewriter')).toBeLessThanOrEqual(118);
+        const institution = employerStationery(patient.id);
+        if (institution !== 'referral') expect(measureDocumentText(t.paperwork.referral, 'book') + measureDocumentText(t.paperwork.stationery[institution], 'book') + 8).toBeLessThanOrEqual(166);
+      }
+      expect(measureDocumentText(t.paperwork.recipient, 'typewriter')).toBeLessThanOrEqual(118);
+    }
+  });
+
   it('fits every subject, body and named signature on the sheet in both languages', () => {
     for (const t of Object.values(translations)) for (const sender of ['zus', 'employer', 'missingResult'] as const) {
       const letters = t.paperwork.letters[sender];

@@ -7,8 +7,10 @@ import { measureText } from '../src/render/font';
 describe('release identity', () => {
   it('uses the package version and preserves published names in both languages', () => {
     expect(GAME_VERSION).toBe(version);
-    expect(releaseLabel('pl')).toBe('WERSJA 0.8.2 / PIECZĄTKA');
-    expect(releaseLabel('en')).toBe('VERSION 0.8.2 / STAMP');
+    expect(releaseLabel('pl')).toBe('WERSJA 0.8.3 / KOLEJKA');
+    expect(releaseLabel('en')).toBe('VERSION 0.8.3 / QUEUE');
+    expect(releaseLabel('pl', '0.8.2')).toBe('WERSJA 0.8.2 / PIECZĄTKA');
+    expect(releaseLabel('en', '0.8.2')).toBe('VERSION 0.8.2 / STAMP');
     expect(releaseLabel('pl', '0.8.0')).toBe('WERSJA 0.8.0 / PAPIEROLOGIA');
     expect(releaseLabel('en', '0.8.0')).toBe('VERSION 0.8.0 / PAPERWORK');
   });

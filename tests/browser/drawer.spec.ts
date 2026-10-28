@@ -234,6 +234,8 @@ test('clipped sheets store together while certificate bundles and stamps retain 
 test('names appear only on the folder label on hover or keyboard focus', async ({ page }, info) => {
   await page.clock.install();
   await enter(page);
+  // Pixel comparisons need the generated folder as well as the drawer background.
+  await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
   await page.clock.pauseAt(new Date(Date.now() + 1000));
   let state = applyAction(createInitialState(37), 'skip-intro').state;
   for (const action of ['call-patient', 'take-document', { type: 'store-paper', paperId: 1 }] as const) state = applyAction(state, action).state;

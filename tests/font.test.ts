@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { drawDocumentText, drawText, measureDocumentText, measureText } from '../src/render/font';
+import { drawDocumentText, drawText, measureDocumentText, measureText, type DocumentFace } from '../src/render/font';
 import { translations } from '../src/i18n';
 import { mobileDialogueLines, mobileStatusLines } from '../src/render/mobile';
 
@@ -15,6 +15,43 @@ function pixels(value: string, x = 0, y = 0, draw = drawDocumentText): Pixel[] {
 }
 
 describe('compact original document font', () => {
+  it('distinguishes original document faces while preserving form metrics', () => {
+    const faces: DocumentFace[] = ['print', 'typewriter', 'handwritten', 'book'];
+    const sample = 'Poradnia / Gabinet 04\nZażółć gęślą jaźń. 1983';
+    const drawn = faces.map(face => pixels(sample, 0, 0, (ctx, value, x, y) => drawDocumentText(ctx, value, x, y, { face })));
+    expect(new Set(drawn.map(marks => JSON.stringify(marks))).size).toBe(faces.length);
+    expect(['Gabinet', '04'].map(measureDocumentText)).toEqual([measureDocumentText('Gabinet'), measureDocumentText('04')]);
+    for (const face of faces) {
+      expect(measureDocumentText(sample, face)).toBe(measureDocumentText(sample));
+      for (const t of Object.values(translations)) {
+        for (const value of [...t.patientNames, ...t.patientJobs]) {
+          expect(measureDocumentText(value, face), `${face}: ${value}`).toBe(measureDocumentText(value));
+        }
+      }
+    }
+  });
+
+  it('keeps Polish accents, alignment and line separation in every document face', () => {
+    for (const face of ['typewriter', 'handwritten', 'book'] as const) {
+      const draw: typeof drawDocumentText = (ctx, value, x, y) => drawDocumentText(ctx, value, x, y, { face });
+      for (const [accented, plain] of Object.entries({ ą: 'a', ć: 'c', ę: 'e', ł: 'l', ń: 'n', ó: 'o', ś: 's', ź: 'z', ż: 'z', Ą: 'A', Ć: 'C', Ę: 'E', Ł: 'L', Ń: 'N', Ó: 'O', Ś: 'S', Ź: 'Z', Ż: 'Z' })) {
+        const marks = pixels(accented, 0, 0, draw);
+        expect(marks, `${face}: ${accented}`).not.toEqual(pixels(plain, 0, 0, draw));
+        expect(marks).not.toEqual(pixels('?', 0, 0, draw));
+        expect(pixels(accented.normalize('NFD'), 0, 0, draw)).toEqual(marks);
+        expect(marks.every(([x, y, w, h]) => x >= 0 && x < measureDocumentText(accented, face) && y >= 0 && y < 7 && w === 1 && h === 1)).toBe(true);
+      }
+      const sample = 'Źdźbło gęślą';
+      const atOrigin = pixels(sample, 0, 0, draw);
+      for (const align of ['center', 'right'] as const) {
+        const marks = pixels(sample, 100.4, 10.3, (ctx, value, x, y) => drawDocumentText(ctx, value, x, y, { face, align }));
+        const left = Math.round(100.4 - measureDocumentText(sample, face) / (align === 'center' ? 2 : 1));
+        expect(marks).toEqual(atOrigin.map(([x, y, w, h]) => [x + left, y + 10, w, h]));
+      }
+      expect(pixels(`${sample}\n${sample}`, 0, 0, draw)).toEqual([...atOrigin, ...atOrigin.map(([x, y, w, h]) => [x, y + 8, w, h])]);
+    }
+  });
+
   it('keeps the mobile dialogue and handwritten note within the generated paper in both languages', () => {
     for (const { mobile } of Object.values(translations)) {
       for (const value of [mobile.greeting, mobile.reply]) {

@@ -1,5 +1,6 @@
 import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, drawDeskCalendar, drawBanknote, drawInspectionForm, type CabinetArtOptions } from '../render/clinic';
-import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading, visiblePaperRect } from '../render/paperwork';
+import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries } from '../render/paperwork';
+import { paginateNoteEntries, notePageControls, notePageLabel } from '../render/note-pages';
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
 import { drawManual, drawManualCover, manualControls, manualPageCount } from '../render/manual';
@@ -15,12 +16,14 @@ export { manualPageCount, manualPageDescription } from '../render/manual';
 
 export type ShiftAction = GameAction | 'select-fit' | 'select-unfit' | 'apply-stamp' | 'manual'
   | 'manual-prev' | 'manual-next' | 'manual-close' | 'put-away-fit' | 'put-away-unfit'
-  | 'take-clip' | 'drawer' | 'trash' | 'reserved-form' | { type: 'read-paper'; paperId: number };
+  | 'take-clip' | 'drawer' | 'trash' | 'reserved-form' | { type: 'read-paper'; paperId: number }
+  | { type: 'note-page'; paperId: number; direction: -1 | 1 };
 export type SelectedStamp = 'fit' | 'unfit' | null;
 export type PatientSpeech = { patientId: number; line: keyof typeof translations.pl.patientSpeech };
 export type DeskPresentation = {
   desk: DeskState; held: DeskItemId | null; heldItems?: readonly DeskItemId[];
   manualOpen: boolean; manualPage: number; clockMinutes?: number;
+  notePages?: Readonly<Record<number, number>>;
   patientMotion?: CabinetArtOptions['patientMotion'];
   patientSpeech?: PatientSpeech;
   phoneSpeech?: string;
@@ -152,7 +155,16 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
         && ((paper.kind === 'specialist' && workDayNumber(state.day) >= 4) || (paper.kind === 'referral' && workDayNumber(state.day) >= 5));
       const selectable = paper.kind === 'additional-referral' && paper.patientId === state.visit?.patientId && paper.day === state.visit?.startedDay
         && !isLifted(view, id) && bounds.x >= RIGHT_DESK_X;
-      return [{ ...item(id, paperDescription(paper, locale, isDocumentClipped(state, paper.id)), id, action), ...bounds },
+      const note = paper.kind === 'note' ? paginateNoteEntries(noteEntries(paper, locale), 166, view.notePages?.[paper.id]) : undefined;
+      const noteCorners = notePageControls(bounds);
+      const canTurnNote = note && note.count > 1 && !isLifted(view, id) && bounds.x >= RIGHT_DESK_X;
+      const description = paperDescription(paper, locale, isDocumentClipped(state, paper.id))
+        + (note && note.count > 1 ? ` ${notePageLabel(locale, note.page, note.count)}. ${t.notePagination.help}` : '');
+      return [{ ...item(id, description, id, action), ...bounds },
+        ...(canTurnNote && note.page > 0 ? [{ ...hotspot(`note-prev-${paper.id}`, `${t.notePagination.previous}. ${notePageLabel(locale, note.page - 1, note.count)}`, noteCorners.previous,
+          { type: 'note-page', paperId: paper.id, direction: -1 }), owner: id }] : []),
+        ...(canTurnNote && note.page < note.count - 1 ? [{ ...hotspot(`note-next-${paper.id}`, `${t.notePagination.next}. ${notePageLabel(locale, note.page + 1, note.count)}`, noteCorners.next,
+          { type: 'note-page', paperId: paper.id, direction: 1 }), owner: id }] : []),
         ...(selectable ? ADDITIONAL_TESTS.map(test => ({ ...hotspot(`select-additional-test-${paper.id}-${test}`,
           `${t.additionalTests.choose}: ${t.additionalTests.tests[test]}`, additionalTestRect(bounds, test),
           { type: 'select-additional-test', paperId: paper.id, test }), owner: id, pressed: paper.test === test })) : []),
@@ -209,7 +221,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     }
     if (id.startsWith('paper-')) {
       const paper = state.papers.find(entry => `paper-${entry.id}` === id && entry.location === 'desk');
-      if (paper && !view.hiddenPaperIds?.includes(paper.id)) drawPaperwork(ctx, paper, bounds, locale, lifted, visibleDocumentClip(state, paper.id, view));
+      if (paper && !view.hiddenPaperIds?.includes(paper.id)) drawPaperwork(ctx, paper, bounds, locale, lifted, visibleDocumentClip(state, paper.id, view), true, view.notePages?.[paper.id]);
       continue;
     }
     if (id.startsWith('clip-')) {

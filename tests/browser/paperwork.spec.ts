@@ -221,10 +221,14 @@ test('dropping onto the projecting clip creates a movable bundle, survives saves
   await expect(page.locator('#announcement')).toContainText('Zapis wczytany');
   await activate(page, 'back');
   await activate(page, 'drawer');
-  await activate(page, 'drawer-paper-2');
+  // A bundle has one cover in filing order, identified by its first sheet.
+  await expect(page.locator('[id^="control-drawer-paper-"]')).toHaveCount(1);
+  await activate(page, 'drawer-paper-1');
+  await expect(page.locator('#control-paper-1')).toHaveAttribute('data-held', 'true');
+  await expect(page.locator('#control-paper-2')).toHaveAttribute('data-held', 'true');
   await placeCarried(page);
   await expect(page.locator('#control-paper-1')).toBeAttached();
-  await page.locator('#control-paper-clip-2').click();
+  await page.locator('[id^="control-paper-clip-"]').click();
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
   await expect(page.locator('[id^="control-paper-clip-"]')).toHaveCount(0);
   const first = await sheetBounds(page, 'paper-1');

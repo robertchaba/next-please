@@ -1,5 +1,5 @@
 import { gameDate, isWeekend } from './calendar';
-import { additionalResultFor, additionalTestForJob, additionalTestForPatient, nextWorkingDay, type AdditionalTest, type AdditionalResult, type PendingReferral } from './additional-tests';
+import { additionalNoteEntry, additionalResultFor, additionalTestForJob, additionalTestForPatient, nextWorkingDay, type AdditionalNoteEntry, type AdditionalTest, type AdditionalResult, type PendingReferral } from './additional-tests';
 import { PATIENTS, CHARACTER_COUNT, randomStep, hasRequiredExaminations, disqualifyingPressure, type ExaminationId, type VisionValues, type PressureValues } from './patients';
 import { BASE_INSURANCE, emptyConsequences, settleDay, type DailyConsequences, type DaySettlement } from './economy';
 import { arrangeProgressionRoster, createAppointmentDetails, createDailyRoster, directiveForDay, emptyCalls, expectedVisitDecision, patientForAppointment, specialistIsValid, workDayNumber,
@@ -20,7 +20,7 @@ export const GAME_LIMITS = { day: 1_000_000, money: 1_000_000_000, patients: 1_0
 export type Decision = 'fit' | 'unfit';
 export type TestResult = 'pass' | 'refer';
 export type DocumentId = number | 'certificate';
-export type NoteEntryId = ExaminationId | 'history' | 'pressure-repeat' | 'call-specialist' | 'call-employer';
+export type NoteEntryId = ExaminationId | 'history' | 'pressure-repeat' | 'call-specialist' | 'call-employer' | AdditionalNoteEntry;
 
 export { PATIENTS } from './patients';
 
@@ -562,7 +562,9 @@ function transition(state: GameState, action: GameAction): ActionResult {
       const required = additionalTestForJob(patientForAppointment(returning.visit));
       const additionalResult = returning.visit.additionalResult?.test === required && incoming.test !== required
         ? returning.visit.additionalResult : incoming;
-      const visit: Visit = { ...returning.visit, additionalResult };
+      const entry = additionalNoteEntry(incoming);
+      const visit: Visit = { ...returning.visit, additionalResult,
+        noteOrder: returning.visit.noteOrder.includes(entry) ? [...returning.visit.noteOrder] : [...returning.visit.noteOrder, entry] };
       return changed({ roster, visit, inspectionCheckedAt, rngState: admissionSeed, pendingReferrals: state.pendingReferrals.filter(pending => pending !== returning),
         clockMinutes: Math.max(SHIFT_START_MINUTES, spend(ACTION_MINUTES.handling)), nextPaperId: state.nextPaperId + 1,
         papers: recordResults([...state.papers, { id: state.nextPaperId, kind: 'additional-result', patientId: visit.patientId,

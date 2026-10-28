@@ -1,0 +1,7 @@
+Use case: stylized-concept
+Asset type: a single original closed clinic rulebook sprite, intended runtime size 138 x 164 pixels.
+Primary request: a handsome but very ordinary worn dark olive clothbound institutional manual from an unnamed 1983 occupational-health clinic. The reference image is ONLY a palette and pixel-art style reference.
+Composition: straight overhead orthographic view of ONE closed upright portrait book. A near-rectangular front cover occupies the complete frame apart from a very small transparent perimeter, spine on the left, narrow yellowed page edges on right and bottom. Width to height ratio 138:164. No perspective tilt. Subtle inset brass/ochre double-rule framing, fraying linen corners, understated spine grooves and rubbed cloth texture. A small unlettered blind-embossed botanical laurel/medical sprig emblem near lower third, unique to this fictional object, no national insignia.
+The broad upper-middle cover surface stays clean and unlettered. All physical decoration should remain extremely restrained and legible when downscaled to 138x164. Hard pixel clusters, soft muted institutional olive, charcoal and dull ochre. Follow the attached game's illustration quality, not a vector outline.
+Text: absolutely no letters, numbers, words, title, labels or logos.
+Background: genuinely transparent alpha, no matte, no checkerboard, no tabletop. No strong cast shadow outside the object. No additional objects, no user interface.
