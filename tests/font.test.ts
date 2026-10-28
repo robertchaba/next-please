@@ -15,18 +15,19 @@ function pixels(value: string, x = 0, y = 0,
   return marks;
 }
 
-describe('larger document reading face', () => {
-  it('gives running text larger lowercase counters and seven-row capitals', () => {
+describe('upright document reading face', () => {
+  it('uses the original four-row lowercase and five-row capitals without cursive variants', () => {
     const height = (value: string, draw: typeof drawReadingText) => {
       const ys = pixels(value, 0, 0, draw).map(([, y]) => y);
       return Math.max(...ys) - Math.min(...ys) + 1;
     };
-    expect(height('o', drawReadingText)).toBe(5);
+    expect(height('o', drawReadingText)).toBe(4);
     expect(height('o', drawDocumentText)).toBe(4);
-    expect(height('A', drawReadingText)).toBe(7);
-    expect(measureReadingText('Irena Gaj')).toBeGreaterThan(measureDocumentText('Irena Gaj'));
+    expect(height('A', drawReadingText)).toBe(5);
+    expect(measureReadingText('Irena Gaj')).toBe(measureDocumentText('Irena Gaj'));
     expect(pixels('Poradnia', 0, 0, drawReadingText)).not.toEqual(pixels('PORADNIA', 0, 0, drawReadingText));
-    expect(pixels('Gabinet', 0, 0, drawReadingText)).not.toEqual(pixels('Gabinet', 0, 0,
+    // Handwritten entries retain upright lettering; color distinguishes the ink.
+    expect(pixels('Gabinet', 0, 0, drawReadingText)).toEqual(pixels('Gabinet', 0, 0,
       (ctx, value, x, y) => drawReadingText(ctx, value, x, y, { face: 'handwritten' })));
   });
 
@@ -42,7 +43,7 @@ describe('larger document reading face', () => {
       for (const character of 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzĄĆĘŁŃÓŚŹŻąćęłńóśźż0123456789.,:;!?/—–()„”’…') {
         expect(pixels(character, 0, 0, draw).every(([x, y, w, h]) => x >= 0 && x < measureReadingText(character, face) && y >= 0 && y < READ_CELL_HEIGHT && w === 1 && h === 1), `${face}: ${character}`).toBe(true);
       }
-      expect(Math.max(...pixels('gypq', 0, 0, draw).map(([, y]) => y))).toBe(9);
+      expect(Math.max(...pixels('gypq', 0, 0, draw).map(([, y]) => y))).toBe(6);
     }
   });
 
@@ -65,15 +66,15 @@ describe('larger document reading face', () => {
 });
 
 describe('institutional document headline lettering', () => {
-  it('creates a stronger headline hierarchy and distinct service mastheads', () => {
+  it('uses the original document alphabet in all heading roles', () => {
     const serif = pixels('SKIEROWANIE', 0, 0, drawDocumentHeading);
     const sans = pixels('SKIEROWANIE', 0, 0, (ctx, text, x, y) => drawDocumentHeading(ctx, text, x, y, { face: 'sans' }));
     const body = pixels('SKIEROWANIE');
-    expect(serif.length).toBeGreaterThan(body.length * 1.5);
-    expect(serif).not.toEqual(sans);
-    expect(Math.max(...serif.map(([, y]) => y))).toBe(8);
-    expect(Math.max(...sans.map(([, y]) => y))).toBe(8);
-    expect(measureDocumentHeading('SKIEROWANIE', 'sans')).toBeLessThan(measureDocumentHeading('SKIEROWANIE', 'serif'));
+    expect(serif).toEqual(body);
+    expect(serif).toEqual(sans);
+    expect(Math.max(...serif.map(([, y]) => y))).toBe(5);
+    expect(Math.max(...sans.map(([, y]) => y))).toBe(5);
+    expect(measureDocumentHeading('SKIEROWANIE', 'sans')).toBe(measureDocumentHeading('SKIEROWANIE', 'serif'));
     for (const text of ['SKIEROWANIE', 'ORZECZENIE', 'ZAŚWIADCZENIE', 'EXAMINATION REPORT', 'CERTIFICATE']) {
       expect(measureDocumentHeading(text, 'serif'), text).toBeLessThanOrEqual(166);
     }
@@ -88,7 +89,7 @@ describe('institutional document headline lettering', () => {
         const marks = pixels(accented, 0, 0, draw);
         expect(marks, `${face}: ${accented}`).not.toEqual(pixels(plain, 0, 0, draw));
         expect(marks).not.toEqual(pixels('?', 0, 0, draw));
-        expect(marks.every(([x, y, w, h]) => x >= 0 && x < measureDocumentHeading(accented, face) && y >= 0 && y < 9 && w === 1 && h === 1)).toBe(true);
+        expect(marks.every(([x, y, w, h]) => x >= 0 && x < measureDocumentHeading(accented, face) && y >= 0 && y < 7 && w === 1 && h === 1)).toBe(true);
         expect(pixels(accented.normalize('NFD'), 0, 0, draw)).toEqual(marks);
       }
     }
@@ -102,18 +103,19 @@ describe('institutional document headline lettering', () => {
       const draw: typeof drawDocumentText = (ctx, value, x, y) => drawDocumentHeading(ctx, value, x, y, { face, align, scale: 2.9 });
       const marks = pixels(`${sample}\n${sample}`, 100.4, 10.3, draw);
       const line = original.map(([x, y]) => [Math.round(100.4 - offset) + x * scale, 10 + y * scale, scale, scale]);
-      expect(marks).toEqual([...line, ...line.map(([x, y, w, h]) => [x, y + 22, w, h])]);
+      expect(marks).toEqual([...line, ...line.map(([x, y, w, h]) => [x, y + 16, w, h])]);
       expect(marks.every(mark => mark.every(Number.isInteger))).toBe(true);
     }
   });
 });
 
 describe('compact original document font', () => {
-  it('distinguishes original document faces while preserving form metrics', () => {
+  it('preserves the original glyphs and metrics for every document role', () => {
     const faces: DocumentFace[] = ['print', 'typewriter', 'handwritten', 'book'];
     const sample = 'Poradnia / Gabinet 04\nZażółć gęślą jaźń. 1983';
     const drawn = faces.map(face => pixels(sample, 0, 0, (ctx, value, x, y) => drawDocumentText(ctx, value, x, y, { face })));
-    expect(new Set(drawn.map(marks => JSON.stringify(marks))).size).toBe(faces.length);
+    expect(new Set(drawn.map(marks => JSON.stringify(marks))).size).toBe(1);
+    expect(drawn[2]).toEqual(drawn[0]);
     expect(['Gabinet', '04'].map(measureDocumentText)).toEqual([measureDocumentText('Gabinet'), measureDocumentText('04')]);
     for (const face of faces) {
       expect(measureDocumentText(sample, face)).toBe(measureDocumentText(sample));

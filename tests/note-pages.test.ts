@@ -28,7 +28,8 @@ describe('medical note pagination', () => {
     expect(after.lines).toEqual(before.lines);
     expect(after.count).toBe(2);
     const partial = entries.slice(0, NOTE_LINES_PER_PAGE - 1);
-    const continuation = { text: 'Konsultacja psychiatryczna: zaburzenia psychiczne.', color: '#385b78' };
+    const continuation = { text: 'Konsultacja psychiatryczna: utrzymujące się zaburzenia psychiczne.', color: '#385b78' };
+    expect(wrapReadingText(continuation.text, DOCUMENT_BODY_WIDTH, 'handwritten').length).toBeGreaterThan(1);
     const together = paginateNoteEntries([...partial, continuation], DOCUMENT_BODY_WIDTH, 1);
     expect(together.lines).toEqual(wrapReadingText(continuation.text, DOCUMENT_BODY_WIDTH, 'handwritten').map(text => ({ ...continuation, text })));
   });

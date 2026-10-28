@@ -6,8 +6,8 @@ import { ITEM_SIZES } from '../core/desk';
 
 export const DOCUMENT_BODY_WIDTH = ITEM_SIZES.document.w - 22;
 
-/** The form label remains small while the typed value uses the reading face. */
-export const fieldLabelWidth = (label: string): number => measureDocumentText(label + 'x') - measureDocumentText('x');
+/** Labels and values share one native size and baseline, including their gap. */
+export const fieldLabelWidth = (label: string): number => measureReadingText(label + 'x') - measureReadingText('x');
 
 export function wrapReadingText(text: string, width = DOCUMENT_BODY_WIDTH, face: ReadingFace = 'typewriter'): string[] {
   const lines: string[] = [];

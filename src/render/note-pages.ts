@@ -3,7 +3,8 @@ import { translations, type Locale } from '../i18n';
 import { measureReadingText } from './font';
 import { DOCUMENT_BODY_WIDTH } from './document-copy';
 
-export const NOTE_LINES_PER_PAGE = 11;
+export const NOTE_LINE_HEIGHT = 14;
+export const NOTE_LINES_PER_PAGE = 9;
 export type NoteLine = { text: string; color: string };
 
 /** Pagination is presentation only; the append-only journal remains intact. */

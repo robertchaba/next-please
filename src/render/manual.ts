@@ -5,8 +5,11 @@ import { MANUAL_OPEN_SIZE, RIGHT_DESK_X, type Rect } from '../core/desk';
 import { manualSupplementsForDay } from '../core/manual';
 
 const CORNER_SIZE = 9;
-const TEXT_INSET = 12;
-const COLUMN_WIDTH = MANUAL_OPEN_SIZE.w / 2 - TEXT_INSET * 2;
+// The illustration includes the cover and page stack: measure from the actual
+// cream leaf, leaving extra room at the outside edges and at the binding.
+export const MANUAL_OUTER_INSET = 22;
+export const MANUAL_INNER_INSET = 14;
+export const MANUAL_COLUMN_WIDTH = MANUAL_OPEN_SIZE.w / 2 - MANUAL_OUTER_INSET - MANUAL_INNER_INSET;
 const NUMBER_GUTTER = 29;
 
 /** Numbering and titles remain the exact localized provision, with a common
@@ -16,7 +19,7 @@ export function manualHeadingLayout(title: string) {
   const number = numbered?.[1] ?? '';
   const text = numbered?.[2] ?? title;
   const offset = number ? NUMBER_GUTTER : 0;
-  const width = COLUMN_WIDTH - offset;
+  const width = MANUAL_COLUMN_WIDTH - offset;
   const lines: string[] = [];
   let line = '';
   for (const word of text.split(' ')) {
@@ -34,9 +37,9 @@ function drawProvisionHeading(ctx: CanvasRenderingContext2D, title: string, x: n
   drawDocumentHeading(ctx, layout.lines.join('\n'), x + layout.offset, y + (layout.lines.length > 1 ? 6 : 12), { color, face: 'sans' });
 }
 
-/** Reflow complete provisions for the larger reading face; old line breaks are
+/** Reflow complete provisions for the upright reading face; old line breaks are
  * editorial wrapping, never omitted text or a reason to shrink the type. */
-export function manualBodyLayout(lines: readonly string[], width = COLUMN_WIDTH): string[] {
+export function manualBodyLayout(lines: readonly string[], width = MANUAL_COLUMN_WIDTH): string[] {
   const rows: string[] = [];
   let current = '';
   for (const word of lines.join(' ').split(' ')) {
@@ -105,12 +108,14 @@ export function drawManual(ctx: CanvasRenderingContext2D, bounds: Rect, locale: 
   drawManualArt(ctx, 'spread', x, y, w, h);
   const middle = Math.floor(w / 2);
   const headingInk = chapter.section === translations[locale].manualBase ? '#39432e' : '#823e32';
-  drawProvisionHeading(ctx, chapter.title, x + 12, y, headingInk);
-  drawProvisionHeading(ctx, chapter.facingTitle, x + middle + 12, y, headingInk);
-  drawProvisionBody(ctx, chapter.lines, x + 12, y + 36, middle - TEXT_INSET * 2);
-  drawProvisionBody(ctx, chapter.facingLines, x + middle + 12, y + 36, middle - TEXT_INSET * 2);
-  drawDocumentText(ctx, `${page + 1}/${pages.length}`, x + middle - 12, y + h - 34, { color: '#7d7456', align: 'right', face: 'typewriter' });
-  drawDocumentText(ctx, chapter.section, x + middle + 12, y + h - 34, { color: '#7d7456', face: 'typewriter' });
+  const left = x + MANUAL_OUTER_INSET, right = x + middle + MANUAL_INNER_INSET;
+  const width = middle - MANUAL_OUTER_INSET - MANUAL_INNER_INSET;
+  drawProvisionHeading(ctx, chapter.title, left, y, headingInk);
+  drawProvisionHeading(ctx, chapter.facingTitle, right, y, headingInk);
+  drawProvisionBody(ctx, chapter.lines, left, y + 36, width);
+  drawProvisionBody(ctx, chapter.facingLines, right, y + 36, width);
+  drawDocumentText(ctx, `${page + 1}/${pages.length}`, x + Math.floor(middle / 2), y + h - 34, { color: '#7d7456', align: 'center', face: 'typewriter' });
+  drawDocumentText(ctx, chapter.section, x + middle + Math.floor(middle / 2), y + h - 34, { color: '#7d7456', align: 'center', face: 'typewriter' });
   drawCorner(ctx, bounds, false);
   if (page < pages.length - 1) drawCorner(ctx, bounds, true);
 }

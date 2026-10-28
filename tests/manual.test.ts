@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { manualSupplementsForDay } from '../src/core/manual';
-import { drawManual, manualBodyLayout, manualHeadingLayout, manualPageCount, manualPageDescription, manualPagesForDay } from '../src/render/manual';
+import { drawManual, manualBodyLayout, manualHeadingLayout, manualPageCount, manualPageDescription, manualPagesForDay, MANUAL_COLUMN_WIDTH, MANUAL_OUTER_INSET, MANUAL_INNER_INSET } from '../src/render/manual';
 import { measureDocumentHeading, measureReadingText, READ_CELL_HEIGHT, READ_LINE_HEIGHT } from '../src/render/font';
 import { MANUAL_OPEN_SIZE } from '../src/core/desk';
 import { translations } from '../src/i18n';
@@ -22,20 +22,23 @@ describe('gradually issued rulebook supplements', () => {
         const headings = marks.filter(mark => mark.y < 36);
         expect(headings.some(mark => mark.w === 2 && mark.h === 2)).toBe(true);
         expect(headings.every(mark => mark.y + mark.h <= 26)).toBe(true);
-        expect(marks.every(mark => mark.x >= 12 && mark.x + mark.w <= MANUAL_OPEN_SIZE.w - 12 && mark.y >= 0 && mark.y + mark.h <= MANUAL_OPEN_SIZE.h - 27)).toBe(true);
+        const middle = MANUAL_OPEN_SIZE.w / 2;
+        expect(marks.every(mark => mark.x >= MANUAL_OUTER_INSET && mark.x + mark.w <= MANUAL_OPEN_SIZE.w - MANUAL_OUTER_INSET && mark.y >= 0 && mark.y + mark.h <= MANUAL_OPEN_SIZE.h - 27)).toBe(true);
+        expect(marks.every(mark => mark.x + mark.w <= middle - MANUAL_INNER_INSET || mark.x >= middle + MANUAL_INNER_INSET)).toBe(true);
       }
     }
   });
 
-  it('reflows every full provision in larger type above the metadata footer', () => {
-    const width = MANUAL_OPEN_SIZE.w / 2 - 24;
+  it('reflows every full provision above the metadata footer and bottom ornament', () => {
+    const width = MANUAL_COLUMN_WIDTH;
     for (const locale of ['pl', 'en'] as const) for (const page of manualPagesForDay(locale, 100)) {
       for (const lines of [page.lines, page.facingLines]) {
         const rows = manualBodyLayout(lines);
         expect(rows.join(' ')).toBe(lines.join(' '));
         for (const row of rows) expect(measureReadingText(row), row).toBeLessThanOrEqual(width);
         const end = 36 + (rows.length - 1) * READ_LINE_HEIGHT + READ_CELL_HEIGHT;
-        expect(end, `${locale}: ${lines.join(' ')}`).toBeLessThanOrEqual(MANUAL_OPEN_SIZE.h - 35);
+        // Leave clear space before the footer at 146 and ornament at 158.
+        expect(end, `${locale}: ${lines.join(' ')}`).toBeLessThanOrEqual(141);
       }
     }
   });

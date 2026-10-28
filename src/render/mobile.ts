@@ -20,22 +20,13 @@ export function mobileStatusLines(value: string): string {
   return lines.join('\n');
 }
 
-/** Original bitmap letters, with a deterministic pen slant and uneven baseline. */
+/** Upright native letters, enlarged by whole pixels on a steady baseline. */
 function handwriting(ctx: CanvasRenderingContext2D, value: string, x: number, y: number, scale: number): void {
-  const glyph = document.createElement('canvas');
-  glyph.width = 12; glyph.height = 9;
-  const ink = glyph.getContext('2d')!;
-  let cursor = x;
-  for (const [index, character] of [...value].entries()) {
-    if (character === ' ') { cursor += 3 * scale; continue; }
-    ink.clearRect(0, 0, 12, 9);
-    drawDocumentText(ink, character, 0, 0, { color: '#354f62' });
-    const baseline = [0, 0, -1, 0, 1, 0][index % 6];
-    for (let row = 0; row < 7; row++) {
-      ctx.drawImage(glyph, 0, row, 12, 1, cursor + Math.floor((6 - row) / 3), y + row * scale + baseline, 12 * scale, scale);
-    }
-    cursor += (measureDocumentText(character) + 1) * scale;
-  }
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  drawDocumentText(ctx, value, 0, 0, { color: '#354f62', face: 'handwritten' });
+  ctx.restore();
 }
 
 export function drawMobileNote(canvas: HTMLCanvasElement, paper: HTMLImageElement | undefined, title: string, lines: readonly string[]): void {

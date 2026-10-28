@@ -10,7 +10,7 @@ import { drawDocumentText, drawDocumentHeading, measureDocumentText, drawReading
 import { referralCopy, correspondenceCopy, employerInstitution, wrapReadingText, fieldLabelWidth } from './document-copy';
 import { drawAdministrativeStamp, drawLetterhead, institutionInk } from './document-style';
 import { drawManualArt } from './clinic';
-import { paginateNoteEntries, notePageControls, notePageLabel } from './note-pages';
+import { paginateNoteEntries, notePageControls, notePageLabel, NOTE_LINE_HEIGHT } from './note-pages';
 
 export const DOCUMENT_INK = '#333b2b';
 export const HANDWRITING_INK = '#385b78';
@@ -294,10 +294,10 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     drawLetterhead(ctx, copy.institution, copy.masthead, copy.subheading, x + 11, y + 6);
     dateAndReference();
     drawDocumentHeading(ctx, copy.title, x + Math.floor(w / 2), y + 29, { color: institutionInk(copy.institution), face: 'serif', align: 'center' });
-    drawDocumentText(ctx, copy.instruction, x + 11, y + 40, { color: muted, face: 'book' });
+    drawReadingText(ctx, copy.instruction, x + 11, y + 40, { color: ink });
     copy.rows.forEach((row, index) => {
-      const rowY = y + 49 + index * READ_LINE_HEIGHT;
-      drawDocumentText(ctx, row.label, x + 11, rowY + 3, { color: '#696b53', face: 'print' });
+      const rowY = y + 54 + index * 12;
+      drawReadingText(ctx, row.label, x + 11, rowY, { color: '#53563f' });
       drawReadingText(ctx, row.value, x + 11 + fieldLabelWidth(row.label), rowY, { color: ink });
     });
     authentication();
@@ -345,7 +345,7 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     if (paper.patientId !== null) {
       drawReadingText(ctx, noteIdentity(paper, locale), x + 11, y + 12, { color: HANDWRITING_INK, face: 'handwritten' });
       const sheet = paginateNoteEntries(noteEntries(paper, locale), w - 22, page);
-      sheet.lines.forEach((line, index) => drawReadingText(ctx, line.text, x + 11, y + 28 + index * READ_LINE_HEIGHT, { color: line.color, face: 'handwritten' }));
+      sheet.lines.forEach((line, index) => drawReadingText(ctx, line.text, x + 11, y + 32 + index * NOTE_LINE_HEIGHT, { color: line.color, face: 'handwritten' }));
       if (sheet.count > 1) {
         drawDocumentText(ctx, notePageLabel(locale, sheet.page, sheet.count), x + Math.floor(w / 2), y + h - 12, { color: muted, align: 'center' });
         if (!lifted && showActions) {
