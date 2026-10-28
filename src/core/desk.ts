@@ -1,3 +1,5 @@
+import type { Paper } from './game';
+
 /** Temporary desk layout. Item positions are deliberately absent from gameplay saves. */
 export type FixedDeskItemId = 'document' | 'incoming-referral' | 'stamp-fit' | 'stamp-unfit' | 'manual' | 'banknote';
 export type DeskItemId = FixedDeskItemId | `paper-${number}` | `clip-${number}` | `banknote-${number}`;
@@ -16,6 +18,8 @@ export interface DeskState {
   positions: Record<DeskItemId, Point>;
   /** Back-to-front drawing and hit-test order. */
   order: DeskItemId[];
+  /** Per-item desktop footprints, derived from paper kinds rather than saved. */
+  sizes?: Partial<Record<DeskItemId, Pick<Rect, 'w' | 'h'>>>;
   /** Compact paper footprint remains stable until it is placed on a desktop. */
   documentCarrySize?: Pick<Rect, 'w' | 'h'>;
 }
@@ -61,10 +65,15 @@ export const MANUAL_OPEN_SIZE = { w: 300, h: 180 } as const;
 export const MANUAL_OPEN_POSITION: Point = { x: 216, y: 134 };
 
 /** Full-size artwork on the main desk; tools also use it while carried. */
+export const PAPER_SIZE = { w: 200, h: 168 } as const;
+export const CLINICAL_PAPER_SIZE = { w: 176, h: 157 } as const;
+export function paperDesktopSize(kind: Paper['kind']): Pick<Rect, 'w' | 'h'> {
+  return kind === 'note' || kind === 'referral' || kind === 'specialist' ? CLINICAL_PAPER_SIZE : PAPER_SIZE;
+}
 export const ITEM_SIZES: Record<DeskItemId, Pick<Rect, 'w' | 'h'>> = {
   banknote: { w: 92, h: 42 },
-  document: { w: 212, h: 176 },
-  'incoming-referral': { w: 212, h: 176 },
+  document: CLINICAL_PAPER_SIZE,
+  'incoming-referral': CLINICAL_PAPER_SIZE,
   'stamp-fit': { w: 48, h: 48 },
   'stamp-unfit': { w: 48, h: 48 },
   manual: { w: 138, h: 164 },
@@ -95,29 +104,33 @@ export function restRect(id: DeskItemId): Rect | undefined {
 }
 
 /** A carried stamp follows its printing face; other carried items their center. */
-export function itemAnchor(id: DeskItemId, size: Pick<Rect, 'w' | 'h'> = fullSize(id)): Point {
+export function itemAnchor(id: DeskItemId, size: Pick<Rect, 'w' | 'h'> = desktopItemSize(id)): Point {
   if (id === 'stamp-fit' || id === 'stamp-unfit') return { x: 24, y: 42 };
   const { w, h } = size;
   return { x: Math.floor(w / 2), y: Math.floor(h / 2) };
 }
 
-function fullSize(id: DeskItemId): Pick<Rect, 'w' | 'h'> {
+export function desktopItemSize(id: DeskItemId, state?: DeskState): Pick<Rect, 'w' | 'h'> {
+  if (state?.sizes?.[id]) return state.sizes[id];
   if (id.startsWith('banknote-')) return ITEM_SIZES.banknote;
-  if (id.startsWith('paper-')) return ITEM_SIZES.document;
+  if (id.startsWith('paper-')) return PAPER_SIZE;
   if (id.startsWith('clip-')) return { w: 14, h: 19 };
   return ITEM_SIZES[id];
 }
 
-export function addDeskItem(state: DeskState, id: DeskItemId, point: Point): DeskState {
+export function addDeskItem(state: DeskState, id: DeskItemId, point: Point, size?: Pick<Rect, 'w' | 'h'>): DeskState {
   if (state.positions[id]) return state;
   const added = { ...state, positions: { ...state.positions, [id]: { ...point } }, order: [...state.order, id] };
+  if (size) added.sizes = { ...state.sizes, [id]: { ...size } };
   return moveDeskItem(added, id, point);
 }
 
 export function removeDeskItem(state: DeskState, id: DeskItemId): DeskState {
   const positions = { ...state.positions };
   delete positions[id];
-  return { ...state, positions, order: state.order.filter(item => item !== id) };
+  const sizes = { ...state.sizes };
+  delete sizes[id];
+  return { ...state, positions, sizes, order: state.order.filter(item => item !== id) };
 }
 
 /** Resting position after importing a visit or canceling pickup from the rack. */
@@ -141,12 +154,12 @@ export function createDeskState(): DeskState {
   };
 }
 
-function itemSize(id: DeskItemId, x: number, held: boolean, manualOpen: boolean, documentCarrySize?: Pick<Rect, 'w' | 'h'>): Pick<Rect, 'w' | 'h'> {
+function itemSize(state: DeskState, id: DeskItemId, x: number, held: boolean, manualOpen: boolean): Pick<Rect, 'w' | 'h'> {
   if (id === 'banknote' || id.startsWith('banknote-')) return ITEM_SIZES.banknote;
   if (id === 'incoming-referral') return held ? CARRIED_TRAY_DOCUMENT : TRAY_DOCUMENT;
-  if (id.startsWith('clip-')) return fullSize(id);
-  if (id.startsWith('paper-')) return held ? CARRIED_ITEM_SIZES.document : x < RIGHT_DESK_X ? SMALL_DOCUMENT : ITEM_SIZES.document;
-  if (held) return id === 'document' && documentCarrySize ? documentCarrySize : CARRIED_ITEM_SIZES[id];
+  if (id.startsWith('clip-')) return desktopItemSize(id, state);
+  if (id.startsWith('paper-')) return held ? CARRIED_ITEM_SIZES.document : x < RIGHT_DESK_X ? SMALL_DOCUMENT : desktopItemSize(id, state);
+  if (held) return id === 'document' && state.documentCarrySize ? state.documentCarrySize : CARRIED_ITEM_SIZES[id];
   if (id === 'stamp-fit' || id === 'stamp-unfit') return RESTING_STAMP;
   if (id === 'manual' && manualOpen) return MANUAL_OPEN_SIZE;
   if (x < RIGHT_DESK_X) return id === 'document' ? SMALL_DOCUMENT : MANUAL_SHELF_SIZE;
@@ -156,13 +169,13 @@ function itemSize(id: DeskItemId, x: number, held: boolean, manualOpen: boolean,
 export function itemRect(state: DeskState, id: DeskItemId, documentInTray = false, held = false, manualOpen = false): Rect {
   if (id === 'incoming-referral' && !held) return { ...TRAY_DOCUMENT };
   const point = state.positions[id];
-  return { ...point, ...itemSize(id, point.x, held, manualOpen, state.documentCarrySize) };
+  return { ...point, ...itemSize(state, id, point.x, held, manualOpen) };
 }
 
 /** Shrink around the item's center; crossing the divider never resizes it again. */
 export function pickUpDeskItem(state: DeskState, id: DeskItemId, documentInTray = false, manualOpen = false): DeskState {
   const origin = itemRect(state, id, documentInTray, false, manualOpen);
-  const size = itemSize(id, origin.x, true, false);
+  const size = itemSize(state, id, origin.x, true, false);
   const pickedUp = id === 'document' ? { ...state, documentCarrySize: { ...size } } : state;
   const point = id === 'document' || id === 'incoming-referral' || id === 'manual' || id.startsWith('paper-')
     ? { x: origin.x + Math.floor(origin.w / 2) - Math.floor(size.w / 2),
@@ -177,7 +190,7 @@ export function moveDeskItem(state: DeskState, id: DeskItemId, point: Point, hel
   const requestedX = Math.round(Number.isNaN(point.x) ? previous.x : point.x);
   const requestedY = Math.round(Number.isNaN(point.y) ? previous.y : point.y);
   const onLeft = requestedX < RIGHT_DESK_X && !(id === 'manual' && manualOpen);
-  const size = itemSize(id, onLeft ? 0 : RIGHT_DESK_X, held, manualOpen, state.documentCarrySize);
+  const size = itemSize(state, id, onLeft ? 0 : RIGHT_DESK_X, held, manualOpen);
   const paperOnRight = !onLeft && (id === 'document' || id.startsWith('paper-'));
   const top = paperOnRight ? RIGHT_DESK_TOP - Math.floor(size.h / 2)
     : id === 'manual' && manualOpen ? Math.min(DESK_BOUNDS.y, DESK_BOUNDS.y + DESK_BOUNDS.h - size.h) : DESK_BOUNDS.y;

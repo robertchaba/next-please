@@ -5,8 +5,8 @@ import { paperDescription, certificateDescription, drawPaperwork, drawCertificat
 import { decodeSave, encodeSave } from '../src/core/save';
 import { measureDocumentText, measureReadingText, READ_CELL_HEIGHT, READ_LINE_HEIGHT } from '../src/render/font';
 import { DOCUMENT_BODY_WIDTH, referralCopy, fieldLabelWidth, wrapReadingText } from '../src/render/document-copy';
-import { NOTE_LINES_PER_PAGE, paginateNoteEntries } from '../src/render/note-pages';
-import { createDeskState, addDeskItem, ITEM_SIZES } from '../src/core/desk';
+import { NOTE_BODY_WIDTH, NOTE_LINE_HEIGHT, NOTE_LINES_PER_PAGE, paginateNoteEntries } from '../src/render/note-pages';
+import { createDeskState, addDeskItem, ITEM_SIZES, PAPER_SIZE, paperDesktopSize } from '../src/core/desk';
 import { shiftButtons, visibleDocumentClip } from '../src/scenes/shift';
 
 function stateAfter(...actions: GameAction[]) {
@@ -22,7 +22,7 @@ describe('separate localized paperwork', () => {
       const t = translations[locale], p = t.paperwork;
       for (const patient of PATIENTS) {
         const copy = referralCopy(patient.id, locale);
-        expect(49 + (copy.rows.length - 1) * READ_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThanOrEqual(ITEM_SIZES.document.h - 29);
+        expect(49 + (copy.rows.length - 1) * READ_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThanOrEqual(PAPER_SIZE.h - 29);
         for (const row of copy.rows) expect(fieldLabelWidth(row.label) + measureReadingText(row.value), row.value).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
         const text = copy.lines.join(' ');
         expect(text).toContain(patient.birthDate);
@@ -32,7 +32,7 @@ describe('separate localized paperwork', () => {
       for (const letter of [...p.letters.zus, ...p.letters.employer]) {
         const lines = wrapReadingText(letter.body);
         expect(lines.join(' ')).toBe(letter.body);
-        expect(70 + (lines.length - 1) * READ_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThanOrEqual(ITEM_SIZES.document.h - 28);
+        expect(70 + (lines.length - 1) * READ_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThanOrEqual(PAPER_SIZE.h - 28);
         for (const line of lines) expect(measureReadingText(line), line).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
       }
       for (const label of [p.referral, p.occupational, p.note, p.letter]) {
@@ -69,7 +69,7 @@ describe('separate localized paperwork', () => {
     expect(noteIdentity({ ...note, patientId: 1, day: 4 }, 'pl')).toContain('Wiek: 46');
     expect(noteIdentity({ ...note, patientId: 1, day: 3, location: 'drawer' }, 'en')).toContain('Age: 45');
     for (const patient of PATIENTS) for (const locale of ['pl', 'en'] as const) {
-      expect(measureReadingText(noteIdentity({ ...note, patientId: patient.id }, locale), 'handwritten')).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
+      expect(measureReadingText(noteIdentity({ ...note, patientId: patient.id }, locale), 'handwritten')).toBeLessThanOrEqual(NOTE_BODY_WIDTH);
     }
   });
 
@@ -178,7 +178,7 @@ describe('separate localized paperwork', () => {
         } };
         drawCertificate(recorder as unknown as CanvasRenderingContext2D, restored, { x: 0, y: 0, ...ITEM_SIZES.document }, locale, false);
         expect(handwriting.some(y => y >= 56 && y < 56 + READ_CELL_HEIGHT)).toBe(state === signed);
-        expect(handwriting.some(y => y >= 88 && y < 88 + READ_CELL_HEIGHT)).toBe(state === signed);
+        expect(handwriting.some(y => y >= 73 && y < 73 + READ_CELL_HEIGHT)).toBe(state === signed);
       }
     }
   });
@@ -191,7 +191,12 @@ describe('separate localized paperwork', () => {
       const recorder = { fillStyle: '', save() {}, restore() {}, fillRect(x: number, y: number, w: number, h: number) {
         if (w === 1 && h === 1) marks.push({ x, y });
       } } as unknown as CanvasRenderingContext2D;
-      for (const paper of state.papers) drawPaperwork(recorder, paper, { x: 0, y: 0, ...ITEM_SIZES.document }, locale, false);
+      for (const paper of state.papers) {
+        const size = paperDesktopSize(paper.kind);
+        drawPaperwork(recorder, paper, { x: 0, y: 0, ...size }, locale, false);
+        expect(marks.every(mark => mark.x >= 0 && mark.x < size.w && mark.y >= 0 && mark.y < size.h)).toBe(true);
+        marks.length = 0;
+      }
       drawCertificate(recorder, state, { x: 0, y: 0, ...ITEM_SIZES.document }, locale, false);
       expect(marks.every(mark => mark.x >= 0 && mark.x < ITEM_SIZES.document.w && mark.y >= 0 && mark.y < ITEM_SIZES.document.h)).toBe(true);
     }
@@ -275,12 +280,12 @@ describe('separate localized paperwork', () => {
       const high = patient.pressureValues.systolic >= 180 || patient.pressureValues.diastolic >= 110;
       expect(pressure.color).toBe(high ? ALERT_INK : HANDWRITING_INK);
       const first = paginateNoteEntries(entries);
-      const pages = Array.from({ length: first.count }, (_, page) => paginateNoteEntries(entries, DOCUMENT_BODY_WIDTH, page));
-      expect(pages.flatMap(page => page.lines)).toEqual(entries.flatMap(entry => wrapReadingText(entry.text, DOCUMENT_BODY_WIDTH, 'handwritten').map(text => ({ ...entry, text }))));
+      const pages = Array.from({ length: first.count }, (_, page) => paginateNoteEntries(entries, NOTE_BODY_WIDTH, page));
+      expect(pages.flatMap(page => page.lines)).toEqual(entries.flatMap(entry => wrapReadingText(entry.text, NOTE_BODY_WIDTH, 'handwritten').map(text => ({ ...entry, text }))));
       for (const page of pages) {
         expect(page.lines.length).toBeLessThanOrEqual(NOTE_LINES_PER_PAGE);
-        expect(28 + (page.lines.length - 1) * READ_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThan(ITEM_SIZES.document.h - 15);
-        for (const line of page.lines) expect(measureReadingText(line.text, 'handwritten')).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
+        expect(32 + (page.lines.length - 1) * NOTE_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThanOrEqual(ITEM_SIZES.document.h - 15);
+        for (const line of page.lines) expect(measureReadingText(line.text, 'handwritten')).toBeLessThanOrEqual(NOTE_BODY_WIDTH);
       }
     }
   });

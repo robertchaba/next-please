@@ -2,12 +2,12 @@ import { PATIENTS, type GameState, type Paper } from '../core/game';
 import { ADDITIONAL_TESTS, additionalNoteResult, additionalTestForJob, type AdditionalTest } from '../core/additional-tests';
 import { referralDate, workDayNumber, effectivePatient } from '../core/progression';
 import { generalFindingIndex, patientAge, veryHighPressure, type PressureValues, type VisionValues } from '../core/patients';
-import type { Rect } from '../core/desk';
+import { CLINICAL_PAPER_SIZE, paperDesktopSize, type DeskItemId, type Rect } from '../core/desk';
 import { formatGameDate, gameDate } from '../core/calendar';
 import { translations, type Locale } from '../i18n';
 import { drawPaper, drawPaperclip, drawDecisionImprint, drawDocumentSignature, drawUnclearSeal, drawInspectionForm, drawInspector, drawStationery } from './clinic';
 import { drawDocumentText, drawDocumentHeading, measureDocumentText, drawReadingText, measureReadingText, READ_LINE_HEIGHT } from './font';
-import { referralCopy, correspondenceCopy, employerInstitution, wrapReadingText, fieldLabelWidth } from './document-copy';
+import { referralCopy, correspondenceCopy, employerInstitution, wrapReadingText, fieldLabelWidth, REFERRAL_BODY_Y, REFERRAL_LINE_HEIGHT } from './document-copy';
 import { drawAdministrativeStamp, drawLetterhead, institutionInk } from './document-style';
 import { drawManualArt } from './clinic';
 import { paginateNoteEntries, notePageControls, notePageLabel, NOTE_LINE_HEIGHT } from './note-pages';
@@ -198,6 +198,14 @@ export function paperClipRect(bounds: Rect): Rect {
   return { x: bounds.x + bounds.w - 17, y: bounds.y - 2, w: 10, h: 19 };
 }
 
+/** Forgiving joining target; empty-handed unclipping keeps the illustrated bounds. */
+export function paperClipTargetRect(bounds: Rect, held: DeskItemId | null): Rect {
+  const clip = paperClipRect(bounds);
+  const joining = held === 'document' || held === 'incoming-referral' || held?.startsWith('paper-');
+  const margin = joining ? 12 : 0;
+  return { x: clip.x - margin, y: clip.y - margin, w: clip.w + margin * 2, h: clip.h + margin * 2 };
+}
+
 /** The horizontal identity card shares the desk paper anchor, but has its own hit area. */
 export function visiblePaperRect(paper: Paper | undefined, bounds: Rect): Rect {
   if (paper?.kind !== 'inspection-id') return bounds;
@@ -246,7 +254,7 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     if (clipped) { const clip = paperClipRect(visiblePaperRect(paper, bounds)); drawPaperclip(ctx, clip.x, clip.y, lifted); }
     return;
   }
-  const full = w >= 188;
+  const full = w >= paperDesktopSize(paper.kind).w;
   const employer = paper.patientId === null ? 'referral' : employerStationery(paper.patientId);
   const employerSeal = employer === 'referral' ? 'employer' : employer;
   const seal = paper.kind === 'letter' || paper.kind === 'directive' ? paper.sender === 'employer' ? employerSeal : paper.sender : paper.kind === 'specialist' ? 'chamber' : paper.kind === 'referral' ? employerSeal : 'clinic';
@@ -296,7 +304,7 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     drawDocumentHeading(ctx, copy.title, x + Math.floor(w / 2), y + 29, { color: institutionInk(copy.institution), face: 'serif', align: 'center' });
     drawReadingText(ctx, copy.instruction, x + 11, y + 40, { color: ink });
     copy.rows.forEach((row, index) => {
-      const rowY = y + 54 + index * 12;
+      const rowY = y + REFERRAL_BODY_Y + index * REFERRAL_LINE_HEIGHT;
       drawReadingText(ctx, row.label, x + 11, rowY, { color: '#53563f' });
       drawReadingText(ctx, row.value, x + 11 + fieldLabelWidth(row.label), rowY, { color: ink });
     });
@@ -417,7 +425,7 @@ export function drawCertificate(ctx: CanvasRenderingContext2D, state: GameState,
   fill(ctx, x + (lifted ? 6 : 3), y + (lifted ? 6 : 3), w, h, '#293126');
   drawPaper(ctx, x, y, w, h);
   const write = (value: string, dx: number, dy: number, color = ink): void => drawDocumentText(ctx, value, x + dx, y + dy, { color, face: color === HANDWRITING_INK ? 'handwritten' : dy === 9 ? 'book' : 'typewriter' });
-  if (w < 188) {
+  if (w < CLINICAL_PAPER_SIZE.w) {
     fill(ctx, x + 7, y + 10, w - 14, 1, '#9e9876');
     fill(ctx, x + 7, y + 15, w - 22, 1, '#b0a780');
     for (let row = 0; row < 4; row++) fill(ctx, x + 7, y + 25 + row * 5, w - 15 - row % 3 * 5, 1, '#b0a780');
@@ -425,21 +433,26 @@ export function drawCertificate(ctx: CanvasRenderingContext2D, state: GameState,
     write(String(visit.patientId + 1).padStart(2, '0'), 7, h - 12, '#82785a');
   } else {
     const d = t.documentDesign;
-    drawLetterhead(ctx, 'clinic', d.medicalOffice, d.institutions.clinic, x + 12, y + 6);
-    drawDocumentText(ctx, formatGameDate(state.day, locale), x + w - 12, y + 9, { color: muted, align: 'right', face: 'typewriter' });
-    drawDocumentText(ctx, `${p.reference} ${state.day}/${state.shiftCompleted + 1}`, x + w - 12, y + 19, { color: muted, align: 'right' });
-    drawDocumentHeading(ctx, d.certificate, x + Math.floor(w / 2), y + 29, { color: ink, align: 'center', face: 'serif' });
-    write(p.name, 12, 45, muted);
-    if (visit.certificateNamed) drawReadingText(ctx, t.patientNames[visit.patientId]!, x + 12, y + 56, { face: 'handwritten', color: HANDWRITING_INK });
-    else for (let dx = 12; dx < 150; dx += 4) fill(ctx, x + dx, y + 63, 2, 1, '#b3a984');
-    write(`${p.position}:`, 12, 77, muted);
-    if (visit.certificateNamed) drawReadingText(ctx, t.patientJobs[visit.patientId]!, x + 12, y + 88, { face: 'handwritten', color: HANDWRITING_INK });
-    else for (let dx = 12; dx < w - 12; dx += 4) fill(ctx, x + dx, y + 98, 2, 1, '#b3a984');
-    write(d.certificateStatement, 12, 116, ink);
+    drawDocumentHeading(ctx, d.medicalOffice, x + 8, y + 6, { color: ink });
+    write(d.institutions.clinic, 8, 16);
+    drawDocumentText(ctx, formatGameDate(state.day, locale), x + w - 8, y + 6, { color: muted, align: 'right', face: 'typewriter' });
+    drawDocumentText(ctx, `${p.reference} ${state.day}/${state.shiftCompleted + 1}`, x + w - 8, y + 31, { color: muted, align: 'right' });
+    drawDocumentHeading(ctx, d.certificate, x + 8, y + 31, { color: ink, face: 'serif' });
+    write(p.name, 8, 46, muted);
+    if (visit.certificateNamed) drawReadingText(ctx, t.patientNames[visit.patientId]!, x + 8, y + 56, { face: 'handwritten', color: HANDWRITING_INK });
+    else for (let dx = 8; dx < w - 8; dx += 4) fill(ctx, x + dx, y + 63, 2, 1, '#b3a984');
+    const jobLabel = `${p.position}:`;
+    const jobX = 8 + measureReadingText(jobLabel) + 4;
+    write(jobLabel, 8, 73, muted);
+    if (visit.certificateNamed) drawReadingText(ctx, t.patientJobs[visit.patientId]!, x + jobX, y + 73, { face: 'handwritten', color: HANDWRITING_INK });
+    else for (let dx = jobX; dx < w - 8; dx += 4) fill(ctx, x + dx, y + 80, 2, 1, '#b3a984');
+    const statement = wrapReadingText(d.certificateStatement, w - 16);
+    statement.forEach((line, index) => write(line, 8, 92 + index * READ_LINE_HEIGHT));
+    const impressionY = 92 + statement.length * READ_LINE_HEIGHT + 4;
     if (visit.decision) {
-      drawDecisionImprint(ctx, visit.decision, locale, x + 12, y + h - 39, 116, 32);
-      drawDocumentSignature(ctx, x + 133, y + h - 37, 38, 11);
-    } else for (let dx = 14; dx < 129; dx += 4) fill(ctx, x + dx, y + 133, 2, 1, '#b3a984');
+      drawDecisionImprint(ctx, visit.decision, locale, x + 8, y + impressionY, 98, 27);
+      drawDocumentSignature(ctx, x + 116, y + h - 33, 30, 10);
+    } else for (let dx = 8; dx < 106; dx += 4) fill(ctx, x + dx, y + impressionY + 19, 2, 1, '#b3a984');
     if (!lifted) drawActionCorner(ctx, bounds, true);
   }
   if (clipped) { const clip = paperClipRect(bounds); drawPaperclip(ctx, clip.x, clip.y); }

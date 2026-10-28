@@ -2,6 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { encodeSave } from '../../src/core/save';
 import { translations } from '../../src/i18n';
 import { longNoteState } from '../fixtures/long-notes';
+import { noteEntries } from '../../src/render/paperwork';
+import { paginateNoteEntries } from '../../src/render/note-pages';
 
 async function key(page: Page, id: string): Promise<void> {
   await page.locator(`#control-${id}`).focus();
@@ -19,6 +21,8 @@ for (const locale of ['pl', 'en'] as const) {
     page.on('pageerror', error => errors.push(error.message));
     const state = longNoteState(), note = state.papers.find(paper => paper.kind === 'note')!;
     const t = translations[locale];
+    const pageCount = paginateNoteEntries(noteEntries(note, locale)).count;
+    expect(pageCount).toBeGreaterThan(1);
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.clock.install();
     await page.goto('/');
@@ -38,16 +42,19 @@ for (const locale of ['pl', 'en'] as const) {
     };
     await load();
     const paper = page.locator(`#control-paper-${note.id}`);
-    await expect(paper).toHaveAccessibleName(new RegExp(`${t.notePagination.page} 1/2`));
+    await expect(paper).toHaveAccessibleName(new RegExp(`${t.notePagination.page} 1/${pageCount}`));
+    expect(await paper.evaluate(element => ({ w: parseInt(element.style.width), h: parseInt(element.style.height) }))).toEqual({ w: 176, h: 157 });
     await expect(paper).toHaveAccessibleName(new RegExp(t.additionalTests.notes['chest-xray'].fit.replace('.', '\\.')));
     await expect(page.locator(`#control-paper-action-${note.id}`)).toHaveCount(0);
-    await page.locator(`#control-note-next-${note.id}`).click();
-    await expect(paper).toHaveAccessibleName(new RegExp(`${t.notePagination.page} 2/2`));
+    for (let current = 2; current <= pageCount; current++) {
+      await page.locator(`#control-note-next-${note.id}`).click();
+      await expect(paper).toHaveAccessibleName(new RegExp(`${t.notePagination.page} ${current}/${pageCount}`));
+    }
     await expect(page.locator(`#control-note-prev-${note.id}`)).toBeFocused();
     await expect(page.locator(`#control-note-next-${note.id}`)).toHaveCount(0);
     await page.locator('#stage').screenshot({ path: info.outputPath(`notes-last-page-${locale}.png`) });
-    await key(page, `note-prev-${note.id}`);
-    await expect(paper).toHaveAccessibleName(new RegExp(`${t.notePagination.page} 1/2`));
+    for (let current = pageCount; current > 1; current--) await key(page, `note-prev-${note.id}`);
+    await expect(paper).toHaveAccessibleName(new RegExp(`${t.notePagination.page} 1/${pageCount}`));
     await paper.focus();
     await page.keyboard.press('Space');
     await expect(page.locator(`[id^="control-note-next-"]`)).toHaveCount(0);
@@ -68,9 +75,9 @@ for (const locale of ['pl', 'en'] as const) {
     // A successful import discards temporary pagination, without saving it.
     await load();
     await key(page, `note-next-${note.id}`);
-    await expect(paper).toHaveAccessibleName(new RegExp(`${t.notePagination.page} 2/2`));
+    await expect(paper).toHaveAccessibleName(new RegExp(`${t.notePagination.page} 2/${pageCount}`));
     await load();
-    await expect(paper).toHaveAccessibleName(new RegExp(`${t.notePagination.page} 1/2`));
+    await expect(paper).toHaveAccessibleName(new RegExp(`${t.notePagination.page} 1/${pageCount}`));
     expect(errors).toEqual([]);
   });
 }

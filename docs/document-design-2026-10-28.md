@@ -39,3 +39,12 @@ Layout fixes remain: referral labels and values share a size and baseline; notes
 The [current rulebook preview](typography-manual-2026-10-28.png) shows the restored font and retained layout fixes.
 
 Rollback verification: rendered glyph pixels and widths match `0732752^` for the original title font, every document role, reading text and uppercase headings, including Polish accents. The production build, all 474 Vitest tests and 24 relevant Playwright scenarios passed. The rulebook was inspected at native 1×, 2× and 3× display scales.
+
+
+## Unified clinical documents
+
+Referrals, certificates, specialist certificates and patient notes now share a 176 × 157 native-pixel format. Its width is the retained intermediate clinical width; its height is halfway between the previous 168-pixel referral and 146-pixel clinical forms. Correspondence, supplementary-test forms/reports and inspection documents remain 200 × 168. Existing generated artwork is composited at these sizes with nearest-neighbor sampling; no font scaling or new artwork is used.
+
+Referrals reflow all six numbered fields within 154 pixels, with ten-pixel row spacing and eight rows at most, above the signature, seal and telephone. Certificate fields use an inline job position and a wrapped decision statement, with a 98 × 27 generated decision impression anchored directly below the last line of the statement, rather than to the bottom of the sheet. Notes keep identity and age, followed by eight rows at fourteen-pixel spacing in a 154-pixel column. Additional entries continue through the existing page corners. The renderer, controls, accessible descriptions and controller use matching dimensions and pagination.
+
+Attaching a second sheet has a twelve-pixel tolerance around the existing clip (34 × 43 target); empty-handed unclipping retains the 10 × 19 sprite bounds. A medical note lies aligned above its equally sized referral, regardless of joining order, without deliberately exposing the lower sheet. Both move, cancel, file and return together. Temporary per-item sizes are derived from paper kinds after import; all contents and save v28 remain unchanged.

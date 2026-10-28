@@ -74,7 +74,7 @@ test('carried stamps stay in hand, rest at the side, and only handing the certif
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
   await expect(page.locator('#control-take-document')).toHaveCount(0);
   const paper = await logicalRect(page, 'apply-stamp');
-  expect(paper).toMatchObject({ w: 212, h: 176 });
+  expect(paper).toMatchObject({ w: 176, h: 157 });
   const stampHome = await logicalRect(page, 'stamp-fit');
   expect(stampHome).toMatchObject({ x: 520, w: 36, h: 36 });
   await page.locator('#control-stamp-fit').click();
@@ -137,10 +137,10 @@ test('documents shrink from the tray and both desktops, with aligned hit areas a
   await page.keyboard.press('Escape');
   expect(await logicalRect(page, 'take-document')).toEqual(tray);
   await carryTo(page, 'take-document', { x: 350, y: 220 });
-  expect(await logicalRect(page, 'paper-1')).toMatchObject({ w: 212, h: 176 });
+  expect(await logicalRect(page, 'paper-1')).toMatchObject({ w: 176, h: 157 });
   await expect(page.locator('#control-apply-stamp')).toHaveCount(0);
   await activate(page, 'take-certificate');
-  expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ w: 212, h: 176 });
+  expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ w: 176, h: 157 });
   const rightDesk = await logicalRect(page, 'apply-stamp');
   await page.locator('#control-apply-stamp').click();
   expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ w: 48, h: 64 });
@@ -162,7 +162,7 @@ test('documents shrink from the tray and both desktops, with aligned hit areas a
   expect(actual.y).toBeCloseTo(expected.y, 3);
   await page.mouse.click(target.x, target.y);
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
-  expect(await logicalRect(page, 'apply-stamp')).toEqual({ x: 252, y: 138, w: 212, h: 176 });
+  expect(await logicalRect(page, 'apply-stamp')).toEqual({ x: 270, y: 149, w: 176, h: 157 });
   expect(await page.evaluate(point => document.elementFromPoint(point.x, point.y)?.id, target)).toBe('control-apply-stamp');
   await carryTo(page, 'apply-stamp', { x: 110, y: 205 });
   const shelf = await logicalRect(page, 'apply-stamp');
@@ -184,16 +184,16 @@ test('right-side papers overlap the room while keeping half on the desk and cove
   await activate(page, 'take-certificate');
   await carryTo(page, 'apply-stamp', { x: 394, y: 10 });
   const certificate = await logicalRect(page, 'apply-stamp');
-  expect(certificate).toEqual({ x: 288, y: 50, w: 212, h: 176 });
+  expect(certificate).toEqual({ x: 306, y: 60, w: 176, h: 157 });
   const heightOnDesk = Math.min(certificate.y + certificate.h, DESK_FRONT.y) - RIGHT_DESK_TOP;
-  expect(heightOnDesk).toBe(certificate.h / 2);
+  expect(heightOnDesk).toBe(Math.ceil(certificate.h / 2));
   const coveredInstrument = await screenPoint(page, { x: 360, y: 85 });
   expect(await page.evaluate(point => document.elementFromPoint(point.x, point.y)?.id, coveredInstrument)).toBe('control-apply-stamp');
   await expect(page.locator('#screen-description')).toContainText('CIŚNIENIE: BRAK');
   await activate(page, 'run-pressure');
   await expect(page.locator('#screen-description')).toContainText('108/62');
   await carryTo(page, 'apply-stamp', { x: 394, y: 172 });
-  expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ x: 288, y: 84 });
+  expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ x: 306, y: 94 });
 });
 
 test('a blank certificate requires handwritten name and job before handoff', async ({ page }, testInfo) => {

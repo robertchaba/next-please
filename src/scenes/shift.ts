@@ -1,5 +1,5 @@
 import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, drawDeskCalendar, drawBanknote, drawInspectionForm, type CabinetArtOptions } from '../render/clinic';
-import { drawPaperwork, paperDescription, paperActionRect, paperClipRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries } from '../render/paperwork';
+import { drawPaperwork, paperDescription, paperActionRect, paperClipTargetRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries } from '../render/paperwork';
 import { paginateNoteEntries, notePageControls, notePageLabel } from '../render/note-pages';
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
@@ -11,7 +11,7 @@ import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
 import { drawerSheets } from '../render/drawer';
 import { calendarText, formatGameDate } from '../core/calendar';
-import { CABINET_HOTSPOTS, ITEM_SIZES, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, dropTargetRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
+import { CABINET_HOTSPOTS, CLINICAL_PAPER_SIZE, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, dropTargetRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
 export { manualPageCount, manualPageDescription } from '../render/manual';
 
 export type ShiftAction = GameAction | 'select-fit' | 'select-unfit' | 'apply-stamp' | 'manual'
@@ -129,7 +129,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
       item('apply-stamp', `${t.applyStamp}. ${certificateDescription(state, locale)}`, 'document', 'apply-stamp'),
       ...(certificateOnDesk ? [{ ...hotspot('write-certificate', t.paperwork.writeCertificate, paperActionRect(certificateBounds), 'write-certificate'), owner: 'document' as const }] : []),
       ...(!isLifted(view, 'document') && visibleDocumentClip(state, 'certificate', view)
-        ? [{ ...hotspot('certificate-clip', t.paperwork.unclip, paperClipRect(certificateBounds), { type: 'unclip-document', documentId: 'certificate' }), owner: 'document' as const }] : []),
+        ? [{ ...hotspot('certificate-clip', t.paperwork.unclip, paperClipTargetRect(certificateBounds, view.held), { type: 'unclip-document', documentId: 'certificate' }), owner: 'document' as const }] : []),
     ] : []),
     ...(state.visit && view.held === null ? [hotspot('run-general', t.general, PATIENT_HANDOFF, 'run-general')] : []),
     hotspot('run-vision', t.vision, CABINET_HOTSPOTS.vision, 'run-vision'),
@@ -155,7 +155,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
         && ((paper.kind === 'specialist' && workDayNumber(state.day) >= 4) || (paper.kind === 'referral' && workDayNumber(state.day) >= 5));
       const selectable = paper.kind === 'additional-referral' && paper.patientId === state.visit?.patientId && paper.day === state.visit?.startedDay
         && !isLifted(view, id) && bounds.x >= RIGHT_DESK_X;
-      const note = paper.kind === 'note' ? paginateNoteEntries(noteEntries(paper, locale), ITEM_SIZES.document.w - 22, view.notePages?.[paper.id]) : undefined;
+      const note = paper.kind === 'note' ? paginateNoteEntries(noteEntries(paper, locale), CLINICAL_PAPER_SIZE.w - 22, view.notePages?.[paper.id]) : undefined;
       const noteCorners = notePageControls(bounds);
       const canTurnNote = note && note.count > 1 && !isLifted(view, id) && bounds.x >= RIGHT_DESK_X;
       const description = paperDescription(paper, locale, isDocumentClipped(state, paper.id))
@@ -173,7 +173,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
           paper.kind === 'specialist' ? 'call-specialist' : 'call-employer'), owner: id }] : []),
         ...(canAct ? [{ ...hotspot(`paper-action-${paper.id}`, t.paperwork.open, paperActionRect(bounds), action), owner: id }] : []),
         ...(!isLifted(view, id) && visibleDocumentClip(state, paper.id, view)
-          ? [{ ...hotspot(`paper-clip-${paper.id}`, t.paperwork.unclip, paperClipRect(bounds), { type: 'unclip-document', documentId: paper.id }), owner: id }] : [])];
+          ? [{ ...hotspot(`paper-clip-${paper.id}`, t.paperwork.unclip, paperClipTargetRect(bounds, view.held), { type: 'unclip-document', documentId: paper.id }), owner: id }] : [])];
     }),
     ...view.desk.order.filter(id => id.startsWith('clip-')).map(id => item(id, t.paperwork.paperclip, id)),
     { ...item('stamp-fit', t.stampFit, 'stamp-fit', 'select-fit'), pressed: selected === 'fit' },

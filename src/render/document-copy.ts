@@ -2,9 +2,12 @@ import { PATIENTS } from '../core/patients';
 import type { Paper } from '../core/game';
 import { translations, type Locale } from '../i18n';
 import { measureDocumentText, measureReadingText, type ReadingFace } from './font';
-import { ITEM_SIZES } from '../core/desk';
+import { PAPER_SIZE, CLINICAL_PAPER_SIZE } from '../core/desk';
 
-export const DOCUMENT_BODY_WIDTH = ITEM_SIZES.document.w - 22;
+export const DOCUMENT_BODY_WIDTH = PAPER_SIZE.w - 22;
+export const REFERRAL_BODY_WIDTH = CLINICAL_PAPER_SIZE.w - 22;
+export const REFERRAL_BODY_Y = 50;
+export const REFERRAL_LINE_HEIGHT = 10;
 
 /** Labels and values share one native size and baseline, including their gap. */
 export const fieldLabelWidth = (label: string): number => measureReadingText(label + 'x') - measureReadingText('x');
@@ -72,7 +75,7 @@ export function referralCopy(patientId: number, locale: Locale) {
     { number: '06', label: d.fields.hazards, value: referral.hazards },
   ];
   const instruction = d.referralInstruction[patient.examination];
-  const rows = fields.flatMap(field => fieldRows(field));
+  const rows = fields.flatMap(field => fieldRows(field, REFERRAL_BODY_WIDTH));
   const lines = [instruction, ...rows.map(row => row.label + row.value)];
   return {
     institution,

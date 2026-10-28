@@ -1,10 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addDeskItem, containsPoint, createDeskState, DEFAULT_DOCUMENT, DESK_BOUNDS, CARRY_BOUNDS, ITEM_SIZES, CARRIED_ITEM_SIZES, restRect, itemAnchor, dropTargetRect, DROP_ZONES, CABINET_HOTSPOTS,
+  addDeskItem, containsPoint, createDeskState, DEFAULT_DOCUMENT, DESK_BOUNDS, CARRY_BOUNDS, ITEM_SIZES, CARRIED_ITEM_SIZES, PAPER_SIZE, CLINICAL_PAPER_SIZE, desktopItemSize, paperDesktopSize, restRect, itemAnchor, dropTargetRect, DROP_ZONES, CABINET_HOTSPOTS,
   itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, TRAY_DOCUMENT, MANUAL_OPEN_POSITION, MANUAL_OPEN_SIZE, RIGHT_DESK_X, RIGHT_DESK_TOP, DESK_FRONT, type DeskItemId,
 } from '../src/core/desk';
 
 describe('temporary desktop layout', () => {
+  it('keeps referrals, certificates and histories at the same size through carrying and placement', () => {
+    const initial = createDeskState();
+    const desk = addDeskItem(initial, 'paper-1', { x: 300, y: 150 }, CLINICAL_PAPER_SIZE);
+    expect(itemRect(desk, 'paper-1')).toMatchObject({ w: 176, h: 157 });
+    expect(itemRect(desk, 'document')).toMatchObject({ w: 176, h: 157 });
+    expect(itemRect(addDeskItem(desk, 'paper-2', { x: 300, y: 150 }, paperDesktopSize('referral')), 'paper-2')).toMatchObject({ w: 176, h: 157 });
+    expect(paperDesktopSize('specialist')).toEqual(CLINICAL_PAPER_SIZE);
+    expect(paperDesktopSize('letter')).toEqual(PAPER_SIZE);
+    const carried = pickUpDeskItem(desk, 'paper-1');
+    expect(itemRect(carried, 'paper-1', false, true)).toMatchObject({ w: 48, h: 64 });
+    const placed = moveDeskItem(carried, 'paper-1', { x: 280, y: 150 });
+    expect(itemRect(placed, 'paper-1')).toEqual({ x: 280, y: 150, w: 176, h: 157 });
+    expect(initial.sizes).toBeUndefined();
+    expect(desk.positions['paper-1']).toEqual({ x: 300, y: 150 });
+  });
+
   it.each((Object.keys(ITEM_SIZES) as DeskItemId[]).filter(id => id !== 'incoming-referral'))('keeps %s within its placement limits at integer coordinates', (id) => {
     const state = createDeskState();
     for (const point of [
@@ -25,7 +41,7 @@ describe('temporary desktop layout', () => {
       expect(rect.x + rect.w).toBeLessThanOrEqual(DESK_BOUNDS.x + DESK_BOUNDS.w);
       expect(rect.y + rect.h).toBeLessThanOrEqual(DESK_BOUNDS.y + DESK_BOUNDS.h);
     }
-    expect(moveDeskItem(state, id, { x: 250.4, y: 145.6 }).positions[id]).toEqual({ x: 250, y: id === 'document' ? 138 : 146 });
+    expect(moveDeskItem(state, id, { x: 250.4, y: 145.6 }).positions[id]).toEqual({ x: 250, y: 146 });
   });
 
   it.each(['document', 'paper-1'] as const)('allows %s over the room only while at least half remains over the right desktop', id => {
@@ -36,7 +52,7 @@ describe('temporary desktop layout', () => {
       expect(heightOnDesk * placed.w).toBeGreaterThanOrEqual(placed.w * placed.h / 2);
       expect(placed.y + placed.h).toBeLessThanOrEqual(DESK_BOUNDS.y + DESK_BOUNDS.h);
     }
-    expect(itemRect(moveDeskItem(initial, id, { x: 300, y: -100 }), id)).toEqual({ x: 300, y: 50, w: 212, h: 176 });
+    expect(itemRect(moveDeskItem(initial, id, { x: 300, y: -100 }), id)).toEqual({ x: 300, y: RIGHT_DESK_TOP - Math.floor(desktopItemSize(id).h / 2), ...desktopItemSize(id) });
     expect(itemRect(moveDeskItem(initial, id, { x: 300, y: 90 }), id).y).toBe(90);
     expect(itemRect(moveDeskItem(initial, id, { x: 90, y: -100 }), id).y).toBe(DESK_BOUNDS.y);
   });
@@ -90,7 +106,7 @@ describe('temporary desktop layout', () => {
     expect(DEFAULT_DOCUMENT.x).toBeGreaterThanOrEqual(RIGHT_DESK_X);
     const state = moveDeskItem(initial, 'document', { x: 250, y: 150 });
     expect(itemRect(state, 'incoming-referral')).toEqual(TRAY_DOCUMENT);
-    expect(itemRect(state, 'document')).toEqual({ x: 250, y: 138, ...ITEM_SIZES.document });
+    expect(itemRect(state, 'document')).toEqual({ x: 250, y: 150, ...ITEM_SIZES.document });
     // Legacy tray flags must never turn the distinct certificate into a referral.
     expect(itemRect(state, 'document', true)).toEqual(itemRect(state, 'document'));
   });
@@ -159,7 +175,7 @@ describe('temporary desktop layout', () => {
       expect(initial).toEqual(snapshot);
       expect(itemRect(initial, 'incoming-referral')).toEqual(TRAY_DOCUMENT);
       expect(itemRect(initial, 'document')).toEqual({ ...DEFAULT_DOCUMENT, ...ITEM_SIZES.document });
-      expect(itemRect(initial, 'paper-1')).toEqual({ x: 270, y: 138, ...ITEM_SIZES.document });
+      expect(itemRect(initial, 'paper-1')).toEqual({ x: 270, y: 146, ...PAPER_SIZE });
     }
   });
 

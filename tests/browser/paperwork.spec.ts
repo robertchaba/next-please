@@ -239,6 +239,86 @@ test('dropping onto the projecting clip creates a movable bundle, survives saves
   expect(separated.state.paperClips).toEqual([]);
 });
 
+for (const [edge, dx, dy] of [['above', 5, -10], ['left', -10, 9], ['right', 19, 9], ['below', 5, 28]] as const) {
+  test(`dropping a sheet just ${edge} the clip joins it without pixel-perfect aiming`, async ({ page }, testInfo) => {
+    await enter(page);
+    await activate(page, 'take-paper');
+    await page.locator('#control-paper-1').focus();
+    await page.keyboard.press('Space');
+    await clickNative(page, 320, 145);
+    await activate(page, 'take-clip');
+    await activate(page, 'paper-1');
+    const clip = await sheetBounds(page, 'paper-clip-1');
+    expect(clip).toMatchObject({ w: 10, h: 19 });
+    await activate(page, 'take-paper');
+    await page.locator('#control-paper-2').focus();
+    await page.keyboard.press('Space');
+    expect(await sheetBounds(page, 'paper-clip-1')).toEqual({ x: clip.x - 12, y: clip.y - 12, w: 34, h: 43 });
+    await clickNative(page, clip.x + dx, clip.y + dy);
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+    await expect(page.locator('#control-paper-clip-1')).toHaveCount(0);
+    expect(await sheetBounds(page, 'paper-clip-2')).toMatchObject({ w: 10, h: 19 });
+    const { state } = await exportState(page, testInfo, `near-clip-${edge}.npsave`);
+    expect(state.paperClips).toEqual([[1, 2]]);
+  });
+}
+
+test('a covering sheet blocks joining to the clip beneath it', async ({ page }, testInfo) => {
+  await enter(page);
+  await activate(page, 'take-paper');
+  await activate(page, 'take-clip');
+  await activate(page, 'paper-1');
+  const clip = await sheetBounds(page, 'paper-clip-1');
+  await activate(page, 'take-paper');
+  await activate(page, 'take-paper');
+  await page.locator('#control-paper-3').focus();
+  await page.keyboard.press('Space');
+  await clickNative(page, clip.x - 10, clip.y + 9);
+  await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+  await expect(page.locator('#control-paper-clip-3')).toHaveCount(0);
+  const { state } = await exportState(page, testInfo, 'covered-clip.npsave');
+  expect(state.paperClips).toEqual([[1]]);
+});
+
+for (const target of [1, 2]) {
+  test(`equally sized referral and history align with the history on top when joining onto sheet ${target}`, async ({ page }, testInfo) => {
+    await enter(page);
+    await activate(page, 'call-patient');
+    await activate(page, 'take-document');
+    await activate(page, 'take-paper');
+    await page.locator(`#control-paper-${target}`).focus();
+    await page.keyboard.press('Space');
+    await clickNative(page, 350, 180);
+    await activate(page, 'take-clip');
+    await activate(page, `paper-${target}`);
+    const source = target === 1 ? 2 : 1;
+    await page.locator(`#control-paper-${source}`).focus();
+    await page.keyboard.press('Space');
+    await activate(page, `paper-clip-${target}`);
+    await expect(page.locator('#control-paper-clip-2')).toBeAttached();
+    await expect(page.locator('#control-paper-clip-1')).toHaveCount(0);
+    const referral = await sheetBounds(page, 'paper-1');
+    const history = await sheetBounds(page, 'paper-2');
+    expect(referral).toMatchObject({ w: 176, h: 157 });
+    expect(history).toMatchObject({ w: 176, h: 157 });
+    expect(referral).toEqual(history);
+    const hitAt = async (x: number, y: number) => page.locator('#stage').evaluate((stage, point) => {
+      const bounds = stage.getBoundingClientRect();
+      return document.elementFromPoint(bounds.x + point.x * bounds.width / 570, bounds.y + point.y * bounds.height / 320)?.id;
+    }, { x, y });
+    expect(await hitAt(history.x + 20, history.y + 40)).toBe('control-paper-2');
+    await page.locator('#control-language-pl').focus();
+    await page.locator('#stage').screenshot({ path: testInfo.outputPath(`history-over-referral-${target}.png`) });
+    await sendPaper(page, 2, 'drawer');
+    await activate(page, 'drawer');
+    await activate(page, 'drawer-paper-1');
+    await clickNative(page, 350, 180);
+    await expect(page.locator('#control-paper-clip-2')).toBeAttached();
+    const { state } = await exportState(page, testInfo, `history-bundle-${target}.npsave`);
+    expect(state.paperClips[0]?.slice().sort()).toEqual([1, 2]);
+  });
+}
+
 test('keyboard joins a certificate bundle, drawer rejects it, and handoff detaches only the certificate', async ({ page }, testInfo) => {
   await enter(page);
   for (const id of ['call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-fit', 'apply-stamp', 'take-clip', 'apply-stamp']) await activate(page, id);
@@ -258,7 +338,7 @@ test('keyboard joins a certificate bundle, drawer rejects it, and handoff detach
   await activate(page, 'return-document');
   await expect(page.locator('#control-apply-stamp')).toHaveCount(0);
   await expect(page.locator('#control-paper-1')).toBeAttached();
-  expect((await sheetBounds(page, 'paper-1')).w).toBe(212);
+  expect((await sheetBounds(page, 'paper-1')).w).toBe(176);
   const { state } = await exportState(page, testInfo, 'bundle-handoff.npsave');
   expect(state.visit).toBeNull();
   expect(state.paperClips).toEqual([[1]]);

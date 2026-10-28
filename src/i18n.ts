@@ -343,7 +343,7 @@ export const translations = {
     trashHelp: 'Przenieś dokument nad kosz i kliknij, aby go wyrzucić.',
     clipTaken: 'Spinacz w dłoni. Przyłóż go do kartki, aby ją spiąć.',
     clipNoTarget: 'Przyłóż spinacz do dokumentacji, skierowania, orzeczenia lub listu.',
-    paperHelp: 'Kliknij, aby podnieść kartkę. Wyniki i wywiad z badania ogólnego pojawiają się automatycznie. Upuść kartkę na spinacz innej, aby je spiąć. Kliknij spinacz, aby rozpiąć.',
+    paperHelp: 'Kliknij, aby podnieść kartkę. Wyniki i wywiad z badania ogólnego pojawiają się automatycznie. Upuść kartkę przy spinaczu innej, aby je spiąć. Kliknij spinacz, aby rozpiąć.',
     letterHelp: 'Otwórz kopertę zagiętym rogiem lub klawiszem Enter. Przeczytany list można wyrzucić do kosza.',
     calendar: {
       label: 'Datownik na biurku', date: 'Data',
@@ -871,7 +871,7 @@ export const translations = {
     trashHelp: 'Move a document over the basket and click to discard it.',
     clipTaken: 'Paperclip in hand. Apply it to a sheet to attach it.',
     clipNoTarget: 'Apply the paperclip to a note, referral, certificate or letter.',
-    paperHelp: 'Click to pick up the sheet. Test results and history from the general examination appear automatically. Drop a sheet onto another sheet’s clip to join them. Click the clip to separate them.',
+    paperHelp: 'Click to pick up the sheet. Test results and history from the general examination appear automatically. Drop a sheet near another sheet’s clip to join them. Click the clip to separate them.',
     letterHelp: 'Open the envelope at its folded corner or press Enter. After reading, discard the letter in the basket.',
     calendar: {
       label: 'Desk calendar', date: 'Date',

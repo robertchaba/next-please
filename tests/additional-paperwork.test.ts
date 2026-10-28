@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ADDITIONAL_TESTS } from '../src/core/additional-tests';
 import { applyAction, createInitialState, type Paper } from '../src/core/game';
 import { PATIENTS } from '../src/core/patients';
-import { addDeskItem, CABINET_HOTSPOTS, createDeskState, ITEM_SIZES, itemRect } from '../src/core/desk';
+import { addDeskItem, CABINET_HOTSPOTS, createDeskState, PAPER_SIZE, itemRect } from '../src/core/desk';
 import { translations } from '../src/i18n';
 import { measureReadingText } from '../src/render/font';
 import { wrapReadingText, DOCUMENT_BODY_WIDTH } from '../src/render/document-copy';
@@ -25,8 +25,8 @@ describe('additional examination paperwork', () => {
         expect(paperDescription(report, locale)).toContain(a.otherChecks);
         const marks: { x: number; y: number }[] = [];
         const recorder = { fillStyle: '', save() {}, restore() {}, fillRect(x: number, y: number, w: number, h: number) { if (w === 1 && h === 1) marks.push({ x, y }); } };
-        for (const paper of [report, referral]) drawPaperwork(recorder as unknown as CanvasRenderingContext2D, paper, { x: 0, y: 0, ...ITEM_SIZES.document }, locale, false);
-        expect(marks.every(mark => mark.x >= 0 && mark.x < ITEM_SIZES.document.w && mark.y >= 0 && mark.y < ITEM_SIZES.document.h)).toBe(true);
+        for (const paper of [report, referral]) drawPaperwork(recorder as unknown as CanvasRenderingContext2D, paper, { x: 0, y: 0, ...PAPER_SIZE }, locale, false);
+        expect(marks.every(mark => mark.x >= 0 && mark.x < PAPER_SIZE.w && mark.y >= 0 && mark.y < PAPER_SIZE.h)).toBe(true);
       }
     }
   });

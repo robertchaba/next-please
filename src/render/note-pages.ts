@@ -1,14 +1,14 @@
-import type { Rect } from '../core/desk';
+import { CLINICAL_PAPER_SIZE, type Rect } from '../core/desk';
 import { translations, type Locale } from '../i18n';
 import { measureReadingText } from './font';
-import { DOCUMENT_BODY_WIDTH } from './document-copy';
 
 export const NOTE_LINE_HEIGHT = 14;
-export const NOTE_LINES_PER_PAGE = 9;
+export const NOTE_LINES_PER_PAGE = 8;
+export const NOTE_BODY_WIDTH = CLINICAL_PAPER_SIZE.w - 22;
 export type NoteLine = { text: string; color: string };
 
 /** Pagination is presentation only; the append-only journal remains intact. */
-export function paginateNoteEntries(entries: readonly NoteLine[], width = DOCUMENT_BODY_WIDTH, requestedPage = 0) {
+export function paginateNoteEntries(entries: readonly NoteLine[], width = NOTE_BODY_WIDTH, requestedPage = 0) {
   const pages: NoteLine[][] = [[]];
   for (const entry of entries) {
     const wrapped: NoteLine[] = [];

@@ -8,11 +8,11 @@ import { examinationComment, examinationCommentText, type ExaminationComment } f
 import { renderCabinet, renderIntro, shiftButtons, shiftDescription, manualPageDescription, paperDescription, carriedAdditionalReferral, visibleDocumentClip, manualPageCount, type SelectedStamp, type ShiftAction, type PatientSpeech } from './scenes/shift';
 import { homePage, homePages, renderHome, HOME_ACTION } from './scenes/home';
 import type { Button } from './ui';
-import { createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, containsPoint, restRect, dropTargetRect, itemAnchor, TRAY, DEFAULT_DOCUMENT, PATIENT_HANDOFF, MANUAL_SHELF_SIZE, MANUAL_OPEN_POSITION, RIGHT_DESK_X, CABINET_HOTSPOTS, type DeskItemId, type Point, type Rect } from './core/desk';
+import { createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, containsPoint, restRect, dropTargetRect, itemAnchor, desktopItemSize, paperDesktopSize, TRAY, DEFAULT_DOCUMENT, PATIENT_HANDOFF, MANUAL_SHELF_SIZE, MANUAL_OPEN_POSITION, RIGHT_DESK_X, CABINET_HOTSPOTS, type DeskItemId, type Point, type Rect } from './core/desk';
 import { installDeskInput } from './core/desk-input';
 import { drawCreatorPortrait, drawPaper, drawPanelIllustration, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
 import { drawText } from './render/font';
-import { paperClipRect, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries } from './render/paperwork';
+import { paperClipTargetRect, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries } from './render/paperwork';
 import { paginateNoteEntries, notePageLabel } from './render/note-pages';
 import { drawerButtons, drawerDescription, renderDrawer, type DrawerAction } from './render/drawer';
 import { installCursor, installDisplay, WIDTH, HEIGHT } from './core/display';
@@ -316,15 +316,31 @@ function setManualOpen(open: boolean): void {
 }
 
 /** Gameplay owns paper contents; the desk owns only their current geometry. */
-function arrangeDocumentGroup(active: DeskItemId, held: boolean, raise = false): void {
-  const others = groupItems(active).filter(id => id !== active && deskState.positions[id]);
-  const origin = deskState.positions[active];
+function arrangeDocumentGroup(active: DeskItemId, held: boolean, raise = false): DeskItemId {
+  const members = groupItems(active).filter(id => deskState.positions[id]);
+  const paperKind = (id: DeskItemId) => gameState.papers.find(paper => id === `paper-${paper.id}`)?.kind;
+  // A medical history covers its referral whichever sheet was used to join them.
+  const cover = !held && paperKind(active) === 'referral'
+    ? [...deskState.order].reverse().find(id => members.includes(id) && paperKind(id) === 'note') : undefined;
+  if (cover) {
+    const origin = itemRect(deskState, active);
+    const width = origin.x >= RIGHT_DESK_X ? desktopItemSize(cover, deskState).w : origin.w;
+    deskState = moveDeskItem(deskState, cover, { x: origin.x + origin.w - width, y: origin.y });
+    active = cover;
+    raise = true;
+  }
+  const others = members.filter(id => id !== active);
+  const origin = itemRect(deskState, active, false, held);
   for (const [index, id] of others.entries()) {
-    const offset = Math.min(others.length - index, 3) * 2;
-    deskState = moveDeskItem(deskState, id, { x: origin.x + offset, y: origin.y + offset }, held);
+    const matchingRecords = !held && paperKind(active) === 'note' && paperKind(id) === 'referral';
+    const offset = matchingRecords ? 0 : Math.min(others.length - index, 3) * 2;
+    // Different paper formats share their clipped upper-right edge.
+    const width = !held && origin.x >= RIGHT_DESK_X ? desktopItemSize(id, deskState).w : origin.w;
+    deskState = moveDeskItem(deskState, id, { x: origin.x + origin.w - width + offset, y: origin.y + offset }, held);
     if (raise) deskState = raiseDeskItem(deskState, id);
   }
   if (raise) deskState = raiseDeskItem(deskState, active);
+  return active;
 }
 
 function reconcileDeskPapers(): void {
@@ -347,7 +363,7 @@ function reconcileDeskPapers(): void {
     if (paper.location !== 'desk' || pendingLetters.has(paper.id)) continue;
     const id: DeskItemId = `paper-${paper.id}`;
     // Incoming paperwork stays on the left until the player carries each sheet.
-    deskState = addDeskItem(deskState, id, { x: 15 + ((paper.id - 1) % 4) * 7, y: 193 + ((paper.id - 1) % 3) * 5 });
+    deskState = addDeskItem(deskState, id, { x: 15 + ((paper.id - 1) % 4) * 7, y: 193 + ((paper.id - 1) % 3) * 5 }, paperDesktopSize(paper.kind));
   }
   for (const group of gameState.paperClips) {
     const ids = group.map(documentItem);
@@ -1215,7 +1231,7 @@ const deskInput = installDeskInput(stage, {
       }
       for (const other of visibleItems) {
         const record = documentId(other), bounds = surfaceBounds(other);
-        if (record !== undefined && visibleDocumentClip(gameState, record, deskView()) && containsPoint(paperClipRect(bounds), target)) return other;
+        if (record !== undefined && visibleDocumentClip(gameState, record, deskView()) && containsPoint(paperClipTargetRect(bounds, id), target)) return other;
         if (containsPoint(bounds, target)) return undefined;
       }
       return undefined;
@@ -1224,18 +1240,21 @@ const deskInput = installDeskInput(stage, {
       const sourceId = documentId(source), clip = clipAt();
       if (sourceId === undefined || !clip) return false;
       const targetId = documentId(clip)!;
+      // Capture the resting target before the new group makes it a carried member.
+      const targetBounds = surfaceBounds(clip);
+      const width = targetBounds.x >= RIGHT_DESK_X ? desktopItemSize(source, deskState).w : targetBounds.w;
+      const destination = { x: targetBounds.x + targetBounds.w - width, y: targetBounds.y };
       const previous = gameState;
       const result = performAction({ type: 'join-documents', documentId: sourceId, targetId });
       if (result.feedback === 'visit-interrupted') { syncControls(); return true; }
       if (result.state === previous) return false;
-      const destination = { ...deskState.positions[clip] };
       gameState = result.state;
       heldItem = null;
       deskState = moveDeskItem(deskState, source, destination);
-      arrangeDocumentGroup(source, false, true);
+      const cover = arrangeDocumentGroup(source, false, true);
       updateClock();
       playEffect('paper');
-      announceDesk(t().feedback[result.feedback], itemControlId(source));
+      announceDesk(t().feedback[result.feedback], itemControlId(cover));
       return true;
     };
     if (id === 'banknote' || id.startsWith('banknote-')) {
@@ -1283,7 +1302,7 @@ const deskInput = installDeskInput(stage, {
       if (joinAtClip(paperId)) return true;
       if (deskState.positions[paperId]) {
         deskState = moveDeskItem(deskState, paperId, target.x >= RIGHT_DESK_X
-          ? { x: Math.max(RIGHT_DESK_X, target.x - itemAnchor(paperId).x), y: target.y - itemAnchor(paperId).y }
+          ? { x: Math.max(RIGHT_DESK_X, target.x - itemAnchor(paperId, desktopItemSize(paperId, deskState)).x), y: target.y - itemAnchor(paperId, desktopItemSize(paperId, deskState)).y }
           : { x: target.x - 30, y: target.y - 40 });
         deskState = raiseDeskItem(deskState, paperId);
       }
@@ -1346,7 +1365,7 @@ const deskInput = installDeskInput(stage, {
       if (joinAtClip(id)) return true;
       heldItem = null;
       deskState = moveDeskItem(deskState, id, target.x >= RIGHT_DESK_X
-        ? { x: Math.max(RIGHT_DESK_X, target.x - itemAnchor(id).x), y: target.y - itemAnchor(id).y }
+        ? { x: Math.max(RIGHT_DESK_X, target.x - itemAnchor(id, desktopItemSize(id, deskState)).x), y: target.y - itemAnchor(id, desktopItemSize(id, deskState)).y }
         : { x: target.x - 30, y: target.y - 40 });
       arrangeDocumentGroup(id, false, true);
       spendTime('handle-item'); playEffect('paper');
@@ -1409,7 +1428,7 @@ const deskInput = installDeskInput(stage, {
     if (id === 'manual') {
       manualOpen = false;
       deskState = moveDeskItem(deskState, id, target.x >= RIGHT_DESK_X
-        ? { x: Math.max(RIGHT_DESK_X, target.x - itemAnchor(id).x), y: target.y - itemAnchor(id).y }
+        ? { x: Math.max(RIGHT_DESK_X, target.x - itemAnchor(id, desktopItemSize(id, deskState)).x), y: target.y - itemAnchor(id, desktopItemSize(id, deskState)).y }
         : { x: target.x - MANUAL_SHELF_SIZE.w / 2, y: target.y - MANUAL_SHELF_SIZE.h / 2 });
       spendTime('handle-item');
       feedback = t().manualClosed;
@@ -1426,7 +1445,7 @@ const deskInput = installDeskInput(stage, {
         acted = true;
       } else {
         const placed = target.x >= RIGHT_DESK_X
-          ? { x: Math.max(RIGHT_DESK_X, target.x - itemAnchor(id).x), y: target.y - itemAnchor(id).y }
+          ? { x: Math.max(RIGHT_DESK_X, target.x - itemAnchor(id, desktopItemSize(id, deskState)).x), y: target.y - itemAnchor(id, desktopItemSize(id, deskState)).y }
           : { x: Math.max(5, Math.min(RIGHT_DESK_X - 66, target.x - 30)), y: target.y - 40 };
         deskState = moveDeskItem(deskState, id, placed);
         arrangeDocumentGroup(id, false, true);

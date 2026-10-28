@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { PATIENTS } from '../src/core/patients';
 import type { Paper } from '../src/core/game';
 import { translations } from '../src/i18n';
-import { correspondenceCopy, referralCopy, wrapFormText, wrapReadingText, fieldLabelWidth, DOCUMENT_BODY_WIDTH } from '../src/render/document-copy';
+import { correspondenceCopy, referralCopy, wrapFormText, wrapReadingText, fieldLabelWidth, REFERRAL_BODY_WIDTH, REFERRAL_BODY_Y, REFERRAL_LINE_HEIGHT } from '../src/render/document-copy';
 import { measureDocumentHeading, measureDocumentText, measureReadingText, READ_CELL_HEIGHT } from '../src/render/font';
-import { ITEM_SIZES } from '../src/core/desk';
+import { CLINICAL_PAPER_SIZE } from '../src/core/desk';
 
 describe('institutional document copy', () => {
   it('keeps official correspondence clear of the signature and stamp area', () => {
@@ -49,10 +49,10 @@ describe('institutional document copy', () => {
       expect(copy.instruction).toContain(t.paperwork[patient.examination]);
       const printed = copy.lines.join(' ').replace(/\s+/g, ' ');
       for (const field of copy.fields) expect(printed).toContain(field.value.replace(/\s+/g, ' '));
-      for (const row of copy.rows) expect(fieldLabelWidth(row.label) + measureReadingText(row.value), row.label + row.value).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
-      expect(measureReadingText(copy.instruction)).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
-      expect(copy.rows.length, `${locale} ${patient.id}: ${copy.lines.join(' | ')}`).toBeLessThanOrEqual(7);
-      expect(54 + (copy.rows.length - 1) * 12 + READ_CELL_HEIGHT).toBeLessThanOrEqual(ITEM_SIZES.document.h - 31);
+      for (const row of copy.rows) expect(fieldLabelWidth(row.label) + measureReadingText(row.value), row.label + row.value).toBeLessThanOrEqual(REFERRAL_BODY_WIDTH);
+      expect(measureReadingText(copy.instruction)).toBeLessThanOrEqual(REFERRAL_BODY_WIDTH);
+      expect(copy.rows.length, `${locale} ${patient.id}: ${copy.lines.join(' | ')}`).toBeLessThanOrEqual(8);
+      expect(REFERRAL_BODY_Y + (copy.rows.length - 1) * REFERRAL_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThanOrEqual(CLINICAL_PAPER_SIZE.h - 29);
       if (copy.institution === 'employer') expect(wrapFormText(copy.masthead.toUpperCase(), 104).length, copy.masthead).toBeLessThanOrEqual(2);
     }
   });
