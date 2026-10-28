@@ -539,3 +539,156 @@ export function drawDocumentText(ctx: CanvasRenderingContext2D, value: string, x
   }
   ctx.restore();
 }
+
+/** Larger original body lettering. Seven-row capitals and five-row lowercase
+ * counters keep running copy readable; accents and descenders have their own
+ * rows. Compact document faces remain available for labels and metadata. */
+export const READ_CELL_HEIGHT = 10;
+export const READ_LINE_HEIGHT = 11;
+export type ReadingFace = 'typewriter' | 'handwritten';
+export type ReadingTextOptions = Omit<TextOptions, 'scale'> & { face?: ReadingFace };
+
+// These are native drawings, not stretched copies of the compact face.
+const READING_LETTERS: Record<string, string[]> = {
+  ...BASE_GLYPHS,
+  I: ['111', '010', '010', '010', '010', '010', '111'],
+  a: ['0000', '0000', '0110', '0001', '0111', '1001', '0111'],
+  b: ['1000', '1000', '1010', '1101', '1001', '1001', '1110'],
+  c: ['0000', '0000', '0111', '1000', '1000', '1000', '0111'],
+  d: ['0001', '0001', '0101', '1011', '1001', '1001', '0111'],
+  e: ['0000', '0000', '0110', '1001', '1111', '1000', '0111'],
+  f: ['0011', '0100', '0100', '1110', '0100', '0100', '0100'],
+  g: ['0000', '0000', '0111', '1001', '1001', '1001', '0111'],
+  h: ['1000', '1000', '1010', '1101', '1001', '1001', '1001'],
+  i: ['1', '0', '1', '1', '1', '1', '1'],
+  j: ['01', '00', '01', '01', '01', '01', '01'],
+  k: ['1000', '1000', '1001', '1010', '1100', '1010', '1001'],
+  l: ['10', '10', '10', '10', '10', '10', '01'],
+  m: ['00000', '00000', '11010', '10101', '10101', '10101', '10101'],
+  n: ['0000', '0000', '1010', '1101', '1001', '1001', '1001'],
+  o: ['0000', '0000', '0110', '1001', '1001', '1001', '0110'],
+  p: ['0000', '0000', '1110', '1001', '1001', '1001', '1110'],
+  q: ['0000', '0000', '0111', '1001', '1001', '1001', '0111'],
+  r: ['000', '000', '101', '110', '100', '100', '100'],
+  s: ['0000', '0000', '0111', '1000', '0110', '0001', '1110'],
+  t: ['010', '010', '111', '010', '010', '010', '001'],
+  u: ['0000', '0000', '1001', '1001', '1001', '1001', '0111'],
+  v: ['00000', '00000', '10001', '10001', '10001', '01010', '00100'],
+  w: ['00000', '00000', '10001', '10001', '10101', '10101', '01010'],
+  x: ['0000', '0000', '1001', '1001', '0110', '1001', '1001'],
+  y: ['0000', '0000', '1001', '1001', '1001', '0111', '0001'],
+  z: ['0000', '0000', '1111', '0001', '0110', '1000', '1111'],
+  '.': ['0', '0', '0', '0', '0', '0', '1'],
+  ',': ['00', '00', '00', '00', '00', '00', '01'],
+  ':': ['0', '0', '1', '0', '0', '1', '0'],
+  ';': ['00', '00', '01', '00', '00', '01', '01'],
+  '-': ['000', '000', '000', '111', '000', '000', '000'],
+  '/': ['001', '001', '001', '010', '100', '100', '100'],
+  '!': ['1', '1', '1', '1', '1', '0', '1'],
+  "'": ['01', '01', '10', '00', '00', '00', '00'],
+  '"': ['101', '101', '000', '000', '000', '000', '000'],
+  '(': ['01', '10', '10', '10', '10', '10', '01'],
+  ')': ['10', '01', '01', '01', '01', '01', '10'],
+};
+
+const READING_HANDWRITING: Record<string, string[]> = {
+  A: ['00110', '01001', '10001', '11111', '10001', '10001', '10001'],
+  C: ['00111', '01000', '10000', '10000', '10000', '10000', '01111'],
+  D: ['01110', '01001', '10001', '10001', '10001', '10010', '11100'],
+  G: ['00111', '01000', '10000', '10000', '10111', '10001', '01110'],
+  I: ['011', '010', '010', '010', '010', '010', '110'],
+  J: ['00011', '00010', '00010', '00100', '10100', '10100', '01000'],
+  L: ['01000', '01000', '01000', '10000', '10000', '10000', '11111'],
+  N: ['01001', '11001', '10101', '10101', '10011', '10011', '10001'],
+  O: ['00110', '01001', '10001', '10001', '10001', '10010', '01100'],
+  P: ['01110', '01001', '10001', '11110', '10000', '10000', '10000'],
+  R: ['01110', '01001', '10001', '11110', '10100', '10010', '10001'],
+  S: ['00111', '01000', '10000', '01110', '00001', '00001', '11110'],
+  U: ['01001', '01001', '10001', '10001', '10001', '10010', '01100'],
+  a: ['0000', '0000', '0110', '1001', '1001', '1001', '0111'],
+  b: ['0100', '0100', '1000', '1110', '1001', '1001', '1110'],
+  c: ['0000', '0000', '0011', '0100', '1000', '1000', '0111'],
+  d: ['0001', '0001', '0011', '0101', '1001', '1001', '0111'],
+  e: ['0000', '0000', '0011', '0101', '1110', '1000', '0111'],
+  f: ['0001', '0010', '0100', '1110', '0100', '0100', '1000'],
+  h: ['0100', '0100', '1000', '1110', '1001', '1001', '1001'],
+  k: ['0100', '0100', '1001', '1010', '1100', '1010', '1001'],
+  l: ['01', '01', '01', '10', '10', '10', '01'],
+  n: ['0000', '0000', '0110', '1001', '1001', '1001', '1001'],
+  o: ['0000', '0000', '0011', '0101', '1001', '1001', '0110'],
+  r: ['000', '000', '011', '100', '100', '100', '100'],
+  s: ['0000', '0000', '0011', '0100', '0010', '0001', '1110'],
+  t: ['001', '001', '111', '010', '010', '010', '001'],
+  u: ['0000', '0000', '0101', '1001', '1001', '1001', '0111'],
+};
+
+function makeReadingFace(overrides: Record<string, string[]> = {}): Record<string, string[]> {
+  const glyphs: Record<string, string[]> = {};
+  for (const [letter, body] of Object.entries({ ...READING_LETTERS, ...overrides })) {
+    const blank = '0'.repeat(body[0].length);
+    glyphs[letter] = [blank, blank, ...body, blank];
+  }
+  for (const [letter, tail] of Object.entries({ g: '0110', j: '10', p: '1000', q: '0001', y: '1110', ',': '10', ';': '10' })) glyphs[letter][9] = tail;
+  for (const [letter, plain] of Object.entries({ Ć: 'C', Ń: 'N', Ó: 'O', Ś: 'S', Ź: 'Z', ć: 'c', ń: 'n', ó: 'o', ś: 's', ź: 'z' })) {
+    const rows = [...glyphs[plain]], width = rows[0].length;
+    const first = letter === letter.toUpperCase() ? 0 : 1;
+    rows[first] = '0'.repeat(width - 2) + '10';
+    rows[first + 1] = '0'.repeat(width - 3) + '100';
+    glyphs[letter] = rows;
+  }
+  for (const [letter, plain] of Object.entries({ Ż: 'Z', ż: 'z' })) {
+    const rows = [...glyphs[plain]], middle = Math.floor(rows[0].length / 2);
+    rows[letter === 'Ż' ? 0 : 1] = rows[0].slice(0, middle) + '1' + rows[0].slice(middle + 1);
+    glyphs[letter] = rows;
+  }
+  for (const [letter, plain] of Object.entries({ Ą: 'A', Ę: 'E', ą: 'a', ę: 'e' })) {
+    const rows = [...glyphs[plain]], width = rows[0].length;
+    rows[9] = '0'.repeat(width - 2) + '11';
+    glyphs[letter] = rows;
+  }
+  glyphs.Ł = [...glyphs.L]; glyphs.Ł[5] = '10100'; glyphs.Ł[6] = '11000';
+  glyphs.ł = ['000', '000', '010', '010', '011', '110', '010', '010', '001', '000'];
+  glyphs['–'] = glyphs['-']; glyphs['—'] = glyphs['-'];
+  glyphs['’'] = glyphs["'"]; glyphs['‘'] = glyphs["'"];
+  glyphs['“'] = glyphs['"']; glyphs['”'] = glyphs['"'];
+  glyphs['„'] = ['000', '000', '000', '000', '000', '000', '000', '000', '101', '101'];
+  glyphs['…'] = ['00000', '00000', '00000', '00000', '00000', '00000', '00000', '00000', '10101', '00000'];
+  return glyphs;
+}
+
+const READING_FACES: Record<ReadingFace, Record<string, string[]>> = {
+  typewriter: makeReadingFace(), handwritten: makeReadingFace(READING_HANDWRITING),
+};
+
+function readingGlyph(character: string, face: ReadingFace): string[] {
+  return READING_FACES[face][character] ?? READING_FACES[face]['?'];
+}
+function readingWidth(value: string, face: ReadingFace): number {
+  return Math.max(0, [...value].reduce((width, character) => width + (character === ' ' ? 4 : readingGlyph(character, face)[0].length + 1), 0) - 1);
+}
+
+/** Measures the larger body face in native pixels, preserving mixed case. */
+export function measureReadingText(value: string, face: ReadingFace = 'typewriter'): number {
+  return Math.max(...value.normalize('NFC').replace(/\r\n?/g, '\n').split('\n').map(line => readingWidth(line, face)));
+}
+
+export function drawReadingText(ctx: CanvasRenderingContext2D, value: string, x: number, y: number, options: ReadingTextOptions = {}): void {
+  const face = options.face ?? 'typewriter';
+  ctx.save();
+  ctx.fillStyle = options.color ?? '#282e24';
+  for (const [index, line] of value.normalize('NFC').replace(/\r\n?/g, '\n').split('\n').entries()) {
+    const width = readingWidth(line, face);
+    const offset = options.align === 'center' ? width / 2 : options.align === 'right' ? width : 0;
+    let cursorX = Math.round(x - offset);
+    const cursorY = Math.round(y) + index * READ_LINE_HEIGHT;
+    for (const character of line) {
+      if (character === ' ') { cursorX += 4; continue; }
+      const rows = readingGlyph(character, face);
+      for (let row = 0; row < rows.length; row++) for (let column = 0; column < rows[row].length; column++) {
+        if (rows[row][column] === '1') ctx.fillRect(cursorX + column, cursorY + row, 1, 1);
+      }
+      cursorX += rows[0].length + 1;
+    }
+  }
+  ctx.restore();
+}

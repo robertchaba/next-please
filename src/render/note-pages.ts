@@ -1,19 +1,20 @@
 import type { Rect } from '../core/desk';
 import { translations, type Locale } from '../i18n';
-import { measureDocumentText } from './font';
+import { measureReadingText } from './font';
+import { DOCUMENT_BODY_WIDTH } from './document-copy';
 
-export const NOTE_LINES_PER_PAGE = 12;
+export const NOTE_LINES_PER_PAGE = 11;
 export type NoteLine = { text: string; color: string };
 
 /** Pagination is presentation only; the append-only journal remains intact. */
-export function paginateNoteEntries(entries: readonly NoteLine[], width = 166, requestedPage = 0) {
+export function paginateNoteEntries(entries: readonly NoteLine[], width = DOCUMENT_BODY_WIDTH, requestedPage = 0) {
   const pages: NoteLine[][] = [[]];
   for (const entry of entries) {
     const wrapped: NoteLine[] = [];
     let current = '';
     for (const word of entry.text.split(' ')) {
       const candidate = current ? `${current} ${word}` : word;
-      if (current && measureDocumentText(candidate, 'handwritten') > width) {
+      if (current && measureReadingText(candidate, 'handwritten') > width) {
         wrapped.push({ ...entry, text: current });
         current = word;
       } else current = candidate;

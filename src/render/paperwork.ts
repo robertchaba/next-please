@@ -6,8 +6,8 @@ import type { Rect } from '../core/desk';
 import { formatGameDate, gameDate } from '../core/calendar';
 import { translations, type Locale } from '../i18n';
 import { drawPaper, drawPaperclip, drawDecisionImprint, drawDocumentSignature, drawUnclearSeal, drawInspectionForm, drawInspector, drawStationery } from './clinic';
-import { drawDocumentText, drawDocumentHeading, measureDocumentText } from './font';
-import { referralCopy, correspondenceCopy, employerInstitution } from './document-copy';
+import { drawDocumentText, drawDocumentHeading, measureDocumentText, drawReadingText, measureReadingText, READ_LINE_HEIGHT } from './font';
+import { referralCopy, correspondenceCopy, employerInstitution, wrapReadingText, fieldLabelWidth } from './document-copy';
 import { drawAdministrativeStamp, drawLetterhead, institutionInk } from './document-style';
 import { drawManualArt } from './clinic';
 import { paginateNoteEntries, notePageControls, notePageLabel } from './note-pages';
@@ -119,7 +119,7 @@ export function specialistJob(paper: Extract<Paper, { kind: 'specialist' }>, loc
 
 /** Exactly the same rows serve text, pointer hit tests and keyboard controls. */
 export function additionalTestRect(bounds: Rect, test: AdditionalTest): Rect {
-  return { x: bounds.x + 11, y: bounds.y + 56 + ADDITIONAL_TESTS.indexOf(test) * 14, w: bounds.w - 22, h: 13 };
+  return { x: bounds.x + 11, y: bounds.y + 72 + ADDITIONAL_TESTS.indexOf(test) * 17, w: bounds.w - 22, h: 16 };
 }
 
 export function additionalResultText(paper: Extract<Paper, { kind: 'additional-result' }>, locale: Locale): string {
@@ -127,7 +127,7 @@ export function additionalResultText(paper: Extract<Paper, { kind: 'additional-r
 }
 
 export function paperPhoneRect(bounds: Rect): Rect {
-  return { x: bounds.x + 9, y: bounds.y + 128, w: 91, h: 12 };
+  return { x: bounds.x + 9, y: bounds.y + bounds.h - 16, w: 105, h: 13 };
 }
 
 export function paperDescription(paper: Paper, locale: Locale, clipped = false): string {
@@ -266,8 +266,8 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     drawDocumentText(ctx, `${p.reference} ${paper.id}`, x + w - 12, y + 19, { color: muted, align: 'right', face: 'print' });
   };
   const authentication = (): void => {
-    drawDocumentSignature(ctx, x + 16, y + 119, 55, 11);
-    drawSeal(x + w - 73, y + 115, 24);
+    drawDocumentSignature(ctx, x + 16, y + h - 25, 55, 11);
+    drawSeal(x + w - 73, y + h - 29, 24);
   };
   const clinicalHeader = (title: string, specialist = false): void => {
     const d = t.documentDesign;
@@ -280,7 +280,7 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     if (full) {
       drawSeal(x + 35, y + 116, 24);
       write(t.documentDesign.personal, 35, 67, '#74443c');
-      wrapDocumentLines([correspondenceSender(paper, locale)], 118).forEach((line, index) => write(line, 35, 79 + index * 8));
+      wrapReadingText(correspondenceSender(paper, locale), 144).forEach((line, index) => drawReadingText(ctx, line, x + 35, y + 79 + index * READ_LINE_HEIGHT, { color: ink }));
       write(p.recipient, 35, 103, '#625e46');
     } else drawSeal(x + w - 28, y + h - 18, 12);
   } else if (!full) {
@@ -294,25 +294,25 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     drawLetterhead(ctx, copy.institution, copy.masthead, copy.subheading, x + 11, y + 6);
     dateAndReference();
     drawDocumentHeading(ctx, copy.title, x + Math.floor(w / 2), y + 29, { color: institutionInk(copy.institution), face: 'serif', align: 'center' });
-    drawDocumentText(ctx, copy.instruction, x + 11, y + 44, { color: muted, face: 'book' });
+    drawDocumentText(ctx, copy.instruction, x + 11, y + 40, { color: muted, face: 'book' });
     copy.rows.forEach((row, index) => {
-      drawDocumentText(ctx, row.label, x + 11, y + 52 + index * 8, { color: muted, face: 'print' });
-      const valueX = 11 + measureDocumentText(row.label + 'x') - measureDocumentText('x');
-      drawDocumentText(ctx, row.value, x + valueX, y + 52 + index * 8, { color: ink, face: 'typewriter' });
+      const rowY = y + 49 + index * READ_LINE_HEIGHT;
+      drawDocumentText(ctx, row.label, x + 11, rowY + 3, { color: '#696b53', face: 'print' });
+      drawReadingText(ctx, row.value, x + 11 + fieldLabelWidth(row.label), rowY, { color: ink });
     });
     authentication();
-    if (workDayNumber(paper.day) >= 5) write(`${t.progression.phone} ${paper.details.phone}`, 11, 131, HANDWRITING_INK);
+    if (workDayNumber(paper.day) >= 5) drawReadingText(ctx, `${t.progression.phone} ${paper.details.phone}`, x + 11, y + h - 15, { face: 'handwritten', color: HANDWRITING_INK });
   } else if (paper.kind === 'additional-referral') {
     const a = t.additionalTests;
     clinicalHeader(t.documentDesign.referral);
-    write(t.patientNames[paper.patientId]!, 11, 41, HANDWRITING_INK);
-    write(`${p.position}: ${t.patientJobs[paper.patientId]}`, 11, 49, HANDWRITING_INK);
+    drawReadingText(ctx, t.patientNames[paper.patientId]!, x + 11, y + 44, { face: 'handwritten', color: HANDWRITING_INK });
+    write(`${p.position}: ${t.patientJobs[paper.patientId]}`, 11, 60, HANDWRITING_INK);
     for (const test of ADDITIONAL_TESTS) {
       const row = additionalTestRect(bounds, test);
-      drawDocumentText(ctx, a.tests[test], row.x + 5, row.y + 3, { color: ink, face: 'typewriter' });
+      drawReadingText(ctx, a.tests[test], row.x + 5, row.y + 2, { color: ink });
       if (paper.test === test) {
         // A state-driven hand-marked oval, rasterized on the native pixel grid.
-        const width = measureDocumentText(a.tests[test]) + 10, height = 12;
+        const width = measureReadingText(a.tests[test]) + 10, height = 15;
         const rx = width / 2, ry = height / 2;
         for (let dx = 0; dx <= width; dx++) {
           const dy = Math.round(ry * Math.sqrt(Math.max(0, 1 - ((dx - rx) / rx) ** 2)));
@@ -321,30 +321,31 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
         }
       }
     }
-    write(a.choose, 11, 118, muted);
-    drawDocumentSignature(ctx, x + 99, y + 126, 49, 10);
+    write(a.choose, 11, h - 29, muted);
+    drawDocumentSignature(ctx, x + 99, y + h - 18, 49, 10);
   } else if (paper.kind === 'additional-result') {
     const a = t.additionalTests;
     clinicalHeader(t.documentDesign.report, true);
-    write(t.patientNames[paper.patientId]!, 11, 44);
-    drawDocumentText(ctx, a.tests[paper.test], x + 11, y + 55, { color: ink, face: 'book' });
-    const body = wrapDocumentLines([additionalResultText(paper, locale)], w - 22);
-    body.forEach((line, index) => write(line, 11, 66 + index * 8, paper.fit ? HANDWRITING_INK : ALERT_INK));
-    wrapDocumentLines([a.otherChecks], w - 22).forEach((line, index) => drawDocumentText(ctx, line, x + 11, y + 100 + index * 8, { color: muted, face: 'print' }));
+    drawReadingText(ctx, t.patientNames[paper.patientId]!, x + 11, y + 44, { color: ink });
+    drawReadingText(ctx, a.tests[paper.test], x + 11, y + 59, { color: ink });
+    const body = wrapReadingText(additionalResultText(paper, locale), w - 22, 'handwritten');
+    body.forEach((line, index) => drawReadingText(ctx, line, x + 11, y + 73 + index * READ_LINE_HEIGHT, { face: 'handwritten', color: paper.fit ? HANDWRITING_INK : ALERT_INK }));
+    wrapDocumentLines([a.otherChecks], w - 22).forEach((line, index) => drawDocumentText(ctx, line, x + 11, y + h - 47 + index * 8, { color: muted, face: 'print' }));
     authentication();
   } else if (paper.kind === 'specialist') {
     clinicalHeader(t.documentDesign.specialist, true);
-    write(t.patientNames[paper.patientId]!, 11, 44);
-    const body = wrapDocumentLines([t.progression.treatment, t.progression.clearance], w - 22);
-    body.forEach((line, index) => write(line, 11, 59 + index * 8));
-    write(`${p.position}: ${specialistJob(paper, locale)}`, 11, 103, HANDWRITING_INK);
+    drawReadingText(ctx, t.patientNames[paper.patientId]!, x + 11, y + 44, { color: ink });
+    const body = wrapReadingText(`${t.progression.treatment} ${t.progression.clearance}`, w - 22);
+    body.forEach((line, index) => drawReadingText(ctx, line, x + 11, y + 61 + index * READ_LINE_HEIGHT, { color: ink }));
+    write(`${p.position}:`, 11, h - 48, muted);
+    drawReadingText(ctx, specialistJob(paper, locale), x + 11, y + h - 39, { face: 'handwritten', color: HANDWRITING_INK });
     authentication();
-    write(`${t.progression.phone} ${paper.certificate.phone}`, 11, 131, HANDWRITING_INK);
+    drawReadingText(ctx, `${t.progression.phone} ${paper.certificate.phone}`, x + 11, y + h - 15, { face: 'handwritten', color: HANDWRITING_INK });
   } else if (paper.kind === 'note') {
     if (paper.patientId !== null) {
-      drawDocumentText(ctx, noteIdentity(paper, locale), x + 11, y + 12, { color: HANDWRITING_INK, face: 'handwritten' });
+      drawReadingText(ctx, noteIdentity(paper, locale), x + 11, y + 12, { color: HANDWRITING_INK, face: 'handwritten' });
       const sheet = paginateNoteEntries(noteEntries(paper, locale), w - 22, page);
-      sheet.lines.forEach((line, index) => drawDocumentText(ctx, line.text, x + 11, y + 24 + index * 8, { color: line.color, face: 'handwritten' }));
+      sheet.lines.forEach((line, index) => drawReadingText(ctx, line.text, x + 11, y + 28 + index * READ_LINE_HEIGHT, { color: line.color, face: 'handwritten' }));
       if (sheet.count > 1) {
         drawDocumentText(ctx, notePageLabel(locale, sheet.page, sheet.count), x + Math.floor(w / 2), y + h - 12, { color: muted, align: 'center' });
         if (!lifted && showActions) {
@@ -360,14 +361,16 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     dateAndReference();
     drawDocumentHeading(ctx, copy.title, x + Math.floor(w / 2), y + 29, { color: institutionInk(copy.institution), face: 'serif', align: 'center' });
     const letter = paper.kind === 'directive' ? t.progression.directives[paper.rule] : letterContent(paper, locale);
-    write(paper.kind === 'letter' ? `${copy.subjectLabel}: ${t.patientNames[paper.patientId]}` : copy.recipient, 11, 44);
-    drawDocumentText(ctx, letter.subject, x + 11, y + 55, { color: '#78503a', face: 'book' });
-    const lines = wrapDocumentLines([letter.body], w - 22);
-    lines.forEach((line, index) => write(line, 11, 66 + index * 8));
-    write(letter.role, 11, 116, muted);
-    write(letter.signature, 11, 125, HANDWRITING_INK);
-    drawDocumentSignature(ctx, x + 60, y + 133, 44, 8);
-    drawSeal(x + w - 73, y + 115, 24);
+    if (paper.kind === 'letter') {
+      drawReadingText(ctx, t.patientNames[paper.patientId]!, x + 11, y + 44, { color: ink });
+    } else drawReadingText(ctx, copy.recipient, x + 11, y + 44, { color: ink });
+    drawDocumentText(ctx, letter.subject, x + 11, y + 58, { color: '#78503a', face: 'book' });
+    const lines = wrapReadingText(letter.body, w - 22);
+    lines.forEach((line, index) => drawReadingText(ctx, line, x + 11, y + 70 + index * READ_LINE_HEIGHT, { color: ink }));
+    write(letter.role, 11, h - 28, muted);
+    write(letter.signature, 11, h - 19, HANDWRITING_INK);
+    drawDocumentSignature(ctx, x + 60, y + h - 11, 44, 8);
+    drawSeal(x + w - 73, y + h - 29, 24);
   }
   if (clipped) { const clip = paperClipRect(bounds); drawPaperclip(ctx, clip.x, clip.y); }
 }
@@ -427,16 +430,15 @@ export function drawCertificate(ctx: CanvasRenderingContext2D, state: GameState,
     drawDocumentText(ctx, `${p.reference} ${state.day}/${state.shiftCompleted + 1}`, x + w - 12, y + 19, { color: muted, align: 'right' });
     drawDocumentHeading(ctx, d.certificate, x + Math.floor(w / 2), y + 29, { color: ink, align: 'center', face: 'serif' });
     write(p.name, 12, 45, muted);
-    if (visit.certificateNamed) write(t.patientNames[visit.patientId]!, 12, 56, HANDWRITING_INK);
+    if (visit.certificateNamed) drawReadingText(ctx, t.patientNames[visit.patientId]!, x + 12, y + 56, { face: 'handwritten', color: HANDWRITING_INK });
     else for (let dx = 12; dx < 150; dx += 4) fill(ctx, x + dx, y + 63, 2, 1, '#b3a984');
-    write(`${p.position}:`, 12, 69, muted);
-    const positionX = 12 + measureDocumentText(`${p.position}: `);
-    if (visit.certificateNamed) write(t.patientJobs[visit.patientId]!, positionX, 69, HANDWRITING_INK);
-    else for (let dx = positionX; dx < w - 12; dx += 4) fill(ctx, x + dx, y + 76, 2, 1, '#b3a984');
-    write(d.certificateStatement, 12, 86, ink);
+    write(`${p.position}:`, 12, 77, muted);
+    if (visit.certificateNamed) drawReadingText(ctx, t.patientJobs[visit.patientId]!, x + 12, y + 88, { face: 'handwritten', color: HANDWRITING_INK });
+    else for (let dx = 12; dx < w - 12; dx += 4) fill(ctx, x + dx, y + 98, 2, 1, '#b3a984');
+    write(d.certificateStatement, 12, 116, ink);
     if (visit.decision) {
-      drawDecisionImprint(ctx, visit.decision, locale, x + 12, y + 105, 116, 32);
-      drawDocumentSignature(ctx, x + 133, y + 107, 38, 11);
+      drawDecisionImprint(ctx, visit.decision, locale, x + 12, y + h - 39, 116, 32);
+      drawDocumentSignature(ctx, x + 133, y + h - 37, 38, 11);
     } else for (let dx = 14; dx < 129; dx += 4) fill(ctx, x + dx, y + 133, 2, 1, '#b3a984');
     if (!lifted) drawActionCorner(ctx, bounds, true);
   }

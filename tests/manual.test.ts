@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { manualSupplementsForDay } from '../src/core/manual';
-import { drawManual, manualHeadingLayout, manualPageCount, manualPageDescription, manualPagesForDay } from '../src/render/manual';
-import { measureDocumentHeading } from '../src/render/font';
+import { drawManual, manualBodyLayout, manualHeadingLayout, manualPageCount, manualPageDescription, manualPagesForDay } from '../src/render/manual';
+import { measureDocumentHeading, measureReadingText, READ_CELL_HEIGHT, READ_LINE_HEIGHT } from '../src/render/font';
+import { MANUAL_OPEN_SIZE } from '../src/core/desk';
 import { translations } from '../src/i18n';
 
 describe('gradually issued rulebook supplements', () => {
@@ -17,11 +18,24 @@ describe('gradually issued rulebook supplements', () => {
       for (let page = 0; page < manualPageCount(100); page++) {
         const marks: { x: number; y: number; w: number; h: number }[] = [];
         const ctx = { save() {}, restore() {}, fillStyle: '', fillRect(x: number, y: number, w: number, h: number) { marks.push({ x, y, w, h }); } } as unknown as CanvasRenderingContext2D;
-        drawManual(ctx, { x: 0, y: 0, w: 276, h: 164 }, locale, page, 100);
+        drawManual(ctx, { x: 0, y: 0, ...MANUAL_OPEN_SIZE }, locale, page, 100);
         const headings = marks.filter(mark => mark.y < 36);
         expect(headings.some(mark => mark.w === 2 && mark.h === 2)).toBe(true);
         expect(headings.every(mark => mark.y + mark.h <= 26)).toBe(true);
-        expect(marks.every(mark => mark.x >= 12 && mark.x + mark.w <= 264 && mark.y >= 0 && mark.y + mark.h < 144)).toBe(true);
+        expect(marks.every(mark => mark.x >= 12 && mark.x + mark.w <= MANUAL_OPEN_SIZE.w - 12 && mark.y >= 0 && mark.y + mark.h <= MANUAL_OPEN_SIZE.h - 27)).toBe(true);
+      }
+    }
+  });
+
+  it('reflows every full provision in larger type above the metadata footer', () => {
+    const width = MANUAL_OPEN_SIZE.w / 2 - 24;
+    for (const locale of ['pl', 'en'] as const) for (const page of manualPagesForDay(locale, 100)) {
+      for (const lines of [page.lines, page.facingLines]) {
+        const rows = manualBodyLayout(lines);
+        expect(rows.join(' ')).toBe(lines.join(' '));
+        for (const row of rows) expect(measureReadingText(row), row).toBeLessThanOrEqual(width);
+        const end = 36 + (rows.length - 1) * READ_LINE_HEIGHT + READ_CELL_HEIGHT;
+        expect(end, `${locale}: ${lines.join(' ')}`).toBeLessThanOrEqual(MANUAL_OPEN_SIZE.h - 35);
       }
     }
   });

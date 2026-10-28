@@ -8,7 +8,7 @@ import { examinationComment, examinationCommentText, type ExaminationComment } f
 import { renderCabinet, renderIntro, shiftButtons, shiftDescription, manualPageDescription, paperDescription, carriedAdditionalReferral, visibleDocumentClip, manualPageCount, type SelectedStamp, type ShiftAction, type PatientSpeech } from './scenes/shift';
 import { homePage, homePages, renderHome, HOME_ACTION } from './scenes/home';
 import type { Button } from './ui';
-import { createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, containsPoint, restRect, dropTargetRect, itemAnchor, TRAY, DEFAULT_DOCUMENT, PATIENT_HANDOFF, MANUAL_SHELF_SIZE, RIGHT_DESK_X, CABINET_HOTSPOTS, type DeskItemId, type Point, type Rect } from './core/desk';
+import { createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, containsPoint, restRect, dropTargetRect, itemAnchor, TRAY, DEFAULT_DOCUMENT, PATIENT_HANDOFF, MANUAL_SHELF_SIZE, MANUAL_OPEN_POSITION, RIGHT_DESK_X, CABINET_HOTSPOTS, type DeskItemId, type Point, type Rect } from './core/desk';
 import { installDeskInput } from './core/desk-input';
 import { drawCreatorPortrait, drawPaper, drawPanelIllustration, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
 import { drawText } from './render/font';
@@ -310,7 +310,7 @@ function setManualOpen(open: boolean): void {
   if (open) {
     manualPage = 0;
     const point = deskState.positions.manual;
-    const onDesk = point.x >= RIGHT_DESK_X ? point : { x: 222, y: 144 };
+    const onDesk = point.x >= RIGHT_DESK_X ? point : MANUAL_OPEN_POSITION;
     deskState = raiseDeskItem(moveDeskItem(deskState, 'manual', onDesk, false, true), 'manual');
   } else deskState = moveDeskItem(deskState, 'manual', deskState.positions.manual);
 }
@@ -382,8 +382,8 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     if (action.type === 'note-page') {
       if (paper?.kind !== 'note' || paper.location !== 'desk' || heldItem !== null || deskRect(`paper-${paper.id}`).x < RIGHT_DESK_X) return;
       const entries = noteEntries(paper, locale);
-      const current = paginateNoteEntries(entries, 166, notePages[paper.id]);
-      const next = paginateNoteEntries(entries, 166, current.page + action.direction);
+      const current = paginateNoteEntries(entries, deskRect(`paper-${paper.id}`).w - 22, notePages[paper.id]);
+      const next = paginateNoteEntries(entries, deskRect(`paper-${paper.id}`).w - 22, current.page + action.direction);
       if (next.page === current.page) return;
       notePages[paper.id] = next.page;
       spendTime('read-manual'); playEffect('paper');
@@ -1283,7 +1283,7 @@ const deskInput = installDeskInput(stage, {
       if (joinAtClip(paperId)) return true;
       if (deskState.positions[paperId]) {
         deskState = moveDeskItem(deskState, paperId, target.x >= RIGHT_DESK_X
-          ? { x: Math.max(RIGHT_DESK_X, target.x - 94), y: target.y - 72 }
+          ? { x: Math.max(RIGHT_DESK_X, target.x - itemAnchor(paperId).x), y: target.y - itemAnchor(paperId).y }
           : { x: target.x - 30, y: target.y - 40 });
         deskState = raiseDeskItem(deskState, paperId);
       }

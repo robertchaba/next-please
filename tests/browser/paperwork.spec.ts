@@ -258,7 +258,7 @@ test('keyboard joins a certificate bundle, drawer rejects it, and handoff detach
   await activate(page, 'return-document');
   await expect(page.locator('#control-apply-stamp')).toHaveCount(0);
   await expect(page.locator('#control-paper-1')).toBeAttached();
-  expect((await sheetBounds(page, 'paper-1')).w).toBe(188);
+  expect((await sheetBounds(page, 'paper-1')).w).toBe(212);
   const { state } = await exportState(page, testInfo, 'bundle-handoff.npsave');
   expect(state.visit).toBeNull();
   expect(state.paperClips).toEqual([[1]]);

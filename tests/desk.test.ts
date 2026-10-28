@@ -25,28 +25,30 @@ describe('temporary desktop layout', () => {
       expect(rect.x + rect.w).toBeLessThanOrEqual(DESK_BOUNDS.x + DESK_BOUNDS.w);
       expect(rect.y + rect.h).toBeLessThanOrEqual(DESK_BOUNDS.y + DESK_BOUNDS.h);
     }
-    expect(moveDeskItem(state, id, { x: 250.4, y: 145.6 }).positions[id]).toEqual({ x: 250, y: 146 });
+    expect(moveDeskItem(state, id, { x: 250.4, y: 145.6 }).positions[id]).toEqual({ x: 250, y: id === 'document' ? 138 : 146 });
   });
 
   it.each(['document', 'paper-1'] as const)('allows %s over the room only while at least half remains over the right desktop', id => {
     const initial = addDeskItem(createDeskState(), 'paper-1', { x: 300, y: 151 });
-    for (const y of [-Infinity, -100, 65, 66, 100, 138, 170, 300, Infinity]) {
+    for (const y of [-Infinity, -100, 49, 50, 100, 138, 170, 300, Infinity]) {
       const placed = itemRect(moveDeskItem(initial, id, { x: 300, y }), id);
       const heightOnDesk = Math.min(placed.y + placed.h, DESK_FRONT.y) - Math.max(placed.y, RIGHT_DESK_TOP);
       expect(heightOnDesk * placed.w).toBeGreaterThanOrEqual(placed.w * placed.h / 2);
       expect(placed.y + placed.h).toBeLessThanOrEqual(DESK_BOUNDS.y + DESK_BOUNDS.h);
     }
-    expect(itemRect(moveDeskItem(initial, id, { x: 300, y: -100 }), id)).toEqual({ x: 300, y: 66, w: 188, h: 144 });
+    expect(itemRect(moveDeskItem(initial, id, { x: 300, y: -100 }), id)).toEqual({ x: 300, y: 50, w: 212, h: 176 });
     expect(itemRect(moveDeskItem(initial, id, { x: 300, y: 90 }), id).y).toBe(90);
     expect(itemRect(moveDeskItem(initial, id, { x: 90, y: -100 }), id).y).toBe(DESK_BOUNDS.y);
   });
 
-  it('keeps the manual, stamps and loose clips below the room divider when placed', () => {
+  it('keeps small objects below the divider and fits the open book to the desk', () => {
     const initial = addDeskItem(createDeskState(), 'clip-1', { x: 300, y: 151 });
     for (const id of ['manual', 'stamp-fit', 'stamp-unfit', 'clip-1'] as const) {
       expect(itemRect(moveDeskItem(initial, id, { x: 300, y: -100 }), id).y).toBe(DESK_BOUNDS.y);
     }
-    expect(itemRect(moveDeskItem(initial, 'manual', { x: 300, y: -100 }, false, true), 'manual', false, false, true).y).toBe(DESK_BOUNDS.y);
+    const book = itemRect(moveDeskItem(initial, 'manual', { x: 300, y: -100 }, false, true), 'manual', false, false, true);
+    expect(book.y).toBe(134);
+    expect(book.y + book.h).toBe(DESK_BOUNDS.y + DESK_BOUNDS.h);
   });
 
   it('moves and raises an item without mutating the existing layout or other objects', () => {
@@ -76,6 +78,7 @@ describe('temporary desktop layout', () => {
     expect(second.positions.document).toEqual(DEFAULT_DOCUMENT);
     expect(second.order[0]).toBe('document');
     const rect = itemRect(second, 'document');
+    expect(rect.y + rect.h).toBeLessThanOrEqual(DESK_BOUNDS.y + DESK_BOUNDS.h);
     rect.x = 300;
     expect(second.positions.document).toEqual(DEFAULT_DOCUMENT);
   });
@@ -87,7 +90,7 @@ describe('temporary desktop layout', () => {
     expect(DEFAULT_DOCUMENT.x).toBeGreaterThanOrEqual(RIGHT_DESK_X);
     const state = moveDeskItem(initial, 'document', { x: 250, y: 150 });
     expect(itemRect(state, 'incoming-referral')).toEqual(TRAY_DOCUMENT);
-    expect(itemRect(state, 'document')).toEqual({ x: 250, y: 150, ...ITEM_SIZES.document });
+    expect(itemRect(state, 'document')).toEqual({ x: 250, y: 138, ...ITEM_SIZES.document });
     // Legacy tray flags must never turn the distinct certificate into a referral.
     expect(itemRect(state, 'document', true)).toEqual(itemRect(state, 'document'));
   });
@@ -156,7 +159,7 @@ describe('temporary desktop layout', () => {
       expect(initial).toEqual(snapshot);
       expect(itemRect(initial, 'incoming-referral')).toEqual(TRAY_DOCUMENT);
       expect(itemRect(initial, 'document')).toEqual({ ...DEFAULT_DOCUMENT, ...ITEM_SIZES.document });
-      expect(itemRect(initial, 'paper-1')).toEqual({ x: 270, y: 150, ...ITEM_SIZES.document });
+      expect(itemRect(initial, 'paper-1')).toEqual({ x: 270, y: 138, ...ITEM_SIZES.document });
     }
   });
 
@@ -192,7 +195,7 @@ describe('temporary desktop layout', () => {
     const closed = moveDeskItem(carried, 'manual', { x: 280, y: 140 });
     expect(itemRect(closed, 'manual')).toEqual({ x: 280, y: 143, w: 138, h: 164 });
     const opened = moveDeskItem(closed, 'manual', closed.positions.manual, false, true);
-    expect(itemRect(opened, 'manual', false, false, true)).toMatchObject({ w: 276, h: 164 });
+    expect(itemRect(opened, 'manual', false, false, true)).toMatchObject({ w: 300, h: 180 });
   });
 
   it('keeps paper and book centers steady when keyboard pickup shrinks either desktop size', () => {

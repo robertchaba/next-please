@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { drawDocumentHeading, drawDocumentText, drawText, measureDocumentHeading, measureDocumentText, measureText, type DocumentFace } from '../src/render/font';
+import { drawDocumentHeading, drawDocumentText, drawReadingText, drawText, measureDocumentHeading, measureDocumentText, measureReadingText, measureText, READ_CELL_HEIGHT, READ_LINE_HEIGHT, type DocumentFace } from '../src/render/font';
 import { translations } from '../src/i18n';
 import { mobileDialogueLines, mobileStatusLines } from '../src/render/mobile';
 
@@ -14,6 +14,55 @@ function pixels(value: string, x = 0, y = 0,
   draw(context, value, x, y);
   return marks;
 }
+
+describe('larger document reading face', () => {
+  it('gives running text larger lowercase counters and seven-row capitals', () => {
+    const height = (value: string, draw: typeof drawReadingText) => {
+      const ys = pixels(value, 0, 0, draw).map(([, y]) => y);
+      return Math.max(...ys) - Math.min(...ys) + 1;
+    };
+    expect(height('o', drawReadingText)).toBe(5);
+    expect(height('o', drawDocumentText)).toBe(4);
+    expect(height('A', drawReadingText)).toBe(7);
+    expect(measureReadingText('Irena Gaj')).toBeGreaterThan(measureDocumentText('Irena Gaj'));
+    expect(pixels('Poradnia', 0, 0, drawReadingText)).not.toEqual(pixels('PORADNIA', 0, 0, drawReadingText));
+    expect(pixels('Gabinet', 0, 0, drawReadingText)).not.toEqual(pixels('Gabinet', 0, 0,
+      (ctx, value, x, y) => drawReadingText(ctx, value, x, y, { face: 'handwritten' })));
+  });
+
+  it('keeps Polish accents, punctuation and descenders inside measured native cells', () => {
+    for (const face of ['typewriter', 'handwritten'] as const) {
+      const draw: typeof drawReadingText = (ctx, value, x, y) => drawReadingText(ctx, value, x, y, { face });
+      for (const [accented, plain] of Object.entries({ ą: 'a', ć: 'c', ę: 'e', ł: 'l', ń: 'n', ó: 'o', ś: 's', ź: 'z', ż: 'z', Ą: 'A', Ć: 'C', Ę: 'E', Ł: 'L', Ń: 'N', Ó: 'O', Ś: 'S', Ź: 'Z', Ż: 'Z' })) {
+        const marks = pixels(accented, 0, 0, draw);
+        expect(marks, `${face}: ${accented}`).not.toEqual(pixels(plain, 0, 0, draw));
+        expect(marks).not.toEqual(pixels('?', 0, 0, draw));
+        expect(pixels(accented.normalize('NFD'), 0, 0, draw)).toEqual(marks);
+      }
+      for (const character of 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzĄĆĘŁŃÓŚŹŻąćęłńóśźż0123456789.,:;!?/—–()„”’…') {
+        expect(pixels(character, 0, 0, draw).every(([x, y, w, h]) => x >= 0 && x < measureReadingText(character, face) && y >= 0 && y < READ_CELL_HEIGHT && w === 1 && h === 1), `${face}: ${character}`).toBe(true);
+      }
+      expect(Math.max(...pixels('gypq', 0, 0, draw).map(([, y]) => y))).toBe(9);
+    }
+  });
+
+  it('aligns mixed-case copy on integer pixels with a clear gap between lines', () => {
+    for (const face of ['typewriter', 'handwritten'] as const) {
+      const sample = 'Źdźbło gęślą';
+      const original = pixels(sample, 0, 0, (ctx, value, x, y) => drawReadingText(ctx, value, x, y, { face }));
+      for (const align of ['left', 'center', 'right'] as const) {
+        const offset = align === 'center' ? measureReadingText(sample, face) / 2 : align === 'right' ? measureReadingText(sample, face) : 0;
+        const line = original.map(([x, y, w, h]) => [x + Math.round(100.4 - offset), y + 10, w, h]);
+        const marks = pixels(`${sample}\n${sample}`, 100.4, 10.3,
+          (ctx, value, x, y) => drawReadingText(ctx, value, x, y, { face, align }));
+        expect(marks).toEqual([...line, ...line.map(([x, y, w, h]) => [x, y + READ_LINE_HEIGHT, w, h])]);
+        expect(marks.every(mark => mark.every(Number.isInteger))).toBe(true);
+      }
+      expect(READ_LINE_HEIGHT).toBeGreaterThan(READ_CELL_HEIGHT);
+      expect(measureReadingText(`short\n${sample}`, face)).toBe(measureReadingText(sample, face));
+    }
+  });
+});
 
 describe('institutional document headline lettering', () => {
   it('creates a stronger headline hierarchy and distinct service mastheads', () => {

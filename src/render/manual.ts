@@ -1,11 +1,12 @@
-import { drawDocumentHeading, drawDocumentText, measureDocumentHeading } from './font';
+import { drawDocumentHeading, drawDocumentText, measureDocumentHeading, drawReadingText, measureReadingText, READ_LINE_HEIGHT } from './font';
 import { drawDeskItem, drawManualArt } from './clinic';
 import { translations, type Locale } from '../i18n';
-import { RIGHT_DESK_X, type Rect } from '../core/desk';
+import { MANUAL_OPEN_SIZE, RIGHT_DESK_X, type Rect } from '../core/desk';
 import { manualSupplementsForDay } from '../core/manual';
 
 const CORNER_SIZE = 9;
-const HEADING_WIDTH = 111;
+const TEXT_INSET = 12;
+const COLUMN_WIDTH = MANUAL_OPEN_SIZE.w / 2 - TEXT_INSET * 2;
 const NUMBER_GUTTER = 29;
 
 /** Numbering and titles remain the exact localized provision, with a common
@@ -15,7 +16,7 @@ export function manualHeadingLayout(title: string) {
   const number = numbered?.[1] ?? '';
   const text = numbered?.[2] ?? title;
   const offset = number ? NUMBER_GUTTER : 0;
-  const width = HEADING_WIDTH - offset;
+  const width = COLUMN_WIDTH - offset;
   const lines: string[] = [];
   let line = '';
   for (const word of text.split(' ')) {
@@ -33,9 +34,23 @@ function drawProvisionHeading(ctx: CanvasRenderingContext2D, title: string, x: n
   drawDocumentHeading(ctx, layout.lines.join('\n'), x + layout.offset, y + (layout.lines.length > 1 ? 6 : 12), { color, face: 'sans' });
 }
 
-function drawProvisionBody(ctx: CanvasRenderingContext2D, lines: readonly string[], x: number, y: number): void {
-  lines.forEach((line, index) => drawDocumentText(ctx, line, x, y + index * 8, {
-    color: '#343c2c', face: /\d/.test(line) ? 'typewriter' : 'print',
+/** Reflow complete provisions for the larger reading face; old line breaks are
+ * editorial wrapping, never omitted text or a reason to shrink the type. */
+export function manualBodyLayout(lines: readonly string[], width = COLUMN_WIDTH): string[] {
+  const rows: string[] = [];
+  let current = '';
+  for (const word of lines.join(' ').split(' ')) {
+    const next = current ? `${current} ${word}` : word;
+    if (current && measureReadingText(next) > width) { rows.push(current); current = word; }
+    else current = next;
+  }
+  rows.push(current);
+  return rows;
+}
+
+function drawProvisionBody(ctx: CanvasRenderingContext2D, lines: readonly string[], x: number, y: number, width: number): void {
+  manualBodyLayout(lines, width).forEach((line, index) => drawReadingText(ctx, line, x, y + index * READ_LINE_HEIGHT, {
+    color: '#343c2c', face: 'typewriter',
   }));
 }
 
@@ -92,10 +107,10 @@ export function drawManual(ctx: CanvasRenderingContext2D, bounds: Rect, locale: 
   const headingInk = chapter.section === translations[locale].manualBase ? '#39432e' : '#823e32';
   drawProvisionHeading(ctx, chapter.title, x + 12, y, headingInk);
   drawProvisionHeading(ctx, chapter.facingTitle, x + middle + 12, y, headingInk);
-  drawProvisionBody(ctx, chapter.lines, x + 12, y + 36);
-  drawProvisionBody(ctx, chapter.facingLines, x + middle + 12, y + 36);
-  drawDocumentText(ctx, `${page + 1}/${pages.length}`, x + middle - 12, y + h - 36, { color: '#7d7456', align: 'right', face: 'typewriter' });
-  drawDocumentText(ctx, chapter.section, x + middle + 12, y + h - 36, { color: '#7d7456', face: 'typewriter' });
+  drawProvisionBody(ctx, chapter.lines, x + 12, y + 36, middle - TEXT_INSET * 2);
+  drawProvisionBody(ctx, chapter.facingLines, x + middle + 12, y + 36, middle - TEXT_INSET * 2);
+  drawDocumentText(ctx, `${page + 1}/${pages.length}`, x + middle - 12, y + h - 34, { color: '#7d7456', align: 'right', face: 'typewriter' });
+  drawDocumentText(ctx, chapter.section, x + middle + 12, y + h - 34, { color: '#7d7456', face: 'typewriter' });
   drawCorner(ctx, bounds, false);
   if (page < pages.length - 1) drawCorner(ctx, bounds, true);
 }

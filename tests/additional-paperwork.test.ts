@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { ADDITIONAL_TESTS } from '../src/core/additional-tests';
 import { applyAction, createInitialState, type Paper } from '../src/core/game';
 import { PATIENTS } from '../src/core/patients';
-import { addDeskItem, CABINET_HOTSPOTS, createDeskState } from '../src/core/desk';
+import { addDeskItem, CABINET_HOTSPOTS, createDeskState, ITEM_SIZES, itemRect } from '../src/core/desk';
 import { translations } from '../src/i18n';
-import { measureDocumentText } from '../src/render/font';
+import { measureReadingText } from '../src/render/font';
+import { wrapReadingText, DOCUMENT_BODY_WIDTH } from '../src/render/document-copy';
 import { additionalResultText, additionalTestRect, drawPaperwork, paperDescription, wrapDocumentLines } from '../src/render/paperwork';
 import { carriedAdditionalReferral, shiftButtons } from '../src/scenes/shift';
 
@@ -15,17 +16,17 @@ describe('additional examination paperwork', () => {
     for (const locale of ['pl', 'en'] as const) for (const test of ADDITIONAL_TESTS) {
       const referral: Extract<Paper, { kind: 'additional-referral' }> = { kind: 'additional-referral', id: 1, day: 9, location: 'desk', patientId: patient.id, test };
       const a = translations[locale].additionalTests;
-      expect(measureDocumentText(a.tests[test]) + 10).toBeLessThanOrEqual(166);
+      expect(measureReadingText(a.tests[test]) + 10).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
       expect(paperDescription(referral, locale)).toContain(`${a.selected}: ${a.tests[test]}`);
       for (const fit of [false, true]) {
         const report: Extract<Paper, { kind: 'additional-result' }> = { ...referral, kind: 'additional-result', test, fit };
-        expect(wrapDocumentLines([additionalResultText(report, locale)], 166).length).toBeLessThanOrEqual(4);
-        expect(wrapDocumentLines([a.otherChecks], 166).length).toBeLessThanOrEqual(3);
+        expect(wrapReadingText(additionalResultText(report, locale), DOCUMENT_BODY_WIDTH, 'handwritten').length).toBeLessThanOrEqual(5);
+        expect(wrapDocumentLines([a.otherChecks], DOCUMENT_BODY_WIDTH).length).toBeLessThanOrEqual(3);
         expect(paperDescription(report, locale)).toContain(a.otherChecks);
         const marks: { x: number; y: number }[] = [];
         const recorder = { fillStyle: '', save() {}, restore() {}, fillRect(x: number, y: number, w: number, h: number) { if (w === 1 && h === 1) marks.push({ x, y }); } };
-        for (const paper of [report, referral]) drawPaperwork(recorder as unknown as CanvasRenderingContext2D, paper, { x: 0, y: 0, w: 188, h: 144 }, locale, false);
-        expect(marks.every(mark => mark.x >= 0 && mark.x < 188 && mark.y >= 0 && mark.y < 144)).toBe(true);
+        for (const paper of [report, referral]) drawPaperwork(recorder as unknown as CanvasRenderingContext2D, paper, { x: 0, y: 0, ...ITEM_SIZES.document }, locale, false);
+        expect(marks.every(mark => mark.x >= 0 && mark.x < ITEM_SIZES.document.w && mark.y >= 0 && mark.y < ITEM_SIZES.document.h)).toBe(true);
       }
     }
   });
@@ -45,7 +46,7 @@ describe('additional examination paperwork', () => {
     expect(buttons.find(button => button.id === 'reserved-form-4')?.disabled).toBe(true);
     for (const test of ADDITIONAL_TESTS) {
       const button = buttons.find(button => button.id === `select-additional-test-${paper.id}-${test}`)!;
-      expect({ x: button.x, y: button.y, w: button.w, h: button.h }).toEqual(additionalTestRect({ x: 300, y: 150, w: 188, h: 144 }, test));
+      expect({ x: button.x, y: button.y, w: button.w, h: button.h }).toEqual(additionalTestRect(itemRect(desk, `paper-${paper.id}`), test));
       expect(button.pressed).toBe(test === 'audiometry');
       expect(button.owner).toBe(`paper-${paper.id}`);
     }

@@ -57,14 +57,14 @@ export const DOCUMENT_RACK_SLOTS = [CABINET_HOTSPOTS.paperSupply, CABINET_HOTSPO
   CABINET_HOTSPOTS.additionalReferralSupply, { x: 507, y: 162, w: 54, h: 13 }] as const;
 export const DESK_FRONT: Rect = { x: 0, y: 296, w: 570, h: 24 };
 export const PATIENT_HANDOFF: Rect = { x: 38, y: 32, w: 94, h: 96 };
-export const MANUAL_OPEN_SIZE = { w: 276, h: 164 } as const;
-export const MANUAL_OPEN_POSITION: Point = { x: 222, y: 144 };
+export const MANUAL_OPEN_SIZE = { w: 300, h: 180 } as const;
+export const MANUAL_OPEN_POSITION: Point = { x: 216, y: 134 };
 
 /** Full-size artwork on the main desk; tools also use it while carried. */
 export const ITEM_SIZES: Record<DeskItemId, Pick<Rect, 'w' | 'h'>> = {
   banknote: { w: 92, h: 42 },
-  document: { w: 188, h: 144 },
-  'incoming-referral': { w: 188, h: 144 },
+  document: { w: 212, h: 176 },
+  'incoming-referral': { w: 212, h: 176 },
   'stamp-fit': { w: 48, h: 48 },
   'stamp-unfit': { w: 48, h: 48 },
   manual: { w: 138, h: 164 },
@@ -121,7 +121,7 @@ export function removeDeskItem(state: DeskState, id: DeskItemId): DeskState {
 }
 
 /** Resting position after importing a visit or canceling pickup from the rack. */
-export const DEFAULT_DOCUMENT: Point = { x: 300, y: 151 };
+export const DEFAULT_DOCUMENT: Point = { x: 300, y: 134 };
 export const TRAY: Rect = { x: 14, y: 154, w: 41, h: 130 };
 export const TRAY_DOCUMENT: Rect = { x: 17, y: 190, w: 35, h: 83 };
 export const DESK_BOUNDS: Rect = { x: 5, y: 143, w: 560, h: 171 };
@@ -179,7 +179,8 @@ export function moveDeskItem(state: DeskState, id: DeskItemId, point: Point, hel
   const onLeft = requestedX < RIGHT_DESK_X && !(id === 'manual' && manualOpen);
   const size = itemSize(id, onLeft ? 0 : RIGHT_DESK_X, held, manualOpen, state.documentCarrySize);
   const paperOnRight = !onLeft && (id === 'document' || id.startsWith('paper-'));
-  const top = paperOnRight ? RIGHT_DESK_TOP - Math.floor(size.h / 2) : DESK_BOUNDS.y;
+  const top = paperOnRight ? RIGHT_DESK_TOP - Math.floor(size.h / 2)
+    : id === 'manual' && manualOpen ? Math.min(DESK_BOUNDS.y, DESK_BOUNDS.y + DESK_BOUNDS.h - size.h) : DESK_BOUNDS.y;
   const bounds = held ? CARRY_BOUNDS : {
     x: onLeft ? DESK_BOUNDS.x : RIGHT_DESK_X + 5,
     y: top,

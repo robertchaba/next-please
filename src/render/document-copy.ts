@@ -1,7 +1,25 @@
 import { PATIENTS } from '../core/patients';
 import type { Paper } from '../core/game';
 import { translations, type Locale } from '../i18n';
-import { measureDocumentText } from './font';
+import { measureDocumentText, measureReadingText, type ReadingFace } from './font';
+import { ITEM_SIZES } from '../core/desk';
+
+export const DOCUMENT_BODY_WIDTH = ITEM_SIZES.document.w - 22;
+
+/** The form label remains small while the typed value uses the reading face. */
+export const fieldLabelWidth = (label: string): number => measureDocumentText(label + 'x') - measureDocumentText('x');
+
+export function wrapReadingText(text: string, width = DOCUMENT_BODY_WIDTH, face: ReadingFace = 'typewriter'): string[] {
+  const lines: string[] = [];
+  let line = '';
+  for (const word of text.split(' ')) {
+    const next = line ? `${line} ${word}` : word;
+    if (line && measureReadingText(next, face) > width) { lines.push(line); line = word; }
+    else line = next;
+  }
+  lines.push(line);
+  return lines;
+}
 
 export type DocumentInstitution = 'employer' | 'militia' | 'lot' | 'zus' | 'chamber' | 'clinic';
 export interface DocumentField { number: string; label: string; value: string }
@@ -27,13 +45,13 @@ export function wrapFormText(text: string, width = 166): string[] {
 }
 
 /** Printed field labels and typed values can be drawn separately on each line. */
-export function fieldRows(field: DocumentField, width = 166): DocumentRow[] {
+export function fieldRows(field: DocumentField, width = DOCUMENT_BODY_WIDTH): DocumentRow[] {
   const rows: DocumentRow[] = [];
   let label = `${field.number}  ${field.number === '01' ? '' : `${field.label}: `}`;
   let value = '';
   for (const word of field.value.split(' ')) {
     const candidate = value ? `${value} ${word}` : word;
-    if (value && measureDocumentText(label + candidate, 'typewriter') > width) {
+    if (value && fieldLabelWidth(label) + measureReadingText(candidate) > width) {
       rows.push({ label, value }); label = '    '; value = word;
     } else value = candidate;
   }

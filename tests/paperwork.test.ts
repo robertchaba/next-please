@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { applyAction, createInitialState, PATIENTS, type GameAction } from '../src/core/game';
 import { translations, type Locale } from '../src/i18n';
-import { paperDescription, certificateDescription, referralLines, wrapDocumentLines, drawPaperwork, drawCertificate, HANDWRITING_INK, DOCUMENT_INK, ALERT_INK, generalReading, noteEntries, noteIdentity, letterContent, visionReading, pressureReading } from '../src/render/paperwork';
+import { paperDescription, certificateDescription, drawPaperwork, drawCertificate, HANDWRITING_INK, DOCUMENT_INK, ALERT_INK, generalReading, noteEntries, noteIdentity, letterContent, visionReading, pressureReading } from '../src/render/paperwork';
 import { decodeSave, encodeSave } from '../src/core/save';
-import { measureDocumentText } from '../src/render/font';
-import { createDeskState, addDeskItem } from '../src/core/desk';
+import { measureDocumentText, measureReadingText, READ_CELL_HEIGHT, READ_LINE_HEIGHT } from '../src/render/font';
+import { DOCUMENT_BODY_WIDTH, referralCopy, fieldLabelWidth, wrapReadingText } from '../src/render/document-copy';
+import { NOTE_LINES_PER_PAGE, paginateNoteEntries } from '../src/render/note-pages';
+import { createDeskState, addDeskItem, ITEM_SIZES } from '../src/core/desk';
 import { shiftButtons, visibleDocumentClip } from '../src/scenes/shift';
 
 function stateAfter(...actions: GameAction[]) {
@@ -19,20 +21,22 @@ describe('separate localized paperwork', () => {
     for (const locale of Object.keys(translations) as Locale[]) {
       const t = translations[locale], p = t.paperwork;
       for (const patient of PATIENTS) {
-        const lines = wrapDocumentLines(referralLines(patient.id, locale), 166);
-        expect(lines.length).toBeLessThanOrEqual(10);
-        for (const line of lines) expect(measureDocumentText(line), line).toBeLessThanOrEqual(166);
-        expect(lines.join(' ')).toContain(patient.birthDate);
-        expect(lines.join(' ')).toContain(t.patientReferrals[patient.id]!.employer);
-        expect(lines.join(' ')).toContain(`${p.requirements}: ${p.requirementCodes[patient.requirementId]}`);
+        const copy = referralCopy(patient.id, locale);
+        expect(49 + (copy.rows.length - 1) * READ_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThanOrEqual(ITEM_SIZES.document.h - 29);
+        for (const row of copy.rows) expect(fieldLabelWidth(row.label) + measureReadingText(row.value), row.value).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
+        const text = copy.lines.join(' ');
+        expect(text).toContain(patient.birthDate);
+        expect(copy.employer).toBe(t.patientReferrals[patient.id]!.employer);
+        expect(text).toContain(`${p.requirements}: ${p.requirementCodes[patient.requirementId]}`);
       }
       for (const letter of [...p.letters.zus, ...p.letters.employer]) {
-        const lines = wrapDocumentLines([letter.body], 166);
-        expect(lines.length).toBeLessThanOrEqual(6);
-        for (const line of lines) expect(measureDocumentText(line), line).toBeLessThanOrEqual(166);
+        const lines = wrapReadingText(letter.body);
+        expect(lines.join(' ')).toBe(letter.body);
+        expect(70 + (lines.length - 1) * READ_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThanOrEqual(ITEM_SIZES.document.h - 28);
+        for (const line of lines) expect(measureReadingText(line), line).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
       }
       for (const label of [p.referral, p.occupational, p.note, p.letter]) {
-        expect(measureDocumentText(label), label).toBeLessThanOrEqual(166);
+        expect(measureDocumentText(label), label).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
       }
     }
   });
@@ -65,7 +69,7 @@ describe('separate localized paperwork', () => {
     expect(noteIdentity({ ...note, patientId: 1, day: 4 }, 'pl')).toContain('Wiek: 46');
     expect(noteIdentity({ ...note, patientId: 1, day: 3, location: 'drawer' }, 'en')).toContain('Age: 45');
     for (const patient of PATIENTS) for (const locale of ['pl', 'en'] as const) {
-      expect(measureDocumentText(noteIdentity({ ...note, patientId: patient.id }, locale))).toBeLessThanOrEqual(166);
+      expect(measureReadingText(noteIdentity({ ...note, patientId: patient.id }, locale), 'handwritten')).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
     }
   });
 
@@ -102,10 +106,14 @@ describe('separate localized paperwork', () => {
         t.paperwork.certificatePurpose, t.paperwork.decisionHeading, t.paperwork.name]) {
         expect(measureDocumentText(heading), heading).toBeLessThanOrEqual(164);
       }
-      for (const job of t.patientJobs) expect(measureDocumentText(`${t.paperwork.position}: ${job}`)).toBeLessThanOrEqual(164);
+      for (const value of [...t.patientNames, ...t.patientJobs]) expect(measureReadingText(value, 'handwritten'), value).toBeLessThanOrEqual(ITEM_SIZES.document.w - 24);
       for (const notes of t.patientNotes) {
         expect(notes).toHaveLength(2);
-        for (const line of notes) expect(measureDocumentText(line), line).toBeLessThanOrEqual(146);
+        for (const entry of notes) {
+          const lines = wrapReadingText(entry, DOCUMENT_BODY_WIDTH, 'handwritten');
+          expect(lines.join(' ')).toBe(entry);
+          for (const line of lines) expect(measureReadingText(line, 'handwritten'), line).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
+        }
       }
       expect(measureDocumentText(`${t.paperwork.weight}:`)).toBeLessThan(34);
       expect(measureDocumentText(`${t.paperwork.height}:`)).toBeLessThan(40);
@@ -123,12 +131,12 @@ describe('separate localized paperwork', () => {
         if (w === 1 && h === 1) marks.push({ x, y, color: this.fillStyle });
       },
     };
-    drawPaperwork(recorder as unknown as CanvasRenderingContext2D, note, { x: 0, y: 0, w: 188, h: 144 }, 'pl', false);
+    drawPaperwork(recorder as unknown as CanvasRenderingContext2D, note, { x: 0, y: 0, ...ITEM_SIZES.document }, 'pl', false);
     expect(HANDWRITING_INK).not.toBe(DOCUMENT_INK);
-    expect(marks.some(mark => mark.y >= 24 && mark.y < 31 && mark.color === HANDWRITING_INK)).toBe(true);
-    expect(marks.some(mark => mark.y >= 33 && mark.y < 49 && mark.color === HANDWRITING_INK)).toBe(true);
-    expect(marks.filter(mark => mark.y >= 12 && mark.y < 49).every(mark => mark.color === HANDWRITING_INK)).toBe(true);
-    expect(marks.every(mark => mark.x >= 0 && mark.x < 188 && mark.y >= 0 && mark.y < 144)).toBe(true);
+    expect(marks.some(mark => mark.y >= 28 && mark.y < 28 + READ_CELL_HEIGHT && mark.color === HANDWRITING_INK)).toBe(true);
+    expect(marks.some(mark => mark.y >= 28 + READ_LINE_HEIGHT && mark.y < 28 + 2 * READ_LINE_HEIGHT + READ_CELL_HEIGHT && mark.color === HANDWRITING_INK)).toBe(true);
+    expect(marks.filter(mark => mark.y >= 12 && mark.y < 28 + 2 * READ_LINE_HEIGHT + READ_CELL_HEIGHT).every(mark => mark.color === HANDWRITING_INK)).toBe(true);
+    expect(marks.every(mark => mark.x >= 0 && mark.x < ITEM_SIZES.document.w && mark.y >= 0 && mark.y < ITEM_SIZES.document.h)).toBe(true);
   });
 
   it('retains the issue date and authentication when old paperwork is stored', () => {
@@ -168,9 +176,9 @@ describe('separate localized paperwork', () => {
         const recorder = { fillStyle: '', save() {}, restore() {}, fillRect(_x: number, y: number) {
           if (this.fillStyle === HANDWRITING_INK) handwriting.push(y);
         } };
-        drawCertificate(recorder as unknown as CanvasRenderingContext2D, restored, { x: 0, y: 0, w: 188, h: 144 }, locale, false);
-        expect(handwriting.some(y => y >= 56 && y < 63)).toBe(state === signed);
-        expect(handwriting.some(y => y >= 69 && y < 76)).toBe(state === signed);
+        drawCertificate(recorder as unknown as CanvasRenderingContext2D, restored, { x: 0, y: 0, ...ITEM_SIZES.document }, locale, false);
+        expect(handwriting.some(y => y >= 56 && y < 56 + READ_CELL_HEIGHT)).toBe(state === signed);
+        expect(handwriting.some(y => y >= 88 && y < 88 + READ_CELL_HEIGHT)).toBe(state === signed);
       }
     }
   });
@@ -183,9 +191,9 @@ describe('separate localized paperwork', () => {
       const recorder = { fillStyle: '', save() {}, restore() {}, fillRect(x: number, y: number, w: number, h: number) {
         if (w === 1 && h === 1) marks.push({ x, y });
       } } as unknown as CanvasRenderingContext2D;
-      for (const paper of state.papers) drawPaperwork(recorder, paper, { x: 0, y: 0, w: 188, h: 144 }, locale, false);
-      drawCertificate(recorder, state, { x: 0, y: 0, w: 188, h: 144 }, locale, false);
-      expect(marks.every(mark => mark.x >= 0 && mark.x < 188 && mark.y >= 0 && mark.y < 144)).toBe(true);
+      for (const paper of state.papers) drawPaperwork(recorder, paper, { x: 0, y: 0, ...ITEM_SIZES.document }, locale, false);
+      drawCertificate(recorder, state, { x: 0, y: 0, ...ITEM_SIZES.document }, locale, false);
+      expect(marks.every(mark => mark.x >= 0 && mark.x < ITEM_SIZES.document.w && mark.y >= 0 && mark.y < ITEM_SIZES.document.h)).toBe(true);
     }
   });
 
@@ -206,7 +214,7 @@ describe('separate localized paperwork', () => {
     expect(shiftButtons(state, 'pl', null, () => {}, view).find(button => button.id === 'apply-stamp')?.label).toContain(translations.pl.patientNames[0]);
   });
 
-  it('starts with identity and age, then adds compact chronological findings with no pending slots', () => {
+  it('starts with identity and age, then adds chronological findings with no pending slots', () => {
     let state = stateAfter('skip-intro', 'call-patient', 'take-document', 'take-paper');
     const blank = state.papers.find(paper => paper.kind === 'note')!;
     if (blank.kind !== 'note') throw new Error('Expected note');
@@ -266,9 +274,14 @@ describe('separate localized paperwork', () => {
       const pressure = entries[2]!;
       const high = patient.pressureValues.systolic >= 180 || patient.pressureValues.diastolic >= 110;
       expect(pressure.color).toBe(high ? ALERT_INK : HANDWRITING_INK);
-      const lines = entries.flatMap(entry => wrapDocumentLines([entry.text], 166));
-      expect(lines.length).toBeLessThanOrEqual(11);
-      for (const line of lines) expect(measureDocumentText(line)).toBeLessThanOrEqual(166);
+      const first = paginateNoteEntries(entries);
+      const pages = Array.from({ length: first.count }, (_, page) => paginateNoteEntries(entries, DOCUMENT_BODY_WIDTH, page));
+      expect(pages.flatMap(page => page.lines)).toEqual(entries.flatMap(entry => wrapReadingText(entry.text, DOCUMENT_BODY_WIDTH, 'handwritten').map(text => ({ ...entry, text }))));
+      for (const page of pages) {
+        expect(page.lines.length).toBeLessThanOrEqual(NOTE_LINES_PER_PAGE);
+        expect(28 + (page.lines.length - 1) * READ_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThan(ITEM_SIZES.document.h - 15);
+        for (const line of page.lines) expect(measureReadingText(line.text, 'handwritten')).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
+      }
     }
   });
 

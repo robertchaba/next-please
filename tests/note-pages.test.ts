@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { addDeskItem, createDeskState, itemRect } from '../src/core/desk';
 import { encodeSave, decodeSave } from '../src/core/save';
-import { noteEntries, wrapDocumentLines } from '../src/render/paperwork';
+import { noteEntries } from '../src/render/paperwork';
+import { DOCUMENT_BODY_WIDTH, wrapReadingText } from '../src/render/document-copy';
 import { NOTE_LINES_PER_PAGE, notePageControls, paginateNoteEntries } from '../src/render/note-pages';
 import { shiftButtons } from '../src/scenes/shift';
 import { longNoteState } from './fixtures/long-notes';
@@ -13,10 +14,10 @@ describe('medical note pagination', () => {
     for (const locale of ['pl', 'en'] as const) {
       const entries = noteEntries(paper, locale), first = paginateNoteEntries(entries);
       expect(first.count, JSON.stringify(entries)).toBeGreaterThan(1);
-      const rendered = Array.from({ length: first.count }, (_, page) => paginateNoteEntries(entries, 166, page));
+      const rendered = Array.from({ length: first.count }, (_, page) => paginateNoteEntries(entries, DOCUMENT_BODY_WIDTH, page));
       expect(rendered.every(page => page.lines.length <= NOTE_LINES_PER_PAGE)).toBe(true);
-      expect(rendered.flatMap(page => page.lines)).toEqual(entries.flatMap(entry => wrapDocumentLines([entry.text], 166).map(text => ({ ...entry, text }))));
-      expect(paginateNoteEntries(entries, 166, 999).page).toBe(first.count - 1);
+      expect(rendered.flatMap(page => page.lines)).toEqual(entries.flatMap(entry => wrapReadingText(entry.text, DOCUMENT_BODY_WIDTH, 'handwritten').map(text => ({ ...entry, text }))));
+      expect(paginateNoteEntries(entries, DOCUMENT_BODY_WIDTH, 999).page).toBe(first.count - 1);
     }
   });
 
@@ -28,8 +29,8 @@ describe('medical note pagination', () => {
     expect(after.count).toBe(2);
     const partial = entries.slice(0, NOTE_LINES_PER_PAGE - 1);
     const continuation = { text: 'Konsultacja psychiatryczna: zaburzenia psychiczne.', color: '#385b78' };
-    const together = paginateNoteEntries([...partial, continuation], 166, 1);
-    expect(together.lines).toEqual(wrapDocumentLines([continuation.text], 166).map(text => ({ ...continuation, text })));
+    const together = paginateNoteEntries([...partial, continuation], DOCUMENT_BODY_WIDTH, 1);
+    expect(together.lines).toEqual(wrapReadingText(continuation.text, DOCUMENT_BODY_WIDTH, 'handwritten').map(text => ({ ...continuation, text })));
   });
 
   it('aligns folded-corner controls to their owning sheet and hides them while carried or compact', () => {

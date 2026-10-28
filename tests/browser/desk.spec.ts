@@ -74,7 +74,7 @@ test('carried stamps stay in hand, rest at the side, and only handing the certif
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
   await expect(page.locator('#control-take-document')).toHaveCount(0);
   const paper = await logicalRect(page, 'apply-stamp');
-  expect(paper).toMatchObject({ w: 188, h: 144 });
+  expect(paper).toMatchObject({ w: 212, h: 176 });
   const stampHome = await logicalRect(page, 'stamp-fit');
   expect(stampHome).toMatchObject({ x: 520, w: 36, h: 36 });
   await page.locator('#control-stamp-fit').click();
@@ -137,10 +137,10 @@ test('documents shrink from the tray and both desktops, with aligned hit areas a
   await page.keyboard.press('Escape');
   expect(await logicalRect(page, 'take-document')).toEqual(tray);
   await carryTo(page, 'take-document', { x: 350, y: 220 });
-  expect(await logicalRect(page, 'paper-1')).toMatchObject({ w: 188, h: 144 });
+  expect(await logicalRect(page, 'paper-1')).toMatchObject({ w: 212, h: 176 });
   await expect(page.locator('#control-apply-stamp')).toHaveCount(0);
   await activate(page, 'take-certificate');
-  expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ w: 188, h: 144 });
+  expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ w: 212, h: 176 });
   const rightDesk = await logicalRect(page, 'apply-stamp');
   await page.locator('#control-apply-stamp').click();
   expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ w: 48, h: 64 });
@@ -162,7 +162,7 @@ test('documents shrink from the tray and both desktops, with aligned hit areas a
   expect(actual.y).toBeCloseTo(expected.y, 3);
   await page.mouse.click(target.x, target.y);
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
-  expect(await logicalRect(page, 'apply-stamp')).toEqual({ x: 264, y: 155, w: 188, h: 144 });
+  expect(await logicalRect(page, 'apply-stamp')).toEqual({ x: 252, y: 138, w: 212, h: 176 });
   expect(await page.evaluate(point => document.elementFromPoint(point.x, point.y)?.id, target)).toBe('control-apply-stamp');
   await carryTo(page, 'apply-stamp', { x: 110, y: 205 });
   const shelf = await logicalRect(page, 'apply-stamp');
@@ -184,7 +184,7 @@ test('right-side papers overlap the room while keeping half on the desk and cove
   await activate(page, 'take-certificate');
   await carryTo(page, 'apply-stamp', { x: 394, y: 10 });
   const certificate = await logicalRect(page, 'apply-stamp');
-  expect(certificate).toEqual({ x: 300, y: 66, w: 188, h: 144 });
+  expect(certificate).toEqual({ x: 288, y: 50, w: 212, h: 176 });
   const heightOnDesk = Math.min(certificate.y + certificate.h, DESK_FRONT.y) - RIGHT_DESK_TOP;
   expect(heightOnDesk).toBe(certificate.h / 2);
   const coveredInstrument = await screenPoint(page, { x: 360, y: 85 });
@@ -193,7 +193,7 @@ test('right-side papers overlap the room while keeping half on the desk and cove
   await activate(page, 'run-pressure');
   await expect(page.locator('#screen-description')).toContainText('108/62');
   await carryTo(page, 'apply-stamp', { x: 394, y: 172 });
-  expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ x: 300, y: 100 });
+  expect(await logicalRect(page, 'apply-stamp')).toMatchObject({ x: 288, y: 84 });
 });
 
 test('a blank certificate requires handwritten name and job before handoff', async ({ page }, testInfo) => {
@@ -257,7 +257,7 @@ test('the rulebook keeps its cover on placement and its physical corners open an
   await expect(page.locator('#control-manual-next')).toHaveAccessibleName('Otwórz okładkę regulaminu');
   await page.locator('#control-manual-next').click();
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'true');
-  expect(await logicalRect(page, 'manual')).toMatchObject({ w: 276, h: 164 });
+  expect(await logicalRect(page, 'manual')).toMatchObject({ w: 300, h: 180 });
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-page', '0');
   await expect(page.locator('#screen-description')).toContainText(translations.pl.manualPages[0]!.title);
   const book = await logicalRect(page, 'manual');
@@ -385,7 +385,7 @@ test('touch taps place the closed rulebook then open its cover corner with fract
   await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await client.detach();
   await expect(page.locator('#controls')).toHaveAttribute('data-manual-open', 'true');
-  expect(await logicalRect(page, 'manual')).toMatchObject({ w: 276, h: 164 });
+  expect(await logicalRect(page, 'manual')).toMatchObject({ w: 300, h: 180 });
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
 });
 

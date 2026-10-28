@@ -11,7 +11,7 @@ import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
 import { drawerSheets } from '../render/drawer';
 import { calendarText, formatGameDate } from '../core/calendar';
-import { CABINET_HOTSPOTS, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, dropTargetRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
+import { CABINET_HOTSPOTS, ITEM_SIZES, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, dropTargetRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
 export { manualPageCount, manualPageDescription } from '../render/manual';
 
 export type ShiftAction = GameAction | 'select-fit' | 'select-unfit' | 'apply-stamp' | 'manual'
@@ -155,7 +155,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
         && ((paper.kind === 'specialist' && workDayNumber(state.day) >= 4) || (paper.kind === 'referral' && workDayNumber(state.day) >= 5));
       const selectable = paper.kind === 'additional-referral' && paper.patientId === state.visit?.patientId && paper.day === state.visit?.startedDay
         && !isLifted(view, id) && bounds.x >= RIGHT_DESK_X;
-      const note = paper.kind === 'note' ? paginateNoteEntries(noteEntries(paper, locale), 166, view.notePages?.[paper.id]) : undefined;
+      const note = paper.kind === 'note' ? paginateNoteEntries(noteEntries(paper, locale), ITEM_SIZES.document.w - 22, view.notePages?.[paper.id]) : undefined;
       const noteCorners = notePageControls(bounds);
       const canTurnNote = note && note.count > 1 && !isLifted(view, id) && bounds.x >= RIGHT_DESK_X;
       const description = paperDescription(paper, locale, isDocumentClipped(state, paper.id))

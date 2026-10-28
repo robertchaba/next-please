@@ -2,20 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { PATIENTS } from '../src/core/patients';
 import type { Paper } from '../src/core/game';
 import { translations } from '../src/i18n';
-import { correspondenceCopy, referralCopy, wrapFormText } from '../src/render/document-copy';
-import { measureDocumentHeading, measureDocumentText } from '../src/render/font';
+import { correspondenceCopy, referralCopy, wrapFormText, wrapReadingText, fieldLabelWidth, DOCUMENT_BODY_WIDTH } from '../src/render/document-copy';
+import { measureDocumentHeading, measureDocumentText, measureReadingText } from '../src/render/font';
 
 describe('institutional document copy', () => {
   it('keeps official correspondence clear of the signature and stamp area', () => {
     for (const locale of ['pl', 'en'] as const) {
       const t = translations[locale];
       for (const letter of Object.values(t.progression.directives)) {
-        expect(wrapFormText(letter.body).length, `${locale}: ${letter.body}`).toBeLessThanOrEqual(6);
+        expect(wrapReadingText(letter.body).length, `${locale}: ${letter.body}`).toBeLessThanOrEqual(7);
         expect(measureDocumentText(letter.role), letter.role).toBeLessThanOrEqual(100);
         expect(measureDocumentText(letter.signature), letter.signature).toBeLessThanOrEqual(100);
       }
       for (const letter of Object.values(t.paperwork.letters).flat()) {
-        expect(wrapFormText(letter.body).length, `${locale}: ${letter.body}`).toBeLessThanOrEqual(5);
+        expect(wrapReadingText(letter.body).length, `${locale}: ${letter.body}`).toBeLessThanOrEqual(7);
         expect(measureDocumentText(letter.role), letter.role).toBeLessThanOrEqual(100);
         expect(measureDocumentText(letter.signature), letter.signature).toBeLessThanOrEqual(100);
       }
@@ -27,7 +27,7 @@ describe('institutional document copy', () => {
       expect(measureDocumentText(seal.lot[1])).toBeLessThanOrEqual(34);
       for (const kind of ['clinic', 'chamber'] as const) for (const line of seal[kind]) expect(measureDocumentText(line), line).toBeLessThanOrEqual(40);
       expect(wrapFormText(t.additionalTests.otherChecks).length).toBeLessThanOrEqual(2);
-      expect(wrapFormText(`${t.progression.treatment} ${t.progression.clearance}`).length).toBeLessThanOrEqual(5);
+      expect(wrapReadingText(`${t.progression.treatment} ${t.progression.clearance}`).length).toBeLessThanOrEqual(6);
       for (const name of t.patientNames) expect(measureDocumentText(`${t.documentDesign.subject}: ${name}`), name).toBeLessThanOrEqual(166);
     }
   });
@@ -48,8 +48,8 @@ describe('institutional document copy', () => {
       expect(copy.instruction).toContain(t.paperwork[patient.examination]);
       const printed = copy.lines.join(' ').replace(/\s+/g, ' ');
       for (const field of copy.fields) expect(printed).toContain(field.value.replace(/\s+/g, ' '));
-      for (const line of copy.lines) expect(measureDocumentText(line, 'typewriter'), line).toBeLessThanOrEqual(166);
-      expect(copy.lines.length, `${locale} ${patient.id}: ${copy.lines.join(' | ')}`).toBeLessThanOrEqual(9);
+      for (const row of copy.rows) expect(fieldLabelWidth(row.label) + measureReadingText(row.value), row.label + row.value).toBeLessThanOrEqual(DOCUMENT_BODY_WIDTH);
+      expect(copy.rows.length, `${locale} ${patient.id}: ${copy.lines.join(' | ')}`).toBeLessThanOrEqual(9);
       if (copy.institution === 'employer') expect(wrapFormText(copy.masthead.toUpperCase(), 104).length, copy.masthead).toBeLessThanOrEqual(2);
     }
   });
