@@ -67,7 +67,7 @@ async function place(page: Page, id: string): Promise<void> {
   await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
 }
 
-for (const [job, variant, locale] of [[45, 'militia', 'pl'], [46, 'lot', 'en']] as const) {
+for (const [job, variant, locale] of [[0, 'employer', 'pl'], [45, 'militia', 'pl'], [46, 'lot', 'en']] as const) {
   test(`institutional ${variant} referral retains legible identity and authentication in ${locale}`, async ({ page }, info) => {
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -77,7 +77,8 @@ for (const [job, variant, locale] of [[45, 'militia', 'pl'], [46, 'lot', 'en']] 
     const paper = state.papers.find(paper => paper.kind === 'referral')!;
     await load(page, state, locale);
     await place(page, `paper-${paper.id}`);
-    await expect(page.locator(`#control-paper-${paper.id}`)).toHaveAccessibleName(new RegExp(translations[locale].paperwork.stationery[variant]));
+    const issuer = variant === 'employer' ? translations[locale].patientReferrals[paper.patientId!]!.employer : translations[locale].paperwork.stationery[variant];
+    await expect(page.locator(`#control-paper-${paper.id}`)).toHaveAccessibleName(new RegExp(issuer));
     await expect(page.locator(`#control-paper-${paper.id}`)).toHaveAccessibleName(new RegExp(translations[locale].patientNames[paper.patientId!]!));
     await expect(page.locator(`#control-paper-${paper.id}`)).toHaveAccessibleName(new RegExp(translations[locale].patientJobs[paper.patientId!]!));
     await page.locator(`#control-language-${locale}`).focus();
@@ -125,6 +126,8 @@ test('generated envelope keeps sender readable and opens by its keyboard corner 
   await key(page, `paper-action-${letter.id}`);
   await expect(page.locator(`#control-paper-${letter.id}`)).toHaveAccessibleName(/Pismo w sprawie orzeczenia/);
   await expect(page.locator(`#control-paper-${letter.id}`)).not.toHaveAccessibleName(/Zamknięta koperta/);
+  await page.locator('#control-language-pl').focus();
+  await page.locator('#stage').screenshot({ path: info.outputPath('paperwork-revision-letter-pl-screen.png') });
   expect(errors).toEqual([]);
   expect(missing).toEqual([]);
 });

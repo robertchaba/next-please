@@ -153,6 +153,127 @@ export function drawText(
   ctx.restore();
 }
 
+/** Headline faces are separate from the compact seven-row form lettering.
+ * The heavier serif face reads as letterpress; narrow sans capitals suit service
+ * mastheads. Both have seven-pixel capitals, two accent rows, and 11px leading.
+ * Only integer enlargement is supported; body fields retain their old metrics. */
+export type DocumentHeadingFace = 'serif' | 'sans';
+export type DocumentHeadingOptions = TextOptions & { face?: DocumentHeadingFace };
+
+const HEADING_SERIF: Record<string, string[]> = {
+  A: ['00100', '01110', '11011', '11011', '11111', '11011', '11011'],
+  B: ['11110', '11001', '11001', '11110', '11001', '11001', '11110'],
+  C: ['01111', '11001', '11000', '11000', '11000', '11001', '01110'],
+  D: ['11110', '11001', '11001', '11001', '11001', '11001', '11110'],
+  E: ['11111', '11001', '11000', '11110', '11000', '11001', '11111'],
+  F: ['11111', '11001', '11000', '11110', '11000', '11000', '11100'],
+  G: ['01111', '11001', '11000', '11011', '11001', '11001', '01111'],
+  H: ['11011', '11011', '11011', '11111', '11011', '11011', '11011'],
+  I: ['11111', '00100', '00100', '00100', '00100', '00100', '11111'],
+  J: ['00111', '00010', '00010', '00010', '11010', '11010', '01100'],
+  K: ['11011', '11010', '11100', '11100', '11010', '11001', '11011'],
+  L: ['11100', '11000', '11000', '11000', '11000', '11001', '11111'],
+  M: ['1100011', '1110111', '1101011', '1101011', '1100011', '1100011', '1100011'],
+  N: ['11001', '11101', '11101', '11011', '11011', '11001', '11001'],
+  O: ['01110', '11001', '11001', '11001', '11001', '11001', '01110'],
+  P: ['11110', '11001', '11001', '11110', '11000', '11000', '11100'],
+  Q: ['01110', '11001', '11001', '11001', '11011', '11010', '01101'],
+  R: ['11110', '11001', '11001', '11110', '11010', '11001', '11011'],
+  S: ['01111', '11001', '11000', '01110', '00011', '10011', '11110'],
+  T: ['11111', '10101', '00100', '00100', '00100', '00100', '01110'],
+  U: ['11011', '11001', '11001', '11001', '11001', '11001', '01110'],
+  V: ['11011', '11011', '11011', '01010', '01010', '00100', '00100'],
+  W: ['1100011', '1100011', '1100011', '1101011', '1101011', '0110110', '0100010'],
+  X: ['11011', '11011', '01010', '00100', '01010', '11011', '11011'],
+  Y: ['11011', '11011', '01010', '00100', '00100', '00100', '01110'],
+  Z: ['11111', '10011', '00010', '00100', '01000', '11001', '11111'],
+};
+
+const HEADING_SANS: Record<string, string[]> = {
+  A: ['0110', '1001', '1001', '1001', '1111', '1001', '1001'],
+  B: ['1110', '1001', '1001', '1110', '1001', '1001', '1110'],
+  C: ['0111', '1000', '1000', '1000', '1000', '1000', '0111'],
+  D: ['1110', '1001', '1001', '1001', '1001', '1001', '1110'],
+  E: ['1111', '1000', '1000', '1110', '1000', '1000', '1111'],
+  F: ['1111', '1000', '1000', '1110', '1000', '1000', '1000'],
+  G: ['0111', '1000', '1000', '1011', '1001', '1001', '0111'],
+  H: ['1001', '1001', '1001', '1111', '1001', '1001', '1001'],
+  I: ['1', '1', '1', '1', '1', '1', '1'],
+  J: ['0001', '0001', '0001', '0001', '1001', '1001', '0110'],
+  K: ['1001', '1001', '1010', '1100', '1010', '1001', '1001'],
+  L: ['1000', '1000', '1000', '1000', '1000', '1000', '1111'],
+  M: ['10001', '11011', '10101', '10001', '10001', '10001', '10001'],
+  N: ['1001', '1001', '1101', '1011', '1001', '1001', '1001'],
+  O: ['0110', '1001', '1001', '1001', '1001', '1001', '0110'],
+  P: ['1110', '1001', '1001', '1110', '1000', '1000', '1000'],
+  Q: ['0110', '1001', '1001', '1001', '1001', '1011', '0111'],
+  R: ['1110', '1001', '1001', '1110', '1010', '1001', '1001'],
+  S: ['0111', '1000', '1000', '0110', '0001', '0001', '1110'],
+  T: ['11111', '00100', '00100', '00100', '00100', '00100', '00100'],
+  U: ['1001', '1001', '1001', '1001', '1001', '1001', '0110'],
+  V: ['10001', '10001', '10001', '10001', '01010', '01010', '00100'],
+  W: ['10001', '10001', '10001', '10101', '10101', '11011', '10001'],
+  X: ['1001', '1001', '1001', '0110', '1001', '1001', '1001'],
+  Y: ['10001', '10001', '01010', '00100', '00100', '00100', '00100'],
+  Z: ['1111', '0001', '0010', '0010', '0100', '1000', '1111'],
+};
+
+function makeHeadingFace(body: Record<string, string[]>): Record<string, string[]> {
+  const glyphs = { ...GLYPHS };
+  for (const [letter, rows] of Object.entries(body)) {
+    const blank = '0'.repeat(rows[0].length);
+    glyphs[letter] = [blank, blank, ...rows];
+  }
+  for (const [accented, plain] of Object.entries({ Ć: 'C', Ń: 'N', Ó: 'O', Ś: 'S', Ź: 'Z' })) {
+    const rows = glyphs[plain], width = rows[0].length;
+    glyphs[accented] = ['0'.repeat(width - 2) + '10', '0'.repeat(width - 3) + '100', ...rows.slice(2)];
+  }
+  const dot = '0'.repeat(glyphs.Z[0].length - 3) + '010';
+  glyphs.Ż = [dot, glyphs.Z[1], ...glyphs.Z.slice(2)];
+  const width = glyphs.L[0].length;
+  glyphs.Ł = glyphs.L.map((row, y) => y === 4 || y === 5
+    ? [...row].map((pixel, x) => x === width - (y === 4 ? 2 : 3) ? '1' : pixel).join('') : row);
+  for (const [accented, plain] of Object.entries({ Ą: 'A', Ę: 'E' })) {
+    const rows = glyphs[plain], width = rows[0].length;
+    glyphs[accented] = [...rows.slice(0, 7), rows[8], '0'.repeat(width - 2) + '11'];
+  }
+  return glyphs;
+}
+
+const HEADING_FACES: Record<DocumentHeadingFace, Record<string, string[]>> = {
+  serif: makeHeadingFace(HEADING_SERIF), sans: makeHeadingFace(HEADING_SANS),
+};
+
+function headingWidth(text: string, face: DocumentHeadingFace): number {
+  const glyphs = HEADING_FACES[face];
+  return Math.max(0, [...text].reduce((sum, character) => sum + (character === ' ' ? 4 : (glyphs[character] ?? glyphs['?'])[0].length + 1), 0) - 1);
+}
+
+export function measureDocumentHeading(text: string, face: DocumentHeadingFace = 'serif', scale = 1): number {
+  return Math.max(...normalize(text).split('\n').map(line => headingWidth(line, face))) * integerScale(scale);
+}
+
+export function drawDocumentHeading(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, options: DocumentHeadingOptions = {}): void {
+  const face = options.face ?? 'serif', scale = integerScale(options.scale ?? 1), glyphs = HEADING_FACES[face];
+  ctx.save();
+  ctx.fillStyle = options.color ?? '#2e3329';
+  for (const [index, line] of normalize(text).split('\n').entries()) {
+    const width = headingWidth(line, face) * scale;
+    const offset = options.align === 'center' ? width / 2 : options.align === 'right' ? width : 0;
+    let cursor = Math.round(x - offset);
+    const top = Math.round(y) + index * 11 * scale;
+    for (const character of line) {
+      if (character === ' ') { cursor += 4 * scale; continue; }
+      const rows = glyphs[character] ?? glyphs['?'];
+      rows.forEach((row, dy) => [...row].forEach((pixel, dx) => {
+        if (pixel === '1') ctx.fillRect(cursor + dx * scale, top + dy * scale, scale, scale);
+      }));
+      cursor += (rows[0].length + 1) * scale;
+    }
+  }
+  ctx.restore();
+}
+
 /** Original seven-row document face: five-pixel capitals, four-pixel lowercase
  * and eight-pixel line advance. An accent row and a descender row remain distinct.
  * Narrow glyphs increase form density without fractional scaling. */

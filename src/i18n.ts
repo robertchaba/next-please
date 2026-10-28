@@ -352,8 +352,18 @@ export const translations = {
       weekdays: ['niedziela', 'poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota'],
       weekdaysShort: ['NDZ', 'PON', 'WT', 'ŚR', 'CZW', 'PT', 'SOB'],
     },
+    documentDesign: {
+      referral: 'SKIEROWANIE', certificate: 'ORZECZENIE', report: 'WYNIK BADANIA', specialist: 'ZAŚWIADCZENIE', certificateStatement: 'Orzeka się o zdolności do pracy:', medicalOffice: 'PRZYCHODNIA',
+      letter: 'ZAWIADOMIENIE', directive: 'PISMO OKÓLNE', subject: 'Dotyczy', reference: 'Znak sprawy',
+      recipient: 'Do lekarza orzecznika', personal: 'DO RĄK WŁASNYCH',
+      institutions: { militia: 'KOMENDA MILICJI', lot: 'LOT', zus: 'ZUS', chamber: 'IZBA LEKARSKA', clinic: 'MEDYCYNA PRACY' },
+      departments: { employer: 'DZIAŁ KADR', militia: 'WYDZIAŁ KADR', lot: 'PERSONEL LATAJĄCY', zus: 'REFERAT ORZECZEŃ', chamber: 'SEKRETARIAT', clinic: 'GABINET 04' },
+      referralInstruction: { initial: 'Kieruje się na badanie wstępne:', periodic: 'Kieruje się na badanie okresowe:' },
+      fields: { identity: 'Osoba kierowana', position: 'Stanowisko', work: 'Praca', hazards: 'Narażenia' },
+      seal: { employer: ['DZIAŁ KADR', 'EWIDENCJA'], militia: ['MILICJA', 'KADRY'], lot: ['LOT', 'KADRY'], zus: ['ZUS', 'REFERAT ORZECZEŃ'], chamber: ['IZBA', 'LEKARSKA'], clinic: ['LEKARZ', 'MED. PR.'] },
+    },
     paperwork: {
-      date: 'Data', issued: 'Wystawiono', employerSeal: 'Okrągła fioletowa pieczęć pracodawcy',
+      date: 'Data', issued: 'Wystawiono', employerSeal: 'Fioletowa pieczęć działu kadr',
       clinicSeal: 'Pieczęć gabinetu', zusSeal: 'Podłużna niebieska pieczęć ZUS', signed: 'Podpisano odręcznie',
       referral: 'Skierowanie na badania', occupational: 'Medycyna pracy', note: 'Dokumentacja lekarska', blank: 'Czysta kartka',
       employer: 'Pracodawca', name: 'Imię i nazwisko', birthDate: 'Data urodzenia', birthShort: 'Ur.', age: 'Wiek', sex: 'Płeć',
@@ -371,7 +381,7 @@ export const translations = {
       stationery: { militia: 'Milicja', lot: 'LOT' },
       letters: {
         missingResult: [
-          { subject: 'W sprawie załączników', body: 'Przekazana dokumentacja dopuszczenia do pracy nie zawiera kompletu załączników. Prosimy o uzupełnienie akt o wynik badania dodatkowego.', role: 'Kierownik kadr', signature: 'Witold Krawiec' },
+          { subject: 'W sprawie załączników', body: 'Przy odbiorze orzeczenia stwierdzono brak wymaganego załącznika. Wzywa się do uzupełnienia akt pracownika o wynik badania dodatkowego.', role: 'Kierownik kadr', signature: 'Witold Krawiec' },
           { subject: 'Doręczenie dokumentacji', body: 'W aktach pracownika odnotowano brak wyniku badania dodatkowego. Prosimy przekazywać wynik razem z orzeczeniem o dopuszczeniu do pracy.', role: 'Referent osobowy', signature: 'Irena Brzozowska' },
           { subject: 'Niekompletna teczka', body: 'Teczka pracownika dopuszczonego do pracy pozostaje niekompletna. Do orzeczenia należy dołączyć wynik właściwego badania dodatkowego.', role: 'Kierownik organizacji pracy', signature: 'Jerzy Łukaszewski' },
           { subject: 'Zastrzeżenia do akt', body: 'Weryfikacja przekazanych dokumentów wykazała brak załącznika. Prosimy o sprawdzenie kompletu akt i doręczenie wyniku badania.', role: 'Pełnomocnik zakładu', signature: 'Barbara Wierzbicka' },
@@ -379,7 +389,7 @@ export const translations = {
           { subject: 'Protokół braków', body: 'Brak wyniku badania dodatkowego wpisano do protokołu odbioru akt. Przy dopuszczeniu do pracy wynik przekazuje się wraz z orzeczeniem.', role: 'Kierownik administracji', signature: 'Halina Orłowska' },
         ],
         zus: [
-          { subject: 'Weryfikacja dokumentacji', body: 'Akta orzeczenia przekazano do rozszerzonej weryfikacji. Prosimy o zachowanie dokumentacji badania do czasu zakończenia czynności.', role: 'St. referent rozliczeń', signature: 'Maria Jarosz' },
+          { subject: 'Weryfikacja dokumentacji', body: 'Zarządzono ponowną weryfikację orzeczenia. Dokumentację badania należy zachować w aktach gabinetu do czasu zakończenia czynności.', role: 'St. referent rozliczeń', signature: 'Maria Jarosz' },
           { subject: 'Uzupełnienie akt świadczenia', body: 'W toku rozpatrywania wniosku o świadczenie dołączono odpis orzeczenia z gabinetu. Prosimy o potwierdzenie kompletności dokumentacji.', role: 'Inspektor świadczeń', signature: 'Roman Głowacki' },
           { subject: 'Zawiadomienie o przeglądzie', body: 'Postępowanie wymaga ponownego zestawienia dokumentacji medycznej. Odpis orzeczenia włączono do akt sprawy. Prosimy zachować oryginały.', role: 'Referent księgowości', signature: 'Teresa Biel' },
           { subject: 'Nota w sprawie dokumentacji', body: 'Komisja zapoznała się z przekazanymi załącznikami. Dokumentacja pozostaje w toku weryfikacji. Osobne potwierdzenie odbioru nie jest wymagane.', role: 'Sekretarz komisji', signature: 'Henryk Kulesza' },
@@ -387,7 +397,7 @@ export const translations = {
           { subject: 'Przekazanie sprawy', body: 'Akta przekazano do właściwego referatu celem dalszego rozpatrzenia. Odpis niniejszego pisma należy zachować w dokumentacji gabinetu.', role: 'Kierownik referatu', signature: 'Adam Wilczyński' },
         ],
         employer: [
-          { subject: 'Wszczęcie postępowania', body: 'Rozpoczęto wyjaśnianie sprawy przerwy w obsadzie stanowiska. Prosimy o zachowanie odpisu orzeczenia i dokumentacji badania pracownika.', role: 'Kierownik kadr', signature: 'Witold Krawiec' },
+          { subject: 'Wszczęcie postępowania', body: 'W związku z przerwą w obsadzie stanowiska wszczęto postępowanie wyjaśniające. Odpis orzeczenia oraz dokumentację badania należy zachować.', role: 'Kierownik kadr', signature: 'Witold Krawiec' },
           { subject: 'Zawiadomienie kadrowe', body: 'Po wykreśleniu pracownika z grafiku przekazano sprawę do działu kadr. Prosimy o potwierdzenie daty i zakresu przeprowadzonego badania.', role: 'Referent osobowy', signature: 'Irena Brzozowska' },
           { subject: 'Wyciąg z ewidencji', body: 'W ewidencji odnotowano godziny nieobsadzonego stanowiska. Odpis skierowania dołączono do dokumentacji. Sprawa oczekuje na wyjaśnienie.', role: 'Kierownik organizacji pracy', signature: 'Jerzy Łukaszewski' },
           { subject: 'Przekazanie dokumentów', body: 'Po konsultacji z kadrami dokumenty przekazano do dalszego rozpatrzenia. Prosimy o zachowanie kompletu akt dotyczących orzeczenia.', role: 'Pełnomocnik zakładu', signature: 'Barbara Wierzbicka' },
@@ -474,7 +484,7 @@ export const translations = {
         psychiatry: { fit: 'Bez zaburzeń psychicznych. Zdolność psychiczna do służby w milicji potwierdzona.', unfit: 'Zaburzenia psychiczne wykluczają służbę w milicji. Wymagana odmowa.' },
         'chest-xray': { fit: 'Bez zmian wskazujących na pylicę. Brak przeciwwskazań do pracy górnika.', unfit: 'Obraz radiologiczny potwierdza pylicę płuc. Praca górnika wykluczona. Wymagana odmowa.' },
       },
-      otherChecks: 'Dopuszczenie wymaga także prawidłowych pozostałych badań i dokumentów.',
+      otherChecks: 'Pozostałe badania i dokumenty wymagają osobnej oceny lekarza orzecznika.',
     },
     progression: {
       "chamber": "Izba Lekarska",
@@ -533,25 +543,25 @@ export const translations = {
       "directives": {
         "additional-tests": {
           "subject": "Badania dodatkowe",
-          "body": "Od dziś: hutnik — audiometria; pilot — błędnik; milicjant — psychiatra; górnik — RTG. Druki w 3. szufladzie. Zakreśl badanie. Akta zostają. Powrót z wynikiem dziś lub jutro. Wskazania: regulamin.",
+          "body": "Wprowadza się badania: hutnik — audiometria, pilot — błędnik, milicjant — psychiatra, górnik — RTG. Druki pobiera się z trzeciej przegródki. Zakreśla się jedno badanie. Akta zostają. Powrót dziś lub w następny dzień pracy. Wskazania: regulamin.",
           "role": "Sekretarz Izby Lekarskiej",
           "signature": "dr Adam Pieczęć"
         },
         "dates": {
-          "subject": "W sprawie świeżości skierowań",
-          "body": "Od dziś należy sprawdzać datę skierowania. Starsze niż 3 dni wymaga odmowy. Papier także się starzeje.",
+          "subject": "W sprawie ważności skierowań",
+          "body": "Nakazuje się kontrolę dat skierowań. Dokument starszy niż 3 dni wymaga odmowy; mający dokładnie 3 dni zachowuje ważność. Przepis obowiązuje od daty niniejszego pisma.",
           "role": "Referat kontroli ZUS",
           "signature": "Irena Stempel"
         },
         "specialist": {
           "subject": "Nadciśnienie pod opieką",
-          "body": "Od dziś leczony pacjent z nadciśnieniem może pracować z zaświadczeniem specjalisty o braku przeciwwskazań dla tego stanowiska. Inny zawód unieważnia dokument. Wątpliwości wyjaśnia telefon.",
+          "body": "Dopuszcza się pracę przy leczonym nadciśnieniu na podstawie zaświadczenia specjalisty o braku przeciwwskazań dla danego stanowiska. Inny zawód unieważnia dokument. Wątpliwości wyjaśnia się telefonicznie.",
           "role": "Sekretarz Izby Lekarskiej",
           "signature": "dr Adam Pieczęć"
         },
         "authenticity": {
           "subject": "O autentyczności skierowań",
-          "body": "Od dziś pieczęć potwierdza skierowanie. Brak pieczęci oznacza odmowę. Odcisk niewyraźny należy wyjaśnić w kadrach pod numerem na druku.",
+          "body": "Od daty pisma wymaga się pieczęci pracodawcy na skierowaniu. Jej brak stanowi podstawę odmowy. Niewyraźny odcisk wymaga potwierdzenia w kadrach pod numerem podanym na druku.",
           "role": "Referat kontroli ZUS",
           "signature": "Irena Stempel"
         }
@@ -870,8 +880,18 @@ export const translations = {
       weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
       weekdaysShort: ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
     },
+    documentDesign: {
+      referral: 'REFERRAL', certificate: 'CERTIFICATE', report: 'EXAMINATION REPORT', specialist: 'SPECIALIST OPINION', certificateStatement: 'Fitness for the stated work is certified:', medicalOffice: 'CLINIC',
+      letter: 'NOTICE', directive: 'CIRCULAR', subject: 'Concerning', reference: 'Case reference',
+      recipient: 'To the examining doctor', personal: 'FOR THE ADDRESSEE',
+      institutions: { militia: 'MILITIA COMMAND', lot: 'LOT', zus: 'ZUS', chamber: 'MEDICAL CHAMBER', clinic: 'OCCUPATIONAL HEALTH' },
+      departments: { employer: 'PERSONNEL OFFICE', militia: 'PERSONNEL DIVISION', lot: 'FLIGHT PERSONNEL', zus: 'CERTIFICATION OFFICE', chamber: 'SECRETARIAT', clinic: 'CONSULTING ROOM 04' },
+      referralInstruction: { initial: 'Referred for initial examination:', periodic: 'Referred for periodic examination:' },
+      fields: { identity: 'Referred person', position: 'Position', work: 'Work', hazards: 'Exposures' },
+      seal: { employer: ['PERSONNEL', 'RECORDS'], militia: ['MILITIA', 'STAFF'], lot: ['LOT', 'AIRCREW'], zus: ['ZUS', 'CERTIFICATION'], chamber: ['MEDICAL', 'CHAMBER'], clinic: ['CLINIC', 'DOCTOR'] },
+    },
     paperwork: {
-      date: 'Date', issued: 'Issued', employerSeal: 'Round violet employer seal',
+      date: 'Date', issued: 'Issued', employerSeal: 'Violet personnel-office stamp',
       clinicSeal: 'Clinic seal', zusSeal: 'Rectangular blue ZUS seal', signed: 'Signed by hand',
       referral: 'Referral for examination', occupational: 'Occupational medicine', note: 'Medical notes', blank: 'Blank sheet',
       employer: 'Employer', name: 'Full name', birthDate: 'Date of birth', birthShort: 'Born', age: 'Age', sex: 'Sex',
@@ -889,7 +909,7 @@ export const translations = {
       stationery: { militia: 'Militia', lot: 'LOT' },
       letters: {
         missingResult: [
-          { subject: 'Concerning enclosures', body: 'The work clearance records arrived without all required enclosures. Please complete the file with the additional examination report.', role: 'Personnel manager', signature: 'Witold Krawiec' },
+          { subject: 'Concerning enclosures', body: 'The required enclosure was absent on receipt of the certificate. The employee file shall be completed with the additional examination report.', role: 'Personnel manager', signature: 'Witold Krawiec' },
           { subject: 'Delivery of records', body: 'The employee file is missing an additional examination report. Please supply the report together with the work clearance certificate.', role: 'Personnel officer', signature: 'Irena Brzozowska' },
           { subject: 'Incomplete employee file', body: 'The cleared employee’s file remains incomplete. The relevant additional examination report must accompany the certificate.', role: 'Work organisation manager', signature: 'Jerzy Łukaszewski' },
           { subject: 'Objections to the records', body: 'Review of the supplied documents identified a missing enclosure. Please check the complete file and forward the examination report.', role: 'Company representative', signature: 'Barbara Wierzbicka' },
@@ -897,7 +917,7 @@ export const translations = {
           { subject: 'Record of omissions', body: 'The absent examination report has been entered in the receipt log. Work clearance certificates shall be delivered with the report.', role: 'Administration manager', signature: 'Halina Orłowska' },
         ],
         zus: [
-          { subject: 'Review of documentation', body: 'The certificate file has been referred for extended review. Please retain the examination records until the review is complete.', role: 'Senior accounts clerk', signature: 'Maria Jarosz' },
+          { subject: 'Review of documentation', body: 'A further review of the certificate has been ordered. The examination records shall be retained in the clinic file until proceedings are complete.', role: 'Senior accounts clerk', signature: 'Maria Jarosz' },
           { subject: 'Benefit file supplement', body: 'A copy of the clinic certificate was added during the benefit review. Please confirm that the examination records are complete.', role: 'Benefits inspector', signature: 'Roman Głowacki' },
           { subject: 'Notice of file review', body: 'The proceedings require a fresh compilation of medical records. A certificate copy has joined the file. Please retain the originals.', role: 'Accounts clerk', signature: 'Teresa Biel' },
           { subject: 'Note concerning the records', body: 'The committee has reviewed the attachments. Verification of the records continues. A separate acknowledgment is not required.', role: 'Committee secretary', signature: 'Henryk Kulesza' },
@@ -905,7 +925,7 @@ export const translations = {
           { subject: 'Matter referred onward', body: 'The file has been passed to the appropriate office for further review. Please retain a copy of this notice in the clinic records.', role: 'Section head', signature: 'Adam Wilczyński' },
         ],
         employer: [
-          { subject: 'Procedure initiated', body: 'An inquiry has begun concerning the gap in staffing. Please retain a copy of the certificate and the employee’s examination records.', role: 'Personnel manager', signature: 'Witold Krawiec' },
+          { subject: 'Procedure initiated', body: 'Proceedings have been opened concerning the gap in staffing. A copy of the certificate and the employee’s examination records shall be retained.', role: 'Personnel manager', signature: 'Witold Krawiec' },
           { subject: 'Personnel notification', body: 'The matter was referred to personnel after the worker left the rota. Please confirm the date and scope of the examination.', role: 'Personnel clerk', signature: 'Irena Brzozowska' },
           { subject: 'Extract from the rota', body: 'Unstaffed hours for the referred position have been logged. A referral copy has joined the file. The matter awaits clarification.', role: 'Work planning manager', signature: 'Jerzy Łukaszewski' },
           { subject: 'Documents referred onward', body: 'Following consultation with personnel, the papers were passed for further review. Please retain all records relating to the certificate.', role: 'Company representative', signature: 'Barbara Wierzbicka' },
@@ -992,7 +1012,7 @@ export const translations = {
         psychiatry: { fit: 'No mental disorder found. Mentally fit for militia service.', unfit: 'Mental disorder rules out militia service. Refusal required.' },
         'chest-xray': { fit: 'No signs of pneumoconiosis. No contraindications to mining work.', unfit: 'X-ray confirms pneumoconiosis. Mining work is ruled out. Refusal required.' },
       },
-      otherChecks: 'Approval also requires satisfactory remaining examinations and documents.',
+      otherChecks: 'The examining doctor must also assess the remaining tests and documents.',
     },
     progression: {
       "chamber": "Medical Chamber",
@@ -1051,25 +1071,25 @@ export const translations = {
       "directives": {
         "additional-tests": {
           "subject": "Additional examinations",
-          "body": "From today: furnace worker — hearing; pilot — balance; militia — psychiatry; miner — X-ray. Forms: drawer 3. Circle one test. Keep the records. Results return today or tomorrow. Indications: rulebook.",
+          "body": "Tests are instituted: furnace work — hearing; pilots — balance; militia — psychiatry; miners — X-ray. Forms shall be drawn from the third rack slot. One test is circled; records retained. Return: today or next workday. Indications: rulebook.",
           "role": "Medical Chamber secretary",
           "signature": "dr Adam Pieczęć"
         },
         "dates": {
-          "subject": "On the freshness of referrals",
-          "body": "From today, check referral dates. Referrals older than 3 days require refusal. Paper ages too.",
+          "subject": "Validity of referrals",
+          "body": "Referral dates shall be verified. Documents older than 3 days require refusal; those exactly 3 days old remain valid. This provision takes effect on the date of this notice.",
           "role": "ZUS inspection office",
           "signature": "Irena Stempel"
         },
         "specialist": {
           "subject": "Hypertension under supervision",
-          "body": "From today, treated hypertension may be cleared with a specialist certificate confirming no contraindications for this job. A different job invalidates it. Telephone the specialist to clarify doubts.",
+          "body": "Treated hypertension may be cleared upon a specialist certificate stating no contraindications for the specific job. A different occupation invalidates it. Any doubts shall be clarified by telephone.",
           "role": "Medical Chamber secretary",
           "signature": "dr Adam Pieczęć"
         },
         "authenticity": {
           "subject": "On authentic referrals",
-          "body": "From today, a seal validates a referral. No seal means refusal. Clarify illegible impressions with HR using the number on the form.",
+          "body": "From the date of this notice, referrals require the employer’s seal. Its absence requires refusal. An illegible impression shall be confirmed by personnel using the number on the form.",
           "role": "ZUS inspection office",
           "signature": "Irena Stempel"
         }

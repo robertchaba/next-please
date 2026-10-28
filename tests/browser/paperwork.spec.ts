@@ -121,7 +121,8 @@ test('detected wrong decisions deliver the right sender and envelopes can be ope
   await activate(page, 'back');
   for (const id of ['call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-unfit', 'apply-stamp', 'return-document']) await activate(page, id);
   await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/koperta/i);
-  await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Okrągła fioletowa pieczęć pracodawcy/);
+  await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/DZIAŁ KADR EWIDENCJA/);
+  await expect(page.locator('#control-paper-2')).toHaveAccessibleName(/Fioletowa pieczęć działu kadr/);
   await movePaperRight(page, 2);
   await page.locator('#control-paper-action-2').click();
   const first = await exportState(page, testInfo, 'employer.npsave');

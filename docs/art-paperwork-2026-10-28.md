@@ -1,4 +1,6 @@
-# Stationery artwork — 0.8.3
+# Stationery artwork — 0.8.3 (superseded proposal)
+
+The ornamental-paper approach below was rejected. Its sources and recipe remain as a production archive; the game no longer loads or renders those bordered sheets or the small decorative militia/LOT seals. See [the replacement design](document-design-2026-10-28.md) for plain paper, new letterheads, larger readable stamps and revised typography. The kraft envelope remains in use.
 
 Created for **Next, Please!** on 2026-10-28 with the built-in `image_gen` tool and the `imagegen` skill. No CLI/API fallback or acquired artwork was used. These are original game props, with no separate stock-asset license or attribution requirement; they are not reproductions of official credentials or institutional logos. Robert Chaba's creator credit remains unchanged.
 

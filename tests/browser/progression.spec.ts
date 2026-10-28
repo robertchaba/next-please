@@ -85,7 +85,16 @@ for (const [day, rule, sender] of [[5, 'dates', 'ZUS'], [6, 'specialist', 'Izba 
     await movePaper(page, directive.id);
     await key(page, `paper-action-${directive.id}`);
     const description = page.locator(`#control-paper-${directive.id}`);
-    await expect(description).toHaveAccessibleName(rule === 'dates' ? /Starsze niż 3 dni/ : rule === 'specialist' ? /Inny zawód/ : /Brak pieczęci/);
+    if (rule === 'dates') {
+      await expect(description).toHaveAccessibleName(/starszy niż 3 dni wymaga odmowy/);
+      await expect(description).toHaveAccessibleName(/dokładnie 3 dni zachowuje ważność/);
+    } else if (rule === 'specialist') {
+      await expect(description).toHaveAccessibleName(/Inny zawód unieważnia dokument/);
+    } else {
+      await expect(description).toHaveAccessibleName(/pieczęci pracodawcy/);
+      await expect(description).toHaveAccessibleName(/brak stanowi podstawę odmowy/);
+      await expect(description).toHaveAccessibleName(/Niewyraźny odcisk wymaga potwierdzenia w kadrach/);
+    }
     await page.locator('#stage').screenshot({ path: info.outputPath(`directive-${rule}-pl.png`) });
     await key(page, 'language-en');
     await expect(description).toHaveAccessibleName(rule === 'dates' ? /3 days/ : rule === 'specialist' ? /occupation|job|position/ : /seal|stamp/);

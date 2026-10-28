@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { drawDocumentText, drawText, measureDocumentText, measureText, type DocumentFace } from '../src/render/font';
+import { drawDocumentHeading, drawDocumentText, drawText, measureDocumentHeading, measureDocumentText, measureText, type DocumentFace } from '../src/render/font';
 import { translations } from '../src/i18n';
 import { mobileDialogueLines, mobileStatusLines } from '../src/render/mobile';
 
 type Pixel = [number, number, number, number];
-function pixels(value: string, x = 0, y = 0, draw = drawDocumentText): Pixel[] {
+function pixels(value: string, x = 0, y = 0,
+  draw: (ctx: CanvasRenderingContext2D, text: string, x: number, y: number) => void = drawDocumentText): Pixel[] {
   const marks: Pixel[] = [];
   const context = {
     save() {}, restore() {}, fillStyle: '',
@@ -13,6 +14,50 @@ function pixels(value: string, x = 0, y = 0, draw = drawDocumentText): Pixel[] {
   draw(context, value, x, y);
   return marks;
 }
+
+describe('institutional document headline lettering', () => {
+  it('creates a stronger headline hierarchy and distinct service mastheads', () => {
+    const serif = pixels('SKIEROWANIE', 0, 0, drawDocumentHeading);
+    const sans = pixels('SKIEROWANIE', 0, 0, (ctx, text, x, y) => drawDocumentHeading(ctx, text, x, y, { face: 'sans' }));
+    const body = pixels('SKIEROWANIE');
+    expect(serif.length).toBeGreaterThan(body.length * 1.5);
+    expect(serif).not.toEqual(sans);
+    expect(Math.max(...serif.map(([, y]) => y))).toBe(8);
+    expect(Math.max(...sans.map(([, y]) => y))).toBe(8);
+    expect(measureDocumentHeading('SKIEROWANIE', 'sans')).toBeLessThan(measureDocumentHeading('SKIEROWANIE', 'serif'));
+    for (const text of ['SKIEROWANIE', 'ORZECZENIE', 'ZAŚWIADCZENIE', 'EXAMINATION REPORT', 'CERTIFICATE']) {
+      expect(measureDocumentHeading(text, 'serif'), text).toBeLessThanOrEqual(166);
+    }
+    expect(measureDocumentHeading('LOT', 'sans', 2)).toBeLessThanOrEqual(34);
+    expect(pixels('orZeczenie', 0, 0, drawDocumentHeading)).toEqual(pixels('ORZECZENIE', 0, 0, drawDocumentHeading));
+  });
+
+  it('renders every Polish headline accent within measured bounds', () => {
+    for (const face of ['serif', 'sans'] as const) {
+      const draw: typeof drawDocumentText = (ctx, value, x, y) => drawDocumentHeading(ctx, value, x, y, { face });
+      for (const [accented, plain] of Object.entries({ Ą: 'A', Ć: 'C', Ę: 'E', Ł: 'L', Ń: 'N', Ó: 'O', Ś: 'S', Ź: 'Z', Ż: 'Z' })) {
+        const marks = pixels(accented, 0, 0, draw);
+        expect(marks, `${face}: ${accented}`).not.toEqual(pixels(plain, 0, 0, draw));
+        expect(marks).not.toEqual(pixels('?', 0, 0, draw));
+        expect(marks.every(([x, y, w, h]) => x >= 0 && x < measureDocumentHeading(accented, face) && y >= 0 && y < 9 && w === 1 && h === 1)).toBe(true);
+        expect(pixels(accented.normalize('NFD'), 0, 0, draw)).toEqual(marks);
+      }
+    }
+  });
+
+  it('aligns enlarged mastheads on integer pixels with clear multiline spacing', () => {
+    for (const face of ['serif', 'sans'] as const) for (const align of ['left', 'center', 'right'] as const) {
+      const sample = 'LOT / 04', scale = 2;
+      const original = pixels(sample, 0, 0, (ctx, text, x, y) => drawDocumentHeading(ctx, text, x, y, { face }));
+      const offset = align === 'center' ? measureDocumentHeading(sample, face, scale) / 2 : align === 'right' ? measureDocumentHeading(sample, face, scale) : 0;
+      const draw: typeof drawDocumentText = (ctx, value, x, y) => drawDocumentHeading(ctx, value, x, y, { face, align, scale: 2.9 });
+      const marks = pixels(`${sample}\n${sample}`, 100.4, 10.3, draw);
+      const line = original.map(([x, y]) => [Math.round(100.4 - offset) + x * scale, 10 + y * scale, scale, scale]);
+      expect(marks).toEqual([...line, ...line.map(([x, y, w, h]) => [x, y + 22, w, h])]);
+      expect(marks.every(mark => mark.every(Number.isInteger))).toBe(true);
+    }
+  });
+});
 
 describe('compact original document font', () => {
   it('distinguishes original document faces while preserving form metrics', () => {
