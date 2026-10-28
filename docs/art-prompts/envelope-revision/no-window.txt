@@ -1,0 +1,7 @@
+Use case: precise-object-edit
+Asset type: one transparent pixel-art kraft envelope sprite for the existing game Next, Please!, prepared for a 188 × 144 pixel runtime asset.
+Input image: the existing full-resolution envelope source is the edit target.
+Primary request: remove the entire large cream address label/window from the lower front of the envelope. Replace it seamlessly with the same warm brown kraft paper as the surrounding envelope, so the envelope has one continuous paper surface without any window, label, rectangular patch, border, cutout, light panel, or trace of the former label. The lower central surface should have restrained low-contrast kraft texture so separately rendered dark localized text remains readable anywhere on it.
+Invariants: keep the existing envelope's silhouette, proportions, straight overhead camera, position, top folded triangular flap, folds near the outer edges, small muted red stripe at upper left, faint empty postage outline at upper right, gently curled lower-right opening corner, warm ochre-brown palette, edge wear, crisp pixel clusters and analog clinic atmosphere. Change only the large cream label/window and its border/shadow into continuous matching kraft paper. Do not redesign the envelope or add objects. Preserve the original pixel-art style.
+Text: none. No letters, numbers, signatures, logos, UI, watermark, or embedded stamp text. Existing empty postage outline stays.
+Background: genuinely transparent exterior; preserve clean alpha around the envelope.

@@ -83,11 +83,29 @@ test('identity, drawer names and sequential records work with mouse and keyboard
   const partial = await exportState(page);
   expect(partial.inspection!.received).toEqual(['note']);
   await handFromDrawer(page, referral.id);
+  await expect(page.locator('#patient-speech')).toHaveText(`${translations.pl.inspection.names[initial.inspection!.inspectorId]}: Dziękuję za współpracę. Do widzenia.`);
+  await expect(page.locator('#screen-description')).toContainText(translations.pl.inspection.farewell);
+  await page.locator('#stage').screenshot({ path: info.outputPath('inspection-farewell-pl.png') });
   const complete = await exportState(page);
   expect(complete.inspection).toBeNull();
   expect(complete.inspectionFines).toBe(0);
   expect(complete.patientsProcessed).toBe(initial.patientsProcessed);
   expect(complete.papers.filter(paper => paper.kind === 'referral' || paper.kind === 'note').every(paper => paper.location === 'desk')).toBe(true);
+  await page.clock.runFor(1500);
+  await key(page, 'menu');
+  await page.clock.runFor(4000);
+  await key(page, 'start');
+  await expect(page.locator('#patient-speech')).toContainText(translations.pl.inspection.farewell);
+  await key(page, 'language-en');
+  await expect(page.locator('#patient-speech')).toContainText(translations.en.inspection.farewell);
+  await page.locator('#stage').screenshot({ path: info.outputPath('inspection-farewell-en.png') });
+  const portrait = () => page.locator('#game').evaluate(canvas => Array.from((canvas as HTMLCanvasElement).getContext('2d')!.getImageData(38, 70, 70, 58).data));
+  const beforeDeparture = await portrait();
+  await page.clock.runFor(1560);
+  await expect(page.locator('#patient-speech')).toBeEmpty();
+  expect(await portrait()).not.toEqual(beforeDeparture);
+  await expect(page.locator('#screen-description')).not.toContainText(translations.en.inspection.farewell);
+  await expect(page.locator('#control-call-patient')).toBeEnabled();
   expect(errors).toEqual([]);
 });
 
@@ -103,6 +121,7 @@ for (const partial of [false, true]) test(`confirmation and printed ${partial ? 
   await page.keyboard.press('Escape');
   await expect(page.locator('#control-talk-inspector')).toHaveAccessibleName(/Potwierdź brak dokumentacji/);
   await key(page, 'talk-inspector');
+  await expect(page.locator('#patient-speech')).toContainText(translations.pl.inspection.farewell);
   const saved = await exportState(page);
   expect(saved.inspectionFines).toBe(partial ? 50 : 200);
   const fine = saved.papers.find(paper => paper.kind === 'inspection-fine')!;
@@ -110,8 +129,46 @@ for (const partial of [false, true]) test(`confirmation and printed ${partial ? 
   await expect(page.locator(`#control-paper-${fine.id}`)).toHaveAccessibleName(/MANDAT KARNY/);
   await page.locator('#stage').screenshot({ path: info.outputPath(`inspection-fine-${partial ? 50 : 200}-pl.png`) });
   await key(page, 'language-en');
+  await expect(page.locator('#patient-speech')).toContainText(translations.en.inspection.farewell);
   await expect(page.locator(`#control-paper-${fine.id}`)).toHaveAccessibleName(/PENALTY NOTICE/);
   await page.locator('#stage').screenshot({ path: info.outputPath(`inspection-fine-${partial ? 50 : 200}-en.png`) });
+});
+
+for (const reducedMotion of ['reduce', 'no-preference'] as const) test(`inspection farewell precedes home and survives a menu pause (${reducedMotion})`, async ({ page }) => {
+  const initial = inspectionFixture();
+  initial.clockMinutes = 14 * 60;
+  await load(page, initial);
+  await page.emulateMedia({ reducedMotion });
+  await returnId(page);
+  await key(page, 'talk-inspector');
+  await key(page, 'talk-inspector');
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
+  await expect(page.locator('#patient-speech')).toContainText(translations.pl.inspection.farewell);
+  const saved = await exportState(page);
+  expect(saved.phase).toBe('home');
+  expect(saved.inspection).toBeNull();
+  expect(saved.inspectionFines).toBe(200);
+  await page.clock.runFor(1500);
+  await key(page, 'menu');
+  await page.clock.runFor(4000);
+  await key(page, 'start');
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
+  await expect(page.locator('#patient-speech')).toContainText(translations.pl.inspection.farewell);
+  await page.clock.runFor(1560);
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'home');
+  await expect(page.locator('#patient-speech')).toBeEmpty();
+});
+
+test('calling the next patient dismisses the inspector farewell', async ({ page }) => {
+  await load(page, inspectionFixture());
+  await returnId(page);
+  await key(page, 'talk-inspector');
+  await key(page, 'talk-inspector');
+  await expect(page.locator('#patient-speech')).toContainText(translations.pl.inspection.farewell);
+  await key(page, 'call-patient');
+  await expect(page.locator('#control-take-document')).toBeVisible();
+  await expect(page.locator('#patient-speech')).not.toContainText(translations.pl.inspection.farewell);
+  await expect(page.locator('#screen-description')).not.toContainText(translations.pl.inspection.farewell);
 });
 
 for (const inspectorId of [0, 1, 2] as const) test(`inspector portrait ${inspectorId + 1} has the corresponding ID`, async ({ page }, info) => {

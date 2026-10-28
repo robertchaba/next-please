@@ -17,7 +17,7 @@ const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate
   'workstation-calendar', 'imprint-fit-pl', 'imprint-unfit-pl', 'imprint-fit-en', 'imprint-unfit-en', 'document-seal', 'document-seal-zus', 'document-seal-employer', 'document-signature', 'document-seal-chamber', 'document-seal-employer-unclear', 'banknote-100',
   'zus-inspector-1', 'zus-inspector-2', 'zus-inspector-3', 'inspector-id', 'inspection-fine', 'archive-folder',
   'manual-cover-v083', 'manual-spread-v083', 'manual-corner-left-v083', 'manual-corner-right-v083',
-  'paper-envelope-v083'] as const;
+  'paper-envelope-no-window'] as const;
 export const PATIENT_MOTION_FRAMES = 12;
 
 export async function loadClinicArt(): Promise<void> {
@@ -255,7 +255,7 @@ export function drawManualArt(ctx: CanvasRenderingContext2D, kind: 'cover' | 'sp
 
 export type StationeryKind = 'envelope';
 export function drawStationery(ctx: CanvasRenderingContext2D, kind: StationeryKind, x: number, y: number, w: number, h: number): void {
-  asset(ctx, `sprites/paper-${kind}-v083`, x, y, w, h);
+  asset(ctx, `sprites/paper-${kind}-no-window`, x, y, w, h);
 }
 
 export function drawInkImpression(ctx: CanvasRenderingContext2D, kind: 'employer' | 'militia' | 'lot', x: number, y: number, w: number, h: number): void {

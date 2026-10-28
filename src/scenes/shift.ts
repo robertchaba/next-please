@@ -30,6 +30,7 @@ export type DeskPresentation = {
   clinicSpeech?: { text: string; speaker: 'doctor' | 'cleaner' };
   hiddenPaperIds?: readonly number[];
   departingPatientId?: number;
+  departingInspectorId?: number;
 };
 const documentItem = (id: DocumentId): DeskItemId => id === 'certificate' ? 'document' : `paper-${id}`;
 const isLifted = (view: DeskPresentation, id: DeskItemId): boolean => view.heldItems?.includes(id) ?? view.held === id;
@@ -72,14 +73,15 @@ export function clockTime(state: GameState): string {
   return `${String(Math.floor(state.clockMinutes / 60)).padStart(2, '0')}:${String(state.clockMinutes % 60).padStart(2, '0')}`;
 }
 
-export function shiftDescription(state: GameState, locale: Locale, hiddenPaperIds: readonly number[] = []): string {
+export function shiftDescription(state: GameState, locale: Locale, hiddenPaperIds: readonly number[] = [], departingInspectorId?: number): string {
   const t = translations[locale]; const visit = state.visit;
   const patient = patientForVisit(state);
   const date = calendarText(state.day, locale);
   return [t.cabinetHelp, `${t.clock}: ${clockTime(state)}.`, `${t.day}: ${state.day}.`, `${t.calendar.label}: ${date.day} ${date.month}.`, `${t.queue}: ${state.shiftCompleted}/${state.roster.length}.`, `${t.points}: ${state.money}.`,
     inspectionDescription(state, locale),
     visit && patient ? `${t.patientNames[visit.patientId]}. ${t.patientJobs[visit.patientId]}. ${visit.document === 'tray' ? t.awaitingDocument : t.document}. ${t.generalResult}: ${visit.generalTested ? (patient!.general === 'pass' ? t.generalClear : generalReading(visit.patientId, locale)) : t.untested}. ${t.visionResult}: ${visit.visionTested ? visionReading(patient.visionValues, locale) : t.untested}. ${t.pressureResult}: ${visit.pressureTested ? visit.pressureReadings.map(pressureReading).join('; ') : t.untested}. ${t.paperwork.weight}: ${visit.measurementsTaken ? `${patient.weight} ${t.paperwork.kg}` : t.untested}. ${t.paperwork.height}: ${visit.measurementsTaken ? `${patient.height} ${t.paperwork.cm}` : t.untested}. ${visit.decision ? t[visit.decision] : t.stampHere}.`
-      : state.inspection ? t.inspection.inspector : isShiftFinished(state) ? t.shiftDone : t.emptyChair,
+      : state.inspection ? t.inspection.inspector : departingInspectorId !== undefined
+        ? `${t.inspection.names[departingInspectorId]}: ${t.inspection.farewell}` : isShiftFinished(state) ? t.shiftDone : t.emptyChair,
     ...(visit?.certificateTaken ? [certificateDescription(state, locale)] : []),
     ...state.papers.filter(paper => paper.location === 'desk' && !hiddenPaperIds.includes(paper.id)).map(paper => paperDescription(paper, locale, isDocumentClipped(state, paper.id))),
   ].join(' ');
@@ -199,7 +201,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
   const t = translations[locale], visit = state.visit;
   const patient = patientForVisit(state);
   drawCabinet(ctx, { patientId: visit?.patientId ?? view.departingPatientId ?? null, lampOn: state.lampOn, decoration: state.decoration,
-    clockMinutes: view.clockMinutes ?? state.clockMinutes, patientMotion: view.patientMotion, inspectorId: state.inspection?.inspectorId });
+    clockMinutes: view.clockMinutes ?? state.clockMinutes, patientMotion: view.patientMotion, inspectorId: state.inspection?.inspectorId ?? view.departingInspectorId });
   if (view.patientSpeech) drawPatientSpeech(ctx, t.patientSpeech[view.patientSpeech.line]);
   drawDeskRests(ctx);
   drawWorkstationObjects(ctx, state.papers.filter(paper => paper.location === 'drawer').length, workDayNumber(state.day) >= 7);
@@ -240,6 +242,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
   }
   if (view.phoneSpeech) drawPatientSpeech(ctx, view.phoneSpeech, 216, 78, 'left');
   if (state.inspection) drawPatientSpeech(ctx, inspectionDescription(state, locale), 111, 34);
+  else if (view.departingInspectorId !== undefined) drawPatientSpeech(ctx, t.inspection.farewell, 111, 34);
   // The doctor speaks from our side of the desk, opposite the seated patient.
   // Keep the existing balloon above paperwork, with its tail toward the player.
   if (view.clinicSpeech) drawPatientSpeech(ctx, view.clinicSpeech.text, view.clinicSpeech.speaker === 'cleaner' ? 8 : 20, view.clinicSpeech.speaker === 'cleaner' ? 9 : 292, view.clinicSpeech.speaker === 'doctor' ? 'down' : 'left');

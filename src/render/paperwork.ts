@@ -289,7 +289,7 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
       drawSeal(x + 35, y + 116, 24);
       write(t.documentDesign.personal, 35, 67, '#74443c');
       wrapReadingText(correspondenceSender(paper, locale), 144).forEach((line, index) => drawReadingText(ctx, line, x + 35, y + 79 + index * READ_LINE_HEIGHT, { color: ink }));
-      write(p.recipient, 35, 103, '#625e46');
+      write(p.recipient, 35, 103);
     } else drawSeal(x + w - 28, y + h - 18, 12);
   } else if (!full) {
     if (paper.kind !== 'note' || paper.patientId !== null) {

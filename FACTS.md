@@ -52,6 +52,7 @@
 - Documents may be presented separately or clipped together. Checked originals remain with the doctor for filing again. Both required documents conclude the inspection without a fine.
 - Clicking the inspector with empty hands asks whether the doctor confirms missing records. The doctor may continue searching; another click confirms the loss and ends the inspection. Neither document incurs a 200 zł fine; one missing document incurs 50 zł. The inspector hands over a printed penalty notice, and the fine is included once in the daily budget.
 - Inspections do not count as completed patient visits and earn no patient bonus.
+- After concluding the inspection, the inspector thanks the doctor for cooperating and says goodbye before leaving, whether or not a fine was issued.
 
 ## Work and household budget
 
