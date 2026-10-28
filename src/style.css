@@ -11,6 +11,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 #controls { position: absolute; inset: 0; }
 .hit-target { position: absolute; display: block; margin: 0; padding: 0; border: 0; background: transparent; color: transparent; outline: none; font-size: 1px; cursor: inherit; }
 .hit-target:focus-visible { outline: 1px dashed #ecdfb3; outline-offset: 2px; }
+.help-scroll { position: absolute; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #777e66 transparent; }
+.help-scroll:focus-visible, #controls[data-screen='help'] .hit-target:focus-visible { outline: 1px dashed #7c4438; outline-offset: 3px; }
+.help-scroll h2, .help-scroll p { position: relative; margin: 0; }
 #utility-controls, #session-controls { display: flex; align-items: center; gap: 4px; }
 #session-controls:empty { display: none; }
 #utility-controls { margin-left: auto; min-width: 0; max-width: 100%; flex-wrap: wrap; justify-content: flex-end; }

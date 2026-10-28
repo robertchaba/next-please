@@ -35,7 +35,7 @@ test('Polish default, English persistence, credits and keyboard controls', async
   await expect(page.locator('html')).toHaveAttribute('lang', 'pl');
   await expect(page.getByRole('button', { name: 'ROZPOCZNIJ DYŻUR' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Udostępnij', exact: true })).toBeVisible();
-  await expect(page.locator('#screen-description')).toContainText('WERSJA 0.8.3 / KOLEJKA');
+  await expect(page.locator('#screen-description')).toContainText('WERSJA 0.8.4 / TECZKA');
   await page.waitForFunction(() => performance.getEntriesByType('resource').some(entry => entry.name.endsWith('title-clinic.png')));
   await page.screenshot({ path: testInfo.outputPath('welcome-pl.png') });
   await page.getByRole('button', { name: 'O AUTORZE', exact: true }).click();
@@ -47,7 +47,7 @@ test('Polish default, English persistence, credits and keyboard controls', async
   await page.reload();
   await expect(page.getByRole('button', { name: 'BEGIN YOUR SHIFT' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible();
-  await expect(page.locator('#screen-description')).toContainText('VERSION 0.8.3 / QUEUE');
+  await expect(page.locator('#screen-description')).toContainText('VERSION 0.8.4 / FOLDER');
   await page.screenshot({ path: testInfo.outputPath('welcome-en.png') });
   await page.getByRole('button', { name: 'CREDITS', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Robert Chaba');

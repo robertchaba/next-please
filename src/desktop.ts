@@ -12,6 +12,7 @@ import { createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, p
 import { installDeskInput } from './core/desk-input';
 import { drawCreatorPortrait, drawPaper, drawPanelIllustration, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
 import { drawText } from './render/font';
+import { drawHelpText, helpLayout, HELP_PANEL, HELP_VIEW } from './render/help';
 import { paperClipTargetRect, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries } from './render/paperwork';
 import { paginateNoteEntries, notePageLabel } from './render/note-pages';
 import { drawerButtons, drawerDescription, renderDrawer, type DrawerAction } from './render/drawer';
@@ -23,7 +24,7 @@ import { createInitialState, downloadSave, importSave, SaveError } from './core/
 import { sharePage } from './core/share';
 import { releaseLabel } from './core/release';
 
-type Screen = 'welcome' | 'intro' | 'cabinet' | 'credits' | 'saves' | 'break-room' | 'restart' | 'drawer' | 'home';
+type Screen = 'welcome' | 'intro' | 'cabinet' | 'credits' | 'help' | 'saves' | 'break-room' | 'restart' | 'drawer' | 'home';
 const app = document.querySelector<HTMLElement>('#app')!;
 let desktopActive = !app.hidden;
 let desktopFocus: string | undefined;
@@ -668,7 +669,7 @@ function openScreen(next: Screen, trigger = 'start'): void {
   deskInput.cancel();
   panelReturn = screen; returnFocus = trigger; screen = next; status = ''; toast = '';
   clearInterval(typingTimer);
-  syncControls(next === 'saves' ? 'import' : 'back');
+  syncControls(next === 'saves' ? 'import' : next === 'help' ? 'help-content' : 'back');
 }
 function closeScreen(): void {
   deskInput.cancel();
@@ -676,7 +677,7 @@ function closeScreen(): void {
   if (screen === 'cabinet' || screen === 'home') { goToMenu(); return; }
   if (screen === 'break-room') { startShift(); return; }
   if (screen === 'restart') { screen = 'break-room'; syncControls('restart'); return; }
-  const isPanel = screen === 'credits' || screen === 'saves';
+  const isPanel = screen === 'credits' || screen === 'help' || screen === 'saves';
   screen = isPanel ? panelReturn : 'welcome'; status = ''; toast = '';
   if (screen === 'welcome') clearPatientMotion();
   if (screen === 'intro' || screen === 'home') startTyping();
@@ -755,6 +756,9 @@ function getButtons(): Button[] {
     { id: 'github', label: t().creatorGithub, x: 104, y: 137, w: 170, h: 17, href: 'https://github.com/robertchaba', kind: 'text' },
     { id: 'back', label: t().back, x: 227, y: 216, w: 116, h: 24, action: closeScreen },
   ];
+  if (screen === 'help') return [
+    { id: 'back', label: t().back, x: 227, y: 270, w: 116, h: 22, action: closeScreen },
+  ];
   if (screen === 'saves') return [
     { id: 'export', label: t().export, x: 32, y: 195, w: 208, h: 25, action: () => {
       try { downloadSave(gameState); status = t().exported; }
@@ -779,7 +783,8 @@ function getButtons(): Button[] {
     { id: 'start', label: shiftStarted ? (gameState.phase === 'home' ? t().home.resume : t().resume) : t().start, x: 32, y: 199, w: 208, h: 27, kind: 'primary', action: startShift },
     { id: 'saves', label: t().saves, x: 32, y: 233, w: 208, h: 24, action: () => openScreen('saves', 'saves') },
     { id: 'credits', label: t().credits, x: 32, y: 264, w: 91, h: 18, kind: 'text', action: () => openScreen('credits', 'credits') },
-    { id: 'share', label: t().sharing.label, x: 18, y: 296, w: 66, h: 19, kind: 'text', action: () => { void shareCurrentPage(); } },
+    { id: 'help', label: t().help.label, x: 140, y: 264, w: 100, h: 18, kind: 'text', action: () => openScreen('help', 'help') },
+    { id: 'share', label: t().sharing.label, x: 32, y: 296, w: 66, h: 19, kind: 'text', action: () => { void shareCurrentPage(); } },
   ];
 }
 
@@ -914,11 +919,12 @@ function syncControls(focusId?: string): void {
   buttons = getButtons();
   const heading = document.createElement('h1');
   heading.className = 'sr-only'; heading.id = 'screen-heading';
-  heading.textContent = screen === 'home' ? homePage(gameState, locale, homePageIndex).title : screen === 'drawer' ? t().drawer : screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'break-room' ? t().breakRoomTitle : screen === 'restart' ? t().restartTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
+  heading.textContent = screen === 'help' ? t().help.title : screen === 'home' ? homePage(gameState, locale, homePageIndex).title : screen === 'drawer' ? t().drawer : screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'break-room' ? t().breakRoomTitle : screen === 'restart' ? t().restartTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
   const description = document.createElement('p');
   description.className = 'sr-only'; description.id = 'screen-description';
   description.textContent = screen === 'credits'
     ? `${t().creatorName}. ${t().creatorPortrait} ${t().aiSupport}. ${t().creditsFooter}`
+    : screen === 'help' ? t().help.description
     : screen === 'home' ? `${homePage(gameState, locale, homePageIndex).description} ${homePage(gameState, locale, homePageIndex).text}`
     : screen === 'drawer' ? drawerDescription(gameState, locale, drawerPage)
     : screen === 'intro' ? t().intro[gameState.introStep].body
@@ -926,12 +932,29 @@ function syncControls(focusId?: string): void {
     : screen === 'saves' ? `${t().savesDescription} ${t().savesBody.join(' ')} ${t().sample}. ${t().day}: ${gameState.day}. ${t().patients}: ${gameState.patientsProcessed}. ${t().money}: ${gameState.money}.`
     : screen === 'break-room' ? t().breakRoomDescription
     : screen === 'restart' ? t().restartBody.join(' ')
-    : `${t().subtitle} ${t().tagline} ${t().description} ${releaseLabel(locale)}`;
+    : `${t().clinic}. ${t().subtitle} ${t().tagline} ${t().description} ${releaseLabel(locale)}`;
   controls.append(heading, description);
+  if (screen === 'help') {
+    const content = document.createElement('div');
+    content.id = 'control-help-content'; content.className = 'help-scroll'; content.tabIndex = 0;
+    content.style.cssText = `left:${HELP_VIEW.x}px;top:${HELP_VIEW.y}px;width:${HELP_VIEW.w}px;height:${HELP_VIEW.h}px;`;
+    content.setAttribute('role', 'region');
+    content.setAttribute('aria-label', t().help.contentLabel);
+    content.setAttribute('aria-description', t().help.scrollHelp);
+    for (const block of helpLayout(locale).blocks) {
+      const paragraph = document.createElement(block.heading ? 'h2' : 'p');
+      paragraph.style.height = `${block.height}px`;
+      const copy = document.createElement('span');
+      copy.className = 'sr-only'; copy.textContent = block.text;
+      paragraph.append(copy); content.append(paragraph);
+    }
+    content.addEventListener('scroll', render);
+    controls.append(content);
+  }
   controls.dataset.homePage = String(homePageIndex);
   controls.dataset.homeKind = screen === 'home' ? homePage(gameState, locale, homePageIndex).kind : '';
   controls.dataset.screen = screen; controls.dataset.introStep = String(gameState.introStep);
-  const modal = screen === 'credits' || screen === 'saves' || screen === 'restart' || screen === 'drawer';
+  const modal = screen === 'credits' || screen === 'help' || screen === 'saves' || screen === 'restart' || screen === 'drawer';
   controls.setAttribute('role', modal ? 'dialog' : 'group');
   controls.setAttribute('aria-labelledby', 'screen-heading');
   controls.setAttribute('aria-describedby', 'screen-description');
@@ -991,7 +1014,7 @@ function syncControls(focusId?: string): void {
 function drawButton(button: Button): void {
   const active = hovered === button.id || focused === button.id;
   const { x, y, w, h } = button;
-  const onPaper = screen === 'credits';
+  const onPaper = screen === 'credits' || screen === 'help';
   const ink = onPaper ? colors.ink : colors.bone;
   if (button.kind === 'hotspot') {
     // Objects keep their artwork on hover. Keyboard focus is the DOM indicator.
@@ -1097,19 +1120,13 @@ function render(): void {
   }
   rect(0, 0, WIDTH, HEIGHT, colors.ink);
   if (art.complete && art.naturalWidth) ctx.drawImage(art, 0, 0, WIDTH, HEIGHT);
-  // Solid low-opacity panels preserve the original pixels and quiet the menu area.
-  rect(0, 0, WIDTH, 39, '#121a16ee');
-  rect(0, 39, 251, 250, '#0d15142e');
-  rect(0, 290, WIDTH, 30, '#111a16ee');
-  rect(0, 38, WIDTH, 1, '#485140');
-  rect(0, 289, WIDTH, 1, '#485140');
   rect(21, 17, 11, 3, colors.red); rect(25, 13, 3, 11, colors.red);
   text(t().clinic, 40, 15, colors.muted);
   drawGameTitle();
   rect(33, 151, 29, 2, colors.red);
   text(t().subtitle, 33, 160, '#bdc1a6');
   text(t().tagline, 33, 177, '#8e9b84');
-  text(releaseLabel(locale), 550, 300, '#6f8069', 1, 'right');
+  text(releaseLabel(locale), 536, 300, colors.muted, 1, 'right');
 
   if (screen === 'credits') {
     paper(78, 72, 414, 176, t().creditsTitle, 'NP / 002');
@@ -1117,6 +1134,11 @@ function render(): void {
     text(t().creatorName, 104, 126, colors.ink);
     text(t().aiSupport, 104, 164, '#6a705d');
     text(t().creditsFooter, 104, 200, '#6a705d');
+  }
+  if (screen === 'help') {
+    paper(HELP_PANEL.x, HELP_PANEL.y, HELP_PANEL.w, HELP_PANEL.h, t().help.title, t().help.reference);
+    drawHelpText(ctx, locale, document.getElementById('control-help-content')?.scrollTop ?? 0);
+    text(t().help.scrollHint, 285, 254, '#6a705d', 1, 'center');
   }
   buttons.forEach(drawButton);
   drawToast();
@@ -1570,8 +1592,8 @@ document.addEventListener('keydown', event => {
     else closeScreen();
   }
   if (event.key.toLowerCase() === 'f' && !event.repeat) { event.preventDefault(); void fullscreen(); }
-  if (event.key === 'Tab' && (screen === 'credits' || screen === 'saves' || screen === 'restart' || screen === 'drawer')) {
-    const elements = [...controls.querySelectorAll<HTMLElement>('.hit-target')];
+  if (event.key === 'Tab' && (screen === 'credits' || screen === 'help' || screen === 'saves' || screen === 'restart' || screen === 'drawer')) {
+    const elements = [...controls.querySelectorAll<HTMLElement>('.hit-target, .help-scroll')];
     const index = elements.indexOf(document.activeElement as HTMLElement);
     if ((event.shiftKey && index <= 0) || (!event.shiftKey && index === elements.length - 1)) {
       event.preventDefault(); elements[event.shiftKey ? elements.length - 1 : 0]?.focus();

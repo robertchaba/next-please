@@ -10,6 +10,8 @@ The current title-screen atmosphere is the approved baseline. Use paper records,
 
 The title scene reserves its left 43–45% for the title and controls. The bright service window and doctor sit on the right. The title screen has no room-number plate or “Gabinet nr 04” label; the consulting-room number remains part of the gameplay scene. Keep text separately localized so Polish and English share artwork, except for the four generated PL/EN decision impressions whose lettering is part of their distressed ink and the language-independent optotypes embedded in the generated eye chart. Preserve recognizable silhouettes and hard pixel edges at the native 570 × 320 viewport.
 
+The title illustration fills the entire viewport without tinted header/footer bands, divider rules or a menu-area tint. Retain the existing brick-red clinic cross beside the clinic name at (40,15). Both, the sharing action at (32,296) and right-aligned version ending at (536,300) sit directly on the artwork. Muted light lettering keeps the version readable over the dark floor. The original 570 × 320 asset is sufficient and remains unchanged. The beginner-help link shares the credits row at (140,264). Its dialog reuses the credits' generated paper at (56,20), 458 × 280; original title-font text scrolls inside (78,78), 414 × 170, leaving room for a native scrollbar. Keep the heading, scroll hint and Back button fixed, with dark ink and muted red section titles. Do not add illustrations for this text-only guide.
+
 ## Title background
 
 - Runtime asset: `public/assets/art/title-clinic.png`, 570 × 320 pixels, PNG.

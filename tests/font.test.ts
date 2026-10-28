@@ -2,8 +2,24 @@ import { describe, expect, it } from 'vitest';
 import { drawDocumentHeading, drawDocumentText, drawReadingText, drawText, measureDocumentHeading, measureDocumentText, measureReadingText, measureText, READ_CELL_HEIGHT, READ_LINE_HEIGHT, type DocumentFace } from '../src/render/font';
 import { translations } from '../src/i18n';
 import { mobileDialogueLines, mobileStatusLines } from '../src/render/mobile';
+import { helpLayout, HELP_TEXT_WIDTH, HELP_VIEW } from '../src/render/help';
 
 type Pixel = [number, number, number, number];
+
+it('fits both beginner guides without dropping words or crowding the scrollbar', () => {
+  for (const locale of ['pl', 'en'] as const) {
+    const copy = translations[locale].help;
+    const layout = helpLayout(locale);
+    expect(layout.height).toBeGreaterThan(HELP_VIEW.h);
+    expect(layout.blocks.map(block => block.text)).toEqual([copy.intro, ...copy.sections.flatMap(section => [section.title, section.body])]);
+    for (const block of layout.blocks) {
+      expect(block.lines.join(' ')).toBe(block.text);
+      for (const line of block.lines) expect(measureText(line), line).toBeLessThanOrEqual(HELP_TEXT_WIDTH);
+    }
+    expect(measureText(copy.label)).toBeLessThanOrEqual(96);
+    expect(measureText(copy.scrollHint)).toBeLessThanOrEqual(HELP_VIEW.w);
+  }
+});
 function pixels(value: string, x = 0, y = 0,
   draw: (ctx: CanvasRenderingContext2D, text: string, x: number, y: number) => void = drawDocumentText): Pixel[] {
   const marks: Pixel[] = [];
