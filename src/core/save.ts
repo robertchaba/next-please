@@ -43,7 +43,9 @@ const V12_CASE_LIMIT = 327;
 const V14_CASE_LIMIT = 552;
 const V18_CASE_LIMIT = 2502;
 const V18_CHARACTER_COUNT = 78;
-interface InspectionValidation { fines: number }
+const V27_CASE_LIMIT = 3377;
+const V27_CHARACTER_COUNT = 113;
+interface InspectionValidation { fines: number; catalogCharacters: number }
 interface ReferralValidation { inspection?: InspectionValidation; catalogCharacters?: number; pendingIds: Set<number>; referralsIssued: number; startedDay?: number; partialRoster?: boolean; resultAttachments?: boolean }
 const V12_CHARACTER_COUNT = 53;
 type VisitV10 = Omit<Visit, 'generalTested' | 'examinationOrder' | 'pressureReadings' | 'pressureLatest'>;
@@ -66,9 +68,9 @@ type GameStateV5 = Omit<GameStateV8, 'visit' | 'paperClips' | 'papers' | 'drawer
 type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<VisitV10, 'certificateNamed'> | null };
 type GameStateV7 = Omit<GameStateV8, 'drawerItems'>;
 
-interface SaveV27 {
+interface SaveV28 {
   game: 'next-please';
-  version: 27;
+  version: 28;
   savedAt: string;
   state: CurrentGameState;
 }
@@ -1011,7 +1013,7 @@ function migrateAdditionalTests(state: StateV18): StateV19 {
 }
 
 function validateStateV19(value: unknown, partialRoster = false, weekendDebt = false, resultAttachments = false, inspection?: InspectionValidation): StateV19 {
-  const catalogCharacters = inspection ? CHARACTER_COUNT : 103;
+  const catalogCharacters = inspection?.catalogCharacters ?? 103;
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !isIntegerInRange(value.day, 1, GAME_LIMITS.day)
     || !isIntegerInRange(value.referralsIssued, 0, catalogCharacters * 4)
@@ -1147,7 +1149,7 @@ function validateStateV19(value: unknown, partialRoster = false, weekendDebt = f
 
 /** Preserve actual daily ledgers; older saves never invent missing Friday costs. */
 function validateStateV20(value: unknown, partialRoster = false, weekendDebt = false, resultAttachments = false, inspection?: InspectionValidation): StateV23 {
-  const maxCharacters = inspection ? CHARACTER_COUNT : 103;
+  const maxCharacters = inspection?.catalogCharacters ?? 103;
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !Array.isArray(value.budgetHistory) || value.budgetHistory.length > 2) return fail();
   const { budgetHistory: rawHistory, ...old } = value;
@@ -1161,7 +1163,7 @@ function validateStateV20(value: unknown, partialRoster = false, weekendDebt = f
       || !isIntegerInRange(raw.patients, 0, Math.min(maxCharacters, state.patientsProcessed))
       || !isIntegerInRange(raw.closingBalance, 0, GAME_LIMITS.money)
       || !isIntegerInRange(raw.insuranceCost, 0, GAME_LIMITS.money) || raw.insuranceCost % 50 !== 0
-      || !isIntegerInRange(raw.fines, 0, (maxCharacters * 5 - 1) * 400 + 100 + (inspection ? (CHARACTER_COUNT + 1) * 200 : 0))
+      || !isIntegerInRange(raw.fines, 0, (maxCharacters * 5 - 1) * 400 + 100 + (inspection ? (maxCharacters + 1) * 200 : 0))
       || (inspection ? raw.fines % 50 !== 0 : raw.fines !== 0 && (raw.fines - 100) % 400 !== 0)) return fail();
     const restDay = isWeekend(day) && raw.basePay === 0;
     if ((restDay && (raw.patients !== 0 || raw.fines !== 0))
@@ -1219,7 +1221,7 @@ function migrateBribeIncome(state: StateV23 | StateV24 | StateV25 | CurrentGameS
 }
 
 function validateStateV24(value: unknown, inspection?: InspectionValidation): StateV24 {
-  const maxCharacters = inspection ? CHARACTER_COUNT : 103;
+  const maxCharacters = inspection?.catalogCharacters ?? 103;
   const fail = (): never => { throw new SaveError('invalid-state'); };
   const validCash = (cash: unknown, day: unknown, rest: boolean): cash is number =>
     isIntegerInRange(cash, -maxCharacters * 100, maxCharacters * 100) && cash % 100 === 0
@@ -1253,28 +1255,28 @@ function migrateInspection(state: StateV24 | StateV25 | CurrentGameState): State
     inspectionCheckedAt: state.patientsProcessed, inspectionFines: 0 };
 }
 
-function validateHistoricalCatalog(value: unknown): void {
+function validateHistoricalCatalog(value: unknown, maxPatient = 3127, maxCharacters = 103): void {
   if (!isRecord(value)) throw new SaveError('invalid-state');
   const pending: unknown[] = [value];
   while (pending.length) {
     const entry = pending.pop();
     if (Array.isArray(entry)) { for (const item of entry) pending.push(item); continue; }
     if (!isRecord(entry)) continue;
-    if (entry.patientId !== undefined && entry.patientId !== null && !isIntegerInRange(entry.patientId, 0, 3127)) throw new SaveError('invalid-state');
+    if (entry.patientId !== undefined && entry.patientId !== null && !isIntegerInRange(entry.patientId, 0, maxPatient)) throw new SaveError('invalid-state');
     for (const item of Object.values(entry)) pending.push(item);
   }
-  if ((Array.isArray(value.roster) && (value.roster.length > 103 || value.roster.some(id => !isIntegerInRange(id, 0, 3127))))
-    || (typeof value.referralsIssued === 'number' && value.referralsIssued > 412)
-    || (Array.isArray(value.pendingReferrals) && value.pendingReferrals.length > 103)
-    || (typeof value.shiftCompleted === 'number' && value.shiftCompleted > 103)) throw new SaveError('invalid-state');
+  if ((Array.isArray(value.roster) && (value.roster.length > maxCharacters || value.roster.some(id => !isIntegerInRange(id, 0, maxPatient))))
+    || (typeof value.referralsIssued === 'number' && value.referralsIssued > maxCharacters * 4)
+    || (Array.isArray(value.pendingReferrals) && value.pendingReferrals.length > maxCharacters)
+    || (typeof value.shiftCompleted === 'number' && value.shiftCompleted > maxCharacters)) throw new SaveError('invalid-state');
 }
 
-function validateStateV25(value: unknown): StateV25 {
+function validateStateV25(value: unknown, catalogCharacters = V27_CHARACTER_COUNT): StateV25 {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !Array.isArray(value.recentVisits) || !Array.isArray(value.papers)
     || !Array.isArray(value.paperClips) || !isIntegerInRange(value.day, 1, GAME_LIMITS.day)
     || !isIntegerInRange(value.patientsProcessed, 0, GAME_LIMITS.patients)
-    || !isIntegerInRange(value.shiftCompleted, 0, CHARACTER_COUNT)
+    || !isIntegerInRange(value.shiftCompleted, 0, catalogCharacters)
     || !isIntegerInRange(value.inspectionCheckedAt, 0, value.patientsProcessed)
     || !isIntegerInRange(value.inspectionFines, 0, (value.shiftCompleted + 1) * 200)
     || value.inspectionFines % 50 !== 0
@@ -1349,7 +1351,7 @@ function validateStateV25(value: unknown): StateV25 {
   const previous = validateStateV24({ ...old,
     papers: value.papers.filter(raw => !specials.has((raw as { id: number }).id)),
     paperClips: paperClips.map(group => group.filter(id => id === 'certificate' || !specials.has(id))).filter(group => group.length),
-  }, { fines: inspectionFines });
+  }, { fines: inspectionFines, catalogCharacters });
   if (previous.phase === 'intro' && (recentVisits.length || specials.size || inspectionFines)) return fail();
   for (const target of recentVisits) {
     if (target.day !== day) continue;
@@ -1371,9 +1373,9 @@ function migrateBanknotes(state: StateV25 | CurrentGameState): CurrentGameState 
     patientId: visits[index]?.patientId ?? null, day: state.day, location: 'drawer', credited: true })) };
 }
 
-function validateStateV26(value: unknown): CurrentGameState {
+function validateStateV26(value: unknown, catalogCharacters = V27_CHARACTER_COUNT): CurrentGameState {
   const fail = (): never => { throw new SaveError('invalid-state'); };
-  if (!isRecord(value) || !Array.isArray(value.banknotes) || value.banknotes.length > CHARACTER_COUNT
+  if (!isRecord(value) || !Array.isArray(value.banknotes) || value.banknotes.length > catalogCharacters
     || !isIntegerInRange(value.money, -GAME_LIMITS.money, GAME_LIMITS.money)
     || !isIntegerInRange(value.day, 1, GAME_LIMITS.day)) return fail();
   const ids = new Set<number>(), owners = new Set<string>();
@@ -1392,7 +1394,7 @@ function validateStateV26(value: unknown): CurrentGameState {
   });
   const pending = banknotes.filter(note => !note.credited).length * 100;
   const { banknotes: _notes, ...old } = value;
-  const previous = validateStateV25({ ...old, money: value.money + pending });
+  const previous = validateStateV25({ ...old, money: value.money + pending }, catalogCharacters);
   if (banknotes.length && (previous.phase !== 'cabinet' || workDayNumber(previous.day) < 6)) return fail();
   for (const note of banknotes) {
     const visit = [previous.visit, ...previous.pendingReferrals.map(entry => entry.visit)]
@@ -1432,7 +1434,7 @@ function migrateAdditionalNotes(state: CurrentGameState): CurrentGameState {
 }
 
 /** v27 adds result-bearing journal entries; the v26 state schema stays frozen. */
-function validateStateV27(value: unknown): CurrentGameState {
+function validateStateV27(value: unknown, catalogCharacters = V27_CHARACTER_COUNT): CurrentGameState {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !Array.isArray(value.papers) || !Array.isArray(value.pendingReferrals)) return fail();
   const orders = new Map<string, NoteEntryId[]>();
@@ -1451,7 +1453,7 @@ function validateStateV27(value: unknown): CurrentGameState {
       if (!isRecord(pending)) return fail();
       return { ...pending, visit: strip(pending.visit, `pending:${index}`) };
     }),
-  });
+  }, catalogCharacters);
   const restore = <T extends CurrentVisit | Extract<CurrentPaper, { kind: 'note' }>>(record: T, key: string, pending = false): T => {
     const noteOrder = orders.get(key)!;
     const results = noteOrder.flatMap(entry => { const result = additionalNoteResult(entry); return result ? [result] : []; });
@@ -1483,11 +1485,11 @@ function validateStateV27(value: unknown): CurrentGameState {
 }
 
 export function encodeSave(state: CurrentGameState): Uint8Array {
-  const envelope: SaveV27 = {
+  const envelope: SaveV28 = {
     game: 'next-please',
-    version: 27,
+    version: 28,
     savedAt: new Date().toISOString(),
-    state: validateStateV27(state),
+    state: validateStateV27(state, CHARACTER_COUNT),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -1592,7 +1594,7 @@ function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean })
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11 && envelope.version !== 12 && envelope.version !== 13 && envelope.version !== 14 && envelope.version !== 15 && envelope.version !== 16 && envelope.version !== 17 && envelope.version !== 18 && envelope.version !== 19 && envelope.version !== 20 && envelope.version !== 21 && envelope.version !== 22 && envelope.version !== 23 && envelope.version !== 24 && envelope.version !== 25 && envelope.version !== 26 && envelope.version !== 27) throw new SaveError('unsupported-version');
+  if (envelope.version !== 1 && envelope.version !== 2 && envelope.version !== 3 && envelope.version !== 4 && envelope.version !== 5 && envelope.version !== 6 && envelope.version !== 7 && envelope.version !== 8 && envelope.version !== 9 && envelope.version !== 10 && envelope.version !== 11 && envelope.version !== 12 && envelope.version !== 13 && envelope.version !== 14 && envelope.version !== 15 && envelope.version !== 16 && envelope.version !== 17 && envelope.version !== 18 && envelope.version !== 19 && envelope.version !== 20 && envelope.version !== 21 && envelope.version !== 22 && envelope.version !== 23 && envelope.version !== 24 && envelope.version !== 25 && envelope.version !== 26 && envelope.version !== 27 && envelope.version !== 28) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -1602,6 +1604,9 @@ function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean })
     throw new SaveError('invalid-file');
   }
   migration.additionalNotes = (envelope.version as number) < 27;
+  // v28 appends identities only; v25–27 keep their original catalog ceilings.
+  if (envelope.version === 28) return validateStateV27(envelope.state, CHARACTER_COUNT);
+  if (envelope.version >= 25) validateHistoricalCatalog(envelope.state, V27_CASE_LIMIT, V27_CHARACTER_COUNT);
   if (envelope.version === 27) return validateStateV27(envelope.state);
   if (envelope.version === 26) return validateStateV26(envelope.state);
   if (envelope.version === 25) return validateStateV25(envelope.state);

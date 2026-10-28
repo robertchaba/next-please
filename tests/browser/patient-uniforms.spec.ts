@@ -4,40 +4,43 @@ import { PATIENTS } from '../../src/core/patients';
 import { encodeSave } from '../../src/core/save';
 import { translations } from '../../src/i18n';
 
-test('all 35 appended portraits render with matching jobs in both languages', async ({ page }) => {
-  test.setTimeout(90_000);
-  const missingAssets: string[] = [];
-  page.on('response', response => {
-    if (response.status() >= 400 && response.url().includes('/assets/art/')) missingAssets.push(response.url());
-  });
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('/');
-  await page.locator('#control-start').click();
-  for (let index = 0; index < 4; index++) await page.locator('#control-intro-next').click();
-  await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
-  const portraits = new Set<string>();
-  for (let person = 0; person < 35; person++) {
-    const patient = PATIENTS[2503 + person * 25]!;
-    const initial = createInitialState(person);
-    initial.roster = [patient.id, ...initial.roster.filter(id => PATIENTS[id]!.characterId !== patient.characterId)];
-    let state = applyAction(initial, 'skip-intro').state;
-    for (const action of ['call-patient', 'take-document', 'take-paper', 'run-general'] as const) state = applyAction(state, action).state;
-    await page.locator('#control-saves').click();
-    await page.locator('#save-input').setInputFiles({
-      name: `patient-${76 + person}.npsave`, mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(state)),
+for (const batch of [{ first: 76, count: 35, caseStart: 2503 }, { first: 111, count: 25, caseStart: 3378 }]) {
+  test(`portraits ${batch.first}–${batch.first + batch.count - 1} render with matching jobs in both languages`, async ({ page }, testInfo) => {
+    test.setTimeout(90_000);
+    const missingAssets: string[] = [];
+    page.on('response', response => {
+      if (response.status() >= 400 && response.url().includes('/assets/art/')) missingAssets.push(response.url());
     });
-    await expect(page.locator('#announcement')).toContainText(/Zapis wczytany|Save loaded/);
-    await page.locator('#control-back').click();
-    for (const locale of ['pl', 'en'] as const) {
-      await page.locator(`#control-language-${locale}`).click();
-      await expect(page.locator('#screen-description')).toContainText(translations[locale].patientNames[patient.id]!);
-      await expect(page.locator('#screen-description')).toContainText(translations[locale].patientJobs[patient.id]!);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+    await page.locator('#control-start').click();
+    for (let index = 0; index < 4; index++) await page.locator('#control-intro-next').click();
+    await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
+    const portraits = new Set<string>();
+    for (let person = 0; person < batch.count; person++) {
+      const patient = PATIENTS[batch.caseStart + person * 25]!;
+      const initial = createInitialState(person);
+      initial.roster = [patient.id, ...initial.roster.filter(id => PATIENTS[id]!.characterId !== patient.characterId)];
+      let state = applyAction(initial, 'skip-intro').state;
+      for (const action of ['call-patient', 'take-document', 'take-paper', 'run-general'] as const) state = applyAction(state, action).state;
+      await page.locator('#control-saves').click();
+      await page.locator('#save-input').setInputFiles({
+        name: `patient-${batch.first + person}.npsave`, mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(state)),
+      });
+      await expect(page.locator('#announcement')).toContainText(/Zapis wczytany|Save loaded/);
+      await page.locator('#control-back').click();
+      for (const locale of ['pl', 'en'] as const) {
+        await page.locator(`#control-language-${locale}`).click();
+        await expect(page.locator('#screen-description')).toContainText(translations[locale].patientNames[patient.id]!);
+        await expect(page.locator('#screen-description')).toContainText(translations[locale].patientJobs[patient.id]!);
+      }
+      portraits.add(await page.locator('#game').evaluate(async canvas => {
+        await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+        return Array.from((canvas as HTMLCanvasElement).getContext('2d')!.getImageData(38, 32, 94, 96).data).join(',');
+      }));
     }
-    portraits.add(await page.locator('#game').evaluate(async canvas => {
-      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-      return Array.from((canvas as HTMLCanvasElement).getContext('2d')!.getImageData(38, 32, 94, 96).data).join(',');
-    }));
-  }
-  expect(portraits.size).toBe(35);
-  expect(missingAssets).toEqual([]);
-});
+    expect(portraits.size).toBe(batch.count);
+    expect(missingAssets).toEqual([]);
+    if (batch.first === 111) await page.locator('#stage').screenshot({ path: testInfo.outputPath('patient-135-library.png') });
+  });
+}

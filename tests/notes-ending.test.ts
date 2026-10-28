@@ -10,7 +10,7 @@ import { translations } from '../src/i18n';
 
 const act = (state: GameState, ...actions: GameAction[]) => actions.reduce((s, a) => applyAction(s, a).state, state);
 const notes = (state: GameState) => state.papers.filter((p): p is Extract<Paper, { kind: 'note' }> => p.kind === 'note');
-const file = (state: unknown, version = 25) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-26T12:00:00.000Z', state: version < 24 ? legacyBudget(state) : state })));
+const file = (state: unknown, version = 28) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-26T12:00:00.000Z', state: version < 24 ? legacyBudget(state) : state })));
 function closed(balance: number) {
   const cabinet = act(createInitialState(17), 'skip-intro');
   const ready = { ...cabinet, clockMinutes: 840 };
@@ -102,7 +102,7 @@ describe('bankruptcy ending', () => {
       expect(act(state, 'next-day').day).toBe(2);
     }
     expect(decodeSave(encodeSave(bankrupt))).toEqual(bankrupt);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(bankrupt)))).version).toBe(27);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(bankrupt)))).version).toBe(28);
   });
 
   it('also ends at forced closing without awarding an unfinished appointment', () => {

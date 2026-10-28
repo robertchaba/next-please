@@ -128,7 +128,7 @@ export function generalFindingIndex(patient: Pick<PatientCase, 'id' | 'general'>
 }
 
 /** Visual character groups: each portrait appears at most once per daily queue. */
-export const CHARACTER_COUNT = 113;
+export const CHARACTER_COUNT = 138;
 export const CURATED_CASE_START = 553;
 export const CASES_PER_IDENTITY = 5;
 export const LEGACY_CASE_COUNT = 103;

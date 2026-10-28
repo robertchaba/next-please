@@ -82,8 +82,8 @@ test('save files round-trip and reject corrupt imports without replacing state',
   await download.saveAs(filePath);
   const initial = decodeSave(await readFile(filePath));
   expect(initial).toEqual({ ...createInitialState(), rngState: initial.rngState, roster: initial.roster });
-  expect(initial.roster).toHaveLength(93);
-  expect(new Set(initial.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(93);
+  expect(initial.roster).toHaveLength(118);
+  expect(new Set(initial.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(118);
   const state = { ...createInitialState(), day: 8, money: 1200, patientsProcessed: 43 };
   await page.locator('#save-input').setInputFiles({ name: 'shift.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(state)) });
   await expect(page.getByRole('status')).toContainText('Zapis wczytany');

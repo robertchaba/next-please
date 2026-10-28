@@ -7,6 +7,16 @@ import { gameDate } from '../src/core/calendar';
 import { translations } from '../src/i18n';
 
 describe('patient and occupation catalog', () => {
+  it('preserves all 3378 shipped cases when appending portraits 111–135', () => {
+    expect(createHash('sha256').update(JSON.stringify(PATIENTS.slice(0, 3378))).digest('hex'))
+      .toBe('4d387c983c4966ed40104c5413bafa6b87038fa31eccd3806eb35276576ce854');
+  });
+  it('retains every previously shipped name in both languages', () => {
+    for (const locale of ['pl', 'en'] as const) {
+      expect(createHash('sha256').update(JSON.stringify(translations[locale].patientNames.slice(0, 3378))).digest('hex'))
+        .toBe('d0f64396b2346a3333e032ddfb1d57492a03db0b85187e49101dc8af56ec870f');
+    }
+  });
   it('preserves every previously shipped case when appending the ten civilian portraits', () => {
     expect(createHash('sha256').update(JSON.stringify(PATIENTS.slice(0, 3128))).digest('hex'))
       .toBe('a31528e5b05ba231edfafdb22b8a12b41d08ed718a3108ed2a4ca810a3a32bf7');
@@ -46,7 +56,7 @@ describe('patient and occupation catalog', () => {
   });
 
   it('offers five complete identities per portrait with plausible ages and independent medical variants', () => {
-    expect(PATIENT_IDENTITIES).toHaveLength(565);
+    expect(PATIENT_IDENTITIES).toHaveLength(690);
     const names = new Set<string>();
     for (let characterId = 0; characterId < CHARACTER_COUNT; characterId++) {
       const identities = PATIENT_IDENTITIES.filter(identity => identity.characterId === characterId);
@@ -82,11 +92,11 @@ describe('patient and occupation catalog', () => {
     }
   });
 
-  it('provides 113 portraits, 48 occupations and 27 localized employers with stable references', () => {
-    expect(CHARACTER_COUNT).toBe(113);
-    expect(PATIENTS).toHaveLength(3378);
+  it('provides 138 portraits, 48 occupations and 27 localized employers with stable references', () => {
+    expect(CHARACTER_COUNT).toBe(138);
+    expect(PATIENTS).toHaveLength(4003);
     expect(JOBS).toHaveLength(48);
-    expect(new Set(PATIENTS.map(patient => patient.characterId)).size).toBe(113);
+    expect(new Set(PATIENTS.map(patient => patient.characterId)).size).toBe(138);
     expect(new Set(PATIENTS.map(patient => patient.jobId)).size).toBe(48);
     expect(new Set(PATIENTS.map(patient => patient.employerId)).size).toBe(27);
     for (const [id, patient] of PATIENTS.entries()) {
@@ -131,8 +141,8 @@ describe('patient and occupation catalog', () => {
     expect(createRoster(15, true)).toEqual(first);
     expect(second.roster).not.toEqual(first.roster);
     for (const { roster } of [first, second]) {
-      expect(roster).toHaveLength(113);
-      expect(new Set(roster.map(id => PATIENTS[id]!.characterId)).size).toBe(113);
+      expect(roster).toHaveLength(138);
+      expect(new Set(roster.map(id => PATIENTS[id]!.characterId)).size).toBe(138);
     }
     const positions = Array.from({ length: 30 }, (_, seed) => createRoster(seed).roster.findIndex(id => PATIENTS[id]!.characterId === 0));
     expect(new Set(positions).size).toBeGreaterThan(15);

@@ -84,7 +84,7 @@ function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
   }
   return gzipSync(strToU8(JSON.stringify({
     game: 'next-please',
-    version: 26,
+    version: 28,
     savedAt: '2026-10-23T12:00:00.000Z',
     state: createInitialState(),
     ...overrides,
@@ -129,7 +129,7 @@ describe('portable saves', () => {
   });
 
   it('rejects unsupported versions without interpreting their state', () => {
-    expectCode(() => decodeSave(envelope({ version: 28, state: {} })), 'unsupported-version');
+    expectCode(() => decodeSave(envelope({ version: 29, state: {} })), 'unsupported-version');
   });
 
   it('rejects a save for another game', () => {
@@ -272,11 +272,11 @@ describe('portable saves', () => {
     expectCode(() => decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), ...patch }) })), 'invalid-state');
   });
 
-  it('exports version 27 after migrating an older save', () => {
+  it('exports version 28 after migrating an older save', () => {
     const migrated = decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), introStep: 5 }) }));
     const bytes = encodeSave(migrated);
     const exported = JSON.parse(new TextDecoder().decode(gunzipSync(bytes)));
-    expect(exported).toMatchObject({ version: 27, state: { phase: 'cabinet', introStep: 3 } });
+    expect(exported).toMatchObject({ version: 28, state: { phase: 'cabinet', introStep: 3 } });
     expect(decodeSave(bytes)).toEqual(migrated);
   });
 
@@ -502,7 +502,7 @@ describe('version 6 certificate availability', () => {
     expect(migrated).toEqual(withLegacyProgressionDefaults({ ...stamped, clockMinutes: 482, visit: { ...stamped.visit, certificateNamed: true } }, true));
     expect(migrated.visit).toMatchObject({ certificateTaken: true, decision: 'fit' });
     expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(27);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(28);
     const intake = act(createInitialState(), 'skip-intro', 'call-patient', 'take-document');
     expect(decodeSave(envelope({ version: 5, state: asV5(intake) }))).toEqual(withLegacyProgressionDefaults({ ...intake, visit: { ...intake.visit, certificateTaken: true, certificateNamed: true } }, true));
     const waiting = act(createInitialState(), 'skip-intro', 'call-patient');
@@ -619,7 +619,7 @@ describe('version 8 drawer inventory', () => {
     expect(decoded.drawerItems).not.toBe(state.drawerItems);
     decoded.drawerItems.clips = 0;
     expect(state.drawerItems.clips).toBe(2);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(state)))).version).toBe(27);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(state)))).version).toBe(28);
   });
 
   it('migrates strictly validated v7 papers in filing order without inventing stored objects', () => {
@@ -662,7 +662,7 @@ describe('version 9 economic state', () => {
     const next = applyAction(decodeSave(encodeSave(home)), 'next-day').state;
     expect(next).toEqual(applyAction(home, 'next-day').state);
     expect(next.day).toBe(2);
-    expect(next.roster).toHaveLength(93);
+    expect(next.roster).toHaveLength(118);
     let unfit = 0;
     for (const [index, id] of next.roster.entries()) {
       if (PATIENTS[id]!.expectedDecision === 'unfit') unfit += 1;
@@ -744,7 +744,7 @@ describe('version 10 compatibility and rest-day invariants', () => {
     expect(loaded.roster).toHaveLength(28);
     expect(loaded.previousMonthBalance).toBe(0);
     expect(decodeSave(encodeSave(loaded))).toEqual(loaded);
-    expect(applyAction(loaded, 'next-day').state.roster).toHaveLength(93);
+    expect(applyAction(loaded, 'next-day').state.roster).toHaveLength(118);
   });
 
   it('keeps v9 bounds and exact keys even after the catalog grows', () => {
@@ -991,7 +991,7 @@ describe('version 13 patient expansion', () => {
     expect(decodeSave(encodeSave(loaded))).toEqual(withLegacyProgressionDefaults(state));
     const home = run({ ...loaded, clockMinutes: 840 }, 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document');
     const next = applyAction(home, 'next-day').state;
-    expect(next.roster).toHaveLength(93);
+    expect(next.roster).toHaveLength(118);
     expect(next.papers.filter(paper => paper.kind === 'note')).toEqual(loaded.papers.filter(paper => paper.kind === 'note'));
     expect(decodeSave(encodeSave(next))).toEqual(next);
   });
@@ -1074,7 +1074,7 @@ describe('version 15 portrait identities', () => {
 describe('version 21 occupation-gated queues', () => {
   it('round-trips a shorter queue and its active visit without restricting portrait IDs to queue length', () => {
     const initial = createInitialState(17);
-    expect(initial.roster).toHaveLength(93);
+    expect(initial.roster).toHaveLength(118);
     expect(initial.roster.some(id => PATIENTS[id]!.characterId === 102)).toBe(true);
     const active = ['skip-intro', 'call-patient', 'take-paper', 'run-general'].reduce(
       (state, action) => applyAction(state, action as Parameters<typeof applyAction>[1]).state, initial);
@@ -1095,7 +1095,7 @@ describe('version 21 occupation-gated queues', () => {
     const home = applyAction({ ...loaded, clockMinutes: 1034 }, 'handle-item').state;
     const next = applyAction(home, 'next-day').state;
     expect(next.day).toBe(2);
-    expect(next.roster).toHaveLength(93);
+    expect(next.roster).toHaveLength(118);
     expect(next.roster.every(id => ![18, 45, 46, 47].includes(PATIENTS[id]!.jobId))).toBe(true);
   });
 
@@ -1106,5 +1106,45 @@ describe('version 21 occupation-gated queues', () => {
     }
     const active = applyAction(applyAction(initial, 'skip-intro').state, 'call-patient').state;
     expectCode(() => decodeSave(envelope({ state: { ...active, visit: { ...active.visit!, patientId: initial.roster[1] } } })), 'invalid-state');
+  });
+});
+
+
+describe('version 28 civilian portrait expansion', () => {
+  const run = (state: GameState, ...actions: Parameters<typeof applyAction>[1][]): GameState =>
+    actions.reduce((current, action) => applyAction(current, action).state, state);
+  it.each([25, 26, 27])('preserves a v%i queue and rejects new cases in the same historical envelope', version => {
+    const original = run(createInitialState(), 'skip-intro', 'call-patient', 'take-document', 'take-paper', 'run-general');
+    const historical = version === 25 ? (({ banknotes: _notes, ...state }) => state)(original) : original;
+    const loaded = decodeSave(envelope({ version, state: historical }));
+    expect(loaded).toEqual(original);
+    expect(decodeSave(encodeSave(loaded))).toEqual(original);
+    const recent = { ...historical, recentVisits: [{ patientId: 3378, day: 1 }], patientsProcessed: 1 };
+    const paper = { ...historical, papers: original.papers.map(paper => ({ ...paper, patientId: 3378 })) };
+    const queue = { ...historical, roster: [3378, ...original.roster.slice(1)] };
+    for (const forged of [recent, paper, queue]) expectCode(() => decodeSave(envelope({ version, state: forged })), 'invalid-state');
+  });
+
+  it('round-trips all new civilian portraits from day one with five names and jobs each', () => {
+    const initial = createInitialState(111);
+    for (let character = 113; character < 138; character++) {
+      expect(initial.roster.some(id => PATIENTS[id]!.characterId === character)).toBe(true);
+      for (const identity of PATIENT_IDENTITIES.filter(identity => identity.characterId === character)) {
+        const patient = PATIENTS[CURATED_CASE_START + identity.id * CASES_PER_IDENTITY]!;
+        const state = run({ ...initial, roster: [patient.id, ...initial.roster.filter(id => PATIENTS[id]!.characterId !== character)] },
+          'skip-intro', 'call-patient', 'take-document', 'take-paper', 'run-general', 'run-measurements');
+        expect(decodeSave(encodeSave(state))).toEqual(state);
+      }
+    }
+  });
+
+  it('retains the v26/v27 banknote ceiling while v28 accepts the expanded inventory bound', () => {
+    const state: GameState = { ...run(createInitialState(), 'skip-intro'), day: 9,
+      banknotes: Array.from({ length: 114 }, (_, index) => ({ id: index + 1, patientId: null, day: 9, location: 'drawer', credited: true })) };
+    expect(decodeSave(encodeSave(state))).toEqual(state);
+    for (const version of [26, 27]) expectCode(() => decodeSave(envelope({ version, state })), 'invalid-state');
+    const newOwner: GameState = { ...state, banknotes: [{ ...state.banknotes[0]!, patientId: 3378 }] };
+    expect(decodeSave(encodeSave(newOwner))).toEqual(newOwner);
+    for (const version of [26, 27]) expectCode(() => decodeSave(envelope({ version, state: newOwner })), 'invalid-state');
   });
 });

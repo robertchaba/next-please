@@ -14,7 +14,7 @@ function offer(day = 8): GameState {
   expect(ready.visit!.bribe).toBe('offered');
   return { ...ready, day, visit: { ...ready.visit!, startedDay: day } };
 }
-const file = (state: unknown, version = 26) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state })));
+const file = (state: unknown, version = 28) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state })));
 
 it('reports accepted cash once, alongside wages, with the true opening and closing balances', () => {
   const initial = offer();
@@ -114,10 +114,13 @@ it('keeps separate banknotes on either surface across visits, saves and returns'
   expect(state.banknotes[0]!.location).toBe('desk');
   expect(applyAction(state, { type: 'return-banknote', banknoteId: first.id }).state).toBe(state);
   // A second genuine offer can coexist with the retained banknote.
-  while (state.visit?.bribe !== 'offered') {
-    state = act(state, 'take-document', 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document', 'call-patient');
+  for (let attempts = 0; attempts < state.roster.length && state.visit?.bribe !== 'offered'; attempts++) {
+    // A reshuffled catalog can put an inspection between the two offers.
+    if (state.inspection) state = act(state, 'take-inspection-id', 'return-inspection-id', 'talk-inspector', 'talk-inspector', 'call-patient');
+    else state = act(state, 'take-document', 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document', 'call-patient');
     expect(state.phase).toBe('cabinet');
   }
+  expect(state.visit?.bribe).toBe('offered');
   state = act(state, 'accept-bribe');
   expect(state.banknotes).toHaveLength(2);
   expect(state.bribeIncome).toBe(200);
