@@ -33,8 +33,10 @@ export function manualHeadingLayout(title: string) {
 
 function drawProvisionHeading(ctx: CanvasRenderingContext2D, title: string, x: number, y: number, color: string): void {
   const layout = manualHeadingLayout(title);
-  if (layout.number) drawDocumentHeading(ctx, layout.number, x, y + 6, { color, face: 'sans', scale: 2 });
-  drawDocumentHeading(ctx, layout.lines.join('\n'), x + layout.offset, y + (layout.lines.length > 1 ? 6 : 12), { color, face: 'sans' });
+  // Center the enlarged number beside the restored five-pixel title letters,
+  // leaving clear paper above it even when the heading wraps onto two lines.
+  if (layout.number) drawDocumentHeading(ctx, layout.number, x, y + 9, { color, face: 'sans', scale: 2 });
+  drawDocumentHeading(ctx, layout.lines.join('\n'), x + layout.offset, y + (layout.lines.length > 1 ? 8 : 12), { color, face: 'sans' });
 }
 
 /** Reflow complete provisions for the upright reading face; old line breaks are
