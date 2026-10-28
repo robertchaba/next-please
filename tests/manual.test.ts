@@ -13,14 +13,14 @@ describe('gradually issued rulebook supplements', () => {
         expect(`${layout.number}. ${layout.lines.join(' ')}`).toBe(title);
         expect(layout.lines.length, title).toBeLessThanOrEqual(2);
         for (const line of layout.lines) expect(measureDocumentHeading(line, 'sans'), title).toBeLessThanOrEqual(layout.width);
-        expect(measureDocumentHeading(layout.number, 'sans', 2)).toBeLessThan(layout.offset);
+        expect(measureDocumentHeading(layout.number, 'sans')).toBeLessThan(layout.offset);
       }
       for (let page = 0; page < manualPageCount(100); page++) {
         const marks: { x: number; y: number; w: number; h: number }[] = [];
         const ctx = { save() {}, restore() {}, fillStyle: '', fillRect(x: number, y: number, w: number, h: number) { marks.push({ x, y, w, h }); } } as unknown as CanvasRenderingContext2D;
         drawManual(ctx, { x: 0, y: 0, ...MANUAL_OPEN_SIZE }, locale, page, 100);
         const headings = marks.filter(mark => mark.y < 36);
-        expect(headings.some(mark => mark.w === 2 && mark.h === 2)).toBe(true);
+        expect(headings.every(mark => mark.w === 1 && mark.h === 1)).toBe(true);
         expect(headings.every(mark => mark.y + mark.h <= 26)).toBe(true);
         const middle = MANUAL_OPEN_SIZE.w / 2;
         expect(marks.every(mark => mark.x >= MANUAL_OUTER_INSET && mark.x + mark.w <= MANUAL_OPEN_SIZE.w - MANUAL_OUTER_INSET && mark.y >= 0 && mark.y + mark.h <= MANUAL_OPEN_SIZE.h - 27)).toBe(true);

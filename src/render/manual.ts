@@ -10,7 +10,7 @@ const CORNER_SIZE = 9;
 export const MANUAL_OUTER_INSET = 22;
 export const MANUAL_INNER_INSET = 14;
 export const MANUAL_COLUMN_WIDTH = MANUAL_OPEN_SIZE.w / 2 - MANUAL_OUTER_INSET - MANUAL_INNER_INSET;
-const NUMBER_GUTTER = 29;
+const NUMBER_GUTTER = 14;
 
 /** Numbering and titles remain the exact localized provision, with a common
  * gutter for one- and two-digit sections. Never shrink lettering to fit. */
@@ -33,9 +33,9 @@ export function manualHeadingLayout(title: string) {
 
 function drawProvisionHeading(ctx: CanvasRenderingContext2D, title: string, x: number, y: number, color: string): void {
   const layout = manualHeadingLayout(title);
-  // Center the enlarged number beside the restored five-pixel title letters,
-  // leaving clear paper above it even when the heading wraps onto two lines.
-  if (layout.number) drawDocumentHeading(ctx, layout.number, x, y + 9, { color, face: 'sans', scale: 2 });
+  // Numbers use the same native pixels as the title, centered beside either
+  // one or two lines. Only the complete game viewport is enlarged for display.
+  if (layout.number) drawDocumentHeading(ctx, layout.number, x, y + 12, { color, face: 'sans' });
   drawDocumentHeading(ctx, layout.lines.join('\n'), x + layout.offset, y + (layout.lines.length > 1 ? 8 : 12), { color, face: 'sans' });
 }
 

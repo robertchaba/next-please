@@ -298,7 +298,7 @@ export const measureReadingText = measureDocumentText;
 export const drawReadingText = drawDocumentText;
 
 /** Heading roles also use the restored document alphabet. Retain the newer
- * layout's uppercase headings and whole-pixel enlargement for section numbers. */
+ * layout's uppercase headings and whole-pixel enlargement for institutional marks. */
 export type DocumentHeadingFace = 'serif' | 'sans';
 export type DocumentHeadingOptions = TextOptions & { face?: DocumentHeadingFace };
 

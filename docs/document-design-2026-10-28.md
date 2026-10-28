@@ -10,7 +10,7 @@ The font experiments were reverted at the user’s request to the exact original
 - Generated transparent violet, round blue and aviation-office ink impressions carry localized readable words. Clear, unclear and missing seals keep their existing gameplay meanings.
 - Clinical forms separate the institutional header, patient, requested test, result and scope note. Blue handwriting remains distinct from printed or typed text. The certificate keeps its blank identity fields until written, then its generated decision impression.
 - Letters use institutional letterheads, a notice/circular title, addressee or subject, formal prose, signatory and stamp. Revised directives keep the established thresholds, exceptions and working-day rules.
-- The rulebook retains larger provision numbers and one- or two-line headings, using the restored document alphabet throughout all seventeen spreads.
+- The rulebook uses native 1× provision numbers and one- or two-line headings, using the restored document alphabet throughout all seventeen spreads.
 
 Both dictionaries contain every added visible word and accessible description. The simulated dates, record references and telephone controls are preserved. All assets and glyphs are local and original; no font download, new dependency, backend or runtime service was introduced. The country remains unspecified and no real official logo was copied.
 
