@@ -97,6 +97,7 @@ test('signed certificate and returned examination report show distinct printed a
   await expect(page.locator('#control-apply-stamp')).toHaveAccessibleName(/ZDOLNY/);
   await page.locator('#control-language-pl').focus();
   await page.locator('#stage').screenshot({ path: info.outputPath('paperwork-v083-certificate-pl-screen.png') });
+  const certificateBounds = (await page.locator('#control-apply-stamp').boundingBox())!;
 
   const state = resultState();
   await key(page, 'saves');
@@ -107,22 +108,33 @@ test('signed certificate and returned examination report show distinct printed a
   await place(page, `paper-${report.id}`);
   await expect(page.locator(`#control-paper-${report.id}`)).toHaveAccessibleName(/Audiometria tonalna/);
   await expect(page.locator(`#control-paper-${report.id}`)).toHaveAccessibleName(/Słuch w normie/);
+  const reportBounds = (await page.locator(`#control-paper-${report.id}`).boundingBox())!;
+  expect(reportBounds.width).toBeCloseTo(certificateBounds.width);
+  expect(reportBounds.height).toBeCloseTo(certificateBounds.height);
   await page.locator('#control-language-pl').focus();
   await page.locator('#stage').screenshot({ path: info.outputPath('paperwork-v083-additional-result-pl-screen.png') });
+  await key(page, 'language-en');
+  await expect(page.locator(`#control-paper-${report.id}`)).toHaveAccessibleName(/Hearing is normal/);
+  await page.locator('#stage').screenshot({ path: info.outputPath('paperwork-v084-additional-result-en-screen.png') });
   expect(errors).toEqual([]);
 });
 
 test('generated envelope keeps sender readable and opens by its keyboard corner control', async ({ page }, info) => {
   const errors: string[] = [], missing: string[] = [];
+  const postage = page.waitForResponse(response => response.url().includes('/sprites/paper-envelope-postage.png') && response.status() === 200);
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => { if (response.status() >= 400 && response.url().includes('/assets/art/')) missing.push(response.url()); });
   const state = envelopeState();
   const letter = state.papers.find(paper => paper.kind === 'letter')!;
   await load(page, state, 'pl');
+  await postage;
   await place(page, `paper-${letter.id}`);
   await expect(page.locator(`#control-paper-${letter.id}`)).toHaveAccessibleName(/Zamknięta koperta/);
   await page.locator('#control-language-pl').focus();
   await page.locator('#stage').screenshot({ path: info.outputPath('paperwork-v083-envelope-pl-screen.png') });
+  await key(page, 'language-en');
+  await page.locator('#stage').screenshot({ path: info.outputPath('paperwork-v084-envelope-en-screen.png') });
+  await key(page, 'language-pl');
   await key(page, `paper-action-${letter.id}`);
   await expect(page.locator(`#control-paper-${letter.id}`)).toHaveAccessibleName(/Pismo w sprawie orzeczenia/);
   await expect(page.locator(`#control-paper-${letter.id}`)).not.toHaveAccessibleName(/Zamknięta koperta/);

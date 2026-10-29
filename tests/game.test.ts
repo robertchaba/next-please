@@ -156,7 +156,9 @@ describe('cabinet work', () => {
     const next = applyAction(state, 'next-day');
     expect(next.feedback).toBe('next-day');
     expect(next.state).toMatchObject({ day: 2, shiftCompleted: 0, money: state.money, patientsProcessed: state.patientsProcessed, clockMinutes: 477, lampOn: false, decoration: 'certificate' });
-    expect(act(next.state, 'call-patient').visit?.patientId).toBe(next.state.roster[0]);
+    // This assertion covers the next daily queue, independently of inspections.
+    const ready = { ...next.state, inspectionCheckedAt: next.state.patientsProcessed };
+    expect(act(ready, 'call-patient').visit?.patientId).toBe(next.state.roster[0]);
   });
 
   it('does not mutate either the original state or its visit', () => {

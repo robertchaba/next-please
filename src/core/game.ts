@@ -94,6 +94,8 @@ export interface Banknote {
 }
 
 export interface GameState {
+  /** Unique admitted portraits, oldest appearance first; spans working days. */
+  portraitHistory: number[];
   /** Completed appointments, independent of whether their papers still exist. */
   recentVisits: ArchivedVisit[];
   inspection: Inspection | null;
@@ -175,6 +177,7 @@ export type GameFeedback =
 export function createInitialState(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0]!): GameState {
   const generated = createDailyRoster(seed >>> 0, 1);
   return {
+    portraitHistory: [],
     recentVisits: [], inspection: null, inspectionCheckedAt: 0, inspectionFines: 0,
     pendingReferrals: [], referralsIssued: 0, budgetHistory: [],
     ending: null,
@@ -314,7 +317,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
         clockMinutes: SHIFT_END_MINUTES, referralsIssued: 0, daily: emptyConsequences(), money: result.settlement.closingBalance,
         ending: settledEnding(state, result.settlement.closingBalance) }, 'next-day');
     }
-    const generated = createDailyRoster(state.rngState, day);
+    const generated = createDailyRoster(state.rngState, day, state.portraitHistory);
     const rule = directiveForDay(day);
     if (rule && (state.papers.length >= GAME_LIMITS.papers || state.nextPaperId > GAME_LIMITS.paperId)) return unchanged('limit-reached');
     const papers: Paper[] = rule ? [...state.papers, { id: state.nextPaperId, kind: 'directive', patientId: null, day,
@@ -579,7 +582,9 @@ function transition(state: GameState, action: GameAction): ActionResult {
       patientId: patientId!, document: 'tray', certificateTaken: false, certificateNamed: false, generalTested: false, examinationOrder: [], noteOrder: [], visionTested: false, pressureTested: false, pressureLatest: null, pressureReadings: [], measurementsTaken: false, decision: null,
       referral: details.referral, specialist: details.specialist, specialistTaken: false, calls: emptyCalls(), bribe: details.bribe,
     };
-    return changed({ roster, inspectionCheckedAt, clockMinutes: Math.max(SHIFT_START_MINUTES, spend(ACTION_MINUTES.handling)), visit, rngState: details.seed,
+    const characterId = PATIENTS[patientId!]!.characterId;
+    const portraitHistory = [...state.portraitHistory.filter(id => id !== characterId), characterId];
+    return changed({ roster, portraitHistory, inspectionCheckedAt, clockMinutes: Math.max(SHIFT_START_MINUTES, spend(ACTION_MINUTES.handling)), visit, rngState: details.seed,
       papers: recordResults(state.papers, visit, state.day) }, 'patient-called');
   }
 

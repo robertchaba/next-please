@@ -20,7 +20,7 @@
 - Patients speak sparingly, using small comic speech balloons. Not everyone greets the doctor; patients refused fitness for work generally leave without speaking.
 - The clinic has a staff room where doctors and nurses talk over coffee during a break.
 
-- Each patient portrait has five alternative identities, with names, occupations and ages selected to suit its illustrated appearance. Each identity keeps its occupation and birth date across medical variants. A portrait appears at most once in a daily queue.
+- Each patient portrait has five alternative identities, with names, occupations and ages selected to suit its illustrated appearance. Each identity keeps its occupation and birth date across medical variants. A portrait appears at most once in a daily queue. Across working days, new queues prioritize faces the doctor has not yet seen, followed by those seen longest ago. Returns from additional examinations continue an existing encounter; the scripted sixth-day bribe retains its priority.
 - Selected patient identities have foreign-sounding names; women in this group have two-part foreign–Polish surnames. Names do not establish the country of the clinic.
 - Patient birth dates are consistent across case variants and match the intended age of their portraits. Medical notes include age calculated from birth date on the date of the visit.
 - Patients bring occupational-health referrals from specific employers. Referrals distinguish initial and periodic examinations and include birth date, sex, job, work conditions, and managerial responsibility.

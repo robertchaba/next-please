@@ -3,7 +3,7 @@ import { gzipSync, strToU8 } from 'fflate';
 import { applyAction, advanceClinicTime, createInitialState, settleWeekend, type GameAction, type GameState } from '../src/core/game';
 import { decodeSave, encodeSave, importSave } from '../src/core/save';
 import { homePage, homePages } from '../src/scenes/home';
-import { legacyBudget } from './fixtures/legacy-budget';
+import { historicalState, legacyBudget } from './fixtures/legacy-budget';
 
 const act = (state: GameState, ...actions: GameAction[]) => actions.reduce((s, a) => applyAction(s, a).state, state);
 function offer(day = 8): GameState {
@@ -14,7 +14,7 @@ function offer(day = 8): GameState {
   expect(ready.visit!.bribe).toBe('offered');
   return { ...ready, day, visit: { ...ready.visit!, startedDay: day } };
 }
-const file = (state: unknown, version = 28) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state })));
+const file = (state: unknown, version = 29) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state: historicalState(state, version) })));
 
 it('reports accepted cash once, alongside wages, with the true opening and closing balances', () => {
   const initial = offer();

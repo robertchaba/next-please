@@ -3,8 +3,8 @@ import { PATIENTS, applyAction, createInitialState, type Paper } from '../src/co
 import { ADDITIONAL_TESTS } from '../src/core/additional-tests';
 import { drawCertificate, drawPaperwork, paperDescription, wrapDocumentLines } from '../src/render/paperwork';
 import { paperDesktopSize, CLINICAL_PAPER_SIZE } from '../src/core/desk';
-import { measureReadingText } from '../src/render/font';
-import { wrapReadingText, DOCUMENT_BODY_WIDTH } from '../src/render/document-copy';
+import { measureReadingText, READ_LINE_HEIGHT } from '../src/render/font';
+import { wrapReadingText } from '../src/render/document-copy';
 import { translations } from '../src/i18n';
 
 /** Generated assets load only in the browser; record the actual native lettering. */
@@ -63,9 +63,11 @@ describe('revised document lettering', () => {
   it('keeps both clinical outcomes and the clinic imprint inside the report', () => {
     for (const locale of ['pl', 'en'] as const) for (const test of ADDITIONAL_TESTS) for (const fit of [false, true]) {
       const t = translations[locale];
-      // Five larger result rows stop before the small scope note and ink.
-      expect(wrapReadingText(t.additionalTests.report[test][fit ? 'fit' : 'unfit'], DOCUMENT_BODY_WIDTH, 'handwritten').length).toBeLessThanOrEqual(5);
-      expect(wrapDocumentLines([t.additionalTests.otherChecks], DOCUMENT_BODY_WIDTH).length).toBeLessThanOrEqual(2);
+      const width = CLINICAL_PAPER_SIZE.w - 22;
+      // Full result and scope text remain separate above the signature and seal.
+      const rows = wrapReadingText(t.additionalTests.report[test][fit ? 'fit' : 'unfit'], width, 'handwritten');
+      expect(73 + rows.length * READ_LINE_HEIGHT).toBeLessThanOrEqual(CLINICAL_PAPER_SIZE.h - 47);
+      expect(wrapDocumentLines([t.additionalTests.otherChecks], width).length).toBeLessThanOrEqual(2);
       const paper: Extract<Paper, { kind: 'additional-result' }> = {
         id: 3, kind: 'additional-result', day: 9, patientId: 0, location: 'desk', test, fit,
       };

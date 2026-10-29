@@ -141,6 +141,56 @@ export const IDENTITY_PROFILES = [
   [[58, 10], [60, 34], [61, 0], [63, 21], [59, 35]], // patient-133
   [[29, 43], [31, 40], [32, 36], [34, 29], [30, 37]], // patient-134
   [[37, 32], [39, 20], [40, 35], [42, 36], [38, 41]], // patient-135
+  [[22, 10], [24, 3], [25, 22], [27, 29], [23, 36]], // patient-136
+  [[41, 35], [43, 39], [44, 34], [46, 0], [42, 7]], // patient-137
+  [[54, 34], [56, 0], [57, 32], [59, 21], [55, 10]], // patient-138
+  [[25, 4], [27, 19], [28, 16], [30, 44], [26, 43]], // patient-139
+  [[33, 20], [35, 36], [36, 29], [38, 10], [34, 41]], // patient-140
+  [[59, 34], [61, 0], [62, 39], [64, 32], [60, 35]], // patient-141
+  [[45, 35], [47, 36], [48, 32], [50, 34], [46, 21]], // patient-142
+  [[31, 4], [33, 17], [34, 19], [36, 16], [32, 27]], // patient-143
+  [[62, 34], [64, 0], [65, 21], [67, 10], [63, 32]], // patient-144
+  [[48, 37], [50, 40], [51, 43], [53, 35], [49, 29]], // patient-145
+  [[27, 36], [29, 34], [30, 21], [32, 20], [28, 41]], // patient-146
+  [[36, 44], [38, 4], [39, 16], [41, 43], [37, 29]], // patient-147
+  [[51, 35], [53, 32], [54, 36], [56, 0], [52, 34]], // patient-148
+  [[21, 19], [23, 4], [24, 27], [26, 6], [22, 44]], // patient-149
+  [[39, 7], [41, 35], [42, 36], [44, 43], [40, 29]], // patient-150
+  [[64, 39], [66, 34], [67, 0], [69, 32], [65, 35]], // patient-151
+  [[29, 36], [31, 21], [32, 10], [34, 22], [30, 34]], // patient-152
+  [[44, 4], [46, 6], [47, 27], [49, 17], [45, 16]], // patient-153
+  [[57, 32], [59, 34], [60, 35], [62, 0], [58, 21]], // patient-154
+  [[34, 37], [36, 43], [37, 40], [39, 29], [35, 7]], // patient-155
+  [[20, 36], [22, 20], [23, 41], [25, 21], [21, 10]], // patient-156
+  [[52, 35], [54, 34], [55, 39], [57, 0], [53, 32]], // patient-157
+  [[43, 10], [45, 3], [46, 22], [48, 36], [44, 29]], // patient-158
+  [[26, 43], [28, 44], [29, 4], [31, 31], [27, 29]], // patient-159
+  [[66, 34], [68, 0], [69, 32], [71, 21], [67, 35]], // patient-160
+  [[43, 35], [45, 37], [46, 7], [48, 39], [44, 40]], // patient-161
+  [[28, 36], [30, 20], [31, 41], [33, 29], [29, 21]], // patient-162
+  [[57, 33], [59, 37], [60, 39], [62, 34], [58, 32]], // patient-163
+  [[50, 35], [52, 36], [53, 34], [55, 32], [51, 0]], // patient-164
+  [[25, 4], [27, 19], [28, 16], [30, 44], [26, 43]], // patient-165
+  [[39, 40], [41, 20], [42, 29], [44, 36], [40, 43]], // patient-166
+  [[62, 35], [64, 39], [65, 0], [67, 34], [63, 32]], // patient-167
+  [[22, 10], [24, 22], [25, 36], [27, 41], [23, 21]], // patient-168
+  [[36, 43], [38, 4], [39, 16], [41, 29], [37, 40]], // patient-169
+  [[59, 34], [61, 0], [62, 32], [64, 21], [60, 10]], // patient-170
+  [[48, 35], [50, 37], [51, 43], [53, 39], [49, 7]], // patient-171
+  [[33, 10], [35, 20], [36, 36], [38, 22], [34, 29]], // patient-172
+  [[21, 19], [23, 4], [24, 16], [26, 44], [22, 27]], // patient-173
+  [[55, 35], [57, 34], [58, 36], [60, 0], [56, 32]], // patient-174
+  [[41, 7], [43, 35], [44, 37], [46, 39], [42, 40]], // patient-175
+  [[26, 36], [28, 21], [29, 41], [31, 34], [27, 20]], // patient-176
+  [[64, 33], [66, 39], [67, 34], [69, 32], [65, 0]], // patient-177
+  [[45, 32], [47, 35], [48, 34], [50, 36], [46, 21]], // patient-178
+  [[30, 44], [32, 4], [33, 43], [35, 31], [31, 29]], // patient-179
+  [[61, 34], [63, 0], [64, 35], [66, 32], [62, 21]], // patient-180
+  [[53, 4], [55, 16], [56, 43], [58, 30], [54, 29]], // patient-181
+  [[37, 35], [39, 36], [40, 32], [42, 20], [38, 41]], // patient-182
+  [[23, 19], [25, 4], [26, 17], [28, 27], [24, 44]], // patient-183
+  [[47, 32], [49, 36], [50, 21], [52, 34], [48, 10]], // patient-184
+  [[34, 35], [36, 37], [37, 40], [39, 43], [35, 39]], // patient-185
 ] as const;
 
 /** Append-only visual demographics for portraits without historical case records. */
@@ -205,4 +255,54 @@ export const ADDITIONAL_PORTRAITS = [
   { portraitId: 'patient-133', age: 60, sex: 'female', weight: 66, height: 159 },
   { portraitId: 'patient-134', age: 31, sex: 'male', weight: 74, height: 176 },
   { portraitId: 'patient-135', age: 39, sex: 'female', weight: 61, height: 164 },
+  { portraitId: 'patient-136', age: 24, sex: 'female', weight: 56, height: 158 },
+  { portraitId: 'patient-137', age: 43, sex: 'male', weight: 76, height: 174 },
+  { portraitId: 'patient-138', age: 56, sex: 'female', weight: 62, height: 164 },
+  { portraitId: 'patient-139', age: 27, sex: 'male', weight: 86, height: 180 },
+  { portraitId: 'patient-140', age: 35, sex: 'female', weight: 68, height: 170 },
+  { portraitId: 'patient-141', age: 61, sex: 'male', weight: 73, height: 186 },
+  { portraitId: 'patient-142', age: 47, sex: 'female', weight: 56, height: 163 },
+  { portraitId: 'patient-143', age: 33, sex: 'male', weight: 83, height: 176 },
+  { portraitId: 'patient-144', age: 64, sex: 'female', weight: 62, height: 169 },
+  { portraitId: 'patient-145', age: 50, sex: 'male', weight: 93, height: 182 },
+  { portraitId: 'patient-146', age: 29, sex: 'female', weight: 68, height: 162 },
+  { portraitId: 'patient-147', age: 38, sex: 'male', weight: 80, height: 172 },
+  { portraitId: 'patient-148', age: 53, sex: 'female', weight: 56, height: 168 },
+  { portraitId: 'patient-149', age: 23, sex: 'male', weight: 90, height: 178 },
+  { portraitId: 'patient-150', age: 41, sex: 'female', weight: 62, height: 161 },
+  { portraitId: 'patient-151', age: 66, sex: 'male', weight: 77, height: 184 },
+  { portraitId: 'patient-152', age: 31, sex: 'female', weight: 68, height: 167 },
+  { portraitId: 'patient-153', age: 46, sex: 'male', weight: 87, height: 174 },
+  { portraitId: 'patient-154', age: 59, sex: 'female', weight: 56, height: 160 },
+  { portraitId: 'patient-155', age: 36, sex: 'male', weight: 74, height: 180 },
+  { portraitId: 'patient-156', age: 22, sex: 'female', weight: 62, height: 166 },
+  { portraitId: 'patient-157', age: 54, sex: 'male', weight: 84, height: 186 },
+  { portraitId: 'patient-158', age: 45, sex: 'female', weight: 68, height: 159 },
+  { portraitId: 'patient-159', age: 28, sex: 'male', weight: 71, height: 176 },
+  { portraitId: 'patient-160', age: 68, sex: 'female', weight: 56, height: 165 },
+  { portraitId: 'patient-161', age: 45, sex: 'male', weight: 81, height: 182 },
+  { portraitId: 'patient-162', age: 30, sex: 'female', weight: 62, height: 158 },
+  { portraitId: 'patient-163', age: 59, sex: 'male', weight: 91, height: 172 },
+  { portraitId: 'patient-164', age: 52, sex: 'female', weight: 68, height: 164 },
+  { portraitId: 'patient-165', age: 27, sex: 'male', weight: 78, height: 178 },
+  { portraitId: 'patient-166', age: 41, sex: 'female', weight: 56, height: 170 },
+  { portraitId: 'patient-167', age: 64, sex: 'male', weight: 88, height: 184 },
+  { portraitId: 'patient-168', age: 24, sex: 'female', weight: 62, height: 163 },
+  { portraitId: 'patient-169', age: 38, sex: 'male', weight: 75, height: 174 },
+  { portraitId: 'patient-170', age: 61, sex: 'female', weight: 68, height: 169 },
+  { portraitId: 'patient-171', age: 50, sex: 'male', weight: 85, height: 180 },
+  { portraitId: 'patient-172', age: 35, sex: 'female', weight: 56, height: 162 },
+  { portraitId: 'patient-173', age: 23, sex: 'male', weight: 72, height: 186 },
+  { portraitId: 'patient-174', age: 57, sex: 'female', weight: 62, height: 168 },
+  { portraitId: 'patient-175', age: 43, sex: 'male', weight: 82, height: 176 },
+  { portraitId: 'patient-176', age: 28, sex: 'female', weight: 68, height: 161 },
+  { portraitId: 'patient-177', age: 66, sex: 'male', weight: 92, height: 182 },
+  { portraitId: 'patient-178', age: 47, sex: 'female', weight: 56, height: 167 },
+  { portraitId: 'patient-179', age: 32, sex: 'male', weight: 79, height: 172 },
+  { portraitId: 'patient-180', age: 63, sex: 'female', weight: 62, height: 160 },
+  { portraitId: 'patient-181', age: 55, sex: 'male', weight: 89, height: 178 },
+  { portraitId: 'patient-182', age: 39, sex: 'female', weight: 68, height: 166 },
+  { portraitId: 'patient-183', age: 25, sex: 'male', weight: 76, height: 184 },
+  { portraitId: 'patient-184', age: 49, sex: 'female', weight: 56, height: 159 },
+  { portraitId: 'patient-185', age: 36, sex: 'male', weight: 86, height: 174 },
 ] as const;

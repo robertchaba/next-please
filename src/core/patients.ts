@@ -128,7 +128,7 @@ export function generalFindingIndex(patient: Pick<PatientCase, 'id' | 'general'>
 }
 
 /** Visual character groups: each portrait appears at most once per daily queue. */
-export const CHARACTER_COUNT = 138;
+export const CHARACTER_COUNT = 188;
 export const CURATED_CASE_START = 553;
 export const CASES_PER_IDENTITY = 5;
 export const LEGACY_CASE_COUNT = 103;
@@ -305,7 +305,7 @@ export function randomStep(seed: number): { value: number; seed: number } {
   return { value: next / 0x1_0000_0000, seed: next };
 }
 
-export function createRoster(seed: number, _tutorial = false, eligible: (patient: PatientCase) => boolean = () => true): { roster: number[]; seed: number } {
+export function createRoster(seed: number, _tutorial = false, eligible: (patient: PatientCase) => boolean = () => true, portraitHistory: readonly number[] = []): { roster: number[]; seed: number } {
   // Filter identities before drawing or balancing; locked portraits stay unused.
   const availableCases = CASES_BY_CHARACTER.map(cases => cases.filter(id => eligible(PATIENTS[id]!)));
   const ids = availableCases.flatMap((cases, index) => cases.length ? [index] : []);
@@ -314,6 +314,10 @@ export function createRoster(seed: number, _tutorial = false, eligible: (patient
     const target = Math.floor(random.value * (i + 1));
     [ids[i], ids[target]] = [ids[target]!, ids[i]!];
   }
+  // Unseen faces retain their seeded shuffle; seen faces follow oldest first.
+  // Store admissions, not the entire planned queue, because shifts end early.
+  const recency = new Map(portraitHistory.map((characterId, index) => [characterId, index]));
+  ids.sort((a, b) => (recency.get(a) ?? -1) - (recency.get(b) ?? -1));
   const roster = ids.map(characterId => {
     const cases = availableCases[characterId]!;
     if (cases.length === 1) return cases[0]!;
@@ -344,6 +348,15 @@ export function createRoster(seed: number, _tutorial = false, eligible: (patient
     if (PATIENTS[roster[index]!]!.expectedDecision === 'fit') continue;
     if ((unfitCount + 1) * 100 <= (index + 1) * MAX_UNFIT_PERCENT) {
       unfitCount += 1;
+      continue;
+    }
+    if (portraitHistory.length) {
+      // Preserve recency priority even at the unseen/seen boundary. Balancing
+      // may change findings, but must not bring a familiar face forward.
+      const patient = PATIENTS[roster[index]!]!;
+      const cases = FIT_CASES_BY_IDENTITY[patientIdentity(patient)!.id]!;
+      const variant = randomStep(seed); seed = variant.seed;
+      roster[index] = cases[Math.floor(variant.value * cases.length)]!;
       continue;
     }
     // The full-roster cap guarantees a fit patient remains to fill this slot.

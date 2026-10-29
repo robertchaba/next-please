@@ -68,7 +68,7 @@ export const MANUAL_OPEN_POSITION: Point = { x: 216, y: 134 };
 export const PAPER_SIZE = { w: 200, h: 168 } as const;
 export const CLINICAL_PAPER_SIZE = { w: 176, h: 157 } as const;
 export function paperDesktopSize(kind: Paper['kind']): Pick<Rect, 'w' | 'h'> {
-  return kind === 'note' || kind === 'referral' || kind === 'specialist' ? CLINICAL_PAPER_SIZE : PAPER_SIZE;
+  return kind === 'note' || kind === 'referral' || kind === 'specialist' || kind === 'additional-result' ? CLINICAL_PAPER_SIZE : PAPER_SIZE;
 }
 export const ITEM_SIZES: Record<DeskItemId, Pick<Rect, 'w' | 'h'>> = {
   banknote: { w: 92, h: 42 },

@@ -12,6 +12,7 @@ describe('temporary desktop layout', () => {
     expect(itemRect(desk, 'document')).toMatchObject({ w: 176, h: 157 });
     expect(itemRect(addDeskItem(desk, 'paper-2', { x: 300, y: 150 }, paperDesktopSize('referral')), 'paper-2')).toMatchObject({ w: 176, h: 157 });
     expect(paperDesktopSize('specialist')).toEqual(CLINICAL_PAPER_SIZE);
+    expect(paperDesktopSize('additional-result')).toEqual(CLINICAL_PAPER_SIZE);
     expect(paperDesktopSize('letter')).toEqual(PAPER_SIZE);
     const carried = pickUpDeskItem(desk, 'paper-1');
     expect(itemRect(carried, 'paper-1', false, true)).toMatchObject({ w: 48, h: 64 });

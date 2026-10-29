@@ -1,3 +1,4 @@
+import { historicalState } from './fixtures/legacy-budget';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
 import { advanceClinicTime, applyAction, createInitialState, settleWeekend, type GameAction, type GameState } from '../src/core/game';
@@ -16,7 +17,7 @@ function ready(): GameState {
 }
 function inspector(): GameState { return act(ready(), 'call-patient'); }
 function records(): GameState { return act(inspector(), 'take-inspection-id', 'return-inspection-id'); }
-const file = (state: unknown, version = 28): Uint8Array => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state })));
+const file = (state: unknown, version = 29): Uint8Array => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state: historicalState(state, version) })));
 
 it('never calls an inspector on day one and retains the last 25 completed appointments independently of papers', () => {
   let state = act({ ...createInitialState(17), money: 5000 }, 'skip-intro');
@@ -150,7 +151,7 @@ it('validates inspection state strictly and migrates v24 without invented histor
   const original = { ...next, roster: next.roster.filter(id => id <= 3127) };
   const { banknotes: _banknotes, recentVisits: _recent, inspection: _inspection, inspectionCheckedAt: _checked, inspectionFines: _fines, ...old } = original;
   const migrated = decodeSave(file(old, 24));
-  expect(migrated).toEqual({ ...old, banknotes: [], recentVisits: [], inspection: null, inspectionCheckedAt: old.patientsProcessed, inspectionFines: 0 });
+  expect(migrated).toEqual({ ...old, portraitHistory: [], banknotes: [], recentVisits: [], inspection: null, inspectionCheckedAt: old.patientsProcessed, inspectionFines: 0 });
   expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
   expect(() => decodeSave(file(original, 24))).toThrow();
 });

@@ -1,4 +1,4 @@
-import { legacyBudget } from './fixtures/legacy-budget';
+import { historicalState, legacyBudget } from './fixtures/legacy-budget';
 import { gunzipSync, gzipSync, strToU8 } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { applyAction, createInitialState, type GameState } from '../src/core/game';
@@ -11,8 +11,8 @@ function friday(money: number, seed = 1, insuranceRate = 300): GameState {
   const cabinet = applyAction(createInitialState(seed), 'skip-intro').state;
   return applyAction({ ...cabinet, roster: cabinet.roster.filter(id => id <= 3127), day: 2, money, insuranceRate, clockMinutes: 840 }, 'end-day').state;
 }
-const file = (state: unknown, version = 28): Uint8Array => gzipSync(strToU8(JSON.stringify({
-  game: 'next-please', version, savedAt: '2026-10-26T12:00:00.000Z', state: version < 24 ? legacyBudget(state) : state,
+const file = (state: unknown, version = 29): Uint8Array => gzipSync(strToU8(JSON.stringify({
+  game: 'next-please', version, savedAt: '2026-10-26T12:00:00.000Z', state: version < 24 ? legacyBudget(state) : historicalState(state, version),
 })));
 
 describe('weekend living costs and bankruptcy', () => {
@@ -151,7 +151,7 @@ describe('weekend saves', () => {
     expect(next(decodeSave(encodeSave(fri)))).toEqual(sat);
     expect(next(decodeSave(encodeSave(sat)))).toEqual(next(sat));
     expect(applyAction(decodeSave(encodeSave(sat)), 'end-day').state).toEqual(sat);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(28);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(29);
   });
 
   it('preserves the whole weekend budget through saving, month rollover and Monday', () => {

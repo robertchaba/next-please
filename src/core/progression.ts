@@ -1,6 +1,6 @@
 import { gameDate, isWeekend } from './calendar';
 import { additionalResultFor, additionalTestForJob, additionalTestForPatient } from './additional-tests';
-import { JOBS, PATIENTS, REQUIREMENTS, createRoster, randomStep, type PatientCase } from './patients';
+import { JOBS, PATIENTS, REQUIREMENTS, createRoster, patientIdentity, randomStep, type PatientCase } from './patients';
 import type { Decision, GameState, Visit } from './game';
 
 export type DirectiveRule = 'dates' | 'specialist' | 'authenticity' | 'additional-tests';
@@ -22,8 +22,8 @@ export function workDayNumber(day: number): number {
 }
 
 /** Reserve the four additional-examination professions until their rules arrive. */
-export function createDailyRoster(seed: number, day: number): ReturnType<typeof createRoster> {
-  return createRoster(seed, false, patient => workDayNumber(day) >= 7 || additionalTestForJob(patient) === null);
+export function createDailyRoster(seed: number, day: number, portraitHistory: readonly number[] = []): ReturnType<typeof createRoster> {
+  return createRoster(seed, false, patient => workDayNumber(day) >= 7 || additionalTestForJob(patient) === null, portraitHistory);
 }
 
 export function directiveForDay(day: number): DirectiveRule | null {
@@ -113,6 +113,14 @@ export function createAppointmentDetails(state: Pick<GameState, 'day' | 'shiftCo
 /** The scripted second visitor is the sole exception to the prefix ratio. */
 export function arrangeProgressionRoster(roster: number[], day: number): number[] {
   if (workDayNumber(day) !== 6 || isWeekend(day)) return roster;
+  const second = roster[1] === undefined ? undefined : PATIENTS[roster[1]];
+  const identity = second && patientIdentity(second);
+  if (identity) {
+    // Keep the rare-face order: the scripted offer changes the second person's
+    // medical variant, not their portrait or authored identity.
+    const unfit = PATIENTS.find(patient => patientIdentity(patient)?.id === identity.id && patient.expectedDecision === 'unfit');
+    if (unfit) return roster.map((id, index) => index === 1 ? unfit.id : id);
+  }
   const source = roster.findIndex(id => PATIENTS[id]!.expectedDecision === 'unfit');
   if (source < 0 || source === 1) return roster;
   const arranged = [...roster];

@@ -32,8 +32,8 @@ describe('progression follows working days', () => {
       for (const day of [1, 2, 5, 6, 7, 8]) {
         const generated = createDailyRoster(seed, day);
         expect(createDailyRoster(seed, day)).toEqual(generated);
-        expect(generated.roster).toHaveLength(118);
-        expect(new Set(generated.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(118);
+        expect(generated.roster).toHaveLength(168);
+        expect(new Set(generated.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(168);
         let unfit = 0, highestPercent = 0;
         const jobs = new Set(generated.roster.map(id => JOBS[PATIENTS[id]!.jobId]!.key));
         for (const job of reservedJobs) expect(jobs.has(job)).toBe(false);
@@ -46,7 +46,7 @@ describe('progression follows working days', () => {
       }
       for (const day of [9, 12]) {
         const { roster } = createDailyRoster(seed, day);
-        expect(roster).toHaveLength(138);
+        expect(roster).toHaveLength(188);
         const jobs = roster.map(id => JOBS[PATIENTS[id]!.jobId]!.key);
         for (const job of reservedJobs) expect(jobs).toContain(job);
         expect(jobs.filter(job => job === 'militia-officer')).toHaveLength(10);
@@ -60,7 +60,7 @@ describe('progression follows working days', () => {
       expect(state.day).toBe(day);
       expect(decodeSave(encodeSave(state))).toEqual(state);
       if (state.phase === 'cabinet') {
-        expect(state.roster).toHaveLength(day < 9 ? 118 : 138);
+        expect(state.roster).toHaveLength(day < 9 ? 168 : 188);
         if (day < 9) for (const id of state.roster) expect(reservedJobs).not.toContain(JOBS[PATIENTS[id]!.jobId]!.key);
         if (day === 8) expect(applyAction({ ...state, shiftCompleted: 1 }, 'call-patient').state.visit?.bribe).toBe('offered');
         state = act({ ...state, clockMinutes: 840 }, 'end-day');
@@ -192,7 +192,7 @@ describe('specialist certificates and telephone conclusions', () => {
 describe('borderline bribery and hospital ending', () => {
   it('keeps portraits unique and guarantees the second patient of workday six is borderline and offers100', () => {
     const original = createRoster(23).roster, roster = arrangeProgressionRoster(original, 8);
-    expect(new Set(roster)).toEqual(new Set(original));
+    expect(roster.map(id => PATIENTS[id]!.characterId)).toEqual(original.map(id => PATIENTS[id]!.characterId));
     expect(PATIENTS[roster[1]!]!.expectedDecision).toBe('unfit');
     const visit = bribeAppointment().visit!;
     expect(visit.bribe).toBe('offered');

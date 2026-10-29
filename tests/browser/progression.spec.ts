@@ -176,7 +176,8 @@ for (const authentic of [true, false]) {
 function secondPatientBribe(): GameState {
   let state = actions(beginningOfDay(8), 'call-patient');
   state = completeVisit(state);
-  return actions(state, 'call-patient', 'take-document');
+  // Keep this fixture about the scripted offer, independent of an inspector draw.
+  return actions({ ...state, inspectionCheckedAt: state.patientsProcessed }, 'call-patient', 'take-document');
 }
 
 test('returning the second workday-six patient banknote then refusing retains the normal bonus', async ({ page }, info) => {

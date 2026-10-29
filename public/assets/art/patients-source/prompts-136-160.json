@@ -1,0 +1,294 @@
+{
+  "created": "2026-10-29",
+  "tool": "built-in image_gen",
+  "useCase": "stylized-concept",
+  "referenceStyle": "Existing approved patient 130 and 135 sources were visually inspected; prompts describe the same style.",
+  "portraits": [
+    {
+      "id": 136,
+      "sex": "female",
+      "age": 24,
+      "appearance": "a young woman with a short straight black blunt bob and wide-set brown eyes, wearing an ochre work blouse with a cream collar",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 24 years old: a young woman with a short straight black blunt bob and wide-set brown eyes, wearing an ochre work blouse with a cream collar. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-136.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-09f62e8a-75db-488e-bca2-bee2e128bf98.png"
+    },
+    {
+      "id": 137,
+      "sex": "male",
+      "age": 43,
+      "appearance": "a lean man with a long narrow face, dark receding curls and heavy eyebrows, wearing a burgundy wool cardigan over an oatmeal shirt",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 43 years old: a lean man with a long narrow face, dark receding curls and heavy eyebrows, wearing a burgundy wool cardigan over an oatmeal shirt. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-137.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-987b6d66-6c20-48e2-a2b5-859852e90a20.png"
+    },
+    {
+      "id": 138,
+      "sex": "female",
+      "age": 56,
+      "appearance": "a broad-faced older woman with cropped white curls and a strong jaw, wearing a slate-blue blouse with subtle vertical seams",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 56 years old: a broad-faced older woman with cropped white curls and a strong jaw, wearing a slate-blue blouse with subtle vertical seams. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-138.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-40fe84ec-9053-4c26-8f63-66dfdcfd635b.png"
+    },
+    {
+      "id": 139,
+      "sex": "male",
+      "age": 27,
+      "appearance": "a young man with medium-brown skin, close black coils and rounded cheeks, wearing a tan cotton work shirt with rolled cuffs",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 27 years old: a young man with medium-brown skin, close black coils and rounded cheeks, wearing a tan cotton work shirt with rolled cuffs. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-139.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-ae9625a9-747f-447a-a92f-451b4e33c248.png"
+    },
+    {
+      "id": 140,
+      "sex": "female",
+      "age": 35,
+      "appearance": "a freckled woman with a copper braid crown and narrow green eyes, wearing a plain muted olive blouse",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 35 years old: a freckled woman with a copper braid crown and narrow green eyes, wearing a plain muted olive blouse. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-140.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-af5e56db-f128-42cc-8361-6498fecbc865.png"
+    },
+    {
+      "id": 141,
+      "sex": "male",
+      "age": 61,
+      "appearance": "an older man with a bald crown, gray sideburns, pronounced ears and thin lips, wearing a dark-brown knitted vest over a beige shirt",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 61 years old: an older man with a bald crown, gray sideburns, pronounced ears and thin lips, wearing a dark-brown knitted vest over a beige shirt. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-141.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-b4b725eb-e714-4654-9ea6-917780b7d7d7.png"
+    },
+    {
+      "id": 142,
+      "sex": "female",
+      "age": 47,
+      "appearance": "a woman with warm brown skin, broad cheekbones and a black low bun, wearing a rust wool cardigan over a cream blouse",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 47 years old: a woman with warm brown skin, broad cheekbones and a black low bun, wearing a rust wool cardigan over a cream blouse. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-142.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-8fa4b055-17ec-479e-9d7a-b72733aeec26.png"
+    },
+    {
+      "id": 143,
+      "sex": "male",
+      "age": 33,
+      "appearance": "a broad-faced clean-shaven man with a sandy swept fringe and small dark eyes, wearing a charcoal work jacket over a pale shirt",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 33 years old: a broad-faced clean-shaven man with a sandy swept fringe and small dark eyes, wearing a charcoal work jacket over a pale shirt. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-143.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-b508b6d8-3b03-4809-a0e4-74f55849fce4.png"
+    },
+    {
+      "id": 144,
+      "sex": "female",
+      "age": 64,
+      "appearance": "an angular older woman with a long silver braid brought over one shoulder, wearing a subdued burgundy knitted shawl over an oatmeal blouse",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 64 years old: an angular older woman with a long silver braid brought over one shoulder, wearing a subdued burgundy knitted shawl over an oatmeal blouse. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-144.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-52a82357-96b1-49cd-8ae2-71cf4c4e5e8e.png"
+    },
+    {
+      "id": 145,
+      "sex": "male",
+      "age": 50,
+      "appearance": "a rounded-faced man with a dark thick moustache and thin wire glasses, wearing a blue-gray buttoned shirt",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 50 years old: a rounded-faced man with a dark thick moustache and thin wire glasses, wearing a blue-gray buttoned shirt. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-145.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-d82f8d20-ce77-496e-9f18-dd8ba73c168d.png"
+    },
+    {
+      "id": 146,
+      "sex": "female",
+      "age": 29,
+      "appearance": "a young woman with dark curls to her shoulders and an oval face, wearing a beige knitted vest over a dark olive blouse",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 29 years old: a young woman with dark curls to her shoulders and an oval face, wearing a beige knitted vest over a dark olive blouse. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-146.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-fa94bd05-6436-4032-bb49-b987bd45ff53.png"
+    },
+    {
+      "id": 147,
+      "sex": "male",
+      "age": 38,
+      "appearance": "a narrow-faced man with an auburn short beard and receding auburn hair, wearing a dark-green sweater over a cream shirt",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 38 years old: a narrow-faced man with an auburn short beard and receding auburn hair, wearing a dark-green sweater over a cream shirt. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-147.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-a9094830-5afa-4792-8987-1260103854f6.png"
+    },
+    {
+      "id": 148,
+      "sex": "female",
+      "age": 53,
+      "appearance": "a woman with a blond bouffant hairstyle and square brown glasses, wearing a navy wool cardigan over a light blouse",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 53 years old: a woman with a blond bouffant hairstyle and square brown glasses, wearing a navy wool cardigan over a light blouse. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-148.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-6dc2-7082-885a-7586ed78485a/exec-f2d6fe07-394b-41f2-b0db-a17ea782b18f.png",
+      "initialGeneratedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-41d844ef-9de3-4283-be45-1c1ac4890c14.png",
+      "revision": {
+        "promptFile": "docs/art-prompts/patients-v084/patient-148-complete.txt",
+        "referenced_image_paths": [
+          "public/assets/art/patients-source/revisions/patient-148-cropped.png"
+        ],
+        "transparent_background": true,
+        "reason": "Restore complete top of hair and transparent margin using built-in image_gen."
+      }
+    },
+    {
+      "id": 149,
+      "sex": "male",
+      "age": 23,
+      "appearance": "a young man with dark straight bowl-cut hair, a slim face and a small nose, wearing an olive work overshirt over a tan shirt",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 23 years old: a young man with dark straight bowl-cut hair, a slim face and a small nose, wearing an olive work overshirt over a tan shirt. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-149.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-56b9d191-40d8-4646-885e-22a9772ca752.png"
+    },
+    {
+      "id": 150,
+      "sex": "female",
+      "age": 41,
+      "appearance": "an olive-skinned woman with black cropped waves, a square jaw and prominent cheekbones, wearing an ordinary brown wool jacket and cream blouse",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 41 years old: an olive-skinned woman with black cropped waves, a square jaw and prominent cheekbones, wearing an ordinary brown wool jacket and cream blouse. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-150.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-98bbbd94-c550-41f8-849c-45bf75fe5cfa.png"
+    },
+    {
+      "id": 151,
+      "sex": "male",
+      "age": 66,
+      "appearance": "a lean older man with short white hair, a tidy white moustache and a long chin, wearing a subdued ochre wool waistcoat over a pale shirt",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 66 years old: a lean older man with short white hair, a tidy white moustache and a long chin, wearing a subdued ochre wool waistcoat over a pale shirt. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-151.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-678201a6-306b-4888-927d-b7bf542bc3cc.png"
+    },
+    {
+      "id": 152,
+      "sex": "female",
+      "age": 31,
+      "appearance": "a woman with a long nose, sandy-blond ponytail and lightly freckled cheeks, wearing a muted plum wool sweater",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 31 years old: a woman with a long nose, sandy-blond ponytail and lightly freckled cheeks, wearing a muted plum wool sweater. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-152.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-7daf4e38-e5cd-47e4-84fb-1744f7528396.png"
+    },
+    {
+      "id": 153,
+      "sex": "male",
+      "age": 46,
+      "appearance": "a stocky man with dark-brown skin, a shaved head, broad nose and serious eyes, wearing a gray cotton work shirt",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 46 years old: a stocky man with dark-brown skin, a shaved head, broad nose and serious eyes, wearing a gray cotton work shirt. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-153.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-e4429ffb-a54a-4f88-b95a-75e638a0cbe7.png"
+    },
+    {
+      "id": 154,
+      "sex": "female",
+      "age": 59,
+      "appearance": "a soft-faced older woman with salt-and-pepper pin curls and small smiling eyes, wearing a cream blouse with a dull brown collar",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 59 years old: a soft-faced older woman with salt-and-pepper pin curls and small smiling eyes, wearing a cream blouse with a dull brown collar. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-154.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-20b5d114-2794-4124-957f-62f8afa7f9d6.png"
+    },
+    {
+      "id": 155,
+      "sex": "male",
+      "age": 36,
+      "appearance": "a man with black wavy side-parted hair, a thin moustache and an oblong face, wearing a tan corduroy jacket over an olive shirt",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 36 years old: a man with black wavy side-parted hair, a thin moustache and an oblong face, wearing a tan corduroy jacket over an olive shirt. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-155.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-b2586ed6-c8a9-4236-be52-47f006f91a89.png",
+      "initialGeneratedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-67e921e3-7a8f-41f1-9594-64c6c099affe.png",
+      "revision": {
+        "promptFile": "docs/art-prompts/patients-v084/patient-155-complete.txt",
+        "referenced_image_paths": [
+          "public/assets/art/patients-source/revisions/patient-155-cropped.png"
+        ],
+        "transparent_background": true,
+        "reason": "Restore complete elbow outline and transparent margins using built-in image_gen."
+      }
+    },
+    {
+      "id": 156,
+      "sex": "female",
+      "age": 22,
+      "appearance": "a round-faced young woman with a reddish-brown pixie haircut and large hazel eyes, wearing a slate-blue plain blouse",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 22 years old: a round-faced young woman with a reddish-brown pixie haircut and large hazel eyes, wearing a slate-blue plain blouse. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-156.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-e237-70d2-9691-a58f02a6be1b/exec-56d09b70-4785-49ff-ae9f-bc3cf57082d7.png"
+    },
+    {
+      "id": 157,
+      "sex": "male",
+      "age": 54,
+      "appearance": "a man with a hooked nose, thick gray curls and heavy brow, wearing an olive wool cardigan over an oatmeal shirt",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 54 years old: a man with a hooked nose, thick gray curls and heavy brow, wearing an olive wool cardigan over an oatmeal shirt. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-157.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-6dc2-7082-885a-7586ed78485a/exec-10b9fb61-7071-4d24-95d7-b47d34e76601.png",
+      "initialGeneratedSource": "/Users/user/.codex/generated_images/01a18960-1f7e-7b83-9651-247fd1908d83/exec-0fdb62bf-8a0a-4968-ae8c-9bcce23f3946.png",
+      "revision": {
+        "promptFile": "docs/art-prompts/patients-v084/patient-157-complete.txt",
+        "referenced_image_paths": [
+          "public/assets/art/patients-source/revisions/patient-157-cropped.png"
+        ],
+        "transparent_background": true,
+        "reason": "Restore full silhouette and transparent margins using built-in image_gen."
+      }
+    },
+    {
+      "id": 158,
+      "sex": "female",
+      "age": 45,
+      "appearance": "a woman with a long black braid brought over one shoulder, dark eyes and a long oval face, wearing a muted brick-red blouse",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 45 years old: a woman with a long black braid brought over one shoulder, dark eyes and a long oval face, wearing a muted brick-red blouse. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-158.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a18960-1f7e-7b83-9651-247fd1908d83/exec-a58db68e-3fbc-400b-9a3a-d22667c7c45c.png"
+    },
+    {
+      "id": 159,
+      "sex": "male",
+      "age": 28,
+      "appearance": "a freckled young man with a long face, ginger quiff and clean-shaven chin, wearing an ordinary brown sweater over a cream shirt",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 28 years old: a freckled young man with a long face, ginger quiff and clean-shaven chin, wearing an ordinary brown sweater over a cream shirt. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-159.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a18960-1f7e-7b83-9651-247fd1908d83/exec-d51d2120-c955-4f25-947f-7582c69b12b3.png"
+    },
+    {
+      "id": 160,
+      "sex": "female",
+      "age": 68,
+      "appearance": "an older woman with a short white bob, oval wire glasses and gentle deep-set eyes, wearing a faded green wool cardigan over a pale blouse",
+      "prompt": "Use case: stylized-concept. Asset type: original transparent patient sprite for the 1983 analog occupational-health clinic game Next, Please! Primary request: one completely new fictional civilian adult, 68 years old: an older woman with a short white bob, oval wire glasses and gentle deep-set eyes, wearing a faded green wool cardigan over a pale blouse. Composition: straight-on waist-up seated portrait, natural human head scale, entire hair and both shoulders visible, forearms resting along the bottom with two relaxed realistic hands folded together. Complete isolated silhouette with clear margin at top and sides, no furniture. This will be nearest-neighbor reduced to 94 by 96 game pixels, so face silhouette and clothing need clear bold readable clusters. Style: polished subdued realistic pixel art, crisp square pixel clusters and deliberate textured dithering, hard pixel edges, restrained charcoal outlines, muted olive/charcoal/cream/ochre clothing palette, softly lit face with subtle institutional yellow warmth. Ordinary slightly weary neutral expression. An original recognizably different face, age and hairstyle, not a generic reused face. Background genuinely transparent alpha. No text, numbers, badge, logo, national emblem, accessories held in hands, border, scenery, cast shadow, photographic blur, gradients or glossy 3D. Maintain complete silhouette and realistic folded hands.",
+      "transparent_background": true,
+      "destination": "public/assets/art/patients-source/patient-160.png",
+      "generatedSource": "/Users/user/.codex/generated_images/01a1895f-6dc2-7082-885a-7586ed78485a/exec-98d95bef-2a29-4202-8016-46670b405a73.png",
+      "initialGeneratedSource": "/Users/user/.codex/generated_images/01a18960-1f7e-7b83-9651-247fd1908d83/exec-dabe9969-00d4-4699-b6c9-a8cfb76f14c3.png",
+      "revision": {
+        "promptFile": "docs/art-prompts/patients-v084/patient-160-complete.txt",
+        "referenced_image_paths": [
+          "public/assets/art/patients-source/revisions/patient-160-cropped.png"
+        ],
+        "transparent_background": true,
+        "reason": "Restore full silhouette and transparent margins using built-in image_gen."
+      }
+    }
+  ]
+}

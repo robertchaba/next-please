@@ -1,4 +1,4 @@
-import { legacyBudget } from './fixtures/legacy-budget';
+import { historicalState, legacyBudget } from './fixtures/legacy-budget';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
 import { applyAction, advanceClinicTime, createInitialState, GAME_LIMITS, type GameState, type GameAction, type NoteEntryId } from '../src/core/game';
@@ -166,7 +166,7 @@ describe('day seven additional examinations', () => {
 
   it('rejects forged result, return schedule, unknown fields and duplicate pending identities', () => {
     const state = send(appointment(), 'vestibular');
-    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 28, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
+    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 29, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
     for (const change of [
       (s: GameState) => { s.pendingReferrals[0]!.fit = false; },
       (s: GameState) => { s.pendingReferrals[0]!.returnDay += 7; },
@@ -281,7 +281,7 @@ describe('returned examination report handoff', () => {
   it('validates the saved reprimand reason and keeps previous saves importable', () => {
     const before = act(returned(), 'stamp-fit');
     const state = act(before, 'return-document');
-    const file = (candidate: unknown, version = 28) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state: version < 24 ? legacyBudget(withoutAdditionalNotes(candidate as GameState)) : candidate })));
+    const file = (candidate: unknown, version = 29) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state: version < 24 ? legacyBudget(withoutAdditionalNotes(candidate as GameState)) : historicalState(candidate, version) })));
     const historical = { ...before, roster: before.roster.filter(id => id <= 3127) };
     expect(decodeSave(file(historical, 22))).toEqual(historical);
     for (const change of [{ reason: 'unknown' }, { sender: 'zus' }, { patientId: 0 }, { day: 1 }, { surprise: true }]) {
@@ -302,7 +302,7 @@ function withoutAdditionalNotes(state: GameState): GameState {
 
 describe('additional examination entries in medical notes', () => {
   const notes = (state: GameState) => state.papers.filter(paper => paper.kind === 'note');
-  const file = (state: unknown, version = 28) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-28T12:00:00.000Z', state })));
+  const file = (state: unknown, version = 29) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-28T12:00:00.000Z', state: historicalState(state, version) })));
 
   it.each([true, false])('appends the received %s finding after earlier entries and retains it after the report leaves', fit => {
     const patient = PATIENTS.find(patient => patient.jobId === 46 && additionalResultFor(patient, 'vestibular').fit === fit)!;

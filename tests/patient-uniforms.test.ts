@@ -56,7 +56,7 @@ describe('uniformed patients and fourth portrait expansion', () => {
       expect(bytes.readUInt32BE(20)).toBe(96);
       hashes.add(createHash('sha256').update(bytes).digest('hex'));
     }
-    expect(portraits.size).toBe(138);
+    expect(portraits.size).toBe(188);
     expect(hashes.size).toBe(portraits.size);
   });
 });

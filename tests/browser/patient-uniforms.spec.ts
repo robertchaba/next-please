@@ -4,7 +4,7 @@ import { PATIENTS } from '../../src/core/patients';
 import { encodeSave } from '../../src/core/save';
 import { translations } from '../../src/i18n';
 
-for (const batch of [{ first: 76, count: 35, caseStart: 2503 }, { first: 111, count: 25, caseStart: 3378 }]) {
+for (const batch of [{ first: 76, count: 35, caseStart: 2503 }, { first: 111, count: 25, caseStart: 3378 }, { first: 136, count: 50, caseStart: 4003 }]) {
   test(`portraits ${batch.first}–${batch.first + batch.count - 1} render with matching jobs in both languages`, async ({ page }, testInfo) => {
     test.setTimeout(90_000);
     const missingAssets: string[] = [];
@@ -41,6 +41,6 @@ for (const batch of [{ first: 76, count: 35, caseStart: 2503 }, { first: 111, co
     }
     expect(portraits.size).toBe(batch.count);
     expect(missingAssets).toEqual([]);
-    if (batch.first === 111) await page.locator('#stage').screenshot({ path: testInfo.outputPath('patient-135-library.png') });
+    if (batch.first === 136) await page.locator('#stage').screenshot({ path: testInfo.outputPath('patient-185-library.png') });
   });
 }

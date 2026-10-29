@@ -48,3 +48,10 @@ Referrals, certificates, specialist certificates and patient notes now share a 1
 Referrals reflow all six numbered fields within 154 pixels, with ten-pixel row spacing and eight rows at most, above the signature, seal and telephone. Certificate fields use an inline job position and a wrapped decision statement, with a 98 × 27 generated decision impression anchored directly below the last line of the statement, rather than to the bottom of the sheet. Notes keep identity and age, followed by eight rows at fourteen-pixel spacing in a 154-pixel column. Additional entries continue through the existing page corners. The renderer, controls, accessible descriptions and controller use matching dimensions and pagination.
 
 Attaching a second sheet has a twelve-pixel tolerance around the existing clip (34 × 43 target); empty-handed unclipping retains the 10 × 19 sprite bounds. A medical note lies aligned above its equally sized referral, regardless of joining order, without deliberately exposing the lower sheet. Both move, cancel, file and return together. Temporary per-item sizes are derived from paper kinds after import; all contents and save v28 remain unchanged.
+
+
+## Additional-examination report — 0.8.4
+
+The returned additional-examination report now shares the 176 × 157 reading footprint of the referral, medical note, specialist certificate and final certificate. The complete result and scope note reflow at the unchanged native font size within 154 pixels; the signature and seal remain below them. The additional-examination referral form retains its existing 200 × 168 size. Both carry and placement continue to use the shared paper geometry and aligned semantic controls. Closed correspondence now uses the [generated postage revision](art-envelope-postage-2026-10-29.md).
+
+Verified previews: [Polish report](paperwork-v084-additional-result-pl-screen.png) and [English report](paperwork-v084-additional-result-en-screen.png). Native text checks cover every additional-test outcome in both languages, and the browser test compares the report and certificate hitbox dimensions after public save import.
