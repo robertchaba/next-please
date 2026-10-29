@@ -782,9 +782,9 @@ function getButtons(): Button[] {
   return [
     { id: 'start', label: shiftStarted ? (gameState.phase === 'home' ? t().home.resume : t().resume) : t().start, x: 32, y: 199, w: 208, h: 27, kind: 'primary', action: startShift },
     { id: 'saves', label: t().saves, x: 32, y: 233, w: 208, h: 24, action: () => openScreen('saves', 'saves') },
-    { id: 'credits', label: t().credits, x: 32, y: 264, w: 91, h: 18, kind: 'text', action: () => openScreen('credits', 'credits') },
-    { id: 'help', label: t().help.label, x: 140, y: 264, w: 100, h: 18, kind: 'text', action: () => openScreen('help', 'help') },
     { id: 'share', label: t().sharing.label, x: 32, y: 296, w: 66, h: 19, kind: 'text', action: () => { void shareCurrentPage(); } },
+    { id: 'credits', label: t().credits, x: 116, y: 296, w: 72, h: 19, kind: 'text', action: () => openScreen('credits', 'credits') },
+    { id: 'help', label: t().help.label, x: 206, y: 296, w: 100, h: 19, kind: 'text', action: () => openScreen('help', 'help') },
   ];
 }
 

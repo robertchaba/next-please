@@ -913,7 +913,7 @@ export const translations = {
     subtitle: 'NASTĘPNY, PROSZĘ!', tagline: 'Każdy jest zdolny. Do czasu.',
     start: 'ROZPOCZNIJ DYŻUR', saves: 'TECZKA ZAPISÓW', credits: 'O AUTORZE',
     help: {
-      label: 'O co tu chodzi?', title: 'O CO TU CHODZI?', reference: 'NP / 003',
+      label: 'Instrukcja', title: 'INSTRUKCJA', reference: 'NP / 003',
       description: 'Krótka instrukcja pierwszego dyżuru.',
       contentLabel: 'Instrukcja gry', scrollHint: 'Kółko myszy / strzałki — przewiń',
       scrollHelp: 'Przewijaj kółkiem myszy, strzałkami lub Page Up / Page Down. Home i End przenoszą na początek i koniec. Escape zamyka instrukcję.',
@@ -1458,7 +1458,7 @@ export const translations = {
     subtitle: 'OCCUPATIONAL HAZARD: BUREAUCRACY.', tagline: 'Everyone is fit. Until they aren’t.',
     start: 'BEGIN YOUR SHIFT', saves: 'SAVE FILES', credits: 'CREDITS',
     help: {
-      label: 'How to play?', title: 'HOW TO PLAY?', reference: 'NP / 003',
+      label: 'Instructions', title: 'INSTRUCTIONS', reference: 'NP / 003',
       description: 'A short guide to your first shift.',
       contentLabel: 'Playing instructions', scrollHint: 'Mouse wheel / arrow keys — scroll',
       scrollHelp: 'Scroll with the mouse wheel, arrow keys or Page Up / Page Down. Home and End move to the beginning and end. Escape closes this guide.',
