@@ -1,0 +1,213 @@
+{
+  "album": "Next, Please! (Original Game Soundtrack)",
+  "artist": "Robert Chaba",
+  "album_artist": "Robert Chaba",
+  "artist_url": "https://github.com/robertchaba",
+  "recording_year": "2026",
+  "genre": "Soundtrack",
+  "disc": "1/1",
+  "cover": "docs/soundtrack-cover.png",
+  "cover_sha256": "17abdd4525be59efba7d64d19ef971b1c9effff115506678b8f6cb2540c8d415",
+  "tracks": [
+    {
+      "number": 1,
+      "file": "Bureaucratic March 1.mp3",
+      "title": "Bureaucratic March 1",
+      "source_url": "https://suno.com/song/2560c3f8-b6af-4a4b-bb0d-86bcd4e89999",
+      "original_title": "Bureaucratic March",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "3ce9f2bbd3f770ecc6cac97f5bfaebd3b23f285f01f7a8dd16a296615305fae9",
+      "audio_sha256": "331e416f5c055396e3bbb7c1b73dfe8d21b8c26e985a960587e8f4150a614c20"
+    },
+    {
+      "number": 2,
+      "file": "Bureaucratic March 2.mp3",
+      "title": "Bureaucratic March 2",
+      "source_url": "https://suno.com/song/12ee81fc-337b-4896-a1a7-887b915eab78",
+      "original_title": "Bureaucratic March",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "f78716bf6d4332ec2852e97e5b87d037746228232b37b712d44d50e52f53a7cd",
+      "audio_sha256": "6c4c3d1ab67825548adde9a8115c8cc516dc96edb518469643994bddaa6ba6a4"
+    },
+    {
+      "number": 3,
+      "file": "Bureaucratic March 3.mp3",
+      "title": "Bureaucratic March 3",
+      "source_url": "https://suno.com/song/c2fdcc24-bb1d-4d2c-b18c-27d433725edd",
+      "original_title": "Bureaucratic March",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "1697ad71009a0a93de9b18d2819b2eb0b542838eec8ea2a45ba23ded5fd21e22",
+      "audio_sha256": "ac753095f12a21a2f58925a59d7afcea4937d471f930f5dfaaa8901673cf7b42"
+    },
+    {
+      "number": 4,
+      "file": "Happy Bureaucratic Anthem.mp3",
+      "title": "Happy Bureaucratic Anthem",
+      "source_url": "https://suno.com/song/8900c589-13a3-453a-9b2c-d39dac136fdc",
+      "original_title": "Bureaucratic Anthem",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "77eb0cef89fd6188e6f49727161fd35747a3bc0614e3fddc229e8b5c7888c149",
+      "audio_sha256": "5cd12fcc650eecf7629523b3cb505904ab2c38f2eda05b517c55f15102de42e7"
+    },
+    {
+      "number": 5,
+      "file": "Negative Bureaucratic March.mp3",
+      "title": "Negative Bureaucratic March",
+      "source_url": "https://suno.com/song/bf5770ab-4ebd-4a64-b334-49e15b1ada8c",
+      "original_title": "Bureaucratic March",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "cb4b156c1e65d89c88352f8f15c6e4a5c13c36a59b367dd7eb0da4019db66b63",
+      "audio_sha256": "1e35d122e1d7422fabb3811b3de053883826040b0979b3b2da8b653f8fd95b04"
+    },
+    {
+      "number": 6,
+      "file": "New Bureaucratic March 1.mp3",
+      "title": "New Bureaucratic March 1",
+      "source_url": "https://suno.com/song/861e58ef-6f0c-4aad-9df1-afe556bb344c",
+      "original_title": "Bureaucratic March",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "53ac67a56f9da7778fa59050880e37530479ce4cbe1a51a36fa101a7241a0db9",
+      "audio_sha256": "260225ea1468fe66ca6afed496c8420d3b8067b3d0f993bed4e6de52e1eff947"
+    },
+    {
+      "number": 7,
+      "file": "New Bureaucratic March 2.mp3",
+      "title": "New Bureaucratic March 2",
+      "source_url": "https://suno.com/song/a79c20b5-b3cd-486a-af5a-481a953fd85f",
+      "original_title": "Bureaucratic March",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "badf0bc5ad0bb4249d8d23ca775625c65c3904a0d1ba9cdc0e8fcc7eb563a83c",
+      "audio_sha256": "54e42d053cc6119a842c327f534cc01bd14e851867c88522fe110d98ae8c926d"
+    },
+    {
+      "number": 8,
+      "file": "Officious March.mp3",
+      "title": "Officious March",
+      "source_url": "https://suno.com/song/b63798db-9f4a-432d-8f94-5d5cdb38708a",
+      "original_title": "Officious March",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "0e783320d0c02b7bd71455c20c5d263908b660d1085ad4405513784638765bf5",
+      "audio_sha256": "7e65937b79ec5638f6fc0ead10fad46dfd96c2c54fdd1847c048ce8f77289030"
+    },
+    {
+      "number": 9,
+      "file": "Square Stomp.mp3",
+      "title": "Square Stomp",
+      "source_url": "https://suno.com/song/529ed325-0a23-4732-9e5f-8cdf9a947c9e",
+      "original_title": "Square Stomp",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "be54d891e37111a751256a2eae2446a8c82ce2665f493e4402515507f1df0977",
+      "audio_sha256": "17c7e2844e943b565058b90c088ee950a0ecefcc321a463ab565516bf7d4f761"
+    },
+    {
+      "number": 10,
+      "file": "Bureaucratic Efficiency.mp3",
+      "title": "Bureaucratic Efficiency",
+      "source_url": "https://suno.com/song/a2cf9863-c062-476d-888c-fe100d24021a",
+      "original_title": "Bureaucratic Efficiency",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "e25d403a440f98b7462b3b8138390139910342dcebab6680ea584a9215a9a319",
+      "audio_sha256": "ace9d1f14f03fa8cd30957ee55e374f008a335625b56fe51296333f88ccf43e7"
+    },
+    {
+      "number": 11,
+      "file": "Bureaucratic Loop.mp3",
+      "title": "Bureaucratic Loop",
+      "source_url": "https://suno.com/song/b636fc04-5c0d-4db7-9f7c-7b40079badeb",
+      "original_title": "Bureaucratic Loop",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "3a74c7ff4124571c6a7fb9596e7a5a1eea64f749ba84640e5c74e03685c9fd11",
+      "audio_sha256": "c8436a3c12f3e7b03df3dcb6eda238e68bd2c79215fb0dad413c808e924e9ca0"
+    },
+    {
+      "number": 12,
+      "file": "Bureaucratic Pulse.mp3",
+      "title": "Bureaucratic Pulse",
+      "source_url": "https://suno.com/song/d27cc3dc-84a5-4a93-abf3-cc4b9b1b6ea9",
+      "original_title": "Bureaucratic Pulse",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "7c70dd7d929b3bac349f4aa5819ac633d4ae1f6e971d9cf1c362ed6ea8fcf798",
+      "audio_sha256": "c045dd6263193124d99bb65304c88dbca877b00e70d8ba073b6cc03dd1913e09"
+    },
+    {
+      "number": 13,
+      "file": "Bureaucratic March 4.mp3",
+      "title": "Bureaucratic March 4",
+      "source_url": "https://suno.com/song/30678a56-8531-418e-96d4-4aeffbdfbbe0",
+      "original_title": "Bureaucratic March",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "feadeebbf3810af4db0f4174e76f1664953a01d82e7267a52eb8f62304a72571",
+      "audio_sha256": "d92951db00922f50ee655fe53e50f5162f8ee24175d19127be44f70ce23ac9ab"
+    },
+    {
+      "number": 14,
+      "file": "Bureaucratic Pulse 2.mp3",
+      "title": "Bureaucratic Pulse 2",
+      "source_url": "https://suno.com/song/e4f7cc83-47a2-4003-87b2-9f974224c48c",
+      "original_title": "Bureaucratic Pulse",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "0536e6de282c6ccb3275e77afb8f3a6981f9a15116e028142b17abc7d62c14ec",
+      "audio_sha256": "9ba1bf7b6ea10580170bbbad0274ef091290ad43493366eadc393da947ce05b9"
+    },
+    {
+      "number": 15,
+      "file": "File 42.mp3",
+      "title": "File 42",
+      "source_url": "https://suno.com/song/8058523c-ec77-44e1-bc35-1d569fddd5e8",
+      "original_title": "File 42",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "c4d73bace8be274ee14c9268223abde569d24363468225bb707a1f0498f741db",
+      "audio_sha256": "6fbfd195499865bf7bf42d84607678a25d31d87089082be632d7f8aa13c1a1c8"
+    },
+    {
+      "number": 16,
+      "file": "Menu Loop.mp3",
+      "title": "Menu Loop",
+      "source_url": "https://suno.com/song/ad6be1b8-aa39-4faf-8404-632ff6848b79",
+      "original_title": "Menu Loop",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "ad164ec49ebba44c418466e49967c61342769a14197179a851d1986851e0926b",
+      "audio_sha256": "1df7803cc0461f48189ac487a51f8aaeec371e91baea3b12933d390549564599"
+    },
+    {
+      "number": 17,
+      "file": "Untitled.mp3",
+      "title": "Untitled",
+      "source_url": "https://suno.com/song/bb5988ce-cb7d-4d67-9e36-cfdef4d695c9",
+      "original_title": "Untitled",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "9e5616b4fad5014358e94679748b6923a639c64595403f08eb99f0972efb7cc6",
+      "audio_sha256": "b2bc424a1d33fd39278c9425749b0b7288dd52ad2921e463e9f4946d2f84eb5c"
+    },
+    {
+      "number": 18,
+      "file": "Wissenschaftlicher Optimismus - EOD.mp3",
+      "title": "Wissenschaftlicher Optimismus",
+      "source_url": "https://suno.com/song/acc7f7ea-bb7c-4d21-8f7c-9e11ba8c78c5",
+      "original_title": "Wissenschaftlicher Optimismus",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "52899a6ca78d248f921c16e29f4ccc982abfeaaa5a5ca98a285d8fa4ec088e8b",
+      "audio_sha256": "cc9abe1a22d27d684c162e595e8e974d272f9450c9bc9b65b24cd997b8e3f464"
+    },
+    {
+      "number": 19,
+      "file": "Game Over.mp3",
+      "title": "Game Over",
+      "source_url": "https://suno.com/song/9b19861b-f0d8-497c-a22e-71c6dc5e9d6d",
+      "original_title": "Game Over",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "a759d1713dabdfbd621b26736c12d0f03abad6834f84c75fc5bb1e167cfe46c4",
+      "audio_sha256": "441e241df98c94e132454c9b4465d2b237804bf87345c6d49a8851de8a57bc00"
+    },
+    {
+      "number": 20,
+      "file": "Victory Fanfare - SUCCESS.mp3",
+      "title": "Victory Fanfare",
+      "source_url": "https://suno.com/song/8dce7b12-c5cb-4845-86ae-4986ff55a747",
+      "original_title": "Victory Fanfare",
+      "original_artist": "otherworldlyaria442",
+      "original_file_sha256": "7270008b22c0c787af554ba83e7e24cd4cc22fc14208e6a12157ea35c3071568",
+      "audio_sha256": "9300158de37d87625ac7e3cc78cae62718250d73d89b3fc87d040f0e93996e03"
+    }
+  ]
+}

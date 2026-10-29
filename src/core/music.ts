@@ -27,8 +27,8 @@ export const endDayPlaylist: readonly string[] = [endDayMusic];
 /** Terminal failures have their own cue, outside work and ordinary settlement. */
 export const gameOverMusic = 'game-over';
 export const gameOverPlaylist: readonly string[] = [gameOverMusic];
-/** Both filenames contain the same success cue; neither plays until success scenes exist. */
-export const reservedMusicFiles = ['Victory Fanfare - SUCCESS.mp3', 'Victory Fanfare.mp3'] as const;
+/** The success cue stays reserved until success scenes exist. */
+export const reservedMusicFiles = ['Victory Fanfare - SUCCESS.mp3'] as const;
 
 export const musicPlaylist = tracks.map(([id]) => id);
 export const musicManifest: AudioManifest = Object.fromEntries([

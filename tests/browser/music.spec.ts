@@ -5,7 +5,7 @@ import { applyAction, createInitialState } from '../../src/core/game';
 import { encodeSave } from '../../src/core/save';
 
 const trackFiles = readdirSync(new URL('../../public/assets/audio/music/', import.meta.url))
-  .filter(file => file.endsWith('.mp3') && !file.endsWith(' - EOD.mp3') && !file.endsWith(' - SUCCESS.mp3') && file !== 'Victory Fanfare.mp3' && file !== 'Game Over.mp3').sort();
+  .filter(file => file.endsWith('.mp3') && !file.endsWith(' - EOD.mp3') && !file.endsWith(' - SUCCESS.mp3') && file !== 'Game Over.mp3').sort();
 
 // Inspect the actual Howler/Web Audio playback in the built app; no test-only
 // hooks or mocked audio are installed in production code.
