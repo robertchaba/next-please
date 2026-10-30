@@ -66,6 +66,9 @@ def main():
         raise ValueError("Track numbers must be consecutive")
     if len({track["file"] for track in tracks}) != len(tracks):
         raise ValueError("Duplicate filename in soundtrack manifest")
+    titles = [track["title"].strip().casefold() for track in tracks]
+    if not all(titles) or len(set(titles)) != len(tracks):
+        raise ValueError("Soundtrack titles must be nonempty and distinct")
     if {path.name for path in MUSIC.glob("*.mp3")} != {track["file"] for track in tracks}:
         raise ValueError("MP3 files differ from the soundtrack manifest")
 

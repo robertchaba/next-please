@@ -2,31 +2,31 @@
 
 The application repeats these seventeen tracks in order on the title screen, introduction, cabinet and clinic panels. Ordinary home/day settlement and unsuccessful game endings each use their own recording, listed below. Moving between ordinary clinic screens preserves playback; entering or leaving home, or reaching a terminal failure, changes the active playlist.
 
-| File / title | Supplied by | Generation source |
-| --- | --- | --- |
-| `Bureaucratic March 1.mp3` | Robert Chaba | Previously credited as AI-generated with Suno; filename updated |
-| `Bureaucratic March 2.mp3` | Robert Chaba | Previously credited as AI-generated with Suno; filename updated |
-| `Bureaucratic March 3.mp3` | Robert Chaba | Previously credited as AI-generated with Suno; filename updated |
-| `Happy Bureaucratic Anthem.mp3` | User-provided project file | Suno identified by embedded metadata; source URL in the album manifest |
-| `Negative Bureaucratic March.mp3` | User-provided project file | Suno identified by embedded metadata; source URL in the album manifest |
-| `New Bureaucratic March 1.mp3` | User-provided project file | Suno identified by embedded metadata; source URL in the album manifest |
-| `New Bureaucratic March 2.mp3` | User-provided project file | Suno identified by embedded metadata; source URL in the album manifest |
-| `Officious March.mp3` | Robert Chaba | AI-generated with Suno |
-| `Square Stomp.mp3` | User-provided project file | Suno identified by embedded metadata; source URL in the album manifest |
-| `Bureaucratic Efficiency.mp3` | Pre-existing user workspace file | Suno identified by embedded metadata; source URL in the album manifest |
-| `Bureaucratic Loop.mp3` | Pre-existing user workspace file | Suno identified by embedded metadata; source URL in the album manifest |
-| `Bureaucratic Pulse.mp3` | Pre-existing user workspace file | Suno identified by embedded metadata; source URL in the album manifest |
-| `Bureaucratic March 4.mp3` | User-provided project file, registered 2026-10-25 | Suno identified by embedded metadata; source URL in the album manifest |
-| `Bureaucratic Pulse 2.mp3` | User-provided project file, registered 2026-10-25 | Suno identified by embedded metadata; source URL in the album manifest |
-| `File 42.mp3` | User-provided project file, registered 2026-10-25 | Suno identified by embedded metadata; source URL in the album manifest |
-| `Menu Loop.mp3` | User-provided project file, registered 2026-10-25 | Suno identified by embedded metadata; source URL in the album manifest |
-| `Untitled.mp3` | Pre-existing user workspace file | Suno identified by embedded metadata; source URL in the album manifest |
+| File | Embedded title | Supplied by | Generation source |
+| --- | --- | --- | --- |
+| `Bureaucratic March 1.mp3` | Bureaucratic March: Opening the Office | Robert Chaba | Previously credited as AI-generated with Suno; filename updated |
+| `Bureaucratic March 2.mp3` | Bureaucratic March: The Waiting Room | Robert Chaba | Previously credited as AI-generated with Suno; filename updated |
+| `Bureaucratic March 3.mp3` | Bureaucratic March: In Triplicate | Robert Chaba | Previously credited as AI-generated with Suno; filename updated |
+| `Happy Bureaucratic Anthem.mp3` | Happy Bureaucratic Anthem: Everything in Order | User-provided project file | Suno identified by embedded metadata; source URL in the album manifest |
+| `Negative Bureaucratic March.mp3` | Negative Bureaucratic March: Application Denied | User-provided project file | Suno identified by embedded metadata; source URL in the album manifest |
+| `New Bureaucratic March 1.mp3` | New Bureaucratic March: Revised Procedure | User-provided project file | Suno identified by embedded metadata; source URL in the album manifest |
+| `New Bureaucratic March 2.mp3` | New Bureaucratic March: Further Instructions | User-provided project file | Suno identified by embedded metadata; source URL in the album manifest |
+| `Officious March.mp3` | Officious March: By the Book | Robert Chaba | AI-generated with Suno |
+| `Square Stomp.mp3` | Square Stomp: Corridor Footsteps | User-provided project file | Suno identified by embedded metadata; source URL in the album manifest |
+| `Bureaucratic Efficiency.mp3` | Bureaucratic Efficiency: Stamp and File | Pre-existing user workspace file | Suno identified by embedded metadata; source URL in the album manifest |
+| `Bureaucratic Loop.mp3` | Bureaucratic Loop: Please Wait | Pre-existing user workspace file | Suno identified by embedded metadata; source URL in the album manifest |
+| `Bureaucratic Pulse.mp3` | Bureaucratic Pulse: Office Hours | Pre-existing user workspace file | Suno identified by embedded metadata; source URL in the album manifest |
+| `Bureaucratic March 4.mp3` | Bureaucratic March: The Paper Trail | User-provided project file, registered 2026-10-25 | Suno identified by embedded metadata; source URL in the album manifest |
+| `Bureaucratic Pulse 2.mp3` | Bureaucratic Pulse: Under Pressure | User-provided project file, registered 2026-10-25 | Suno identified by embedded metadata; source URL in the album manifest |
+| `File 42.mp3` | File 42: Pending Review | User-provided project file, registered 2026-10-25 | Suno identified by embedded metadata; source URL in the album manifest |
+| `Menu Loop.mp3` | Menu Loop: Before the Bell | User-provided project file, registered 2026-10-25 | Suno identified by embedded metadata; source URL in the album manifest |
+| `Untitled.mp3` | Untitled: A Note in the Margin | Pre-existing user workspace file | Suno identified by embedded metadata; source URL in the album manifest |
 
-| Special file / title | Use | Provenance |
-| --- | --- | --- |
-| `Wissenschaftlicher Optimismus - EOD.mp3` | Repeats only at home during day settlement; excluded from the ordinary playlist and its previous/next navigation | User-provided project file, registered 2026-10-25; Suno identified by embedded metadata; source URL in the album manifest |
-| `Game Over.mp3` | Repeats only for the terminal bankruptcy and hospital endings; excluded from ordinary work, ordinary settlement, and their previous/next navigation. A pending assault still uses work music until the ending occurs | User-provided project file, registered 2026-10-27; source identified as Suno by embedded metadata; redistribution terms pending confirmation; audio unchanged |
-| `Victory Fanfare - SUCCESS.mp3` | Reserved for future success scenes; deliberately unregistered and never selected for playback | User-provided project file, noted 2026-10-25; Suno identified by embedded metadata; source URL in the album manifest |
+| Special file | Embedded title | Use | Provenance |
+| --- | --- | --- | --- |
+| `Wissenschaftlicher Optimismus - EOD.mp3` | Wissenschaftlicher Optimismus: Feierabend | Repeats only at home during day settlement; excluded from the ordinary playlist and its previous/next navigation | User-provided project file, registered 2026-10-25; Suno identified by embedded metadata; source URL in the album manifest |
+| `Game Over.mp3` | Game Over: The Final Stamp | Repeats only for the terminal bankruptcy and hospital endings; excluded from ordinary work, ordinary settlement, and their previous/next navigation. A pending assault still uses work music until the ending occurs | User-provided project file, registered 2026-10-27; source identified as Suno by embedded metadata; redistribution terms pending confirmation; audio unchanged |
+| `Victory Fanfare - SUCCESS.mp3` | Victory Fanfare: All Clear | Reserved for future success scenes; deliberately unregistered and never selected for playback | User-provided project file, noted 2026-10-25; Suno identified by embedded metadata; source URL in the album manifest |
 
 The older `Victory Fanfare.mp3` alias was removed at the user’s request on 2026-10-29 after confirming it was byte-identical to `Victory Fanfare - SUCCESS.mp3` (original size 876,832 bytes; SHA-1 `f3cbd5155fee3660ddec79cf40e90efdf7666f58`). The retained success cue stays reserved and unregistered. The folder now contains twenty distinct recordings.
 
@@ -38,7 +38,7 @@ The manifest, ordinary, end-of-day and game-over playlists, state-based playlist
 
 ## Album metadata
 
-Updated on 2026-10-29 at the user’s request. Artist and album artist are **Robert Chaba**, explicitly confirmed by the user. Album: **Next, Please! (Original Game Soundtrack)**. Genre: **Soundtrack**. Recording year: **2026**, matching the original generation timestamps; no release date or composer credit is inferred. Disc: **1/1**. Track tags run from **1/20** through **20/20**: the seventeen ordinary recordings in the existing playlist order, then the home, game-over and reserved success cues. Display titles distinguish the numbered marches and pulses; the technical ` - EOD` and ` - SUCCESS` filename suffixes are omitted from title tags. Playback filenames and playlist order are preserved, apart from removing the duplicate.
+Updated on 2026-10-29 at the user’s request. Artist and album artist are **Robert Chaba**, explicitly confirmed by the user. Album: **Next, Please! (Original Game Soundtrack)**. Genre: **Soundtrack**. Recording year: **2026**, matching the original generation timestamps; no release date or composer credit is inferred. Disc: **1/1**. Track tags run from **1/20** through **20/20**: the seventeen ordinary recordings in the existing playlist order, then the home, game-over and reserved success cues. On 2026-10-30, every embedded title received a distinct clinic-themed subtitle while retaining its original title wording, as listed above. Numbered marches and pulses now have descriptive names; the technical ` - EOD` and ` - SUCCESS` filename suffixes remain absent from title tags. Only the title (`TIT2`) frames changed in this revision: artist, album artist, album, track numbers, cover and every other metadata frame were compared before and after and preserved, along with the exact audio payloads. Playback filenames, track IDs, registration, playlist order and context selection are unchanged: seventeen ordinary tracks, dedicated home and game-over cues, and the reserved, unregistered victory cue.
 
 The [album manifest](../../../../docs/soundtrack-metadata.json) records every track number, display title, filename, source URL, original artist/title, original-file SHA-256 and unchanged-audio SHA-256. The original artist tag was `otherworldlyaria442`. Existing Suno URLs, generation comments, lyrics markers, encoder information, custom frames and embedded C2PA data are retained. Retaining C2PA bytes does not re-sign the edited files or assert that their original whole-file credentials still validate; original files remain available in the pre-edit backup and repository history. The artist URL is [Robert Chaba’s GitHub profile](https://github.com/robertchaba).
 
@@ -53,6 +53,6 @@ python3 -m venv /tmp/next-please-metadata-venv
 /tmp/next-please-metadata-venv/bin/python scripts/tag-soundtrack.py --check
 ```
 
-Mutagen is an offline preparation dependency only; nothing was added to the application’s dependencies or runtime. Tags remain ID3v2.4 with UTF-8 text; obsolete ID3v1 tags are removed to avoid conflicting fields. The script checks the manifest and original audio hashes before writing, stages each edit, verifies its tags, exact cover and preserved source frames, and replaces the source only after those checks pass. It never decodes or re-encodes audio. Keep original masters outside the deployed assets folder.
+Mutagen is an offline preparation dependency only; nothing was added to the application’s dependencies or runtime. Tags remain ID3v2.4 with UTF-8 text; obsolete ID3v1 tags are removed to avoid conflicting fields. The script checks the manifest (including nonempty, case-insensitively unique titles) and original audio hashes before writing, stages each edit, verifies its tags, exact cover and preserved source frames, and replaces the source only after those checks pass. It never decodes or re-encodes audio. Keep original masters outside the deployed assets folder.
 
 Audio starts muted. Click the speaker button to enable it. The previous/next buttons beside it select adjacent tracks within the current context, wrap at either end, and preserve mute. Before the first playback, they select a starting track without downloading audio. All three buttons work with Tab and Enter/Space and have Polish and English labels. The small volume slider remembers its setting independently of mute and supports dragging, arrow keys, and Home/End. Three tiny bars beside the speaker respond during audible playback and stay static with reduced motion. When an unmuted preference is saved, the first click or key press after loading starts the active playlist. The ordinary playlist repeats after seventeen tracks. The speaker toggle does not restart a track. Context changes cancel pending loads so a home or ending recording cannot start after returning to work or restarting. Loading a terminal save selects the game-over context while preserving mute and gesture unlocking. See the [audio notes](../README.md).
