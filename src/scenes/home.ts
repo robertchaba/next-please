@@ -3,6 +3,7 @@ import { isWeekend } from '../core/calendar';
 import { translations, type Locale } from '../i18n';
 import { drawHomeIllustration, type HomeIllustration } from '../render/clinic';
 import { drawText, measureText } from '../render/font';
+import { ordinaryWeekendIllustration, weekendTripIllustration } from './weekend';
 
 export const HOME_ACTION = { x: 23, y: 272, w: 318, h: 30 } as const;
 export const HOME_AMOUNT_RIGHT = 319;
@@ -73,13 +74,19 @@ export function homePage(state: GameState, locale: Locale, page: number) {
   const variant = (lines: readonly string[], offset: number): string => lines[((state.rngState >>> 8) + state.day + offset) % lines.length]!;
   const result = s ? s.closingBalance - openingBalance : 0;
   const budgetComments = result > 0 ? h.budgetComments.profit : result < 0 ? h.budgetComments.loss : h.budgetComments.even;
-  const comment = kind === 'arrival' ? (modest ? h.modestRest : rest ? event ? h.eventComments[event] : h.rest : variant(h.arrivalComments, 0))
+  let comment = kind === 'arrival' ? (modest ? h.modestRest : rest ? event ? h.eventComments[event] : h.rest : variant(h.arrivalComments, 0))
     : kind === 'event' && event ? h.eventComments[event]
     : kind === 'work' ? variant(h.workComments, 5) : variant(budgetComments, 9);
   const illustration: HomeIllustration = kind === 'work' ? 'going-to-work'
-    : (kind === 'event' || (rest && kind === 'arrival' && !modest)) && event === 'mountain-trip' ? 'mountain-resort'
-    : (kind === 'event' || (rest && kind === 'arrival' && !modest)) && event === 'seaside-trip' ? 'seaside-resort'
-    : modest && kind === 'arrival' ? 'weekend-modest' : rest ? 'weekend-budget' : kind === 'arrival' ? 'homecoming' : 'home-evening';
+    : (kind === 'event' || (rest && kind === 'arrival' && !modest)) && (event === 'mountain-trip' || event === 'seaside-trip') ? weekendTripIllustration(state.day, event)
+    : modest && kind === 'arrival' ? 'weekend-modest'
+    : rest && kind === 'arrival' && !event ? ordinaryWeekendIllustration(state.day, state.rngState)
+    : rest ? 'weekend-budget' : kind === 'arrival' ? 'homecoming' : 'home-evening';
+  if (illustration in h.weekendComments) {
+    const comments = h.weekendComments[illustration as keyof typeof h.weekendComments];
+    // Separate saved bits from the scene choice so both captions remain reachable.
+    comment = comments[((state.rngState >>> 16) + state.day) % comments.length]!;
+  }
   const bodyScale = kind === 'budget' ? 1 : 2;
   const body = homeLines(comment, bodyScale).join('\n');
   const next = pages[page + 1];

@@ -75,7 +75,11 @@ export function settleDay(input: {
   let event: DaySettlement['event'] = null;
   if (random.value < expenseProbability(available)) {
     random = randomStep(random.seed);
-    const kinds: ExpenseKind[] = input.restDay
+    // Sunday's previous ledger also survives importing a Saturday save.
+    // Once that Saturday contains a trip, only ordinary extra expenses remain.
+    const saturdayTrip = gameDate(input.day).weekday === 0 && input.settlement?.day === input.day - 1
+      && (input.settlement.event?.kind === 'mountain-trip' || input.settlement.event?.kind === 'seaside-trip');
+    const kinds: ExpenseKind[] = input.restDay && !saturdayTrip
       ? ['medicine', 'car-repair', 'home-repair', 'fur-coat', 'mountain-trip', 'seaside-trip']
       : ['medicine', 'car-repair', 'home-repair', 'fur-coat'];
     const kind = kinds[Math.floor(random.value * kinds.length)]!;

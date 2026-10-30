@@ -70,8 +70,8 @@ describe('localized home sequence', () => {
       expect(content.body).not.toContain('999');
       expect(homePage(state, 'pl', 1)).toEqual(content);
       expect(state).toEqual(before);
-      if (kind === 'mountain-trip') expect(content.illustration).toBe('mountain-resort');
-      if (kind === 'seaside-trip') expect(content.illustration).toBe('seaside-resort');
+      if (kind === 'mountain-trip') expect(content.illustration).toBe('weekend-mountain-resort');
+      if (kind === 'seaside-trip') expect(content.illustration).toBe('weekend-seaside-resort');
     }
   });
 
@@ -118,7 +118,7 @@ describe('localized home sequence', () => {
     }
     // Fix the weekend's own random draw, independently of the patient roster size.
     const comfortable = applyAction({ ...homeState(2, 5000), rngState: 34 }, 'next-day').state;
-    expect(homePage(comfortable, 'pl', 0).illustration).toBe('seaside-resort');
+    expect(homePage(comfortable, 'pl', 0).illustration).toBe('weekend-seaside-resort');
     expect(homePage(homeState(2, 200), 'pl', 0).illustration).toBe('homecoming');
     expect(homePage(sunday, 'pl', homePages(sunday).indexOf('work')).illustration).toBe('going-to-work');
   });

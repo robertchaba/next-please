@@ -11,8 +11,10 @@ The complete, exact prompt set is retained in [`public/assets/art/daily-scenes-s
 | Return home | `daily-scenes-source/homecoming.png` | `public/assets/art/homecoming.png` |
 | Journey to work | `daily-scenes-source/going-to-work.png` | `public/assets/art/going-to-work.png` |
 | Weekend household budget | `daily-scenes-source/weekend-budget.png` | `public/assets/art/weekend-budget.png` |
-| Mountain resort | `daily-scenes-source/mountain-resort.png` | `public/assets/art/mountain-resort.png` |
-| Seaside resort | `daily-scenes-source/seaside-resort.png` | `public/assets/art/seaside-resort.png` |
+| Mountain resort | `daily-scenes-source/mountain-resort.png` | `public/assets/art/weekend-mountain-resort.png` |
+| Seaside resort | `daily-scenes-source/seaside-resort.png` | `public/assets/art/weekend-seaside-resort.png` |
+
+The mountain and seaside runtime files were renamed with the `weekend-` prefix on 30 October 2026. Original source filenames and generation prompts remain unchanged; the preparation recipe maps them to the current runtime names.
 
 Source paths in the table are relative to `public/assets/art/`. The original evening room remains unchanged and supplies the weekday budget and ordinary expense cards. Generated scenes contain no localized writing, place names, dates, country identifiers or user-interface drawings. They do not establish household relationships or a named resort.
 

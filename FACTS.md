@@ -60,7 +60,8 @@
 - After work, the doctor goes home, may encounter a special event, and reviews a brief household budget before going to work again.
 - The household budget shows base income, patient bonus, net bribe income, money from the previous day, living costs, fines, insurance, any additional expenses and the closing balance, without detailed explanations. Expenses appear in red with a minus sign. Accepted bribes remain as banknotes on the desk or in the drawer after the patient leaves. They can be moved between those places and become income once at the end of the day; returned money reduces bribe income.
 - Friday, Saturday and Sunday share one illustrated weekend scene with an appropriate comment, followed by one budget summary before Monday. It combines income and expenses from all three days and shows the balance from before the weekend.
-- Weekend domestic scenes may differ. A special event may be a trip to an unnamed mountain or seaside resort.
+- Weekend domestic scenes may differ. A special event may be a trip to an unnamed mountain or seaside resort. At most one such trip can occur during a weekend; other unexpected expenses may still occur.
+- Weekend scenery and comments follow the current season in the game. A sunny golden-leaf park walk belongs to autumn and does not appear in December; winter seaside trips have winter scenery.
 - The daily wage is 1000 zł, plus 50 zł for every completed appointment.
 - Ordinary daily living costs apply from the first day and are randomly selected from 400–800 zł. Insurance starts at 300 zł, with penalties and additional expenses accounted for separately.
 - Across Friday, Saturday and Sunday, insurance is charged once, in Friday's settlement. Saturday and Sunday pay no wages or patient bonus and charge no further insurance. The insurance rate still falls on days without a new increase.

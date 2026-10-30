@@ -1,5 +1,7 @@
 # Modest weekend scene
 
+Caption update, 30 October 2026: the unchanged illustration now uses “Ziemniak, chleb i herbata. Trzy dania. Trzeba tylko jeść osobno.” / “Potato, bread and tea. Three courses. Just eat them separately.” The previous comment quoted below is retained as a production record. See the [current weekend catalog](art-weekends-seasonal-2026-10-30.md).
+
 Created on 26 October 2026 with the built-in `image_gen` tool using the imagegen skill. This is a new original project illustration; the existing `weekend-budget.png` was inspected as a style and composition reference. No stock imagery, copied game assets, API/CLI generation fallback or additional third-party license was used. The country remains unspecified.
 
 - Exact prompt: [weekend-modest.txt](art-prompts/weekend-modest.txt).
