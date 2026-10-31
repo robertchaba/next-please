@@ -19,8 +19,43 @@ async function load(page: Page, state: GameState) {
 }
 
 for (const locale of ['pl', 'en'] as const) {
+  test(`first newspaper arrives on the second working day after saving and loading in ${locale}`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.clock.install();
+    await page.goto('/');
+    await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
+    await key(page, 'start');
+    for (let i = 0; i < 4; i++) await key(page, 'intro-next');
+    await page.clock.pauseAt(new Date(Date.now() + 1000));
+    await key(page, `language-${locale}`);
+    await expect(page.locator('[id^="control-newspaper"]')).toHaveCount(0);
+    await key(page, 'use-phone');
+    await expect(page.locator('#announcement')).toContainText(translations[locale].feedback['phone-ready']);
+    const first = await exportNewspaperState(page);
+    expect(first.day).toBe(1);
+    expect(first.newspaperCopies).toEqual([]);
+    await load(page, first);
+    await expect(page.locator('[id^="control-newspaper"]')).toHaveCount(0);
+    for (const drawer of ['drawer', 'drawer-2']) {
+      await key(page, drawer);
+      await expect(page.locator('[id^="control-drawer-newspaper-"]')).toHaveCount(0);
+      await page.keyboard.press('Escape');
+    }
+    await load(page, { ...first, money: 10000, clockMinutes: 840 });
+    await key(page, 'end-day');
+    for (let i = 0; i < 6 && await page.locator('#controls').getAttribute('data-screen') !== 'cabinet'; i++) await key(page, 'home-next');
+    await expect(page.locator('#control-newspaper')).toBeVisible();
+    await key(page, 'newspaper');
+    await expect(page.locator('#screen-description')).toContainText(locale === 'pl' ? '04.11.1983' : '04/11/1983');
+    const second = await exportNewspaperState(page);
+    expect(second.newspaperCopies.map(copy => copy.day)).toEqual([2]);
+    expect(second.newspaper).toEqual(first.newspaper);
+    await load(page, second);
+    await expect(page.locator('#control-newspaper')).toBeVisible();
+  });
+
   test(`newspaper stack exposes dated edges, paginates and retrieves the chosen issue in ${locale}`, async ({ page }, info) => {
-    let state = applyAction({ ...createInitialState(120), money: 100000 }, 'skip-intro').state;
+    let state = { ...morning(), money: 100000 };
     for (let index = 0; index < DRAWER_NEWSPAPER_BATCH_SIZE + 4; index++) {
       if (index) {
         state = applyAction({ ...state, clockMinutes: 840 }, 'end-day').state;
@@ -43,7 +78,7 @@ for (const locale of ['pl', 'en'] as const) {
     const copies = state.newspaperCopies.filter(copy => copy.location === 'drawer-2');
     const edges = page.locator('[id^="control-drawer-newspaper-"]');
     await expect(edges).toHaveCount(DRAWER_NEWSPAPER_BATCH_SIZE);
-    await expect(page.locator('#control-drawer-newspaper-1')).toHaveCount(0);
+    await expect(page.locator('#control-drawer-newspaper-2')).toHaveCount(0);
     const selected = copies[3]!;
     const edge = page.locator(`#control-drawer-newspaper-${selected.day}`);
     await edge.hover();
@@ -183,52 +218,54 @@ for (const locale of ['pl', 'en'] as const) {
     for (let i = 0; i < 4; i++) await key(page, 'intro-next');
     await page.clock.pauseAt(new Date(Date.now() + 1000));
     await key(page, `language-${locale}`);
-    await load(page, morning());
+    let state = applyAction({ ...morning(), clockMinutes: 840 }, 'end-day').state;
+    do { state = applyAction(state, 'next-day').state; } while (state.phase === 'home');
+    await load(page, state);
     const stage = (await page.locator('#stage').boundingBox())!;
     const click = async (x: number, y: number) => page.mouse.click(stage.x + x * stage.width / 570, stage.y + y * stage.height / 320);
     const pickup = async (id: string) => { await page.locator(`#control-${id}`).focus(); await page.keyboard.press('Space'); };
     // Use the enlarged drop zone, outside the closed drawer's ordinary hotspot.
     await pickup('newspaper'); await click(400, 285);
     await expect(page.locator('#control-newspaper')).toHaveCount(0);
-    await pickup('newspaper-1'); await key(page, 'drawer');
-    await expect(page.locator('#control-newspaper-1')).toHaveCount(0);
+    await pickup('newspaper-2'); await key(page, 'drawer');
+    await expect(page.locator('#control-newspaper-2')).toHaveCount(0);
     await key(page, 'drawer-2');
-    await expect(page.locator('#control-drawer-newspaper-2')).toHaveAccessibleName(new RegExp(locale === 'pl' ? 'Kurier 04.11.1983' : 'Courier 04/11/1983'));
-    await expect(page.locator('#control-drawer-newspaper-1')).toHaveCount(0);
+    await expect(page.locator('#control-drawer-newspaper-5')).toHaveAccessibleName(new RegExp(locale === 'pl' ? 'Kurier 07.11.1983' : 'Courier 07/11/1983'));
+    await expect(page.locator('#control-drawer-newspaper-2')).toHaveCount(0);
     await page.keyboard.press('Escape');
     const saved = await exportNewspaperState(page);
-    expect(saved.newspaperCopies.map(copy => [copy.day, copy.location])).toEqual([[1, 'drawer'], [2, 'drawer-2']]);
+    expect(saved.newspaperCopies.map(copy => [copy.day, copy.location])).toEqual([[2, 'drawer'], [5, 'drawer-2']]);
     await load(page, saved);
     await key(page, 'drawer');
-    await key(page, 'drawer-newspaper-1');
-    await expect(page.locator('#control-newspaper-1')).toHaveAttribute('data-held', 'true');
+    await key(page, 'drawer-newspaper-2');
+    await expect(page.locator('#control-newspaper-2')).toHaveAttribute('data-held', 'true');
     await click(366, 212);
-    await expect(page.locator('#screen-description')).toContainText(locale === 'pl' ? '03.11.1983' : '03/11/1983');
+    await expect(page.locator('#screen-description')).toContainText(locale === 'pl' ? '04.11.1983' : '04/11/1983');
     await expect(page.locator('#screen-description')).toContainText(translations[locale].newspaper.articles[saved.newspaperCopies[0]!.articleIds[0]!].body);
-    await key(page, 'newspaper-1-next');
-    await pickup('newspaper-1'); await key(page, 'drawer-2');
+    await key(page, 'newspaper-2-next');
+    await pickup('newspaper-2'); await key(page, 'drawer-2');
     await pickup('manual'); await key(page, 'drawer-2');
     await key(page, 'drawer-2');
     await expect(page.locator('[id^="control-drawer-newspaper-"]')).toHaveCount(2);
-    await page.locator('#control-drawer-newspaper-1').hover();
+    await page.locator('#control-drawer-newspaper-2').hover();
     await page.locator('#stage').screenshot({ path: info.outputPath(`newspaper-drawer-${locale}.png`) });
-    await key(page, 'drawer-newspaper-1');
+    await key(page, 'drawer-newspaper-2');
     // Discarding uses the generous basket target and does not reroll the edition.
     await click(560, 290);
     await expect(page.locator('#announcement')).toContainText(translations[locale].feedback['newspaper-trashed']);
-    await expect(page.locator('#control-newspaper-1')).toHaveCount(0);
+    await expect(page.locator('#control-newspaper-2')).toHaveCount(0);
     const discarded = await exportNewspaperState(page);
-    expect(discarded.newspaperCopies.map(copy => copy.day)).toEqual([2]);
+    expect(discarded.newspaperCopies.map(copy => copy.day)).toEqual([5]);
     expect(discarded.newspaper).toEqual(saved.newspaper);
     await load(page, { ...discarded, clockMinutes: 840 });
     await key(page, 'end-day');
     for (let i = 0; i < 6 && await page.locator('#controls').getAttribute('data-screen') !== 'cabinet'; i++) await key(page, 'home-next');
     await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
     await expect(page.locator('#control-newspaper')).toBeVisible();
-    await expect(page.locator('#control-newspaper-1')).toHaveCount(0);
+    await expect(page.locator('#control-newspaper-2')).toHaveCount(0);
     await key(page, 'drawer-2');
-    await expect(page.locator('#control-drawer-newspaper-2')).toBeVisible();
-    await expect(page.locator('#control-drawer-newspaper-1')).toHaveCount(0);
+    await expect(page.locator('#control-drawer-newspaper-5')).toBeVisible();
+    await expect(page.locator('#control-drawer-newspaper-2')).toHaveCount(0);
     expect(errors).toEqual([]);
   });
 }
@@ -245,8 +282,8 @@ async function exportNewspaperState(page: Page): Promise<GameState> {
   return state;
 }
 
-for (const locale of ['pl', 'en'] as const) for (const firstDay of [true, false]) {
-  test(`classifieds have stable pages, clickable numbers and random answers on the ${firstDay ? 'first' : 'later'} morning in ${locale}`, async ({ page }, info) => {
+for (const locale of ['pl', 'en'] as const) for (const firstIssue of [true, false]) {
+  test(`classifieds have stable pages, clickable numbers and random answers on the ${firstIssue ? 'second' : 'later'} morning in ${locale}`, async ({ page }, info) => {
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -258,12 +295,13 @@ for (const locale of ['pl', 'en'] as const) for (const firstDay of [true, false]
     await page.clock.pauseAt(new Date(Date.now() + 1000));
     await key(page, `language-${locale}`);
     let state = morning();
-    if (firstDay) {
+    if (firstIssue) {
       for (let seed = 0; seed < 256; seed++) {
-        state = applyAction(createInitialState(seed), 'skip-intro').state;
+        state = applyAction({ ...createInitialState(seed), money: 10000 }, 'skip-intro').state;
+        state = applyAction(applyAction({ ...state, clockMinutes: 840 }, 'end-day').state, 'next-day').state;
         if (state.newspaper.classifiedIds.some(id => classifiedPhone(id))) break;
       }
-      expect(state.day).toBe(1);
+      expect(state.day).toBe(2);
       expect(state.visit).toBeNull();
     } else {
       do {
@@ -273,7 +311,7 @@ for (const locale of ['pl', 'en'] as const) for (const firstDay of [true, false]
     }
     expect(state.newspaper.classifiedIds.some(id => classifiedPhone(id))).toBe(true);
     await load(page, state);
-    const audible = firstDay && locale === 'pl';
+    const audible = firstIssue && locale === 'pl';
     if (audible) await key(page, 'sound');
     await key(page, 'use-phone');
     await expect(page.locator('#announcement')).toContainText(translations[locale].feedback['phone-ready']);

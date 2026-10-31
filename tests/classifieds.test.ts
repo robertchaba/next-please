@@ -65,7 +65,7 @@ describe('classified newspaper page', () => {
     }
   });
 
-  it('offers the exchange tone and calls printed numbers on the first morning without a patient', () => {
+  it('offers the exchange tone on day one and calls printed numbers after the first delivery on day two', () => {
     let initial = applyAction(createInitialState(0), 'skip-intro').state;
     for (let seed = 1; seed < 256 && !initial.newspaper.classifiedIds.some(id => classifiedPhone(id)); seed++) {
       initial = applyAction(createInitialState(seed), 'skip-intro').state;
@@ -77,16 +77,19 @@ describe('classified newspaper page', () => {
     expect(tone.feedback).toBe('phone-ready');
     expect(tone.state.clockMinutes).toBe(initial.clockMinutes + 1);
     expect(tone.state.rngState).toBe(initial.rngState);
-    const action = { type: 'call-classified', day: 1, classifiedId: id } as const;
-    const call = applyAction(tone.state, action);
+    expect(applyAction(tone.state, { type: 'call-classified', day: 1, classifiedId: id }).state).toBe(tone.state);
+    const second = next({ ...tone.state, money: 100000 });
+    expect(second.day).toBe(2);
+    const action = { type: 'call-classified', day: 2, classifiedId: id } as const;
+    const call = applyAction(second, action);
     expect(CLASSIFIED_CALL_RESULTS).toContain(call.feedback);
-    expect(call.state.clockMinutes).toBe(tone.state.clockMinutes + 3);
+    expect(call.state.clockMinutes).toBe(second.clockMinutes + 3);
     expect(call.state.visit).toBeNull();
     expect(call.state.newspaper).toBe(initial.newspaper);
     expect(call.state.papers).toBe(initial.papers);
-    expect(call.state.money).toBe(initial.money);
+    expect(call.state.money).toBe(second.money);
     expect(decodeSave(encodeSave(call.state))).toEqual(call.state);
-    expect(applyAction(decodeSave(encodeSave(tone.state)), action)).toEqual(call);
+    expect(applyAction(decodeSave(encodeSave(second)), action)).toEqual(call);
   });
 
   it('retains ads in old copies through both drawers, later issues and export', () => {

@@ -1610,10 +1610,10 @@ function migrateNewspaper(state: StateV31): StateV32 {
 function migrateNewspaperCopies(state: StateV32): StateV33 {
   let day = state.day;
   while (isWeekend(day)) day--;
-  return { ...state, newspaperCopies: [{ day, articleIds: [...state.newspaper.articleIds], location: 'desk' }] };
+  return { ...state, newspaperCopies: day === 1 ? [] : [{ day, articleIds: [...state.newspaper.articleIds], location: 'desk' }] };
 }
 
-function validateStateV33(value: unknown): StateV33 {
+function validateStateV33(value: unknown, allowUndeliveredIssue = false): StateV33 {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !Array.isArray(value.newspaperCopies) || value.newspaperCopies.length > GAME_LIMITS.papers) return fail();
   const { newspaperCopies: rawCopies, ...base } = value;
@@ -1630,7 +1630,8 @@ function validateStateV33(value: unknown): StateV33 {
     days.add(raw.day);
     return { day: raw.day, articleIds: [...raw.articleIds] as PressArticleId[], location: raw.location };
   });
-  if (state.phase === 'intro' && (newspaperCopies.length !== 1 || newspaperCopies[0]!.location !== 'desk'
+  const awaitingFirstDelivery = allowUndeliveredIssue && newspaperCopies.length === 0;
+  if (state.phase === 'intro' && !awaitingFirstDelivery && (newspaperCopies.length !== 1 || newspaperCopies[0]!.location !== 'desk'
     || JSON.stringify(newspaperCopies[0]!.articleIds) !== JSON.stringify(state.newspaper.articleIds))) return fail();
   return { ...state, newspaperCopies };
 }
@@ -1660,7 +1661,7 @@ function validateStateV34(value: unknown): LatestGameState {
     const { classifiedIds: _ids, ...copy } = raw;
     return copy;
   });
-  const state = validateStateV33({ ...value, newspaper, newspaperCopies });
+  const state = validateStateV33({ ...value, newspaper, newspaperCopies }, true);
   let publicationDay = state.day;
   while (isWeekend(publicationDay)) publicationDay--;
   const copies = state.newspaperCopies.map((copy, index) => {

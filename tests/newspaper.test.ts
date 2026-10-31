@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
 import { advanceClinicTime, applyAction, createInitialState, type GameState } from '../src/core/game';
-import { createNewspaper, nextNewspaper, PRESS_ARTICLES } from '../src/core/newspaper';
+import { createNewspaper, nextNewspaper, newspaperCopy, PRESS_ARTICLES } from '../src/core/newspaper';
 import { decodeSave, encodeSave } from '../src/core/save';
 import { NEWSPAPER_BODY_BOTTOM, NEWSPAPER_COLUMN_WIDTH, NEWSPAPER_TITLE_WIDTH, newspaperArticleLayout, newspaperDescription } from '../src/render/newspaper';
 import { measureText, measureDocumentText } from '../src/render/font';
@@ -12,6 +12,40 @@ const nextDay = (state: GameState) => applyAction(applyAction({ ...state, clockM
 const file = (state: unknown, version = 34) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-31T12:00:00.000Z', state })));
 
 describe('morning newspaper', () => {
+  it('delivers the first copy on 4 November, preserving the pending issue through saves', () => {
+    const intro = createInitialState(120);
+    expect(intro.newspaperCopies).toEqual([]);
+    expect(decodeSave(encodeSave(intro))).toEqual(intro);
+    const first = applyAction({ ...decodeSave(encodeSave(intro)), money: 100000 }, 'skip-intro').state;
+    expect(first.day).toBe(1);
+    expect(first.newspaperCopies).toEqual([]);
+    for (const type of ['store-newspaper', 'retrieve-newspaper', 'trash-newspaper'] as const) {
+      expect(applyAction(first, { type, day: 1 }).state).toBe(first);
+    }
+    const second = nextDay(decodeSave(encodeSave(first)));
+    expect(second.day).toBe(2);
+    expect(second.newspaper).toEqual(intro.newspaper);
+    expect(second.newspaperCopies).toEqual([newspaperCopy(intro.newspaper, 2)]);
+    expect(decodeSave(encodeSave(second))).toEqual(second);
+    let monday = nextDay(second);
+    while (monday.phase === 'home') monday = applyAction(monday, 'next-day').state;
+    expect(monday.newspaperCopies.map(copy => copy.day)).toEqual([2, 5]);
+    expect(monday.newspaper.articleIds.every(id => !second.newspaper.articleIds.includes(id))).toBe(true);
+  });
+
+  it('preserves explicitly saved legacy copies without inventing a first-day delivery on migration', () => {
+    const intro = createInitialState(120);
+    const legacy = { ...intro, newspaperCopies: [newspaperCopy(intro.newspaper, 1)] };
+    expect(decodeSave(encodeSave(legacy))).toEqual(legacy);
+    const second = nextDay(applyAction({ ...legacy, money: 100000 }, 'skip-intro').state);
+    expect(second.newspaperCopies.map(copy => copy.day)).toEqual([1, 2]);
+    expect(second.newspaper.articleIds.every(id => !intro.newspaper.articleIds.includes(id))).toBe(true);
+    const { newspaperCopies: _copies, newspaper: _newspaper, ...old } = intro;
+    const migrated = decodeSave(file(old, 31));
+    expect(migrated.newspaperCopies).toEqual([]);
+    expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
+  });
+
   it('arrives 14–21 minutes before eight from day two, including Monday; first day stays at 7:57', () => {
     const minutes = new Set<number>();
     for (let seed = 0; seed < 128; seed++) {

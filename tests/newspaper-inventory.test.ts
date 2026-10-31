@@ -7,7 +7,7 @@ import { DRAWER_NEWSPAPER_BATCH_SIZE, drawerButtons, drawerNewspapers, drawerShe
 import { dropTargetRect, DROP_ZONES } from '../src/core/desk';
 import { historicalState } from './fixtures/legacy-budget';
 
-const start = () => applyAction({ ...createInitialState(120), money: 100000 }, 'skip-intro').state;
+const start = () => next(applyAction({ ...createInitialState(120), money: 100000 }, 'skip-intro').state);
 function next(state: GameState): GameState {
   let result = applyAction({ ...state, clockMinutes: 840 }, 'end-day').state;
   do { result = applyAction(result, 'next-day').state; } while (result.phase === 'home');
@@ -19,18 +19,19 @@ describe('physical newspaper copies', () => {
   it('keeps dated editions across weekdays, weekends, both drawers and save imports', () => {
     let state = start();
     const original = structuredClone(state.newspaperCopies[0]!);
-    state = applyAction(state, { type: 'store-newspaper', day: 1, drawer: 'drawer-2' }).state;
-    expect(state.clockMinutes).toBe(478);
+    const arrival = state.clockMinutes;
+    state = applyAction(state, { type: 'store-newspaper', day: 2, drawer: 'drawer-2' }).state;
+    expect(state.clockMinutes).toBe(arrival + 1);
     state = next(next(state));
-    expect(state.day).toBe(5);
-    expect(state.newspaperCopies.map(copy => copy.day)).toEqual([1, 2, 5]);
+    expect(state.day).toBe(6);
+    expect(state.newspaperCopies.map(copy => copy.day)).toEqual([2, 5, 6]);
     expect(state.newspaperCopies[0]).toEqual({ ...original, location: 'drawer-2' });
     expect(decodeSave(encodeSave(state))).toEqual(state);
     const selection = structuredClone(state.newspaper);
     const before = state.clockMinutes;
-    expect(applyAction(state, { type: 'retrieve-newspaper', day: 1, drawer: 'drawer' }).state).toBe(state);
-    state = applyAction(state, { type: 'retrieve-newspaper', day: 1, drawer: 'drawer-2' }).state;
-    state = applyAction(state, { type: 'store-newspaper', day: 1, drawer: 'drawer' }).state;
+    expect(applyAction(state, { type: 'retrieve-newspaper', day: 2, drawer: 'drawer' }).state).toBe(state);
+    state = applyAction(state, { type: 'retrieve-newspaper', day: 2, drawer: 'drawer-2' }).state;
+    state = applyAction(state, { type: 'store-newspaper', day: 2, drawer: 'drawer' }).state;
     expect(state.clockMinutes).toBe(before + 2);
     expect(state.newspaperCopies[0]).toEqual({ ...original, location: 'drawer' });
     expect(state.newspaper).toEqual(selection);
@@ -41,17 +42,17 @@ describe('physical newspaper copies', () => {
     const selection = structuredClone(state.newspaper);
     const first = structuredClone(state.newspaperCopies[0]);
     const before = state.clockMinutes;
-    state = applyAction(state, { type: 'trash-newspaper', day: 2 }).state;
+    state = applyAction(state, { type: 'trash-newspaper', day: 5 }).state;
     expect(state.clockMinutes).toBe(before + 1);
     expect(state.newspaperCopies).toEqual([first]);
     expect(state.newspaper).toEqual(selection);
     expect(decodeSave(encodeSave(state))).toEqual(state);
-    expect(applyAction(state, { type: 'retrieve-newspaper', day: 2 }).state).toBe(state);
-    expect(applyAction(state, { type: 'trash-newspaper', day: 2 }).state).toBe(state);
+    expect(applyAction(state, { type: 'retrieve-newspaper', day: 5 }).state).toBe(state);
+    expect(applyAction(state, { type: 'trash-newspaper', day: 5 }).state).toBe(state);
     const tomorrow = next(state);
-    expect(tomorrow.newspaperCopies.map(copy => copy.day)).toEqual([1, 5]);
-    state = applyAction(state, { type: 'store-newspaper', day: 1 }).state;
-    expect(applyAction(state, { type: 'trash-newspaper', day: 1 }).state).toBe(state);
+    expect(tomorrow.newspaperCopies.map(copy => copy.day)).toEqual([2, 6]);
+    state = applyAction(state, { type: 'store-newspaper', day: 2 }).state;
+    expect(applyAction(state, { type: 'trash-newspaper', day: 2 }).state).toBe(state);
   });
 
   it('migrates v32 with its exact issue and RNG, creating only the recoverable latest copy', () => {
@@ -75,7 +76,7 @@ describe('physical newspaper copies', () => {
       [{ ...copy, articleIds: [...copy.articleIds].reverse() }]]) {
       expect(() => decodeSave(file({ ...state, newspaperCopies: copies }))).toThrow();
     }
-    expect(() => decodeSave(file({ ...createInitialState(12), newspaperCopies: [] }))).toThrow();
+    expect(() => decodeSave(file({ ...createInitialState(12), newspaperCopies: [{ ...copy, day: 1, location: 'drawer' }] }))).toThrow();
     const loaded = decodeSave(encodeSave(state));
     loaded.newspaperCopies[0]!.articleIds.pop();
     expect(loaded.newspaperCopies[0]!.articleIds).not.toEqual(state.newspaperCopies[0]!.articleIds);
@@ -97,8 +98,8 @@ describe('physical newspaper copies', () => {
     expect([0, 1, 2].flatMap(page => drawerNewspapers(state, page, 'drawer-2').map(({ copy }) => copy.day))).toEqual(days);
     expect(state.newspaperCopies.map(copy => copy.day)).toEqual([...days].reverse());
     expect(drawerSheets(state, 99, 'drawer-2').current).toBe(2);
-    expect(drawerButtons(state, 'pl', 0, () => {}, 'drawer-2').find(button => button.id === 'drawer-newspaper-1')?.label).toContain('03.11.1983');
-    for (const target of ['drawer', 'drawer-2', 'trash'] as const) expect(dropTargetRect(target, 'newspaper-1')).toEqual(DROP_ZONES[target]);
+    expect(drawerButtons(state, 'pl', 0, () => {}, 'drawer-2').find(button => button.id === 'drawer-newspaper-2')?.label).toContain('04.11.1983');
+    for (const target of ['drawer', 'drawer-2', 'trash'] as const) expect(dropTargetRect(target, 'newspaper-2')).toEqual(DROP_ZONES[target]);
   });
 
   it('overlaps generated newspapers while keeping each exposed edge selectable and clear of other objects', () => {
@@ -132,9 +133,9 @@ describe('physical newspaper copies', () => {
   it('observes clinic closing before storing, retrieving or discarding a copy', () => {
     for (const type of ['store-newspaper', 'retrieve-newspaper', 'trash-newspaper'] as const) {
       let state = start();
-      if (type === 'retrieve-newspaper') state = applyAction(state, { type: 'store-newspaper', day: 1 }).state;
+      if (type === 'retrieve-newspaper') state = applyAction(state, { type: 'store-newspaper', day: 2 }).state;
       const copies = structuredClone(state.newspaperCopies);
-      const result = applyAction({ ...state, clockMinutes: 1034 }, { type, day: 1 });
+      const result = applyAction({ ...state, clockMinutes: 1034 }, { type, day: 2 });
       expect(result.state.phase).toBe('home');
       expect(result.state.newspaperCopies).toEqual(copies);
     }

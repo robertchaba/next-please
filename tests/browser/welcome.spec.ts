@@ -81,7 +81,7 @@ test('save files round-trip and reject corrupt imports without replacing state',
   const filePath = testInfo.outputPath(download.suggestedFilename());
   await download.saveAs(filePath);
   const initial = decodeSave(await readFile(filePath));
-  expect(initial).toEqual({ ...createInitialState(), rngState: initial.rngState, roster: initial.roster, newspaper: initial.newspaper, newspaperCopies: [{ day: 1, articleIds: initial.newspaper.articleIds, classifiedIds: initial.newspaper.classifiedIds, location: 'desk' }] });
+  expect(initial).toEqual({ ...createInitialState(), rngState: initial.rngState, roster: initial.roster, newspaper: initial.newspaper });
   expect(initial.roster).toHaveLength(168);
   expect(new Set(initial.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(168);
   const state = { ...createInitialState(), day: 8, money: 1200, patientsProcessed: 43 };

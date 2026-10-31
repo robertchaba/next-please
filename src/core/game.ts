@@ -191,7 +191,7 @@ export function createInitialState(seed = globalThis.crypto.getRandomValues(new 
   const generated = createDailyRoster(seed >>> 0, 1);
   const newspaper = createNewspaper(seed);
   return {
-    newspaper, newspaperCopies: [newspaperCopy(newspaper, 1)],
+    newspaper, newspaperCopies: [],
     portraitHistory: [],
     recentVisits: [], inspection: null, inspectionCheckedAt: 0, inspectionFines: 0,
     pendingReferrals: [], referralsIssued: 0, budgetHistory: [],
@@ -335,7 +335,10 @@ function transition(state: GameState, action: GameAction): ActionResult {
     if (state.newspaperCopies.length >= GAME_LIMITS.papers) return unchanged('limit-reached');
     const generated = createDailyRoster(state.rngState, day, state.portraitHistory);
     const arrival = randomStep(generated.seed);
-    const newspaper = nextNewspaper(state.newspaper.rngState, state.newspaper);
+    // The initial selection waits for the first delivery on 4 November.
+    // Older saves may already contain a delivered first-day copy.
+    const newspaper = state.day === 1 && state.newspaperCopies.length === 0
+      ? state.newspaper : nextNewspaper(state.newspaper.rngState, state.newspaper);
     const rule = directiveForDay(day);
     if (rule && (state.papers.length >= GAME_LIMITS.papers || state.nextPaperId > GAME_LIMITS.paperId)) return unchanged('limit-reached');
     const papers: Paper[] = rule ? [...state.papers, { id: state.nextPaperId, kind: 'directive', patientId: null, day,

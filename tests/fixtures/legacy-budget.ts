@@ -49,5 +49,5 @@ export function withMigratedNewspaper(state: unknown): unknown {
   const newspaper = { ...createNewspaper((state.rngState ^ state.day) >>> 0), classifiedIds: [] };
   let day = state.day;
   while (isWeekend(day)) day--;
-  return { ...state, newspaper, newspaperCopies: [newspaperCopy(newspaper, day)] };
+  return { ...state, newspaper, newspaperCopies: day === 1 ? [] : [newspaperCopy(newspaper, day)] };
 }
