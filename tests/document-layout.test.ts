@@ -15,7 +15,7 @@ function letteringBounds(paper: Paper, locale: 'pl' | 'en') {
   const ctx = {
     fillStyle: '', save() {}, restore() {},
     fillRect(x: number, y: number, w: number, h: number) {
-      // Ignore the existing lifted-paper shadow and state-driven pen corner.
+      // Measure individual lettering pixels, excluding larger state-driven marks.
       if (w !== 1 || h !== 1) return;
       written++;
       if (x < 0 || x >= size.w - 11 || y < 0 || y >= size.h) outside.push({ x, y });

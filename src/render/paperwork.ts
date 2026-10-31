@@ -264,7 +264,6 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     if (paper.kind === 'referral' && paper.details.seal === 'unclear') drawUnclearSeal(ctx, sx + (size < 20 ? 0 : 16), sy, size);
     else drawAdministrativeStamp(ctx, seal, locale, sx, sy, size < 20);
   };
-  fill(ctx, x + (lifted ? 6 : 3), y + (lifted ? 6 : 3), w, h, '#20271fc0');
   const envelope = (paper.kind === 'letter' || paper.kind === 'directive') && !paper.opened;
   if (envelope) drawStationery(ctx, 'envelope', x, y, w, h);
   else drawPaper(ctx, x, y, w, h);
@@ -424,7 +423,6 @@ export function drawCertificate(ctx: CanvasRenderingContext2D, state: GameState,
   const visit = state.visit;
   if (!visit?.certificateTaken) return;
   const { x, y, w, h } = bounds, t = translations[locale], p = t.paperwork;
-  fill(ctx, x + (lifted ? 6 : 3), y + (lifted ? 6 : 3), w, h, '#293126');
   drawPaper(ctx, x, y, w, h);
   const write = (value: string, dx: number, dy: number, color = ink): void => drawDocumentText(ctx, value, x + dx, y + dy, { color, face: color === HANDWRITING_INK ? 'handwritten' : dy === 9 ? 'book' : 'typewriter' });
   if (w < CLINICAL_PAPER_SIZE.w) {

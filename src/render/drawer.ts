@@ -54,7 +54,7 @@ function coverName(paper: Paper, locale: Locale): string {
 }
 
 function storedCash(state: GameState, drawer: DrawerId) { return state.banknotes.filter(note => note.location === drawer); }
-const cashBounds: Rect = { x: 267, y: 227, w: 92, h: 56 };
+const cashBounds: Rect = { x: 267, y: 211, w: 92, h: 56 };
 
 export function drawerDescription(state: GameState, locale: Locale, page: number, drawer: DrawerId = 'drawer'): string {
   const t = translations[locale], sheets = drawerSheets(state, page, drawer);
@@ -88,7 +88,7 @@ export function renderDrawer(ctx: CanvasRenderingContext2D, state: GameState, lo
   const t = translations[locale];
   drawDrawerInterior(ctx);
   const cash = storedCash(state, drawer);
-  for (let index = 0; index < Math.min(8, cash.length); index++) drawBanknote(ctx, 267, 241 - index * 2);
+  for (let index = 0; index < Math.min(8, cash.length); index++) drawBanknote(ctx, cashBounds.x, cashBounds.y + 14 - index * 2);
   const sheets = drawerSheets(state, page, drawer);
   // Only the labelled upper strip of each generated cover is exposed. The lower
   // cover edges stay inside the paper compartment, away from navigation targets.
