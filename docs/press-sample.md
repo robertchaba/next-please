@@ -6,7 +6,7 @@ Materiały obejmują życie miejskie, kulturę, sport, usługi, handel, oświat�
 
 Wydanie losuje 3–4 materiały. Każdy czyta się w całości na jednym widoku, w dwóch kolumnach. Przyszłe materiały fabularne mogą zająć część lub wszystkie miejsca wydania.
 
-Baza została rozszerzona o [150 kolejnych artykułów i 150 ogłoszeń](press-catalog.md). Poniżej pozostaje pierwotna zaakceptowana próbka.
+Baza została rozszerzona o [150 kolejnych artykułów i 150 ogłoszeń](press-catalog.md). Poniżej pozostaje historyczna, zaakceptowana próbka. Audyt 0.8.9 doprecyzował w grze kontekst dziesięciu z tych tekstów; aktualne brzmienie PL/EN jest w `src/i18n.ts`, a zakres zmian opisuje [raport audytu](press-editorial-audit.md).
 
 ## 1. Jedna powieść, 43 chętnych
 
