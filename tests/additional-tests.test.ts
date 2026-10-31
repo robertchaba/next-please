@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
 import { applyAction, advanceClinicTime, createInitialState, GAME_LIMITS, type GameState, type GameAction, type NoteEntryId } from '../src/core/game';
 import { ADDITIONAL_TESTS, additionalNoteEntry, additionalNoteResult, additionalTestForJob, additionalResultFor, type AdditionalTest } from '../src/core/additional-tests';
-import { PATIENTS, randomStep } from '../src/core/patients';
+import { PATIENTS, createRoster, randomStep } from '../src/core/patients';
 import { expectedVisitDecision, patientForAppointment } from '../src/core/progression';
 import { decodeSave, encodeSave } from '../src/core/save';
 import { noteEntries, paperDescription } from '../src/render/paperwork';
@@ -153,7 +153,7 @@ describe('day seven additional examinations', () => {
 
   it('migrates and re-exports an active historical paid weekend shift', () => {
     const initial = createInitialState(44);
-    const historical = act({ ...initial, day: 3, roster: initial.roster.filter(id => PATIENTS[id]!.characterId < 78) }, 'skip-intro', 'call-patient');
+    const historical = act({ ...initial, day: 3, roster: createRoster(44, false, patient => patient.id < 5253).roster.filter(id => PATIENTS[id]!.characterId < 78) }, 'skip-intro', 'call-patient');
     const raw = structuredClone(historical) as unknown as Record<string, unknown>;
     delete raw.pendingReferrals; delete raw.referralsIssued; delete raw.budgetHistory;
     const visit = raw.visit as Record<string, unknown>;
@@ -166,7 +166,7 @@ describe('day seven additional examinations', () => {
 
   it('rejects forged result, return schedule, unknown fields and duplicate pending identities', () => {
     const state = send(appointment(), 'vestibular');
-    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 29, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
+    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 30, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
     for (const change of [
       (s: GameState) => { s.pendingReferrals[0]!.fit = false; },
       (s: GameState) => { s.pendingReferrals[0]!.returnDay += 7; },

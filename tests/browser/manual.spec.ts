@@ -9,7 +9,7 @@ async function key(page: Page, id: string): Promise<void> {
 }
 
 function beginningOfDay(day: number) {
-  let state = applyAction(createInitialState(71), 'skip-intro').state;
+  let state = applyAction({ ...createInitialState(71), money: 10000 }, 'skip-intro').state;
   while (state.day < day && !state.ending) {
     if (state.phase === 'cabinet') state = applyAction({ ...state, clockMinutes: 840 }, 'end-day').state;
     state = applyAction(state, 'next-day').state;

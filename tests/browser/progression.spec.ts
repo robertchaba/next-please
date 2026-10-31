@@ -9,7 +9,7 @@ const actions = (state: GameState, ...items: GameAction[]): GameState => items.r
 
 /** Actual weekday transitions retain the letters and weekend accounting. */
 function beginningOfDay(day: number, seed = 71): GameState {
-  let state = actions(createInitialState(seed), 'skip-intro');
+  let state = actions({ ...createInitialState(seed), money: 10000 }, 'skip-intro');
   while (state.day < day && state.ending === null) {
     if (state.phase === 'cabinet') state = applyAction({ ...state, clockMinutes: 840 }, 'end-day').state;
     state = applyAction(state, 'next-day').state;

@@ -87,6 +87,28 @@ export const PRESSURE_LIMIT = { systolic: 160, diastolic: 100 } as const;
 export const VERY_HIGH_PRESSURE = { systolic: 180, diastolic: 110 } as const;
 export const significantVisionDefect = (values: VisionValues): boolean => Math.abs(values.left) >= VISION_LIMIT || Math.abs(values.right) >= VISION_LIMIT;
 export const disqualifyingPressure = (values: PressureValues): boolean => values.systolic >= PRESSURE_LIMIT.systolic || values.diastolic >= PRESSURE_LIMIT.diastolic;
+export type MedicalAssessment = 'fit' | 'unfit' | 'discretionary';
+export const visionAssessment = (values: VisionValues): MedicalAssessment => {
+  const defect = Math.max(Math.abs(values.left), Math.abs(values.right));
+  return defect > VISION_LIMIT ? 'unfit' : defect === VISION_LIMIT ? 'discretionary' : 'fit';
+};
+export const pressureAssessment = (values: PressureValues): MedicalAssessment => {
+  if (values.systolic > PRESSURE_LIMIT.systolic + 5 || values.diastolic > PRESSURE_LIMIT.diastolic + 5) return 'unfit';
+  return values.systolic >= PRESSURE_LIMIT.systolic - 5 || values.diastolic >= PRESSURE_LIMIT.diastolic - 5 ? 'discretionary' : 'fit';
+};
+/** New cases may straddle the nominal limit; historical measurement ranges stay valid. */
+export function compatiblePressureReading(patient: PatientCase, reading: PressureValues): boolean {
+  return patient.id >= DISCRETIONARY_CASE_START
+    ? pressureAssessment(reading) === pressureAssessment(patient.pressureValues)
+    : disqualifyingPressure(reading) === (patient.pressure === 'refer');
+}
+export function medicalAssessment(patient: PatientCase): MedicalAssessment {
+  const results: MedicalAssessment[] = [patient.general === 'refer' ? 'unfit' : 'fit'];
+  const relevant = REQUIREMENTS[patient.requirementId].disqualifying;
+  if (relevant.includes('vision')) results.push(visionAssessment(patient.visionValues));
+  if (relevant.includes('pressure')) results.push(pressureAssessment(patient.pressureValues));
+  return results.includes('unfit') ? 'unfit' : results.includes('discretionary') ? 'discretionary' : 'fit';
+}
 export const veryHighPressure = (values: PressureValues): boolean => values.systolic >= VERY_HIGH_PRESSURE.systolic || values.diastolic >= VERY_HIGH_PRESSURE.diastolic;
 
 export interface PatientCase {
@@ -130,6 +152,7 @@ export function generalFindingIndex(patient: Pick<PatientCase, 'id' | 'general'>
 /** Visual character groups: each portrait appears at most once per daily queue. */
 export const CHARACTER_COUNT = 188;
 export const CURATED_CASE_START = 553;
+export const DISCRETIONARY_CASE_START = 5253;
 export const CASES_PER_IDENTITY = 5;
 export const LEGACY_CASE_COUNT = 103;
 type OriginalCase = Omit<PatientCase, 'general' | 'visionValues' | 'pressureValues'>;
@@ -269,10 +292,11 @@ export const PATIENT_IDENTITIES: readonly PatientIdentity[] = IDENTITY_PROFILES.
 
 /** The saved case ID resolves its entire identity; no extra random or save field. */
 export function patientIdentity(patient: Pick<PatientCase, 'id'>): PatientIdentity | undefined {
-  return patient.id < CURATED_CASE_START ? undefined : PATIENT_IDENTITIES[Math.floor((patient.id - CURATED_CASE_START) / CASES_PER_IDENTITY)];
+  return patient.id < CURATED_CASE_START ? undefined : PATIENT_IDENTITIES[patient.id >= DISCRETIONARY_CASE_START
+    ? patient.id - DISCRETIONARY_CASE_START : Math.floor((patient.id - CURATED_CASE_START) / CASES_PER_IDENTITY)];
 }
 
-export const PATIENTS: readonly PatientCase[] = [
+const establishedPatients: readonly PatientCase[] = [
   ...historicalPatients,
   ...PATIENT_IDENTITIES.flatMap((identity) => Array.from({ length: CASES_PER_IDENTITY }, (_, variant): PatientCase => {
     const occupation = JOBS[identity.jobId]!;
@@ -292,8 +316,22 @@ export const PATIENTS: readonly PatientCase[] = [
   })),
 ];
 
+/** Append-only alternatives: saved older findings and identity IDs stay intact. */
+export const PATIENTS: readonly PatientCase[] = [...establishedPatients, ...PATIENT_IDENTITIES.map((identity): PatientCase => {
+  const original = establishedPatients[CURATED_CASE_START + identity.id * CASES_PER_IDENTITY]!;
+  const specialist = [18, 45, 46, 47].includes(original.jobId) && identity.id % 3 === 0;
+  const vision = !specialist && (original.requirementId === 'vision' || (original.requirementId === 'full' && identity.id % 2 === 0));
+  const pressure = !specialist && !vision;
+  return { ...original, id: DISCRETIONARY_CASE_START + identity.id, caseVariant: specialist ? 4 : vision ? 1 : 2,
+    general: specialist && [45, 47].includes(original.jobId) ? 'refer' : 'pass',
+    conditionId: specialist ? ([45, 47].includes(original.jobId) ? 'general' : 'healthy') : vision ? 'vision' : 'pressure',
+    vision: vision ? 'refer' : 'pass', visionValues: vision ? { left: -6, right: -2 } : original.visionValues,
+    pressure: pressure ? 'refer' : 'pass', pressureValues: pressure ? { systolic: 160, diastolic: 100 } : original.pressureValues,
+    expectedDecision: 'unfit' };
+})];
+
 const CASES_BY_CHARACTER = Array.from({ length: CHARACTER_COUNT }, (_, characterId) => PATIENTS
-  .filter(patient => patient.id >= CURATED_CASE_START && patient.characterId === characterId).map(patient => patient.id));
+  .filter(patient => patient.id >= CURATED_CASE_START && patient.id < DISCRETIONARY_CASE_START && patient.characterId === characterId).map(patient => patient.id));
 const FIT_CASES_BY_IDENTITY = PATIENT_IDENTITIES.map(identity => PATIENTS
   .slice(CURATED_CASE_START + identity.id * CASES_PER_IDENTITY, CURATED_CASE_START + (identity.id + 1) * CASES_PER_IDENTITY)
   .filter(patient => patient.expectedDecision === 'fit').map(patient => patient.id));
@@ -363,6 +401,19 @@ export function createRoster(seed: number, _tutorial = false, eligible: (patient
     const nextFit = roster.findIndex((id, position) => position > index && PATIENTS[id]!.expectedDecision === 'fit');
     const [fitId] = roster.splice(nextFit, 1);
     roster.splice(index, 0, fitId!);
+  }
+  // About one fifth of former refusal slots leave room for medical judgement.
+  // Count naturally borderline old cases first; never alter the prefix balance,
+  // selected identity, or a returning visit's already established findings.
+  const refused = roster.flatMap((id, index) => PATIENTS[id]!.expectedDecision === 'unfit' ? [index] : []);
+  const borderline = refused.filter(index => medicalAssessment(PATIENTS[roster[index]!]!) === 'discretionary').length;
+  const candidates = refused.filter(index => medicalAssessment(PATIENTS[roster[index]!]!) !== 'discretionary');
+  const count = Math.max(0, Math.round(refused.length * 0.2) - borderline);
+  for (let index = 0; index < count && candidates.length; index++) {
+    const draw = randomStep(seed); seed = draw.seed;
+    const slot = candidates.splice(Math.floor(draw.value * candidates.length), 1)[0]!;
+    const replacement = DISCRETIONARY_CASE_START + patientIdentity(PATIENTS[roster[slot]!]!)!.id;
+    if (eligible(PATIENTS[replacement]!)) roster[slot] = replacement;
   }
   return { roster, seed };
 }

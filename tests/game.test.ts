@@ -1,7 +1,7 @@
 import { createInitialState } from './fixtures/game';
 import { describe, expect, it } from 'vitest';
 import { applyAction, CLINIC_CLOSE_MINUTES, GAME_LIMITS, INTRO_SLIDES, PATIENTS, clippedDocuments, isDocumentClipped, type GameAction, type GameState } from '../src/core/game';
-import { disqualifyingPressure } from '../src/core/patients';
+import { DISCRETIONARY_CASE_START, disqualifyingPressure, pressureAssessment } from '../src/core/patients';
 
 function act(state: GameState, ...actions: GameAction[]): GameState {
   return actions.reduce((current, action) => applyAction(current, action).state, state);
@@ -510,7 +510,8 @@ describe('general examination and chronological findings', () => {
         expect(reading).not.toEqual(prior);
         expect(Math.abs(reading.systolic - patient.pressureValues.systolic)).toBeLessThanOrEqual(3);
         expect(Math.abs(reading.diastolic - patient.pressureValues.diastolic)).toBeLessThanOrEqual(2);
-        expect(disqualifyingPressure(reading)).toBe(patient.pressure === 'refer');
+        if (patient.id < DISCRETIONARY_CASE_START) expect(disqualifyingPressure(reading)).toBe(patient.pressure === 'refer');
+        else expect(pressureAssessment(reading)).toBe(pressureAssessment(patient.pressureValues));
       }
     }
   });

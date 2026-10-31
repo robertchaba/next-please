@@ -151,7 +151,7 @@ describe('weekend saves', () => {
     expect(next(decodeSave(encodeSave(fri)))).toEqual(sat);
     expect(next(decodeSave(encodeSave(sat)))).toEqual(next(sat));
     expect(applyAction(decodeSave(encodeSave(sat)), 'end-day').state).toEqual(sat);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(29);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(30);
   });
 
   it('preserves the whole weekend budget through saving, month rollover and Monday', () => {
@@ -194,7 +194,7 @@ describe('weekend saves', () => {
   it('imports v19 without inventing missing costs or settling a day again', () => {
     for (const current of [friday(200), next(friday(200)), next(next(friday(200)))]) {
       const { budgetHistory: _history, ...old } = current;
-      if (old.roster.length) old.roster = createRoster(1).roster.filter(id => id <= 3127);
+      if (old.roster.length) old.roster = createRoster(1, false, patient => patient.id < 5253).roster.filter(id => id <= 3127);
       const loaded = decodeSave(file(old, 19));
       expect(loaded).toEqual({ ...old, budgetHistory: [] });
       expect(decodeSave(encodeSave(loaded))).toEqual(loaded);

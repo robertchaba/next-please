@@ -102,7 +102,7 @@ describe('bankruptcy ending', () => {
       expect(act(state, 'next-day').day).toBe(2);
     }
     expect(decodeSave(encodeSave(bankrupt))).toEqual(bankrupt);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(bankrupt)))).version).toBe(29);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(bankrupt)))).version).toBe(30);
   });
 
   it('also ends at forced closing without awarding an unfinished appointment', () => {

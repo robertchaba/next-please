@@ -3,7 +3,7 @@ import { ADDITIONAL_TESTS, additionalNoteEntry, additionalNoteResult, additional
 import { Gunzip, gzipSync, strToU8 } from 'fflate';
 import { ARRIVAL_MINUTES, CLINIC_CLOSE_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_START_MINUTES, type GameState as LatestGameState, type Visit as CurrentVisit, type Paper as CurrentPaper, type DocumentId, type NoteEntryId } from './game';
 
-import { CHARACTER_COUNT, JOBS, disqualifyingPressure, type ExaminationId, type PressureValues, type PatientCase } from './patients';
+import { CHARACTER_COUNT, JOBS, compatiblePressureReading, type ExaminationId, type PressureValues, type PatientCase } from './patients';
 import { defaultReferral, directiveForDay, emptyCalls, effectivePatient, employerPhone, specialistPhone, workDayNumber, type ReferralDetails, type SpecialistCertificate, type PhoneConclusions } from './progression';
 import { BASE_INSURANCE, BASE_PAY, MODEST_WEEKEND_LIVING, PATIENT_BONUS, type DaySettlement as CurrentSettlement, type DailyConsequences } from './economy';
 
@@ -71,9 +71,9 @@ type GameStateV5 = Omit<GameStateV8, 'visit' | 'paperClips' | 'papers' | 'drawer
 type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<VisitV10, 'certificateNamed'> | null };
 type GameStateV7 = Omit<GameStateV8, 'drawerItems'>;
 
-interface SaveV29 {
+interface SaveV30 {
   game: 'next-please';
-  version: 29;
+  version: 30;
   savedAt: string;
   state: LatestGameState;
 }
@@ -672,7 +672,7 @@ function validatePressureReadings(value: unknown, patientId: number | null, meas
     if (!patient || !isRecord(reading) || !hasOnlyKeys(reading, ['systolic', 'diastolic'])
       || !isIntegerInRange(reading.systolic, patient.pressureValues.systolic - 3, patient.pressureValues.systolic + 3)
       || !isIntegerInRange(reading.diastolic, patient.pressureValues.diastolic - 2, patient.pressureValues.diastolic + 2)
-      || disqualifyingPressure({ systolic: reading.systolic, diastolic: reading.diastolic }) !== (patient.pressure === 'refer')) throw new SaveError('invalid-state');
+      || !compatiblePressureReading(patient, { systolic: reading.systolic, diastolic: reading.diastolic })) throw new SaveError('invalid-state');
     return { systolic: reading.systolic, diastolic: reading.diastolic };
   });
   if (readings.length === 2 && readings[0]!.systolic === readings[1]!.systolic && readings[0]!.diastolic === readings[1]!.diastolic) throw new SaveError('invalid-state');
@@ -1516,9 +1516,9 @@ function validateStateV29(value: unknown): LatestGameState {
 }
 
 export function encodeSave(state: LatestGameState): Uint8Array {
-  const envelope: SaveV29 = {
+  const envelope: SaveV30 = {
     game: 'next-please',
-    version: 29,
+    version: 30,
     savedAt: new Date().toISOString(),
     state: validateStateV29(state),
   };
@@ -1625,7 +1625,7 @@ function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean })
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (!isIntegerInRange(envelope.version, 1, 29)) throw new SaveError('unsupported-version');
+  if (!isIntegerInRange(envelope.version, 1, 30)) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -1635,7 +1635,11 @@ function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean })
     throw new SaveError('invalid-file');
   }
   migration.additionalNotes = (envelope.version as number) < 27;
-  if (envelope.version === 29) return validateStateV29(envelope.state);
+  if (envelope.version === 30) return validateStateV29(envelope.state);
+  if (envelope.version === 29) {
+    validateHistoricalCatalog(envelope.state, 5252, CHARACTER_COUNT);
+    return validateStateV29(envelope.state);
+  }
   // Catalog ceilings and exact field sets of older versions remain frozen.
   if (envelope.version === 28) {
     validateHistoricalCatalog(envelope.state, V28_CASE_LIMIT, V28_CHARACTER_COUNT);

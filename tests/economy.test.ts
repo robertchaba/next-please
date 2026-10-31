@@ -20,7 +20,7 @@ function submit(patientId: number, decision: 'fit' | 'unfit', fraction: number, 
 
 describe('patient catalog and deterministic queues', () => {
   it('preserves the original 103 case fixtures while adding five identities per portrait', () => {
-    expect(PATIENTS).toHaveLength(5253);
+    expect(PATIENTS).toHaveLength(6193);
     expect(new Set(PATIENTS.map(patient => patient.characterId)).size).toBe(188);
     for (let character = 3; character < 28; character += 1) {
       const cases = PATIENTS.slice(0, 103).filter(patient => patient.characterId === character);
@@ -63,7 +63,7 @@ describe('decision consequences', () => {
     expect(state.daily).toMatchObject({ zusCases: 1, fines: 100 });
     state = submit(2, 'fit', .9, state);
     expect(state.daily).toMatchObject({ zusCases: 2, fines: 500 });
-    state = submit(4, 'fit', .9, state);
+    state = submit(6, 'fit', .9, state);
     expect(state.daily).toMatchObject({ zusCases: 3, fines: 900 });
     const home = act({ ...state, money: 2000, clockMinutes: 840 }, 'end-day');
     expect(home.settlement?.fines).toBe(900);

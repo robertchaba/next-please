@@ -1,10 +1,15 @@
 import { isWeekend } from './calendar';
-import { JOBS, type PatientCase } from './patients';
+import { DISCRETIONARY_CASE_START, JOBS, type MedicalAssessment, type PatientCase } from './patients';
 import type { Visit } from './game';
 
 export const ADDITIONAL_TESTS = ['audiometry', 'vestibular', 'psychiatry', 'chest-xray'] as const;
 export type AdditionalTest = typeof ADDITIONAL_TESTS[number];
+/** fit means unequivocal clearance; the immutable case distinguishes doubtful reports. */
 export interface AdditionalResult { test: AdditionalTest; fit: boolean }
+export function additionalAssessment(patient: Pick<PatientCase, 'id' | 'jobId' | 'caseVariant'>, result: AdditionalResult): MedicalAssessment {
+  return result.fit ? 'fit' : patient.id >= DISCRETIONARY_CASE_START && patient.caseVariant === 4
+    && additionalTestForJob(patient) === result.test ? 'discretionary' : 'unfit';
+}
 /** The journal stores the received finding even after its separate report leaves. */
 export type AdditionalNoteEntry = `additional:${AdditionalTest}:${'fit' | 'unfit'}`;
 export function additionalNoteEntry(result: AdditionalResult): AdditionalNoteEntry {
@@ -44,7 +49,7 @@ export function additionalTestForPatient(patient: Pick<PatientCase, 'jobId' | 'g
 /** A fixed case result, never sampled while reading or drawing the report. */
 export function additionalResultFor(patient: Pick<PatientCase, 'id' | 'jobId' | 'general' | 'caseVariant'>, test: AdditionalTest): AdditionalResult {
   const relevant = additionalTestForJob(patient) === test;
-  return { test, fit: !relevant || patient.caseVariant !== 4 || patient.id % 2 === 0 };
+  return { test, fit: !relevant || patient.caseVariant !== 4 || (patient.id < DISCRETIONARY_CASE_START && patient.id % 2 === 0) };
 }
 export function nextWorkingDay(day: number): number {
   let next = day + 1;

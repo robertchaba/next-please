@@ -1,6 +1,6 @@
 import { gameDate, isWeekend } from './calendar';
 import { additionalNoteEntry, additionalResultFor, additionalTestForJob, additionalTestForPatient, nextWorkingDay, type AdditionalNoteEntry, type AdditionalTest, type AdditionalResult, type PendingReferral } from './additional-tests';
-import { PATIENTS, CHARACTER_COUNT, randomStep, hasRequiredExaminations, disqualifyingPressure, type ExaminationId, type VisionValues, type PressureValues } from './patients';
+import { PATIENTS, CHARACTER_COUNT, randomStep, hasRequiredExaminations, compatiblePressureReading, type ExaminationId, type VisionValues, type PressureValues } from './patients';
 import { BASE_INSURANCE, emptyConsequences, settleDay, type DailyConsequences, type DaySettlement } from './economy';
 import { arrangeProgressionRoster, createAppointmentDetails, createDailyRoster, directiveForDay, emptyCalls, expectedVisitDecision, patientForAppointment, specialistIsValid, workDayNumber,
   type BribeState, type DirectiveRule, type PhoneConclusions, type ReferralDetails, type SpecialistCertificate } from './progression';
@@ -677,7 +677,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
     for (let systolic = -3; systolic <= 3; systolic++) for (let diastolic = -2; diastolic <= 2; diastolic++) {
       const reading = { systolic: baseline.systolic + systolic, diastolic: baseline.diastolic + diastolic };
       if ((!previous || reading.systolic !== previous.systolic || reading.diastolic !== previous.diastolic)
-        && disqualifyingPressure(reading) === (patient.pressure === 'refer')) candidates.push(reading);
+        && compatiblePressureReading(patient, reading)) candidates.push(reading);
     }
     const reading = draw ? candidates[Math.floor(draw.value * candidates.length)]! : { ...baseline };
     const feedback = patient.pressure === 'pass' ? 'pressure-pass' : 'pressure-refer';
@@ -706,7 +706,8 @@ function transition(state: GameState, action: GameAction): ActionResult {
       && paper.test === additionalTestForJob(patient) && paper.test === visit.additionalResult!.test
       && paper.fit === visit.additionalResult!.fit);
   const handedIds = new Set<DocumentId>(['certificate', ...handedResults.map(paper => paper.id)]);
-  const wrongDecision = visit.decision !== expectedVisitDecision(state);
+  const expected = expectedVisitDecision(state);
+  const wrongDecision = expected !== 'discretionary' && visit.decision !== expected;
   const requiredAdditional = workDayNumber(state.day) >= 7 ? additionalTestForPatient(patient) : null;
   const correct = hasRequiredExaminations(patient, visit) && (!requiredAdditional || visit.additionalResult?.test === requiredAdditional) && !wrongDecision;
   if (state.patientsProcessed === GAME_LIMITS.patients) return unchanged('limit-reached');

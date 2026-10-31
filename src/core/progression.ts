@@ -1,7 +1,7 @@
 import { gameDate, isWeekend } from './calendar';
-import { additionalResultFor, additionalTestForJob, additionalTestForPatient } from './additional-tests';
-import { JOBS, PATIENTS, REQUIREMENTS, createRoster, patientIdentity, randomStep, type PatientCase } from './patients';
-import type { Decision, GameState, Visit } from './game';
+import { additionalAssessment, additionalResultFor, additionalTestForJob, additionalTestForPatient } from './additional-tests';
+import { JOBS, PATIENTS, REQUIREMENTS, createRoster, patientIdentity, randomStep, pressureAssessment, visionAssessment, type MedicalAssessment, type PatientCase } from './patients';
+import type { GameState, Visit } from './game';
 
 export type DirectiveRule = 'dates' | 'specialist' | 'authenticity' | 'additional-tests';
 export interface ReferralDetails {
@@ -62,21 +62,29 @@ export function specialistIsValid(visit: Pick<Visit, 'patientId' | 'specialist'>
   return visit.specialist !== null && visit.specialist.jobId === PATIENTS[visit.patientId]!.jobId;
 }
 
-export function expectedVisitDecision(state: Pick<GameState, 'day' | 'visit'>): Decision | null {
+export function expectedVisitDecision(state: Pick<GameState, 'day' | 'visit'>): MedicalAssessment | null {
   const visit = state.visit;
   if (!visit) return null;
   const day = workDayNumber(state.day), patient = patientForAppointment(visit);
   if (day >= 3 && visit.referral.ageDays > 3) return 'unfit';
   if (day >= 5 && !visit.referral.authentic) return 'unfit';
   const additional = day >= 7 ? additionalTestForPatient(patient) : null;
+  const received = additional && visit.additionalResult?.test === additional
+    ? additionalAssessment(patient, visit.additionalResult) : null;
   const clearsConcern = (additional === 'psychiatry' || additional === 'chest-xray')
-    && visit.additionalResult?.test === additional && visit.additionalResult.fit;
+    && received !== null && received !== 'unfit';
   if (patient.general === 'refer' && !clearsConcern) return 'unfit';
-  if (additional && !additionalResultFor(patient, additional).fit) return 'unfit';
+  if (additional && !additionalResultFor(patient, additional).fit && received !== 'discretionary') return 'unfit';
+  let discretionary = received === 'discretionary';
   const relevant = REQUIREMENTS[patient.requirementId].disqualifying;
-  if (relevant.includes('vision') && patient.vision === 'refer') return 'unfit';
-  if (relevant.includes('pressure') && patient.pressure === 'refer' && !(day >= 4 && specialistIsValid(visit))) return 'unfit';
-  return 'fit';
+  const pressure = pressureAssessment(patient.pressureValues);
+  const findings = [
+    relevant.includes('vision') ? visionAssessment(patient.visionValues) : 'fit',
+    relevant.includes('pressure') && !(pressure === 'unfit' && day >= 4 && specialistIsValid(visit)) ? pressure : 'fit',
+  ];
+  if (findings.includes('unfit')) return 'unfit';
+  discretionary ||= findings.includes('discretionary');
+  return discretionary ? 'discretionary' : 'fit';
 }
 
 export function createAppointmentDetails(state: Pick<GameState, 'day' | 'shiftCompleted' | 'rngState'>, patientId: number): {

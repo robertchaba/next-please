@@ -1,5 +1,5 @@
 import { PATIENTS, type GameState, type Paper } from '../core/game';
-import { ADDITIONAL_TESTS, additionalNoteResult, additionalTestForJob, type AdditionalTest } from '../core/additional-tests';
+import { ADDITIONAL_TESTS, additionalAssessment, additionalNoteResult, additionalTestForJob, type AdditionalTest } from '../core/additional-tests';
 import { referralDate, workDayNumber, effectivePatient } from '../core/progression';
 import { generalFindingIndex, patientAge, veryHighPressure, type PressureValues, type VisionValues } from '../core/patients';
 import { CLINICAL_PAPER_SIZE, paperDesktopSize, type DeskItemId, type Rect } from '../core/desk';
@@ -74,7 +74,7 @@ export function noteEntries(paper: Extract<Paper, { kind: 'note' }>, locale: Loc
   const history = paper.bribe ? t.progression.bribeNotes[effectivePatient(paper.patientId, true).vision === 'refer' ? 'vision' : 'pressure'] : t.patientNotes[paper.patientId]!;
   for (const entry of paper.noteOrder) {
     const additional = additionalNoteResult(entry);
-    if (additional) rows.push({ text: `${t.additionalTests.tests[additional.test]}: ${t.additionalTests.notes[additional.test][additional.fit ? 'fit' : 'unfit']}`, color: HANDWRITING_INK });
+    if (additional) rows.push({ text: `${t.additionalTests.tests[additional.test]}: ${t.additionalTests.notes[additional.test][additionalAssessment(PATIENTS[paper.patientId]!, additional)]}`, color: HANDWRITING_INK });
     if (entry === 'general' && r.general !== null) rows.push({ text: `${t.generalResult}: ${r.general === 'pass' ? t.generalClear : generalReading(paper.patientId, locale)}`, color: HANDWRITING_INK });
     if (entry === 'history' && r.general !== null) for (const text of history) rows.push({ text, color: HANDWRITING_INK });
     if (entry === 'vision' && r.vision !== null) rows.push({ text: `${t.documentVision}: ${visionReading(r.vision, locale)}`, color: HANDWRITING_INK });
@@ -123,7 +123,7 @@ export function additionalTestRect(bounds: Rect, test: AdditionalTest): Rect {
 }
 
 export function additionalResultText(paper: Extract<Paper, { kind: 'additional-result' }>, locale: Locale): string {
-  return translations[locale].additionalTests.report[paper.test][paper.fit ? 'fit' : 'unfit'];
+  return translations[locale].additionalTests.report[paper.test][additionalAssessment(PATIENTS[paper.patientId]!, paper)];
 }
 
 export function paperPhoneRect(bounds: Rect): Rect {
@@ -337,7 +337,8 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     drawReadingText(ctx, t.patientNames[paper.patientId]!, x + 11, y + 44, { color: ink });
     drawReadingText(ctx, a.tests[paper.test], x + 11, y + 59, { color: ink });
     const body = wrapReadingText(additionalResultText(paper, locale), w - 22, 'handwritten');
-    body.forEach((line, index) => drawReadingText(ctx, line, x + 11, y + 73 + index * READ_LINE_HEIGHT, { face: 'handwritten', color: paper.fit ? HANDWRITING_INK : ALERT_INK }));
+    const assessment = additionalAssessment(PATIENTS[paper.patientId]!, paper);
+    body.forEach((line, index) => drawReadingText(ctx, line, x + 11, y + 73 + index * READ_LINE_HEIGHT, { face: 'handwritten', color: assessment === 'unfit' ? ALERT_INK : HANDWRITING_INK }));
     wrapDocumentLines([a.otherChecks], w - 22).forEach((line, index) => drawDocumentText(ctx, line, x + 11, y + h - 47 + index * 8, { color: muted, face: 'print' }));
     authentication();
   } else if (paper.kind === 'specialist') {

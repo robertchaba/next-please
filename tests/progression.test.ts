@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyAction, advanceClinicTime, createInitialState, type GameAction, type GameState } from '../src/core/game';
-import { JOBS, PATIENTS, createRoster, randomStep } from '../src/core/patients';
+import { JOBS, PATIENTS, visionAssessment, createRoster, randomStep } from '../src/core/patients';
 import { arrangeProgressionRoster, createAppointmentDetails, createDailyRoster, directiveForDay, effectivePatient, expectedVisitDecision, patientForAppointment, referralDate, workDayNumber } from '../src/core/progression';
 import { decodeSave, encodeSave } from '../src/core/save';
 
@@ -159,7 +159,7 @@ describe('specialist certificates and telephone conclusions', () => {
     expect(submit(match, 'unfit').daily.refusals).toBe(1);
   });
   it('never waives an independent vision or general contraindication', () => {
-    for (const patient of PATIENTS.filter(patient => patient.requirementId === 'full' && (patient.general === 'refer' || patient.vision === 'refer')).slice(0, 20)) {
+    for (const patient of PATIENTS.filter(patient => patient.requirementId === 'full' && (patient.general === 'refer' || visionAssessment(patient.visionValues) === 'unfit')).slice(0, 20)) {
       const state = formalValid(appointment(6, patient.id));
       expect(expectedVisitDecision({ ...state, visit: { ...state.visit!, specialist: { jobId: patient.jobId, phone: '43-1234' } } })).toBe('unfit');
     }
