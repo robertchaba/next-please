@@ -18,7 +18,7 @@ export function longNoteState(): GameState {
     const returnDay = state.pendingReferrals[0]!.returnDay;
     state = act({ ...state, clockMinutes: 840 }, 'end-day');
     while (state.day < returnDay) state = act(state, 'next-day');
-    state = act(state, 'call-patient');
+    state = act({ ...state, clockMinutes: 480 }, 'call-patient');
   }
   return state;
 }

@@ -13,7 +13,7 @@ function inspectionFixture(): GameState {
   state = act(advanceClinicTime(state, 1000).state, 'next-day');
   let seed = 1;
   while (randomStep(seed).value >= 1 / 25) seed++;
-  return act({ ...state, rngState: seed }, 'call-patient');
+  return act({ ...state, clockMinutes: 480, rngState: seed }, 'call-patient');
 }
 async function key(page: Page, id: string): Promise<void> {
   await page.locator(`#control-${id}`).focus();

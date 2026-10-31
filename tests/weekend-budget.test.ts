@@ -1,4 +1,4 @@
-import { historicalState, legacyBudget } from './fixtures/legacy-budget';
+import { historicalState, legacyBudget, withMigratedNewspaper } from './fixtures/legacy-budget';
 import { gunzipSync, gzipSync, strToU8 } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { applyAction, createInitialState, type GameState } from '../src/core/game';
@@ -126,12 +126,13 @@ describe('weekend saves', () => {
           weekend: { modest: true, sundayLivingCost: remaining - livingCost } } };
       for (const old of [oldSaturday, next(oldSaturday)]) {
         const loaded = decodeSave(file(old, 21));
-        expect(loaded).toEqual(old);
-        expect(decodeSave(encodeSave(loaded))).toEqual(old);
-        expect(next(loaded)).toEqual(next(old));
+        expect(loaded).toEqual(withMigratedNewspaper(old));
+        expect(decodeSave(encodeSave(loaded))).toEqual(loaded);
+        expect(next(loaded)).toEqual(next({ ...old, newspaper: loaded.newspaper, newspaperCopies: loaded.newspaperCopies }));
       }
       expect(next(oldSaturday)).toMatchObject({ day: 4, money: 0, ending: null });
-      expect(next(decodeSave(file(fri, 21)))).toEqual(sat);
+      const restoredFriday = decodeSave(file(fri, 21));
+      expect(next(restoredFriday)).toEqual({ ...sat, newspaper: restoredFriday.newspaper, newspaperCopies: restoredFriday.newspaperCopies });
       expect(next(sat).ending).toBe('bankruptcy');
       // New debt-bearing plans must never pass the frozen v21 validator.
       expect(() => decodeSave(file(sat, 21))).toThrowError(expect.objectContaining({ code: 'invalid-state' }));
@@ -151,7 +152,7 @@ describe('weekend saves', () => {
     expect(next(decodeSave(encodeSave(fri)))).toEqual(sat);
     expect(next(decodeSave(encodeSave(sat)))).toEqual(next(sat));
     expect(applyAction(decodeSave(encodeSave(sat)), 'end-day').state).toEqual(sat);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(31);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(33);
   });
 
   it('preserves the whole weekend budget through saving, month rollover and Monday', () => {
@@ -196,7 +197,7 @@ describe('weekend saves', () => {
       const { budgetHistory: _history, ...old } = current;
       if (old.roster.length) old.roster = createRoster(1, false, patient => patient.id < 5253).roster.filter(id => id <= 3127);
       const loaded = decodeSave(file(old, 19));
-      expect(loaded).toEqual({ ...old, budgetHistory: [] });
+      expect(loaded).toEqual(withMigratedNewspaper({ ...old, budgetHistory: [] }));
       expect(decodeSave(encodeSave(loaded))).toEqual(loaded);
       expect(next(loaded).money).toBe(next(current).money);
       expect(next(loaded).rngState).toBe(next(current).rngState);

@@ -1,3 +1,6 @@
+import { isWeekend } from '../../src/core/calendar';
+import { createNewspaper, newspaperCopy } from '../../src/core/newspaper';
+
 /** Reproduce the cash-as-opening-balance representation used before save v24. */
 export function legacyBudget(state: unknown): unknown {
   if (!state || typeof state !== 'object') return state;
@@ -26,9 +29,21 @@ export function legacyBudget(state: unknown): unknown {
 export function historicalState(state: unknown, version: number): unknown {
   if (!state || typeof state !== 'object') return state;
   const old = structuredClone(state) as Record<string, unknown>;
+  if (version < 33) delete old.newspaperCopies;
+  if (version < 32) delete old.newspaper;
   if (version < 29) delete old.portraitHistory;
   if (version < 31 && old.drawerItems && typeof old.drawerItems === 'object' && 'drawer' in old.drawerItems) {
     old.drawerItems = old.drawerItems.drawer;
   }
   return old;
+}
+
+/** Pre-v32 files have no recoverable press pool; migration starts one deterministically. */
+export function withMigratedNewspaper(state: unknown): unknown {
+  if (!state || typeof state !== 'object' || !('rngState' in state) || typeof state.rngState !== 'number'
+    || !('day' in state) || typeof state.day !== 'number') throw new Error('Expected complete migrated fixture');
+  const newspaper = createNewspaper((state.rngState ^ state.day) >>> 0);
+  let day = state.day;
+  while (isWeekend(day)) day--;
+  return { ...state, newspaper, newspaperCopies: [newspaperCopy(newspaper, day)] };
 }

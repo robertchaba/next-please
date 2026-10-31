@@ -35,7 +35,7 @@ test('Polish default, English persistence, credits and keyboard controls', async
   await expect(page.locator('html')).toHaveAttribute('lang', 'pl');
   await expect(page.getByRole('button', { name: 'ROZPOCZNIJ DYŻUR' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Udostępnij', exact: true })).toBeVisible();
-  await expect(page.locator('#screen-description')).toContainText('WERSJA 0.8.6 / PARAFKA');
+  await expect(page.locator('#screen-description')).toContainText('WERSJA 0.8.7 / REJESTRACJA');
   await page.waitForFunction(() => performance.getEntriesByType('resource').some(entry => entry.name.endsWith('title-clinic.png')));
   await page.screenshot({ path: testInfo.outputPath('welcome-pl.png') });
   await page.getByRole('button', { name: 'O AUTORZE', exact: true }).click();
@@ -47,7 +47,7 @@ test('Polish default, English persistence, credits and keyboard controls', async
   await page.reload();
   await expect(page.getByRole('button', { name: 'BEGIN YOUR SHIFT' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible();
-  await expect(page.locator('#screen-description')).toContainText('VERSION 0.8.6 / INITIALS');
+  await expect(page.locator('#screen-description')).toContainText('VERSION 0.8.7 / RECEPTION');
   await page.screenshot({ path: testInfo.outputPath('welcome-en.png') });
   await page.getByRole('button', { name: 'CREDITS', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Robert Chaba');
@@ -81,7 +81,7 @@ test('save files round-trip and reject corrupt imports without replacing state',
   const filePath = testInfo.outputPath(download.suggestedFilename());
   await download.saveAs(filePath);
   const initial = decodeSave(await readFile(filePath));
-  expect(initial).toEqual({ ...createInitialState(), rngState: initial.rngState, roster: initial.roster });
+  expect(initial).toEqual({ ...createInitialState(), rngState: initial.rngState, roster: initial.roster, newspaper: initial.newspaper, newspaperCopies: [{ day: 1, articleIds: initial.newspaper.articleIds, location: 'desk' }] });
   expect(initial.roster).toHaveLength(168);
   expect(new Set(initial.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(168);
   const state = { ...createInitialState(), day: 8, money: 1200, patientsProcessed: 43 };

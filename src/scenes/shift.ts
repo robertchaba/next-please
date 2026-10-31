@@ -1,3 +1,4 @@
+import { drawNewspaper, newspaperControls, newspaperPageCount, newspaperDescription, type NewspaperViews } from '../render/newspaper';
 import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, drawDeskCalendar, drawBanknote, drawInspectionForm, type CabinetArtOptions } from '../render/clinic';
 import { drawPaperwork, paperDescription, paperActionRect, paperClipTargetRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries } from '../render/paperwork';
 import { paginateNoteEntries, notePageControls, notePageLabel } from '../render/note-pages';
@@ -11,10 +12,11 @@ import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
 import { drawerSheets } from '../render/drawer';
 import { calendarText, formatGameDate } from '../core/calendar';
-import { CABINET_HOTSPOTS, CLINICAL_PAPER_SIZE, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, dropTargetRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
+import { isNewspaperItem, newspaperItemId, CABINET_HOTSPOTS, CLINICAL_PAPER_SIZE, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, dropTargetRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
 export { manualPageCount, manualPageDescription } from '../render/manual';
 
 export type ShiftAction = GameAction | 'select-fit' | 'select-unfit' | 'apply-stamp' | 'manual'
+  | { type: 'read-newspaper'; day: number; turn: 'toggle' | 'prev' | 'next' | 'close' }
   | 'manual-prev' | 'manual-next' | 'manual-close' | 'put-away-fit' | 'put-away-unfit'
   | 'take-clip' | 'drawer' | 'drawer-2' | 'trash' | 'reserved-form' | { type: 'read-paper'; paperId: number }
   | { type: 'note-page'; paperId: number; direction: -1 | 1 };
@@ -22,7 +24,7 @@ export type SelectedStamp = 'fit' | 'unfit' | null;
 export type PatientSpeech = { patientId: number; line: keyof typeof translations.pl.patientSpeech };
 export type DeskPresentation = {
   desk: DeskState; held: DeskItemId | null; heldItems?: readonly DeskItemId[];
-  manualOpen: boolean; manualPage: number; clockMinutes?: number;
+  manualOpen: boolean; manualPage: number; newspaperViews?: NewspaperViews; clockMinutes?: number;
   notePages?: Readonly<Record<number, number>>;
   patientMotion?: CabinetArtOptions['patientMotion'];
   patientSpeech?: PatientSpeech;
@@ -95,7 +97,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     button(id, label, bounds.x, bounds.y, bounds.w, bounds.h, action);
   const item = (id: string, label: string, itemId: DeskItemId, action?: ShiftAction): Button => ({
     id, label, kind: 'hotspot', action: action === undefined ? undefined : () => onAction(action),
-    ...itemRect(view.desk, itemId, state.visit?.document === 'tray' && view.held !== 'document', isLifted(view, itemId), view.manualOpen), item: itemId,
+    ...itemRect(view.desk, itemId, state.visit?.document === 'tray' && view.held !== 'document', isLifted(view, itemId), view.manualOpen, isNewspaperItem(itemId) && view.newspaperViews?.[itemId]?.open), item: itemId,
   });
   if (state.phase === 'intro') return [
     button('intro-next', state.introStep === INTRO_SLIDES - 1 ? t.enterCabinet : t.next, 391, 262, 155, 26, 'advance-intro', 'text'),
@@ -144,7 +146,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
       : [{ ...hotspot('reserved-form-3', `${t.reservedForm} 3`, DOCUMENT_RACK_SLOTS[2], 'reserved-form'), disabled: true }]),
     { ...hotspot('reserved-form-4', `${t.reservedForm} 4`, DOCUMENT_RACK_SLOTS[3], 'reserved-form'), disabled: true },
     hotspot('take-clip', t.takeClip, CABINET_HOTSPOTS.clipSupply, 'take-clip'),
-    ...DRAWERS.map(drawer => hotspot(drawer, `${t.drawerNames[drawer]}: ${drawerSheets(state, 0, drawer).papers.length + Number(state.drawerItems[drawer].manual) + state.drawerItems[drawer].clips + state.banknotes.filter(note => note.location === drawer).length}. ${t.drawerHelp}`, dropTargetRect(drawer, view.held, view.heldItems), drawer)),
+    ...DRAWERS.map(drawer => hotspot(drawer, `${t.drawerNames[drawer]}: ${drawerSheets(state, 0, drawer).papers.length + Number(state.drawerItems[drawer].manual) + state.drawerItems[drawer].clips + state.banknotes.filter(note => note.location === drawer).length + state.newspaperCopies.filter(copy => copy.location === drawer).length}. ${t.drawerHelp}`, dropTargetRect(drawer, view.held, view.heldItems), drawer)),
     hotspot('trash', t.trash, dropTargetRect('trash', view.held, view.heldItems), 'trash'),
     ...state.papers.filter(paper => paper.location === 'desk' && !view.hiddenPaperIds?.includes(paper.id)).flatMap(paper => {
       const id: DeskItemId = `paper-${paper.id}`;
@@ -180,6 +182,17 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     ...view.desk.order.filter(id => id.startsWith('clip-')).map(id => item(id, t.paperwork.paperclip, id)),
     { ...item('stamp-fit', t.stampFit, 'stamp-fit', 'select-fit'), pressed: selected === 'fit' },
     { ...item('stamp-unfit', t.stampUnfit, 'stamp-unfit', 'select-unfit'), pressed: selected === 'unfit' },
+    ...state.newspaperCopies.filter(copy => copy.location === 'desk' && view.desk.positions[newspaperItemId(copy.day, state.day)]).flatMap(copy => {
+      const id = newspaperItemId(copy.day, state.day), reading = view.newspaperViews?.[id];
+      const page = reading?.page ?? 0;
+      const corners = newspaperControls(itemRect(view.desk, id, false, false, false, reading?.open));
+      return [item(id, `${t.newspaper.title}. ${formatGameDate(copy.day, locale)}. ${reading?.open ? newspaperDescription(copy, copy.day, locale, page) : t.newspaper.open}`, id, { type: 'read-newspaper', day: copy.day, turn: 'toggle' }),
+        ...(view.held !== id && reading?.open ? [
+          ...(page > 0 ? [{ ...hotspot(`${id}-prev`, t.newspaper.previous, corners.previous, { type: 'read-newspaper', day: copy.day, turn: 'prev' }), owner: id }] : []),
+          ...(page < newspaperPageCount(copy) - 1 ? [{ ...hotspot(`${id}-next`, t.newspaper.next, corners.next, { type: 'read-newspaper', day: copy.day, turn: 'next' }), owner: id }] : []),
+        ] : []),
+      ];
+    }),
     ...(!isManualStored(state) ? [item('manual', t.manual, 'manual', 'manual')] : []),
     ...(!isManualStored(state) && view.held !== 'manual' && view.desk.positions.manual.x >= RIGHT_DESK_X ? [
       ...(view.manualOpen ? [hotspot('manual-prev', view.manualPage === 0 ? t.manualClose : t.manualPrevious, pageCorners.previous, 'manual-prev')] : []),
@@ -210,7 +223,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
   if (visit?.specialist && !visit.specialistTaken) drawPaper(ctx, 72, 181, 35, 66);
   for (const id of view.desk.order) {
     const lifted = isLifted(view, id);
-    const bounds = itemRect(view.desk, id, visit?.document === 'tray' && !lifted, lifted, view.manualOpen);
+    const bounds = itemRect(view.desk, id, visit?.document === 'tray' && !lifted, lifted, view.manualOpen, isNewspaperItem(id) && view.newspaperViews?.[id]?.open);
     const { x, y, w, h } = bounds;
     if (id === 'banknote') { if (visit?.bribe === 'offered') drawBanknote(ctx, x, y, w, h); continue; }
     if (id.startsWith('banknote-')) {
@@ -228,6 +241,12 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     }
     if (id.startsWith('clip-')) {
       drawPaperclip(ctx, x, y, lifted);
+      continue;
+    }
+    if (isNewspaperItem(id)) {
+      const copy = state.newspaperCopies.find(copy => newspaperItemId(copy.day, state.day) === id && copy.location === 'desk');
+      const reading = view.newspaperViews?.[id];
+      if (copy) drawNewspaper(ctx, bounds, copy, copy.day, locale, reading?.open ?? false, reading?.page ?? 0, lifted);
       continue;
     }
     if (id !== 'document') {

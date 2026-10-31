@@ -33,6 +33,7 @@ for (const scene of scenes) test(`${scene} renders its local art, PL/EN captions
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const state = fixture(scene), buffer = Buffer.from(encodeSave(state));
   await page.goto('/');
+  await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
   await key(page, 'saves');
   await page.locator('#save-input').setInputFiles({ name: 'weekend.npsave', mimeType: 'application/gzip', buffer });
   await expect(page.getByRole('status')).toContainText('Zapis wczytany');

@@ -1,4 +1,4 @@
-import { historicalState, legacyBudget } from './fixtures/legacy-budget';
+import { historicalState, legacyBudget, withMigratedNewspaper } from './fixtures/legacy-budget';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, gunzipSync, strToU8 } from 'fflate';
 import { applyAction, advanceClinicTime, createInitialState, type GameAction, type GameState, type Paper } from '../src/core/game';
@@ -102,7 +102,7 @@ describe('bankruptcy ending', () => {
       expect(act(state, 'next-day').day).toBe(2);
     }
     expect(decodeSave(encodeSave(bankrupt))).toEqual(bankrupt);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(bankrupt)))).version).toBe(31);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(bankrupt)))).version).toBe(33);
   });
 
   it('also ends at forced closing without awarding an unfinished appointment', () => {
@@ -125,7 +125,7 @@ describe('bankruptcy ending', () => {
     const { budgetHistory: _history, pendingReferrals: _pending, referralsIssued: _issued, ...legacy } = ended;
     const historical = { ...legacy, ending: null };
     const migrated = decodeSave(file(historical, 17));
-    expect(migrated).toEqual(ended);
+    expect(migrated).toEqual(withMigratedNewspaper(ended));
     expect(act(migrated, 'next-day')).toBe(migrated);
     expect(() => decodeSave(file({ ...ended, ending: null }))).toThrowError(expect.objectContaining({ code: 'invalid-state' }));
     for (const state of [{ ...ended, money: 0 }, { ...ended, phase: 'cabinet' }, { ...closed(1), ending: 'bankruptcy' }]) {

@@ -1,4 +1,4 @@
-import { itemAnchor, restRect, type DeskItemId, type Point, type Rect } from './desk';
+import { isNewspaperItem, itemAnchor, restRect, type DeskItemId, type Point, type Rect } from './desk';
 
 type DeskInputOptions = {
   enabled: () => boolean;
@@ -90,7 +90,7 @@ export function installDeskInput(stage: HTMLElement, options: DeskInputOptions):
       const attachedClip = control.id === 'control-certificate-clip' || control.id.startsWith('control-paper-clip-');
       if (((held === 'banknote' || held.startsWith('banknote-')) && ['control-return-bribe', 'control-accept-bribe', 'control-store-banknote', 'control-drawer', 'control-drawer-2'].includes(control.id))
         || ((held === 'document' || held.startsWith('paper-')) && ['control-return-document', 'control-hand-additional-referral', 'control-hand-inspection-paper'].includes(control.id))
-        || ((held === 'incoming-referral' || held.startsWith('paper-') || held.startsWith('clip-') || held === 'manual') && ['control-drawer', 'control-drawer-2', 'control-trash'].includes(control.id))
+        || ((held === 'incoming-referral' || held.startsWith('paper-') || held.startsWith('clip-') || held === 'manual' || isNewspaperItem(held)) && ['control-drawer', 'control-drawer-2', 'control-trash'].includes(control.id))
         || (held.startsWith('clip-') && (control.dataset.item?.startsWith('paper-') || control.dataset.item === 'document'))
         || ((held === 'document' || held === 'incoming-referral' || held.startsWith('paper-')) && attachedClip)) {
         activate({ x: parseFloat(control.style.left) + parseFloat(control.style.width) / 2,

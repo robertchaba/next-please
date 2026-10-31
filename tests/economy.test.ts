@@ -119,7 +119,9 @@ describe('closing and the household budget', () => {
     expect(loaded).toEqual(home);
     expect(act(loaded, 'end-day')).toBe(loaded);
     const next = act(loaded, 'next-day');
-    expect(next).toMatchObject({ day: 2, phase: 'cabinet', money: home.money, insuranceRate: 400, settlement: null, clockMinutes: 477, shiftCompleted: 0 });
+    expect(next.clockMinutes).toBeGreaterThanOrEqual(459);
+    expect(next.clockMinutes).toBeLessThanOrEqual(466);
+    expect(next).toMatchObject({ day: 2, phase: 'cabinet', money: home.money, insuranceRate: 400, settlement: null, clockMinutes: expect.any(Number), shiftCompleted: 0 });
     expect(next.roster).not.toEqual(home.roster);
     expect(decodeSave(encodeSave(next))).toEqual(next);
   });
@@ -175,6 +177,7 @@ describe('multi-day case and save integration', () => {
     let state = act({ ...createInitialState(614), money: 100000 }, 'skip-intro');
     const seen = new Set<number>();
     for (let day = 0; day < 3; day++) {
+      if (state.phase === 'cabinet') state = { ...state, clockMinutes: Math.max(480, state.clockMinutes) };
       while (state.phase === 'cabinet' && !canEndDay(state)) {
         state = act(state, 'call-patient');
         if (state.inspection) {
@@ -236,7 +239,9 @@ describe('rest days and monthly carryover', () => {
     expect(sunday).toMatchObject({ day: 4, phase: 'home', roster: [], insuranceRate: 350 });
     expect(sunday.settlement).toMatchObject({ basePay: 0, patientBonus: 0, patients: 0, insuranceCost: 0, openingBalance: saturday.money });
     const monday = act(decodeSave(encodeSave(sunday)), 'next-day');
-    expect(monday).toMatchObject({ day: 5, phase: 'cabinet', clockMinutes: 477, money: sunday.money, insuranceRate: 350, settlement: null });
+    expect(monday.clockMinutes).toBeGreaterThanOrEqual(459);
+    expect(monday.clockMinutes).toBeLessThanOrEqual(466);
+    expect(monday).toMatchObject({ day: 5, phase: 'cabinet', clockMinutes: expect.any(Number), money: sunday.money, insuranceRate: 350, settlement: null });
     expect(monday.roster).toHaveLength(168);
     expect(decodeSave(encodeSave(monday))).toEqual(monday);
   });

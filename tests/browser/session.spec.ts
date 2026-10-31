@@ -126,7 +126,7 @@ test('restart can be canceled and resets progress only after confirmation, retai
   await page.keyboard.press('Escape');
   await activate(page, 'saves');
   const restarted = await exportState(page, testInfo);
-  expect(restarted).toEqual({ ...createInitialState(), rngState: restarted.rngState, roster: restarted.roster });
+  expect(restarted).toEqual({ ...createInitialState(), rngState: restarted.rngState, roster: restarted.roster, newspaper: restarted.newspaper, newspaperCopies: [{ day: 1, articleIds: restarted.newspaper.articleIds, location: 'desk' }] });
   expect(restarted.roster).toHaveLength(168);
   expect(new Set(restarted.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(168);
   let unfit = 0;
@@ -198,7 +198,7 @@ test('a delayed import cannot overwrite a newly restarted game', async ({ page }
   await page.keyboard.press('Escape');
   await activate(page, 'saves');
   const restarted = await exportState(page, testInfo);
-  expect(restarted).toEqual({ ...createInitialState(), rngState: restarted.rngState, roster: restarted.roster });
+  expect(restarted).toEqual({ ...createInitialState(), rngState: restarted.rngState, roster: restarted.roster, newspaper: restarted.newspaper, newspaperCopies: [{ day: 1, articleIds: restarted.newspaper.articleIds, location: 'desk' }] });
   expect(restarted.roster).toHaveLength(168);
   expect(new Set(restarted.roster.map(id => PATIENTS[id]!.characterId)).size).toBe(168);
 });

@@ -8,7 +8,7 @@ export function discretionaryAppointment(patientId: number, day = 1): GameState 
   const initial = createInitialState(123);
   const patient = PATIENTS[patientId]!;
   const roster = [patientId, ...initial.roster.filter(id => PATIENTS[id]!.characterId !== patient.characterId)];
-  const state = act({ ...initial, day, money: 10000, roster }, 'skip-intro', 'call-patient');
+  const state = act({ ...initial, day, clockMinutes: 480, money: 10000, roster }, 'skip-intro', 'call-patient');
   return { ...state, visit: { ...state.visit!, bribe: 'none', specialist: null,
     referral: { ...state.visit!.referral, ageDays: 0, authentic: true, seal: 'clear' } } };
 }
@@ -24,7 +24,7 @@ export function receiveDiscretionary(state: GameState): GameState {
   const day = state.pendingReferrals[0]!.returnDay;
   state = act({ ...state, clockMinutes: 840 }, 'end-day');
   while (state.day < day) state = act(state, 'next-day');
-  return act(state, 'call-patient');
+  return act({ ...state, clockMinutes: 480 }, 'call-patient');
 }
 
 export function attachReport(state: GameState): GameState {

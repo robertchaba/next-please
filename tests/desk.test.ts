@@ -37,12 +37,13 @@ describe('temporary desktop layout', () => {
       expect(Number.isInteger(rect.x)).toBe(true);
       expect(Number.isInteger(rect.y)).toBe(true);
       expect(rect.x).toBeGreaterThanOrEqual(DESK_BOUNDS.x);
-      const minimumY = id === 'document' && rect.x >= RIGHT_DESK_X ? RIGHT_DESK_TOP - rect.h / 2 : DESK_BOUNDS.y;
+      const minimumY = id === 'document' && rect.x >= RIGHT_DESK_X ? RIGHT_DESK_TOP - rect.h / 2
+        : id === 'newspaper' && rect.x >= RIGHT_DESK_X ? 134 : DESK_BOUNDS.y;
       expect(rect.y).toBeGreaterThanOrEqual(minimumY);
       expect(rect.x + rect.w).toBeLessThanOrEqual(DESK_BOUNDS.x + DESK_BOUNDS.w);
       expect(rect.y + rect.h).toBeLessThanOrEqual(DESK_BOUNDS.y + DESK_BOUNDS.h);
     }
-    expect(moveDeskItem(state, id, { x: 250.4, y: 145.6 }).positions[id]).toEqual({ x: 250, y: 146 });
+    expect(moveDeskItem(state, id, { x: 250.4, y: 145.6 }).positions[id]).toEqual({ x: 250, y: id === 'newspaper' ? 134 : 146 });
   });
 
   it.each(['document', 'paper-1'] as const)('allows %s over the room only while at least half remains over the right desktop', id => {

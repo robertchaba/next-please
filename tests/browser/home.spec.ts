@@ -83,7 +83,9 @@ test('last patient leaves at closing; automatic home and daily budget preserve s
   await key(page, 'home-next');
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   const next = await exportState(page, info);
-  expect(next.state).toMatchObject({ day: 2, money: saved.state.money, shiftCompleted: 0, clockMinutes: 477, settlement: null });
+  expect(next.state.clockMinutes).toBeGreaterThanOrEqual(459);
+  expect(next.state.clockMinutes).toBeLessThanOrEqual(466);
+  expect(next.state).toMatchObject({ day: 2, money: saved.state.money, shiftCompleted: 0, clockMinutes: expect.any(Number), settlement: null });
   expect(next.state.roster).toHaveLength(168);
   let unfit = 0;
   for (const [index, id] of next.state.roster.entries()) {
@@ -164,7 +166,9 @@ test('Friday through Sunday shows one summed budget, keeps events and leads into
   await key(page, 'home-next');
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   const monday = await exportState(page, info);
-  expect(monday.state).toMatchObject({ day: 5, clockMinutes: 477, settlement: null, budgetHistory: [], money: sunday.money });
+  expect(monday.state.clockMinutes).toBeGreaterThanOrEqual(459);
+  expect(monday.state.clockMinutes).toBeLessThanOrEqual(466);
+  expect(monday.state).toMatchObject({ day: 5, clockMinutes: expect.any(Number), settlement: null, budgetHistory: [], money: sunday.money });
 });
 
 test('modest weekends show their own scene and joke in both languages and preserve the Sunday plan', async ({ page }, info) => {

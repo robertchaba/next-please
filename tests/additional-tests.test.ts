@@ -1,4 +1,4 @@
-import { historicalState, legacyBudget } from './fixtures/legacy-budget';
+import { historicalState, legacyBudget, withMigratedNewspaper } from './fixtures/legacy-budget';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
 import { applyAction, advanceClinicTime, createInitialState, GAME_LIMITS, type GameState, type GameAction, type NoteEntryId } from '../src/core/game';
@@ -14,7 +14,7 @@ const patientForJob = (jobId: number, variant = 0) => PATIENTS.find(patient => p
 function appointment(jobId = 46, variant = 0, day = 9, patientId?: number): GameState {
   const patient = patientId === undefined ? patientForJob(jobId, variant) : PATIENTS[patientId]!, initial = createInitialState(3456);
   const roster = [patient.id, ...initial.roster.filter(id => PATIENTS[id]!.characterId !== patient.characterId)];
-  const called = act({ ...initial, day, money: 10000, roster }, 'skip-intro', 'call-patient');
+  const called = act({ ...initial, day, clockMinutes: 480, money: 10000, roster }, 'skip-intro', 'call-patient');
   return { ...called, visit: { ...called.visit!, bribe: 'none', specialist: null,
     referral: { ...called.visit!.referral, ageDays: 0, seal: 'clear', authentic: true } } };
 }
@@ -30,7 +30,7 @@ function returnNextWorkday(state: GameState): GameState {
   const returnDay = state.pendingReferrals[0]!.returnDay;
   state = act({ ...state, clockMinutes: 840 }, 'end-day');
   while (state.day < returnDay) state = act(state, 'next-day');
-  return act(state, 'call-patient');
+  return act({ ...state, clockMinutes: 480 }, 'call-patient');
 }
 const roundTrip = (state: GameState) => expect(decodeSave(encodeSave(state))).toEqual(state);
 
@@ -87,7 +87,8 @@ describe('day seven additional examinations', () => {
     state = act({ ...state, clockMinutes: 840 }, 'end-day'); roundTrip(state);
     state = act(state, 'next-day'); roundTrip(state);
     state = act(state, 'next-day'); roundTrip(state);
-    state = act(state, 'next-day', 'call-patient');
+    state = act(state, 'next-day');
+    state = act({ ...state, clockMinutes: 480 }, 'call-patient');
     expect(state.visit!.startedDay).toBe(9);
     expect(state.visit!.pressureReadings).toHaveLength(1);
     state = act(state, 'run-general', 'run-pressure', 'call-employer');
@@ -146,14 +147,15 @@ describe('day seven additional examinations', () => {
     expect(state.shiftCompleted).toBe(0);
     expect(state.pendingReferrals[0]!.visit).toEqual(visit);
     roundTrip(state);
-    state = act(state, 'next-day', 'call-patient');
+    state = act(state, 'next-day');
+    state = act({ ...state, clockMinutes: 480 }, 'call-patient');
     expect(state.visit).toEqual(visit);
     roundTrip(state);
   });
 
   it('migrates and re-exports an active historical paid weekend shift', () => {
     const initial = createInitialState(44);
-    const historical = act({ ...initial, day: 3, roster: createRoster(44, false, patient => patient.id < 5253).roster.filter(id => PATIENTS[id]!.characterId < 78) }, 'skip-intro', 'call-patient');
+    const historical = act({ ...initial, day: 3, clockMinutes: 480, roster: createRoster(44, false, patient => patient.id < 5253).roster.filter(id => PATIENTS[id]!.characterId < 78) }, 'skip-intro', 'call-patient');
     const raw = structuredClone(historical) as unknown as Record<string, unknown>;
     delete raw.pendingReferrals; delete raw.referralsIssued; delete raw.budgetHistory;
     const visit = raw.visit as Record<string, unknown>;
@@ -166,7 +168,7 @@ describe('day seven additional examinations', () => {
 
   it('rejects forged result, return schedule, unknown fields and duplicate pending identities', () => {
     const state = send(appointment(), 'vestibular');
-    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 31, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
+    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 33, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
     for (const change of [
       (s: GameState) => { s.pendingReferrals[0]!.fit = false; },
       (s: GameState) => { s.pendingReferrals[0]!.returnDay += 7; },
@@ -283,7 +285,7 @@ describe('returned examination report handoff', () => {
     const state = act(before, 'return-document');
     const file = (candidate: unknown, version = 29) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-27T12:00:00.000Z', state: version < 24 ? legacyBudget(withoutAdditionalNotes(candidate as GameState)) : historicalState(candidate, version) })));
     const historical = { ...before, roster: before.roster.filter(id => id <= 3127) };
-    expect(decodeSave(file(historical, 22))).toEqual(historical);
+    expect(decodeSave(file(historical, 22))).toEqual(withMigratedNewspaper(historical));
     for (const change of [{ reason: 'unknown' }, { sender: 'zus' }, { patientId: 0 }, { day: 1 }, { surprise: true }]) {
       const forged = { ...state, papers: state.papers.map(paper => paper.kind === 'letter' ? { ...paper, ...change } : paper) };
       expect(() => decodeSave(file(forged))).toThrow();
@@ -341,7 +343,8 @@ describe('additional examination entries in medical notes', () => {
     expect(notes(state)[0]!.noteOrder).toEqual(entries);
     state = advanceClinicTime(state, 1035 - state.clockMinutes).state;
     roundTrip(state);
-    state = act(state, 'next-day', 'call-patient');
+    state = act(state, 'next-day');
+    state = act({ ...state, clockMinutes: 480 }, 'call-patient');
     expect(state.visit!.noteOrder).toEqual(entries);
     roundTrip(state);
   });
@@ -350,11 +353,11 @@ describe('additional examination entries in medical notes', () => {
     const legacy = (state: GameState): GameState => ({ ...state, roster: state.roster.filter(id => id <= 3377) });
     let state = act(legacy(appointment()), 'take-document', 'run-pressure', 'take-paper');
     const pending = send(state, 'vestibular', 1);
-    expect(decodeSave(file(withoutAdditionalNotes(pending), 26))).toEqual(pending);
+    expect(decodeSave(file(withoutAdditionalNotes(pending), 26))).toEqual(withMigratedNewspaper(pending));
     state = legacy(returnNextWorkday(pending));
-    expect(decodeSave(file(withoutAdditionalNotes(state), 26))).toEqual(state);
+    expect(decodeSave(file(withoutAdditionalNotes(state), 26))).toEqual(withMigratedNewspaper(state));
     state = send(state, 'audiometry', 1);
-    expect(decodeSave(file(withoutAdditionalNotes(state), 26))).toEqual(state);
+    expect(decodeSave(file(withoutAdditionalNotes(state), 26))).toEqual(withMigratedNewspaper(state));
     roundTrip(decodeSave(file(withoutAdditionalNotes(state), 26)));
   });
 

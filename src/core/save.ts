@@ -1,7 +1,8 @@
+import { createNewspaper, newspaperCopy, PRESS_ARTICLES, type NewspaperState, type NewspaperCopy, type PressArticleId } from './newspaper';
 import { gameDate, isWeekend } from './calendar';
 import { ADDITIONAL_TESTS, additionalNoteEntry, additionalNoteResult, additionalResultFor, additionalTestForJob, nextWorkingDay, type AdditionalTest, type AdditionalResult, type PendingReferral } from './additional-tests';
 import { Gunzip, gzipSync, strToU8 } from 'fflate';
-import { ARRIVAL_MINUTES, CLINIC_CLOSE_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_START_MINUTES, type GameState as LatestGameState, type Visit as CurrentVisit, type Paper as LatestPaper, type Banknote, type DrawerItems, type StorageLocation, type DocumentId, type NoteEntryId } from './game';
+import { EARLIEST_ARRIVAL_MINUTES, FIRST_PATIENT_MINUTES, ARRIVAL_MINUTES, CLINIC_CLOSE_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_START_MINUTES, type GameState as LatestGameState, type Visit as CurrentVisit, type Paper as LatestPaper, type Banknote, type DrawerItems, type StorageLocation, type DocumentId, type NoteEntryId } from './game';
 
 import { CHARACTER_COUNT, JOBS, compatiblePressureReading, type ExaminationId, type PressureValues, type PatientCase } from './patients';
 import { defaultReferral, directiveForDay, emptyCalls, effectivePatient, employerPhone, specialistPhone, workDayNumber, type ReferralDetails, type SpecialistCertificate, type PhoneConclusions } from './progression';
@@ -13,9 +14,11 @@ export type { GameState } from './game';
 /** Freeze the pre-progression schema so legacy validators keep exact bounds. */
 type LegacyLocation<T> = T extends { location: StorageLocation } ? Omit<T, 'location'> & { location: 'desk' | 'drawer' } : never;
 type CurrentPaper = LegacyLocation<LatestPaper>;
-type CurrentGameState = Omit<LatestGameState, 'portraitHistory' | 'drawerItems' | 'papers' | 'banknotes'> & {
+type CurrentGameState = Omit<LatestGameState, 'newspaperCopies' | 'newspaper' | 'portraitHistory' | 'drawerItems' | 'papers' | 'banknotes'> & {
   drawerItems: DrawerItems; papers: CurrentPaper[]; banknotes: LegacyLocation<Banknote>[];
 };
+type StateV32 = Omit<LatestGameState, 'newspaperCopies'>;
+type StateV31 = Omit<StateV32, 'newspaper'>;
 type StateV30 = CurrentGameState & Pick<LatestGameState, 'portraitHistory'>;
 type VisitV18 = Omit<CurrentVisit, 'startedDay' | 'additionalResult' | 'additionalTests'>;
 type PaperV24 = Exclude<CurrentPaper, { kind: 'inspection-id' | 'inspection-fine' }>;
@@ -76,9 +79,9 @@ type GameStateV5 = Omit<GameStateV8, 'visit' | 'paperClips' | 'papers' | 'drawer
 type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<VisitV10, 'certificateNamed'> | null };
 type GameStateV7 = Omit<GameStateV8, 'drawerItems'>;
 
-interface SaveV31 {
+interface SaveV33 {
   game: 'next-please';
-  version: 31;
+  version: 33;
   savedAt: string;
   state: LatestGameState;
 }
@@ -456,7 +459,7 @@ function validateStateV8(value: unknown): GameStateV8 {
 
 /** Frozen original queue: legacy appointments retain their original positions. */
 function legacyInitialState(): GameState {
-  const { portraitHistory: _portraits, banknotes: _banknotes, recentVisits: _recent, inspection: _inspection, inspectionCheckedAt: _checked, inspectionFines: _fines, bribeIncome: _bribes, settlement: _settlement, budgetHistory: _history, pendingReferrals: _pending, referralsIssued: _issued, ...initial } = createInitialState(0x4e505301);
+  const { newspaperCopies: _copies, newspaper: _newspaper, portraitHistory: _portraits, banknotes: _banknotes, recentVisits: _recent, inspection: _inspection, inspectionCheckedAt: _checked, inspectionFines: _fines, bribeIncome: _bribes, settlement: _settlement, budgetHistory: _history, pendingReferrals: _pending, referralsIssued: _issued, ...initial } = createInitialState(0x4e505301);
   return { ...initial, drawerItems: { manual: false, clips: 0 }, settlement: null, visit: null, papers: [], rngState: 3477621340,
     roster: [0, 1, 2, 62, 49, 75, 81, 66, 98, 4, 67, 43, 34, 28, 42, 58, 15, 21, 89, 26, 93, 52, 100, 8, 72, 86, 14, 38] };
 }
@@ -1521,7 +1524,7 @@ function validateStateV29(value: unknown): StateV30 {
 }
 
 /** Preserve the existing validation rules after checking each physical compartment. */
-function validateStateV31(value: unknown): LatestGameState {
+function validateStateV31(value: unknown): StateV31 {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !isRecord(value.drawerItems) || !hasOnlyKeys(value.drawerItems, ['drawer', 'drawer-2'])
     || !Array.isArray(value.papers) || !Array.isArray(value.banknotes) || !Array.isArray(value.paperClips)) return fail();
@@ -1555,20 +1558,85 @@ function validateStateV31(value: unknown): LatestGameState {
   };
 }
 
-function migrateDrawers(state: StateV30): LatestGameState {
+function migrateDrawers(state: StateV30): StateV31 {
   return { ...state, drawerItems: { drawer: { ...state.drawerItems }, 'drawer-2': { manual: false, clips: 0 } } };
 }
 
-function hasTwoDrawers(state: LatestGameState | StateV23 | StateV24 | StateV25 | CurrentGameState): state is LatestGameState {
+function hasTwoDrawers(state: StateV31 | StateV23 | StateV24 | StateV25 | CurrentGameState): state is StateV31 {
   return 'drawer' in state.drawerItems;
 }
 
+/** Validate the new morning range, then reuse frozen clinical/cash validators.
+ * The five-minute projection changes validation only, never the restored clock.
+ */
+function validateStateV32(value: unknown): StateV32 {
+  const fail = (): never => { throw new SaveError('invalid-state'); };
+  if (!isRecord(value) || !isRecord(value.newspaper)
+    || !hasOnlyKeys(value.newspaper, ['articleIds', 'usedArticleIds', 'rngState'])) return fail();
+  const raw = value.newspaper;
+  const ids = (input: unknown, min: number, max: number): PressArticleId[] => {
+    if (!Array.isArray(input) || input.length < min || input.length > max
+      || new Set(input).size !== input.length
+      || input.some(id => !PRESS_ARTICLES.some(article => article.id === id))) return fail();
+    return [...input] as PressArticleId[];
+  };
+  const articleIds = ids(raw.articleIds, 3, 4);
+  const usedArticleIds = ids(raw.usedArticleIds, articleIds.length, PRESS_ARTICLES.length);
+  if (articleIds.some(id => !usedArticleIds.includes(id)) || !isIntegerInRange(raw.rngState, 0, 0xffff_ffff)
+    || (value.phase === 'intro' && usedArticleIds.length !== articleIds.length)) return fail();
+  const newspaper: NewspaperState = { articleIds, usedArticleIds, rngState: raw.rngState };
+  const { newspaper: _newspaper, ...base } = value;
+  const earlyShift = typeof value.day === 'number' && value.day > 1 && value.phase === 'cabinet';
+  if (!isIntegerInRange(value.clockMinutes, earlyShift ? EARLIEST_ARRIVAL_MINUTES : ARRIVAL_MINUTES, CLINIC_CLOSE_MINUTES)) return fail();
+  if (earlyShift && value.clockMinutes < FIRST_PATIENT_MINUTES
+    && (value.visit !== null || value.inspection !== null || value.shiftCompleted !== 0)) return fail();
+  const projectedClock = earlyShift
+    ? Math.max(ARRIVAL_MINUTES, Math.min(CLINIC_CLOSE_MINUTES - 1, value.clockMinutes + 5)) : value.clockMinutes;
+  if (value.phase === 'cabinet' && value.clockMinutes === CLINIC_CLOSE_MINUTES) return fail();
+  const previous = validateStateV31({ ...base, clockMinutes: projectedClock });
+  return { ...previous, clockMinutes: value.clockMinutes, newspaper };
+}
+
+function migrateNewspaper(state: StateV31): StateV32 {
+  // No historical issue list can be recovered. Start the press pool on import,
+  // using a separate stream without consuming or changing the saved game RNG.
+  return { ...state, newspaper: createNewspaper((state.rngState ^ state.day) >>> 0) };
+}
+
+function migrateNewspaperCopies(state: StateV32): LatestGameState {
+  let day = state.day;
+  while (isWeekend(day)) day--;
+  return { ...state, newspaperCopies: [newspaperCopy(state.newspaper, day)] };
+}
+
+function validateStateV33(value: unknown): LatestGameState {
+  const fail = (): never => { throw new SaveError('invalid-state'); };
+  if (!isRecord(value) || !Array.isArray(value.newspaperCopies) || value.newspaperCopies.length > GAME_LIMITS.papers) return fail();
+  const { newspaperCopies: rawCopies, ...base } = value;
+  const state = validateStateV32(base);
+  const days = new Set<number>();
+  const newspaperCopies = rawCopies.map((raw): NewspaperCopy => {
+    if (!isRecord(raw) || !hasOnlyKeys(raw, ['day', 'articleIds', 'location'])
+      || !isIntegerInRange(raw.day, 1, state.day) || isWeekend(raw.day) || days.has(raw.day)
+      || (raw.location !== 'desk' && raw.location !== 'drawer' && raw.location !== 'drawer-2')
+      || !Array.isArray(raw.articleIds) || raw.articleIds.length < 3 || raw.articleIds.length > 4
+      || new Set(raw.articleIds).size !== raw.articleIds.length
+      || raw.articleIds.some(id => !state.newspaper.usedArticleIds.includes(id as PressArticleId))) return fail();
+    if (raw.day === state.day && JSON.stringify(raw.articleIds) !== JSON.stringify(state.newspaper.articleIds)) return fail();
+    days.add(raw.day);
+    return { day: raw.day, articleIds: [...raw.articleIds] as PressArticleId[], location: raw.location };
+  });
+  if (state.phase === 'intro' && (newspaperCopies.length !== 1 || newspaperCopies[0]!.location !== 'desk'
+    || JSON.stringify(newspaperCopies[0]!.articleIds) !== JSON.stringify(state.newspaper.articleIds))) return fail();
+  return { ...state, newspaperCopies };
+}
+
 export function encodeSave(state: LatestGameState): Uint8Array {
-  const envelope: SaveV31 = {
+  const envelope: SaveV33 = {
     game: 'next-please',
-    version: 31,
+    version: 33,
     savedAt: new Date().toISOString(),
-    state: validateStateV31(state),
+    state: validateStateV33(state),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -1659,12 +1727,14 @@ function decompressSave(bytes: Uint8Array): Uint8Array {
 export function decodeSave(bytes: Uint8Array): LatestGameState {
   const migration = { additionalNotes: false };
   const decoded = decodeState(bytes, migration);
-  if (hasTwoDrawers(decoded)) return decoded;
+  if ('newspaperCopies' in decoded) return decoded;
+  if ('newspaper' in decoded) return migrateNewspaperCopies(decoded);
+  if (hasTwoDrawers(decoded)) return migrateNewspaperCopies(migrateNewspaper(decoded));
   const state = migrateBanknotes(migrateInspection(migrateBribeIncome(decoded)));
-  return migrateDrawers(migratePortraitHistory(migration.additionalNotes ? migrateAdditionalNotes(state) : state));
+  return migrateNewspaperCopies(migrateNewspaper(migrateDrawers(migratePortraitHistory(migration.additionalNotes ? migrateAdditionalNotes(state) : state))));
 }
 
-function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean }): LatestGameState | StateV23 | StateV24 | StateV25 | CurrentGameState {
+function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean }): LatestGameState | StateV32 | StateV31 | StateV23 | StateV24 | StateV25 | CurrentGameState {
   const expanded = decompressSave(bytes);
   let envelope: unknown;
   try {
@@ -1675,7 +1745,7 @@ function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean })
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (!isIntegerInRange(envelope.version, 1, 31)) throw new SaveError('unsupported-version');
+  if (!isIntegerInRange(envelope.version, 1, 33)) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -1685,6 +1755,8 @@ function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean })
     throw new SaveError('invalid-file');
   }
   migration.additionalNotes = (envelope.version as number) < 27;
+  if (envelope.version === 33) return validateStateV33(envelope.state);
+  if (envelope.version === 32) return validateStateV32(envelope.state);
   if (envelope.version === 31) return validateStateV31(envelope.state);
   if (envelope.version === 30) return validateStateV29(envelope.state);
   if (envelope.version === 29) {

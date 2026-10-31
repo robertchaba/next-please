@@ -418,6 +418,138 @@ const patientCopy = {
 
 export const translations = {
   pl: {
+    newspaper: {
+      "title": "Kurier Obywatelski",
+      "strapline": "DZIENNIK MIASTA I REGIONU",
+      "issue": "Nr",
+      "page": "Strona",
+      "open": "Rozłóż gazetę",
+      "close": "Złóż i odłóż gazetę na lewą stronę",
+      "next": "Następna strona",
+      "previous": "Poprzednia strona",
+      "closed": "Gazeta złożona na lewym biurku.",
+      "emptyRoom": "Jeszcze nikogo nie ma.",
+      "contents": "W tym numerze",
+      "imprint": "Redakcja Kuriera Obywatelskiego",
+      "help": "Po prawej gazeta rozkłada się do czytania. Rogi: strony. Enter: rozłóż lub odłóż na lewo. Spacja: podnieś. Strzałki: przenieś. Enter: odłóż. Escape: anuluj lub odłóż gazetę.",
+      "topics": {
+        "culture": "Kultura",
+        "craft": "Rzemiosło",
+        "sport": "Sport",
+        "hobby": "Zainteresowania",
+        "technology": "Technika",
+        "household": "Gospodarność",
+        "home": "Dom",
+        "kitchen": "Kuchnia",
+        "transport": "Podróże",
+        "everyday": "Z życia",
+        "education": "Szkoła",
+        "science": "Nauka",
+        "community": "Osiedle"
+      },
+      "articles": {
+        "reading-circle": {
+          "title": "Jedna powieść, 43 chętnych",
+          "body": "W filii nr 6 biblioteki miejskiej przy ulicy Kolejowej na najpoczytniejszą powieść zapisano 43 osoby. Do dyspozycji jest jeden egzemplarz; drugi wrócił z wypożyczenia bez kilkunastu stron. Bibliotekarka Janina Wolska pokazuje zeszyt rezerwacji. Najdłużej czekają czytelnicy, którzy mogą przyjść dopiero po drugiej zmianie. Filia wymienia książki z placówkami na obrzeżach, lecz tam poszukiwane są te same tytuły. W sprawozdaniu rocznym każdy obrót tego egzemplarza będzie kolejnym wypożyczeniem. Zeszyt pani Wolskiej opisuje drugą stronę tej statystyki.",
+          "byline": "Ewa Lis - Dział miejski"
+        },
+        "choir": {
+          "title": "Próba po drugiej zmianie",
+          "body": "Zakładowy chór kolejarzy ćwiczy w sali nad stołówką. Czterdziestu śpiewaków ma różne rozkłady służby, więc dyrygent nigdy nie słyszy na próbie całego zespołu. Partie basowe powtarza osobno z ludźmi schodzącymi z nocnej zmiany. Nuty przepisuje na kalce pracownica kancelarii; wspólny śpiewnik mieści się w dwóch teczkach. W repertuarze są pieśni ludowe i utwory przedwojenne. Na występy chór jeździ po całym województwie. Jak mówi jego kierownik, trudniej zebrać wszystkich na dworcu niż nauczyć ich nowej pieśni.",
+          "byline": "Marek Boruta - Kultura"
+        },
+        "film-club": {
+          "title": "Film poza repertuarem",
+          "body": "W klubie filmowym przy kinie Świt rozmowa trwa zwykle dłużej niż seans. Przychodzą studenci, nauczyciele i stali bywalcy, których bileterka zna po nazwisku. Klub sprowadza starsze filmy pomijane w zwykłym repertuarze. Jedna kopia krąży między kilkoma miastami, dlatego program trzeba uzgadniać z dużym wyprzedzeniem. Prowadzący spotkania prosi widzów o pytania na kartkach. Najwięcej dotyczy obyczajów i codziennego życia bohaterów. O warsztacie reżysera, przewidzianym w konspekcie, dyskutuje już znacznie mniej osób.",
+          "byline": "Marek Boruta - Kultura"
+        },
+        "theatre": {
+          "title": "Drugie życie kostiumu",
+          "body": "W pracowni miejskiego teatru suknie wiszą według epok, a nie według przedstawień. Kostium sprzed dziesięciu sezonów wraca na scenę po zmianie rękawów i kołnierza. Krawcowa Helena Mazur od lat odkłada skrawki tkanin do opisanych pudełek. Z nich dobiera łaty niewidoczne z widowni. Nowego materiału starcza przede wszystkim na stroje pierwszoplanowe; reszta obsady korzysta z magazynu. Przed premierą najwięcej pracy wymagają nie efektowne suknie, lecz zwykłe surduty, które muszą dobrze leżeć na kolejnych aktorach.",
+          "byline": "Ewa Lis - Za kulisami"
+        },
+        "chess": {
+          "title": "Kolejarze przy szachownicy",
+          "body": "Szachiści kolejarzy pokonali drużynę budowlanych 5:3 w kolejnej rundzie ligi miejskiej. O wyniku przesądziły ostatnie szachownice, przy których grali juniorzy. Kapitan zwycięzców podkreśla pracę szkolnej sekcji: młodzi mają stałe zajęcia, podczas gdy starsi zawodnicy uzgadniają treningi z grafikiem zmian. Mecze odbywają się w świetlicach zakładowych, bez opłat za wstęp. Widzowie mogą śledzić zapis partii na tablicy. Liga nie ma własnej sali, ale dzięki gospodarzom z kilku dzielnic rozgrywki zachowują regularny rytm.",
+          "byline": "Jan Rudzki - Sport"
+        },
+        "table-tennis": {
+          "title": "Po lekcjach przy stole",
+          "body": "Drużyna spółdzielców wygrała 6:4 z pocztowcami w miejskiej lidze tenisa stołowego. Spotkanie rozegrano w sali szkoły nr 12, udostępnianej klubom po lekcjach. Zawodnicy sami ustawili stoły i ogrodzenia z ławek, a po meczu przygotowali salę na poranną gimnastykę. Trener spółdzielców chwali zwłaszcza grę deblową młodszej pary. Sekcja przyjmuje uczniów, lecz ma tylko dwa wieczory treningowe w tygodniu. Korzystają z nich na zmianę juniorzy i dorośli. Dla części zawodników dojazd z przedmieść trwa dłużej niż sam trening.",
+          "byline": "Jan Rudzki - Sport"
+        },
+        "stamps": {
+          "title": "Miasto na kopercie",
+          "body": "Na spotkaniach koła filatelistów przy domu kultury na Szkolnej coraz częściej ogląda się całe koperty, nie tylko znaczki. Stemple dawnych urzędów pocztowych pozwalają odtworzyć rozwój przedmieść. Kolekcjoner Antoni Witek zbiera przesyłki z adresami ulic, które zmieniły nazwy. Większość znalazł w rodzinnych papierach, resztę wymienił z innymi członkami koła. Prosi, by przed oddaniem makulatury przejrzeć stare listy. Odcięty znaczek traci część opowieści, którą zachowują adres, data i pieczęć na odwrocie koperty.",
+          "byline": "Ewa Lis - Zainteresowania"
+        },
+        "cassette": {
+          "title": "Koncert z odbiornika",
+          "body": "W listach do działu technicznego powraca pytanie, jak nagrać audycję bez głosów domowników. W wielu mieszkaniach magnetofon stoi przy radiu, a muzykę zbiera mikrofon. Instruktor pracowni przy domu kultury pokazuje inne połączenie, wykorzystujące gniazda obu aparatów. Nie każdy odbiornik je posiada, a odpowiedniego przewodu trzeba nieraz szukać w kilku sklepach. Na zajęcia przynosi się własny sprzęt i instrukcje. Uczestnicy wymieniają też spisy audycji: przy niewielu kasetach warto wiedzieć, co zajmuje drugą stronę.",
+          "byline": "Dział techniczny"
+        },
+        "knitting": {
+          "title": "Włóczka z odzysku",
+          "body": "Przy ladzie pasmanterii na Ogrodowej klientki porównują próbki wełny przyniesione z domu. Potrzeba często jednego motka, lecz dokładnie w tym samym odcieniu. Sprzedawczyni radzi wtedy zmienić cały kołnierz albo oba mankiety. W osiedlowym klubie kobiety prują stare swetry i łączą odzyskaną włóczkę w pasy. Wzory krążą w zeszytach, przepisywane z pożyczonych czasopism. Nie wszystko da się wykorzystać: najbardziej wytarte fragmenty odpadają. Z dobrego swetra dla dorosłego zostaje jednak materiał na kamizelkę dla dziecka.",
+          "byline": "Anna Wrona - Dom i rodzina"
+        },
+        "darning": {
+          "title": "Krawiec od drobnych spraw",
+          "body": "Punkt krawiecki w pasażu przy Ogrodowej ma dwie maszyny i zeszyt pełen zamówień. Nie szyje się tu na miarę: skraca spodnie, wymienia podszewki, dopasowuje płaszcze kupione na wyrost. Mistrz Stanisław Bury najwięcej czasu poświęca rzeczom przynoszonym po kimś z rodziny. Każdą trzeba najpierw rozpruć i sprawdzić zapasy materiału. Cennik ujmuje taką pracę w kilku rubrykach, choć dwa podobne płaszcze mogą wymagać zupełnie innych zabiegów. Klienci pytają przede wszystkim o termin; od niego zależy, czy będą mieli w czym chodzić.",
+          "byline": "Ewa Lis - Usługi"
+        },
+        "plants": {
+          "title": "Ogród na parapecie",
+          "body": "W kwiaciarni na osiedlu Północ pytania o rośliny dotyczą najczęściej mieszkań, nie ogrodów. Klienci opisują wąskie parapety, suche powietrze i okna wychodzące na sąsiedni blok. Florystka Zofia Kurek namawia, by najpierw ustalić, ile miejsca rzeczywiście można przeznaczyć na donice. Okazały okaz z wystawy nie zawsze się tam zmieści. Wśród mieszkańców krążą sadzonki zielistek i pelargonii; sklep sprzedaje do nich ziemię oraz podstawki. Najwięcej porad wymaga roślina otrzymana w prezencie, której nazwy nikt nie zapamiętał.",
+          "byline": "Anna Wrona - Dom i rodzina"
+        },
+        "bread": {
+          "title": "Obiad spod kredowej tablicy",
+          "body": "W barze mlecznym niedaleko dworca jadłospis zapisuje się kredą. Zanim przyjdą pierwsi podróżni, kuchnia wydaje już śniadania pracownikom okolicznych sklepów. Kierowniczka mówi, że stały gość chce przede wszystkim znać cenę i dostać posiłek bez długiego czekania. Dlatego obok potraw mącznych codziennie jest prosta zupa. Pieczywo z poprzedniego dnia przeznacza się na grzanki, a dostawy planuje według utargów z całego tygodnia. Najtrudniej przewidzieć ruch w dni targowe: wtedy przy stolikach spotyka się miasto i okoliczne wsie.",
+          "byline": "Anna Wrona - Handel"
+        },
+        "station-clock": {
+          "title": "Miasto na dwóch biletach",
+          "body": "Przed siódmą w dworcowej poczekalni spotykają się ludzie dojeżdżający z całego województwa. Po zejściu z pociągu wielu czeka jeszcze przejazd tramwajem. W teczkach, obok śniadania, noszą dwa bilety miesięczne. Pani Teresa, księgowa, zna rozkład na pamięć, lecz do domu wraca według godzin odbioru dziecka z przedszkola. Zmiana służbowego zebrania o pół godziny oznacza dla niej godzinę na peronie. W miejskich statystykach jest pracownikiem biurowym. Sporą część jej dnia pracy wyznacza jednak kolejowy zegar.",
+          "byline": "Ewa Lis - Miasto i region"
+        },
+        "lost-scarf": {
+          "title": "Magazyn rzeczy niczyich",
+          "body": "Pracownicy miejskiego biura rzeczy znalezionych porządkują przedmioty przekazane przez zajezdnie tramwajowe. Najwięcej jest parasoli, rękawiczek i toreb z drobnymi zakupami. Po dokumenty właściciele zgłaszają się szybko; ubrania potrafią czekać miesiącami. Każda rzecz otrzymuje numer i opis okoliczności znalezienia. Urzędniczka wyjaśnia, że pytanie o sam kolor szalika rzadko wystarcza: na półce leży zwykle kilka podobnych. Przy zgłoszeniu warto podać trasę i przybliżoną godzinę przejazdu. To pozwala odnaleźć właściwy wpis w księdze.",
+          "byline": "Dział miejski"
+        },
+        "handwriting": {
+          "title": "Co mówi szkolny zeszyt",
+          "body": "W śródmiejskiej szkole nr 12 nauczyciele porównali zeszyty pierwszoklasistów z początku roku i po kilku tygodniach nauki. Zwracali uwagę nie tylko na kształt liter, lecz także na tempo pisania. Wychowawczyni tłumaczy, że staranny uczeń potrafi zostać daleko za dyktowanym zdaniem. Rodzice proszą o dodatkowe wzory do ćwiczeń; szkoła powiela je wspólnie dla kilku klas. Część dzieci pisze piórem po starszym rodzeństwie. Dopasowanie stalówki i spokojne prowadzenie ręki okazują się ważniejsze niż ozdobna okładka zeszytu.",
+          "byline": "Anna Wrona - Oświata"
+        },
+        "aquarium": {
+          "title": "Podwodny świat w świetlicy",
+          "body": "Na spotkanie miejskiego koła akwarystów przyniesiono słoiki z sadzonkami i zeszyty obserwacji. Członkowie porównywali urządzenie małych zbiorników, takich, na jakie wystarcza miejsca w blokach. Pokazowy zbiornik w świetlicy skompletowano z darów: szkło dostarczył rzemieślnik, lampę jeden z klubowiczów, rośliny reszta koła. Dyżury przy nim dzielą uczniowie i emeryci. Instruktor podkreśla, że najpierw trzeba nauczyć się stałej opieki. Efektowną rybę łatwo przynieść z giełdy; trudniej zorganizować zastępstwo na czas urlopu.",
+          "byline": "Marek Boruta - Zainteresowania"
+        },
+        "bookbinding": {
+          "title": "Rocznik w twardej oprawie",
+          "body": "Introligator przy ulicy Stolarskiej oprawia roczniki dla czytelni i domowych zbieraczy. Na stole leżą czasopisma techniczne, gazety oraz zeszyty z wykrojami. Zanim powstanie okładka, trzeba sprawdzić kolejność numerów i kompletność wkładek. Najwięcej kłopotu sprawiają wycięte porady: właściciel pamięta cały rocznik, lecz w środku brakuje połowy strony. Mistrz zachowuje dawne okładki i spisy treści. Jak wyjaśnia, dobra oprawa ma ułatwić znalezienie potrzebnego tekstu, a nie tylko wyrównać grzbiety na półce.",
+          "byline": "Ewa Lis - Rzemiosło"
+        },
+        "starlight": {
+          "title": "Niebo znad kamienic",
+          "body": "W miejskim kole astronomicznym pierwszym przyrządem nie jest luneta, lecz mapa nieba. Instruktor uczy odnajdywać kilka jasnych gwiazd, zanim pozwoli ustawić teleskop. W śródmieściu obserwację utrudniają światła i ciasne podwórza; na lepszy widok uczestnicy wyjeżdżają za ostatnie zabudowania. Zajęcia przyciągają uczniów, ale także dorosłych przynoszących dawno nieużywane lornetki. Najwięcej cierpliwości wymaga wspólne czekanie na przejaśnienie. W zeszycie koła obok rysunków nieba zapisuje się więc również pogodę.",
+          "byline": "Marek Boruta - Nauka"
+        },
+        "noticeboard": {
+          "title": "Czyja kolej do suszarni?",
+          "body": "Mieszkanka osiedla Północ pisze do redakcji w sprawie wspólnej suszarni. Na tablicy wisi regulamin, ale nie ma wykazu dyżurów ani informacji, kto przechowuje klucz. Spółdzielnia w odpowiedzi wskazuje gospodarza domu. Ten prowadzi zeszyt rezerwacji, o którym część nowych lokatorów nie wiedziała. Rada bloku zapowiada wywieszenie tej informacji obok regulaminu. Czytelniczka nie domagała się nowych urządzeń: chciała korzystać z pomieszczenia, za które płaci w czynszu. Do załatwienia sprawy wystarczyła czytelna kartka.",
+          "byline": "Listy do redakcji"
+        },
+        "bicycle": {
+          "title": "Rower szuka kąta",
+          "body": "W sklepach sportowych rower ogląda się z każdej strony. W mieszkaniu trzeba jeszcze znaleźć dla niego miejsce. Czytelnicy z nowych osiedli piszą o wąskich piwnicach i schodach bez podjazdów. Jeden z gospodarzy domów pokazuje nam wspólną rowerownię: stoją w niej także wózki, sanki i sprzęt turystyczny. Lokatorzy sami oznaczyli miejsca, by można było dojść do dalszej ściany. Rower pozostaje dla wielu środkiem dojazdu na działkę albo do pracy na przedmieściu. Jego użyteczność zaczyna się od możliwości wyprowadzenia go z domu.",
+          "byline": "Dział miejski"
+        }
+      }
+    },
     mobile: {
       title: 'Next, Please!', reception: 'Telefon do przychodni',
       languagePolish: 'PL', languageEnglish: 'EN',
@@ -435,12 +567,12 @@ export const translations = {
     phone: 'Telefon — posłuchaj sygnału centrali', measurements: 'Waga ze wzrostomierzem — zmierz wagę i wzrost',
     takePaper: 'Weź czystą kartkę ze stojaka', takeClip: 'Weź spinacz z pojemnika',
     drawer: 'Szuflada', drawerNames: { drawer: 'Lewa szuflada', 'drawer-2': 'Prawa szuflada' }, trash: 'Kosz na papier',
-    drawerEmpty: 'Szuflada jest pusta. Przenieś tu dokument, aby go zachować.',
-    drawerHelp: 'Odłóż trzymaną kartkę, regulamin, spinacz lub banknot do szuflady. Z pustą dłonią otworzysz jej zawartość.',
-    drawerViewHelp: 'Okładki dokumentów leżą w kolejności włożenia. Spięty komplet zajmuje jedną pozycję. Najedź kursorem lub wybierz klawiszem Tab, aby odczytać nazwisko. Kliknij lub naciśnij Enter, aby wyjąć akta. Kolejne partie mieszczą dalsze akta. Dolna krawędź lub Escape zamyka szufladę.',
+    drawerEmpty: 'Szuflada jest pusta. Przenieś tu przedmiot, aby go zachować.',
+    drawerHelp: 'Odłóż trzymaną kartkę, gazetę, regulamin, spinacz lub banknot do szuflady. Z pustą dłonią otworzysz jej zawartość.',
+    drawerViewHelp: 'Okładki dokumentów leżą w kolejności włożenia. Spięty komplet zajmuje jedną pozycję. Najedź kursorem lub wybierz klawiszem Tab, aby odczytać nazwisko. Kliknij lub naciśnij Enter, aby wyjąć akta. Kolejne partie mieszczą dalsze akta. Gazety leżą osobno; najedź lub wybierz, aby zobaczyć datę numeru. Dolna krawędź lub Escape zamyka szufladę.',
     drawerDocuments: 'Akta', drawerCash: 'Gotówka', drawerObjects: 'Inne przedmioty', drawerBatch: 'Część archiwum',
     drawerRetrieve: 'Wyjmij', drawerClose: 'Zamknij szufladę', drawerPrevious: 'Wcześniejsze', drawerNext: 'Późniejsze',
-    trashHelp: 'Przenieś dokument nad kosz i kliknij, aby go wyrzucić.',
+    trashHelp: 'Przenieś dokument lub gazetę nad kosz i kliknij, aby go wyrzucić.',
     clipTaken: 'Spinacz w dłoni. Przyłóż go do kartki, aby ją spiąć.',
     clipNoTarget: 'Przyłóż spinacz do dokumentacji, skierowania, orzeczenia lub listu.',
     paperHelp: 'Kliknij, aby podnieść kartkę. Wyniki i wywiad z badania ogólnego pojawiają się automatycznie. Upuść kartkę przy spinaczu innej, aby je spiąć. Kliknij spinacz, aby rozpiąć.',
@@ -698,7 +830,7 @@ export const translations = {
         facingTitle: '10. Doręczenie', facingLines: ['Piórem na formularzu', 'uzupełnia się nazwisko', 'i stanowisko. Podbity druk', 'doręcza się pacjentowi.', 'Doręczenie kończy wizytę.', 'Odłożenie orzeczenia', 'na tackę nie stanowi', 'jego doręczenia.'] },
       { title: '11. Łączenie akt', lines: ['Spinacz umieszcza się', 'na pierwszej kartce.', 'Kolejną kartkę przykłada', 'się do tego spinacza.', 'Wyjęcie spinacza', 'rozdziela akta.', 'Skierowanie oraz notatkę', 'z każdej wizyty składa się', 'w dowolnej szufladzie.'],
         facingTitle: '12. Korespondencja', facingLines: ['Pisma ZUS i pracodawców', 'otwiera się od rogu koperty.', 'Treść należy odczytać', 'przed złożeniem do akt', 'lub usunięciem do kosza.', 'Brak pisma po wizycie', 'nie jest potwierdzeniem', 'prawidłowości orzeczenia.'] },
-      { title: '13. Czas przyjęć', lines: ['Przyjęcia prowadzi się', 'od 08:00 do 14:00.', 'Po tej godzinie kończy się', 'wizytę już rozpoczętą.', 'Lekturę przepisów oraz', 'porządkowanie biurka', 'wlicza się do czasu pracy.', 'Zegar nie wymaga obsługi.'],
+      { title: '13. Czas przyjęć', lines: ['Przyjęcia prowadzi się', 'od 07:55 do 14:00.', 'Po tej godzinie kończy się', 'wizytę już rozpoczętą.', 'Lekturę przepisów oraz', 'porządkowanie biurka', 'wlicza się do czasu pracy.', 'Zegar nie wymaga obsługi.'],
         facingTitle: '14. Zamknięcie', facingLines: ['O 17:00 personel sprzątający', 'wzywa do zakończenia pracy.', 'O 17:15 gabinet zamyka się', 'także przy obecności', 'pacjenta. Wizyta przerwana', 'nie podlega premiowaniu.', 'Sporządzoną dokumentację', 'pozostawia się w aktach.'] },
       { title: '15. Wynagrodzenie', lines: ['Za dzień pracy przysługuje', '1000 zł oraz po 50 zł', 'za zakończoną wizytę.', 'Rozliczenie następuje', 'po powrocie do domu.', 'Koszty utrzymania, składkę', 'i należności odlicza się', 'od dostępnych środków.'],
         facingTitle: '16. Należności ZUS', facingLines: ['Za pierwsze ujawnione', 'uchybienie w danym dniu', 'nalicza się 100 zł kary.', 'Za każde następne — 400 zł.', 'Przy dopuszczeniu do pracy', 'należy uwzględnić stan', 'zdrowia i obowiązujące', 'przepisy przychodni.'] },
@@ -892,11 +1024,12 @@ export const translations = {
       'paper-taken': 'Czysta kartka w dłoni. Przenieś ją na biurko.',
       'paper-written': 'Dodatkowe informacje dopisane do dokumentacji.', 'paper-stored': 'Dokument zachowany w szufladzie.',
       'paper-retrieved': 'Dokument wyjęty z szuflady.',
-      'item-stored': 'Przedmiot schowany w szufladzie.', 'item-retrieved': 'Przedmiot wyjęty z szuflady.', 'item-missing': 'Nie ma tu tego przedmiotu.', 'paper-trashed': 'Dokument wyrzucony do kosza.',
+      'item-stored': 'Przedmiot schowany w szufladzie.', 'item-retrieved': 'Przedmiot wyjęty z szuflady.', 'item-missing': 'Nie ma tu tego przedmiotu.', 'newspaper-trashed': 'Gazeta wyrzucona do kosza.', 'paper-trashed': 'Dokument wyrzucony do kosza.',
       'paper-missing': 'Nie ma tu dokumentu.', 'paper-wrong-patient': 'Ta kartka należy do innego pacjenta. Weź czystą.',
       'results-needed': 'Najpierw przeprowadź badanie ogólne, aby dopisać wywiad.',
       'letter-opened': 'Koperta otwarta. Przeczytaj pismo.', 'paper-clipped': 'Spinacz założony na dokument.',
       none: '', 'cabinet-ready': 'Gabinet otwarty. Wezwij pierwszą osobę.',
+      'waiting-room-empty': 'Jeszcze nikogo nie ma. Pierwsi pacjenci przychodzą o 7:55.',
       'patient-called': 'Pacjent czeka. Weź skierowanie z podajnika.',
       'patient-waiting': 'Najpierw zakończ obecną wizytę.',
       'shift-finished': 'Przyjęcia zakończone. Możesz wrócić do domu.',
@@ -983,6 +1116,138 @@ export const translations = {
     description: 'Czarna komedia o medycynie pracy, papierologii i wątpliwych decyzjach.',
   },
   en: {
+    newspaper: {
+      "title": "Civic Courier",
+      "strapline": "CITY AND REGIONAL DAILY",
+      "issue": "No.",
+      "page": "Page",
+      "open": "Unfold the newspaper",
+      "close": "Fold and return the newspaper to the left desk",
+      "next": "Next page",
+      "previous": "Previous page",
+      "closed": "Newspaper folded on the left desk.",
+      "emptyRoom": "Nobody here yet.",
+      "contents": "In this issue",
+      "imprint": "Civic Courier editorial office",
+      "help": "On the right, the newspaper opens for reading. Corners: pages. Enter: open or return to the left. Space: pick up. Arrows: move. Enter: put down. Escape: cancel or put away the newspaper.",
+      "topics": {
+        "culture": "Culture",
+        "craft": "Crafts",
+        "sport": "Sport",
+        "hobby": "Hobbies",
+        "technology": "Technology",
+        "household": "Thrift",
+        "home": "Home",
+        "kitchen": "Kitchen",
+        "transport": "Travel",
+        "everyday": "Everyday life",
+        "education": "School",
+        "science": "Science",
+        "community": "Community"
+      },
+      "articles": {
+        "reading-circle": {
+          "title": "One novel, 43 readers",
+          "body": "At municipal library branch No. 6 on Kolejowa Street, 43 readers are waiting for its most popular novel. There is one copy; a second came back with several pages missing. Librarian Janina Wolska shows us her reservations book. Those who can only visit after the late shift wait longest. The branch exchanges books with libraries on the outskirts, but the same titles are wanted there too. Each loan will count towards the annual circulation figure. Mrs Wolska’s notebook records the other side of that statistic.",
+          "byline": "Ewa Lis - City desk"
+        },
+        "choir": {
+          "title": "Rehearsal after the shift",
+          "body": "The railway workers’ choir rehearses above the canteen. Its forty singers work different rosters, so the conductor never hears the whole ensemble at a rehearsal. He practises the bass parts separately with men coming off night duty. A clerk copies the scores using carbon paper; two folders hold the shared songbook. Folk songs and pre-war pieces make up the repertoire. The choir performs throughout the province. Its leader says gathering everyone at the station takes more arranging than learning a new song.",
+          "byline": "Marek Boruta - Culture"
+        },
+        "film-club": {
+          "title": "Beyond the cinema bill",
+          "body": "At the Świt cinema’s film society, discussions usually outlast the screening. Students, teachers and regulars known by name to the usher fill the seats. The society books older films absent from the ordinary programme. A single print travels between several cities, so bookings take months to arrange. The host invites written questions. Most concern the characters’ manners and everyday lives. By the time discussion reaches the director’s technique, the subject listed in the lecture notes, rather fewer viewers remain.",
+          "byline": "Marek Boruta - Culture"
+        },
+        "theatre": {
+          "title": "A costume’s second life",
+          "body": "In the municipal theatre’s workshop, dresses hang by historical period, not by production. A costume from ten seasons ago returns to the stage with new sleeves and collar. Seamstress Helena Mazur keeps labelled boxes of fabric scraps, matching patches that will disappear from the audience’s view. New cloth goes chiefly to the leading roles; the rest of the cast draws on the store. Before a premiere, the most work goes into ordinary frock coats rather than splendid gowns. Each must fit its next actor as convincingly as the last.",
+          "byline": "Ewa Lis - Backstage"
+        },
+        "chess": {
+          "title": "Railway juniors deliver",
+          "body": "The railway chess team beat the builders 5:3 in the latest city league round. Junior players on the lower boards settled the match. The winning captain credits the school section: younger players have regular lessons, while the adults fit practice around shift rosters. Matches take place in workplace recreation rooms, with free admission. Spectators follow the moves on a display board. The league has no hall of its own, but hosts in several districts keep the fixtures running regularly. Its youngest players are now earning places in the senior teams.",
+          "byline": "Jan Rudzki - Sport"
+        },
+        "table-tennis": {
+          "title": "Tables after lessons",
+          "body": "The cooperative team beat the postal workers 6:4 in the city table tennis league. They played in the gym of School No. 12, lent to clubs after lessons. Players set out the tables and bench barriers themselves, then cleared the floor for morning exercises. The winning coach singled out his younger doubles pair. The section accepts school pupils but has only two practice evenings a week, shared between juniors and adults. For some players coming from the outskirts, the journey takes longer than the session. Keeping a regular team requires more than a good forehand.",
+          "byline": "Jan Rudzki - Sport"
+        },
+        "stamps": {
+          "title": "A city on an envelope",
+          "body": "At the Szkolna Street cultural centre’s stamp circle, collectors increasingly examine whole envelopes rather than loose stamps. Postmarks from former postal branches trace the growth of the suburbs. Antoni Witek collects letters addressed to streets that have changed names. Most came from family papers; others were exchanged with fellow members. He asks residents to look through old correspondence before sending paper for recycling. A stamp cut from its envelope loses part of the story preserved by the address, date and marks on the back.",
+          "byline": "Ewa Lis - Hobbies"
+        },
+        "cassette": {
+          "title": "A concert from the radio",
+          "body": "Letters to our technical desk keep asking how to record a broadcast without the family’s conversation. In many flats, a microphone beside the radio picks up both. An instructor at the cultural centre demonstrates a connection through the sockets on the two machines. Not every receiver has them, and the right lead may take visits to several shops to find. Participants bring their own equipment and manuals. They also exchange broadcast lists: with only a few cassettes available, it pays to know what is already recorded on side two.",
+          "byline": "Technical desk"
+        },
+        "knitting": {
+          "title": "Wool for another winter",
+          "body": "At a haberdashery on Ogrodowa Street, customers compare wool samples brought from home. Often they need just one ball, but in exactly the same shade. The assistant suggests replacing the whole collar or both cuffs instead. At an estate club, women unravel old jumpers and combine the recovered wool in stripes. Patterns circulate in notebooks, copied from borrowed magazines. Not everything can be saved: the most worn sections are discarded. A sound adult jumper can nevertheless provide enough wool for a child’s waistcoat.",
+          "byline": "Anna Wrona - Home and family"
+        },
+        "darning": {
+          "title": "The everyday tailor",
+          "body": "The tailoring counter in the Ogrodowa shopping arcade has two machines and a book full of orders. It makes no bespoke suits: trousers are shortened, linings replaced and oversized coats fitted. Master tailor Stanisław Bury spends longest on clothes handed down within families. Each must be unpicked to see how much spare cloth remains. The price list reduces this work to a few entries, although two similar coats can require quite different alterations. Customers chiefly ask when the work will be ready. They often need the garment they have just left behind.",
+          "byline": "Ewa Lis - Local services"
+        },
+        "plants": {
+          "title": "A garden on the sill",
+          "body": "At a flower shop on the Północ housing estate, most questions concern flats rather than gardens. Customers describe narrow sills, dry rooms and windows facing the next block. Florist Zofia Kurek suggests first measuring how much space can really be spared for pots. A fine specimen from the window display may not fit. Spider plant and geranium cuttings circulate among neighbours; the shop supplies soil and saucers. The longest consultations concern plants received as gifts. Their owners can describe every leaf, but nobody remembers the name.",
+          "byline": "Anna Wrona - Home and family"
+        },
+        "bread": {
+          "title": "Lunch from the chalkboard",
+          "body": "The milk bar near the station writes its menu in chalk. Before the first travellers arrive, the kitchen is serving breakfast to staff from nearby shops. The manager says regulars chiefly want a known price and a meal without a long wait. Alongside dumplings and noodles, there is a simple soup each day. Yesterday’s bread becomes croutons, and delivery orders follow the week’s takings. Market days are hardest to predict. Then the tables bring together shop workers, commuters and people arriving from the surrounding villages.",
+          "byline": "Anna Wrona - Trade"
+        },
+        "station-clock": {
+          "title": "A city on two tickets",
+          "body": "Before seven, the station waiting room fills with commuters from across the province. Many still face a tram journey after leaving the train. Beside their packed breakfast they carry two monthly season tickets. Teresa, a bookkeeper, knows the timetable by heart, but plans her return around collecting her child from nursery. Moving an office meeting by half an hour can mean an hour waiting on the platform. The city’s statistics count her as an office worker. A considerable part of her working day is nevertheless governed by the railway clock.",
+          "byline": "Ewa Lis - City and region"
+        },
+        "lost-scarf": {
+          "title": "The unclaimed storeroom",
+          "body": "Staff at the city lost property office are sorting items delivered by tram depots. Umbrellas, gloves and bags of small purchases form the largest piles. Owners come promptly for documents; clothing can wait for months. Each object receives a number and a record of where it was found. A clerk explains that a scarf’s colour rarely settles a claim: several similar ones usually share the shelf. Giving the route and approximate journey time helps locate the right entry in the ledger. The office’s busiest shelves hold the least distinctive possessions.",
+          "byline": "City desk"
+        },
+        "handwriting": {
+          "title": "Inside the exercise book",
+          "body": "At School No. 12 in the city centre, teachers compared first-year pupils’ books from the start of term with work written several weeks later. They considered speed as well as letter shapes. The class teacher explains that a careful child can fall far behind a dictated sentence. Parents ask for extra practice sheets, which the school duplicates for several classes together. Some children use fountain pens passed down by older siblings. A suitable nib and a steady hand prove more useful than the decorated covers sold for exercise books.",
+          "byline": "Anna Wrona - Education"
+        },
+        "aquarium": {
+          "title": "An aquarium for the club",
+          "body": "Members of the city aquarium circle brought jars of plant cuttings and observation books to their meeting. They compared small tanks suited to cramped flats. The recreation room’s display tank came from donations: a craftsman supplied the glass, one member the lamp, and others the plants. Pupils and pensioners share its care. The instructor says learning that regular duty comes first. Bringing home a striking fish from a collectors’ fair is easy; arranging someone to care for the tank during a holiday takes more thought.",
+          "byline": "Marek Boruta - Hobbies"
+        },
+        "bookbinding": {
+          "title": "A year between boards",
+          "body": "A bookbinder on Stolarska Street binds annual volumes for reading rooms and private collectors. Technical magazines, newspapers and sewing journals cover his bench. Before making a cover, he checks issue numbers and supplements. Clipped advice columns cause most trouble: an owner remembers a complete year, but half a page is missing inside. The binder keeps the original covers and indexes. A good binding, he explains, should help its reader find a needed article, as well as make the volumes stand neatly on a shelf.",
+          "byline": "Ewa Lis - Crafts"
+        },
+        "starlight": {
+          "title": "Stars above the rooftops",
+          "body": "At the city astronomy circle, the first instrument is a sky chart rather than a telescope. The instructor teaches members to find a few bright stars before setting up the larger instrument. Lights and narrow courtyards restrict the view in the centre; for clearer skies, the group travels beyond the last buildings. Pupils attend alongside adults bringing binoculars long unused at home. Waiting together for a break in the clouds takes the most patience. The circle’s notebook records the weather beside its drawings of the sky.",
+          "byline": "Marek Boruta - Science"
+        },
+        "noticeboard": {
+          "title": "Whose turn to dry?",
+          "body": "A resident of the Północ housing estate writes about the communal drying room. Its rules are on the noticeboard, but nothing says who keeps the key or records bookings. The housing cooperative’s reply refers her to the caretaker. He has a reservations book that some new tenants never knew existed. The block committee says the details will be posted beside the rules. Our reader was not asking for new equipment, only access to a room included in her rent. A clear notice was enough to resolve a surprisingly lengthy correspondence.",
+          "byline": "Letters to the editor"
+        },
+        "bicycle": {
+          "title": "Room for a bicycle",
+          "body": "In a sports shop, a bicycle can be admired from every side. At home, it still needs somewhere to stand. Readers on new estates describe narrow cellars and stairs without ramps. A caretaker shows us a shared cycle room also holding prams, sledges and camping gear. Tenants have marked out spaces themselves so the back wall remains accessible. For many residents, a bicycle is transport to an allotment or a workplace on the outskirts. Its usefulness depends first on being able to get it out of the building each morning.",
+          "byline": "City desk"
+        }
+      }
+    },
     mobile: {
       title: 'Next, Please!', reception: 'Calling the clinic',
       languagePolish: 'PL', languageEnglish: 'EN',
@@ -1000,12 +1265,12 @@ export const translations = {
     phone: 'Telephone — listen to the exchange tone', measurements: 'Scale and stadiometer — measure weight and height',
     takePaper: 'Take a blank sheet from the document rack', takeClip: 'Take a paperclip from the holder',
     drawer: 'Drawer', drawerNames: { drawer: 'Left drawer', 'drawer-2': 'Right drawer' }, trash: 'Wastepaper basket',
-    drawerEmpty: 'The drawer is empty. Move a document here to keep it.',
-    drawerHelp: 'Put a held sheet, rulebook, paperclip or banknote in the drawer. With empty hands, open its contents.',
-    drawerViewHelp: 'Document covers follow filing order. Clipped records occupy one position. Hover or focus with Tab to read the name. Click or press Enter to retrieve it. Browse further batches for more records. The bottom edge or Escape closes the drawer.',
+    drawerEmpty: 'The drawer is empty. Move an item here to keep it.',
+    drawerHelp: 'Put a held sheet, newspaper, rulebook, paperclip or banknote in the drawer. With empty hands, open its contents.',
+    drawerViewHelp: 'Document covers follow filing order. Clipped records occupy one position. Hover or focus with Tab to read the name. Click or press Enter to retrieve it. Browse further batches for more records. Newspapers lie separately; hover or focus to see the issue date. The bottom edge or Escape closes the drawer.',
     drawerDocuments: 'Files', drawerCash: 'Cash', drawerObjects: 'Other objects', drawerBatch: 'Archive section',
     drawerRetrieve: 'Take out', drawerClose: 'Close drawer', drawerPrevious: 'Earlier files', drawerNext: 'Later files',
-    trashHelp: 'Move a document over the basket and click to discard it.',
+    trashHelp: 'Move a document or newspaper over the basket and click to discard it.',
     clipTaken: 'Paperclip in hand. Apply it to a sheet to attach it.',
     clipNoTarget: 'Apply the paperclip to a note, referral, certificate or letter.',
     paperHelp: 'Click to pick up the sheet. Test results and history from the general examination appear automatically. Drop a sheet near another sheet’s clip to join them. Click the clip to separate them.',
@@ -1263,7 +1528,7 @@ export const translations = {
         facingTitle: '10. Delivery', facingLines: ['The pen on the form shall', 'enter the name and job.', 'The stamped certificate', 'shall be given to the patient.', 'This concludes the visit.', 'Placing the certificate', 'in the tray does not', 'constitute delivery.'] },
       { title: '11. Joining records', lines: ['A clip shall be attached', 'to the first sheet.', 'Add sheets against that clip.', 'Removing the clip', 'separates the records.', 'The referral and visit note', 'from every appointment', 'shall both be archived', 'in either desk drawer.'],
         facingTitle: '12. Correspondence', facingLines: ['Letters from ZUS and', 'employers shall be opened', 'at the envelope corner', 'and read before filing', 'or disposal in the basket.', 'The absence of a letter', 'does not certify that', 'a ruling was correct.'] },
-      { title: '13. Admission hours', lines: ['Admissions shall run', 'from 08:00 to 14:00.', 'After that hour, only', 'the current visit continues.', 'Reading these regulations', 'and arranging the desk', 'count towards working time.', 'The clock requires no action.'],
+      { title: '13. Admission hours', lines: ['Admissions shall run', 'from 07:55 to 14:00.', 'After that hour, only', 'the current visit continues.', 'Reading these regulations', 'and arranging the desk', 'count towards working time.', 'The clock requires no action.'],
         facingTitle: '14. Closing procedure', facingLines: ['At 17:00 the cleaning staff', 'shall request work to end.', 'At 17:15 the office closes,', 'including when occupied', 'by a patient. Interrupted', 'visits earn no bonus.', 'Records already prepared', 'shall remain on file.'] },
       { title: '15. Remuneration', lines: ['Each working day earns', '1000 zł, plus 50 zł for', 'each completed visit.', 'Settlement takes place', 'on returning home.', 'Living costs, insurance', 'and amounts due shall be', 'deducted from available funds.'],
         facingTitle: '16. ZUS charges', facingLines: ['The first detected breach', 'of the day incurs a fine', 'of 100 zł. Each further', 'breach incurs 400 zł.', 'Approval requires regard', 'to health and the current', 'clinic regulations.'] },
@@ -1457,11 +1722,12 @@ export const translations = {
       'paper-taken': 'A blank sheet in hand. Move it onto the desk.',
       'paper-written': 'Supplementary information added to the medical notes.', 'paper-stored': 'Document kept in the drawer.',
       'paper-retrieved': 'Document retrieved from the drawer.',
-      'item-stored': 'Item kept in the drawer.', 'item-retrieved': 'Item retrieved from the drawer.', 'item-missing': 'This item is not here.', 'paper-trashed': 'Document discarded in the basket.',
+      'item-stored': 'Item kept in the drawer.', 'item-retrieved': 'Item retrieved from the drawer.', 'item-missing': 'This item is not here.', 'newspaper-trashed': 'Newspaper discarded in the basket.', 'paper-trashed': 'Document discarded in the basket.',
       'paper-missing': 'There is no document here.', 'paper-wrong-patient': 'This sheet belongs to another patient. Take a blank one.',
       'results-needed': 'Perform the general examination before adding patient history.',
       'letter-opened': 'Envelope opened. Read the letter.', 'paper-clipped': 'Paperclip attached to the document.',
       none: '', 'cabinet-ready': 'Office open. Call your first patient.',
+      'waiting-room-empty': 'Nobody is here yet. The first patients arrive at 7:55.',
       'patient-called': 'Patient waiting. Take the referral from the tray.',
       'patient-waiting': 'Finish this appointment first.',
       'shift-finished': 'Admissions closed. You can go home.',

@@ -1,4 +1,4 @@
-import { historicalState } from './fixtures/legacy-budget';
+import { historicalState, withMigratedNewspaper } from './fixtures/legacy-budget';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
 import { advanceClinicTime, applyAction, createInitialState, settleWeekend, type GameAction, type GameState } from '../src/core/game';
@@ -13,7 +13,7 @@ const seedFor = (wanted: boolean): number => {
 };
 function ready(): GameState {
   const first = complete(act({ ...createInitialState(17), money: 5000 }, 'skip-intro'));
-  return { ...act(advanceClinicTime(first, 1000).state, 'next-day'), rngState: seedFor(true) };
+  return { ...act(advanceClinicTime(first, 1000).state, 'next-day'), clockMinutes: 480, rngState: seedFor(true) };
 }
 function inspector(): GameState { return act(ready(), 'call-patient'); }
 function records(): GameState { return act(inspector(), 'take-inspection-id', 'return-inspection-id'); }
@@ -148,10 +148,10 @@ it('validates inspection state strictly and migrates v24 without invented histor
   historical.roster = historical.roster.filter(id => id <= 3127);
   const completed = complete(act({ ...historical, money: 5000 }, 'skip-intro'));
   const next = act(advanceClinicTime(completed, 1000).state, 'next-day');
-  const original = { ...next, roster: next.roster.filter(id => id <= 3127) };
+  const original = { ...next, clockMinutes: 477, roster: next.roster.filter(id => id <= 3127) };
   const { banknotes: _banknotes, recentVisits: _recent, inspection: _inspection, inspectionCheckedAt: _checked, inspectionFines: _fines, ...old } = original;
   const migrated = decodeSave(file(old, 24));
-  expect(migrated).toEqual({ ...old, portraitHistory: [], banknotes: [], recentVisits: [], inspection: null, inspectionCheckedAt: old.patientsProcessed, inspectionFines: 0 });
+  expect(migrated).toEqual(withMigratedNewspaper({ ...old, portraitHistory: [], banknotes: [], recentVisits: [], inspection: null, inspectionCheckedAt: old.patientsProcessed, inspectionFines: 0 }));
   expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
   expect(() => decodeSave(file(original, 24))).toThrow();
 });

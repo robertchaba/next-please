@@ -1,0 +1,5 @@
+Use case: stylized-concept
+Asset type: original transparent folded newspaper sprite for the 570x320 pixel-art game Next, Please!.
+Primary request: a single folded daily newspaper, viewed straight down, landscape aspect ratio 1.55:1. Muted grayish warm newsprint, fine stacked folded leaves at bottom edge, slightly worn corners. Ordinary inexpensive 1983 newspaper in an unnamed country. Restrained low-resolution pixel art in the charcoal/olive/aged cream analog clinic palette. Crisp clustered pixel shading, no blur.
+Composition: rectangular, straight edges, flat top-down view, tiny transparent margin. A dark thin double rule below an EMPTY masthead area on top quarter. Two quiet EMPTY columns below with a fine dividing rule. Folds and paper thickness supply the character. Keep paper sufficiently light for localized printed words at runtime.
+Constraints: NO text, NO letters, NO pseudo-text, NO pictures, NO emblems, NO other objects, NO desk/background, NO surrounding shadow. Actual transparent alpha outside the newspaper. Not a book, envelope or parchment. The game adds masthead and text.

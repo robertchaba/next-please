@@ -62,8 +62,10 @@ describe('drawer presentation', () => {
     expect(controls.find(button => button.id === 'drawer-close')).toMatchObject(DRAWER_CLOSE);
     for (const id of ['drawer-manual', 'drawer-clip']) {
       expect(controls.find(button => button.id === id)?.x).toBeGreaterThan(350);
-      expect(controls.find(button => button.id === id)?.y).toBeGreaterThan(219);
+      expect(controls.find(button => button.id === id)?.y).toBeGreaterThan(200);
     }
+    const manual = controls.find(button => button.id === 'drawer-manual')!;
+    expect(manual.y + manual.h).toBeLessThan(278); // Stay inside the illustrated drawer front.
     expect(drawerSheets(state, 99).current).toBe(0);
   });
 

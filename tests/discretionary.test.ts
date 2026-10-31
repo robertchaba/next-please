@@ -1,4 +1,4 @@
-import { historicalState } from './fixtures/legacy-budget';
+import { historicalState, withMigratedNewspaper } from './fixtures/legacy-budget';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
 import { applyAction, createInitialState, type GameState } from '../src/core/game';
@@ -107,7 +107,7 @@ describe('medical judgement at the limits', () => {
 
   it('imports v29 without changing findings or RNG, and rejects new IDs disguised as v29', () => {
     const old = { ...createInitialState(1), roster: createRoster(1, false, patient => patient.id < DISCRETIONARY_CASE_START).roster };
-    expect(decodeSave(file(old, 29))).toEqual(old);
+    expect(decodeSave(file(old, 29))).toEqual(withMigratedNewspaper(old));
     expect(() => decodeSave(file(discretionaryAppointment(DISCRETIONARY_CASE_START), 29))).toThrow();
   });
 });

@@ -1,14 +1,15 @@
 # Game facts
 
 - The player is an occupational medicine doctor who decides whether patients are fit for work.
-- The location and country are unspecified.
+- The location and country are unspecified. In 1983, an unnamed communist party governs the country. The opposition is the trade union Wzajemność.
 - The game begins on 3 November 1983. A desk calendar beside the paperclip holder shows the current date.
 - The doctor's key tool for issuing decisions is a mechanical rubber stamp.
 - The doctor's consulting room is number 04.
 - The doctor calls the next patient with a bell on the left side of the desk.
 - Patient order is randomized; the first day has no fixed opening sequence.
 - At most 33% of patients in a newly arranged daily queue fall into the original refusal pool, including cases now left to medical judgement. This also applies to every initial portion of that queue, so shorter working days retain the same limit. Examination criteria and the currently applicable document rules determine each patient's decision. The scripted second patient on the sixth working day is an exception to the prefix limit. Patients returning from additional examinations continue existing visits; their established findings are retained rather than balanced again.
-- New patients are admitted from 08:00 to 14:00. The player arrives shortly before 08:00; the clock continues advancing during work after admissions end.
+- On the first day, the doctor arrives at 07:57. From the second working day onward, arrival is randomly 14–21 minutes before 08:00 (07:39–07:46). Ringing before 07:55 calls nobody because the waiting room is still empty. New patients can be called from 07:55 until 14:00; the first day retains its 08:00 first admission. The clock continues advancing during work after admissions end.
+- Each working day, the newspaper “Kurier Obywatelski” is on the doctor’s desk. It is a regional daily covering a large unnamed city and its surroundings. Unfolding it on the right takes up a large area, like the rulebook. Each issue contains 3–4 articles, generally without illustrations. Background articles are chosen randomly; some may be reused when fresh material runs out. Future story articles may replace part or all of an issue. The player may store newspapers in either drawer, retrieve older issues, or discard them in the wastebasket. Retained issues keep their original date and articles across working days. A new issue arrives independently of retained or discarded copies.
 - A single click picks up an item, which follows the cursor; the next click puts it down or attempts to use it. Stamps can only be put away in their dedicated places.
 - Documents and books shrink when picked up from either desktop, then keep their compact size while carried; placing them on the right desktop enlarges them for reading. Stamps are the exception and grow slightly when picked up.
 - Documents on the right may overlap the consulting room, provided at least half of each sheet remains over the desktop.
@@ -16,7 +17,7 @@
 - A visit ends when the doctor hands the stamped certificate to the patient. Leaving it in the tray does not end the visit.
 - Time passes continuously in the consulting room, independently of the additional time charged for actions. With a patient present, 30 real seconds equal 30 in-game minutes; with the room empty, 30 real seconds equal 5 in-game minutes. Thinking, reading the rulebook and organizing documents do not stop this flow; the rate depends on whether a patient is present.
 - Books can be read and their pages turned while they lie on the desk.
-- Books and multipage documents have covers; the first page turn opens the cover. The rulebook stays closed when placed on the desk.
+- Books and multipage documents have covers; the first page turn opens the cover. The rulebook stays closed when placed on the desk. The newspaper unfolds immediately when placed on the right; turning its pages does not change its size.
 - Patients speak sparingly, using small comic speech balloons. Not everyone greets the doctor; patients refused fitness for work generally leave without speaking.
 - The clinic has a staff room where doctors and nurses talk over coffee during a break.
 
@@ -34,7 +35,7 @@
 - Medical notes initially contain only the patient’s first name, surname and age. Sheets taken without a patient remain blank until assigned to a visit. Completed examinations add their label and value automatically, directly below the previous entry, in examination order. Unperformed examinations leave no reserved rows. The general (physical) examination adds the patient history automatically. Medical notes have no pen control. Every later entry is appended below the existing entries, including a second blood pressure reading, telephone conclusions and the findings from additional examinations when the patient returns; earlier entries never move. Each additional finding remains in the medical notes after its separate report is handed to the patient, including when several additional examinations were performed. Handwritten entries use a different ink color from printed or typewritten text.
 - A four-slot document rack on the right, above the stamps, provides blank sheets and certificate forms separately. The first two slots are active initially. The third slot from the top becomes stocked with additional-examination referral forms on the seventh working day; the fourth remains reserved. A holder beside the telephone on the right provides paperclips. The doctor can attach a paperclip to a document.
 - The patient brings a referral and, from the fourth working day, may also bring a specialist certificate concerning hypertension. The doctor fetches the certificate form from the rack; each sheet is carried individually from its tray or rack slot onto the main desk.
-- The desk has two identical drawers, with the second between the first and the wastebasket. The player decides which drawer holds each document, clipped bundle, rulebook, loose paperclip or banknote. Paperwork can be retrieved from either drawer or discarded in the wastebasket. Either drawer can be opened throughout the working day and fills the screen. Documents are browsed through covers in filing order. A clipped bundle appears once. Patient names appear only on hover or keyboard focus, and no document preview is shown; other stored objects lie separately. Selecting an item closes the drawer and takes it out. Clicking the lower edge closes it without taking anything.
+- The desk has two identical drawers, with the second between the first and the wastebasket. The player decides which drawer holds each document, clipped bundle, newspaper, rulebook, loose paperclip or banknote. Paperwork can be retrieved from either drawer or discarded in the wastebasket. Either drawer can be opened throughout the working day and fills the screen. Documents are browsed through covers in filing order. A clipped bundle appears once. Patient names appear only on hover or keyboard focus, and no document preview is shown; other stored objects lie separately. Selecting an item closes the drawer and takes it out. Clicking the lower edge closes it without taking anything.
 - The referral and medical note from every completed visit must both be archived in either desk drawer, including across working days.
 - Formal documents carry issue dates, seals and signatures. The refusal stamp reads ODMOWA instead of NIEZDOLNY and is not limited to medical grounds.
 - Dropping a sheet near a paperclip attached to another sheet joins the documents into one movable bundle. The medical note and referral have the same size and lie aligned in a bundle, with the note on top regardless of which sheet was added first. Clicking the attached clip separates the documents.
@@ -105,3 +106,4 @@
 ## To be decided
 
 - Whether the location/country is fictional.
+- Contents and timing of future story newspaper issues. The initial 20 background articles and their revised visual presentation have been accepted.

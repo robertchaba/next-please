@@ -16,7 +16,7 @@ function seventhDay(): GameState {
   expect(state.day).toBe(9);
   expect(state.ending).toBeNull();
   const patient = PATIENTS.find(patient => patient.jobId === 18 && patient.general === 'pass' && patient.vision === 'pass' && patient.pressure === 'pass' && additionalResultFor(patient, 'audiometry').fit)!;
-  return { ...state, roster: [patient.id, ...state.roster.filter(id => PATIENTS[id]!.characterId !== patient.characterId)] };
+  return { ...state, clockMinutes: 480, roster: [patient.id, ...state.roster.filter(id => PATIENTS[id]!.characterId !== patient.characterId)] };
 }
 async function key(page: Page, id: string, value = 'Enter'): Promise<void> {
   await page.locator(`#control-${id}`).focus();
@@ -105,7 +105,7 @@ test('third-drawer referral circles exactly one test, keeps records and restores
   let later = applyAction({ ...sent, clockMinutes: 840 }, 'end-day').state;
   for (let steps = 0; later.phase === 'home' && steps < 4; steps++) later = applyAction(later, 'next-day').state;
   expect(later.phase).toBe('cabinet');
-  await importState(page, later);
+  await importState(page, { ...later, clockMinutes: 480 });
   await key(page, 'call-patient');
   await expect(page.locator('#announcement')).toContainText('Pacjent wrócił z wynikiem');
   const resultId = later.nextPaperId;
@@ -136,7 +136,7 @@ for (const attached of [true, false]) test(`returning worker receives ${attached
   const returnDay = state.pendingReferrals[0]!.returnDay;
   state = actions({ ...state, clockMinutes: 840 }, 'end-day');
   while (state.day < returnDay) state = actions(state, 'next-day');
-  state = actions(state, 'call-patient', 'take-certificate', 'write-certificate', 'stamp-fit');
+  state = actions({ ...state, clockMinutes: 480 }, 'call-patient', 'take-certificate', 'write-certificate', 'stamp-fit');
   const report = state.papers.find(paper => paper.kind === 'additional-result')!;
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.clock.install();

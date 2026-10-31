@@ -22,7 +22,7 @@ function submit(state: GameState, decision: 'fit' | 'unfit', roll = 0.9): GameSt
 }
 function bribeAppointment(): GameState {
   const state = cabinet(8);
-  return act({ ...state, shiftCompleted: 1 }, 'call-patient');
+  return act({ ...state, clockMinutes: 484, shiftCompleted: 1 }, 'call-patient');
 }
 
 describe('progression follows working days', () => {
@@ -62,7 +62,7 @@ describe('progression follows working days', () => {
       if (state.phase === 'cabinet') {
         expect(state.roster).toHaveLength(day < 9 ? 168 : 188);
         if (day < 9) for (const id of state.roster) expect(reservedJobs).not.toContain(JOBS[PATIENTS[id]!.jobId]!.key);
-        if (day === 8) expect(applyAction({ ...state, shiftCompleted: 1 }, 'call-patient').state.visit?.bribe).toBe('offered');
+        if (day === 8) expect(applyAction({ ...state, clockMinutes: 484, shiftCompleted: 1 }, 'call-patient').state.visit?.bribe).toBe('offered');
         state = act({ ...state, clockMinutes: 840 }, 'end-day');
       } else expect(state.roster).toEqual([]);
       state = act(state, 'next-day');
@@ -80,7 +80,8 @@ describe('progression follows working days', () => {
       expect(state.day).toBe(day);
       for (const paper of state.papers.filter(paper => paper.kind === 'directive' && paper.day === day)) {
         if (paper.kind !== 'directive') throw new Error('Wrong paper');
-        expect(state.clockMinutes).toBe(477);
+        expect(state.clockMinutes).toBeGreaterThanOrEqual(459);
+        expect(state.clockMinutes).toBeLessThanOrEqual(466);
         expect(state.visit).toBeNull();
         expect(paper.sender).toBe(paper.rule === 'specialist' ? 'chamber' : 'zus');
         expect(paper.opened).toBe(false);

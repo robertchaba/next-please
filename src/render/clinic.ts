@@ -18,7 +18,7 @@ const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate
   'workstation-calendar', 'imprint-fit-pl', 'imprint-unfit-pl', 'imprint-fit-en', 'imprint-unfit-en', 'document-seal', 'document-seal-zus', 'document-seal-employer', 'document-signature', 'document-seal-chamber', 'document-seal-employer-unclear', 'banknote-100',
   'zus-inspector-1', 'zus-inspector-2', 'zus-inspector-3', 'inspector-id', 'inspection-fine', 'archive-folder',
   'manual-cover-v083', 'manual-spread-v083', 'manual-corner-left-v083', 'manual-corner-right-v083',
-  'paper-envelope-postage'] as const;
+  'newspaper-folded', 'newspaper-spread', 'newspaper-masthead-pl', 'newspaper-masthead-en', 'paper-envelope-postage'] as const;
 export const PATIENT_MOTION_FRAMES = 12;
 
 export async function loadClinicArt(): Promise<void> {
@@ -251,6 +251,14 @@ export function drawWorkstationObjects(ctx: CanvasRenderingContext2D, _drawerCou
 
 export function drawPaper(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
   asset(ctx, 'sprites/workstation-paper', x, y, w, h);
+}
+
+export function drawNewspaperArt(ctx: CanvasRenderingContext2D, open: boolean, x: number, y: number, w: number, h: number): void {
+  asset(ctx, `sprites/newspaper-${open ? 'spread' : 'folded'}`, x, y, w, h);
+}
+
+export function drawNewspaperMasthead(ctx: CanvasRenderingContext2D, locale: Locale, x: number, y: number): void {
+  asset(ctx, `sprites/newspaper-masthead-${locale}`, x, y, locale === 'pl' ? 268 : 216, 30);
 }
 
 export function drawManualArt(ctx: CanvasRenderingContext2D, kind: 'cover' | 'spread' | 'corner-left' | 'corner-right', x: number, y: number, w: number, h: number): void {

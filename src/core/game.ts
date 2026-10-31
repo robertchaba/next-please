@@ -1,3 +1,4 @@
+import { createNewspaper, nextNewspaper, newspaperCopy, type NewspaperState, type NewspaperCopy } from './newspaper';
 import { gameDate, isWeekend } from './calendar';
 import { additionalNoteEntry, additionalResultFor, additionalTestForJob, additionalTestForPatient, nextWorkingDay, type AdditionalNoteEntry, type AdditionalTest, type AdditionalResult, type PendingReferral } from './additional-tests';
 import { PATIENTS, CHARACTER_COUNT, randomStep, hasRequiredExaminations, compatiblePressureReading, type ExaminationId, type VisionValues, type PressureValues } from './patients';
@@ -10,6 +11,8 @@ export const INTRO_SLIDES = 4;
 export const SHIFT_LENGTH = CHARACTER_COUNT;
 export const ARRIVAL_MINUTES = 477;
 export const SHIFT_START_MINUTES = 480;
+export const EARLIEST_ARRIVAL_MINUTES = 459;
+export const FIRST_PATIENT_MINUTES = 475;
 export const SHIFT_END_MINUTES = 840;
 export const CLEANER_WARNING_MINUTES = 1020;
 export const CLINIC_CLOSE_MINUTES = 1035;
@@ -100,6 +103,8 @@ export interface Banknote {
 }
 
 export interface GameState {
+  newspaper: NewspaperState;
+  newspaperCopies: NewspaperCopy[];
   /** Unique admitted portraits, oldest appearance first; spans working days. */
   portraitHistory: number[];
   /** Completed appointments, independent of whether their papers still exist. */
@@ -155,6 +160,7 @@ export type GameAction =
   | { type: 'accept-bribe'; location: Banknote['location'] }
   | { type: 'store-banknote' | 'retrieve-banknote' | 'return-banknote'; banknoteId: number; drawer?: DrawerId }
   | { type: 'store-drawer-item' | 'retrieve-drawer-item'; item: 'manual' | 'clip'; drawer?: DrawerId }
+  | { type: 'store-newspaper' | 'retrieve-newspaper' | 'trash-newspaper'; day: number; drawer?: DrawerId }
   | { type: 'write-note' | 'store-paper' | 'retrieve-paper' | 'trash-paper' | 'open-letter' | 'clip-paper'; paperId: number; drawer?: DrawerId }
   | { type: 'clip-document'; documentId: DocumentId }
   | { type: 'unclip-document'; documentId: DocumentId }
@@ -165,7 +171,7 @@ export type GameFeedback =
   | 'inspection-document-accepted' | 'inspection-wrong-document' | 'inspection-confirm-missing'
   | 'inspection-complete' | 'inspection-fined' | 'inspection-waiting'
   | 'additional-unavailable' | 'referral-taken' | 'test-selected' | 'test-needed' | 'test-already-done' | 'patient-referred' | 'patient-returned' | 'referral-penalty'
-  | 'none' | 'cabinet-ready' | 'patient-called' | 'patient-waiting' | 'shift-finished'
+  | 'newspaper-trashed' | 'waiting-room-empty' | 'none' | 'cabinet-ready' | 'patient-called' | 'patient-waiting' | 'shift-finished'
   | 'document-taken' | 'document-needed' | 'certificate-taken' | 'certificate-needed' | 'no-patient' | 'vision-pass' | 'vision-refer'
   | 'general-pass' | 'general-refer'
   | 'pressure-pass' | 'pressure-refer' | 'stamped-fit' | 'stamped-unfit'
@@ -182,7 +188,9 @@ export type GameFeedback =
 
 export function createInitialState(seed = globalThis.crypto.getRandomValues(new Uint32Array(1))[0]!): GameState {
   const generated = createDailyRoster(seed >>> 0, 1);
+  const newspaper = createNewspaper(seed);
   return {
+    newspaper, newspaperCopies: [newspaperCopy(newspaper, 1)],
     portraitHistory: [],
     recentVisits: [], inspection: null, inspectionCheckedAt: 0, inspectionFines: 0,
     pendingReferrals: [], referralsIssued: 0, budgetHistory: [],
@@ -323,13 +331,17 @@ function transition(state: GameState, action: GameAction): ActionResult {
         clockMinutes: SHIFT_END_MINUTES, referralsIssued: 0, daily: emptyConsequences(), money: result.settlement.closingBalance,
         ending: settledEnding(state, result.settlement.closingBalance) }, 'next-day');
     }
+    if (state.newspaperCopies.length >= GAME_LIMITS.papers) return unchanged('limit-reached');
     const generated = createDailyRoster(state.rngState, day, state.portraitHistory);
+    const arrival = randomStep(generated.seed);
+    const newspaper = nextNewspaper(state.newspaper.rngState, state.newspaper);
     const rule = directiveForDay(day);
     if (rule && (state.papers.length >= GAME_LIMITS.papers || state.nextPaperId > GAME_LIMITS.paperId)) return unchanged('limit-reached');
     const papers: Paper[] = rule ? [...state.papers, { id: state.nextPaperId, kind: 'directive', patientId: null, day,
       location: 'desk', sender: rule === 'specialist' || rule === 'additional-tests' ? 'chamber' : 'zus', rule, opened: false }] : state.papers;
-    return changed({ phase: 'cabinet', day, previousMonthBalance, bribeIncome: 0, inspectionFines: 0, shiftCompleted: 0, clockMinutes: ARRIVAL_MINUTES,
-      roster: arrangeProgressionRoster(generated.roster.map(id => state.pendingReferrals.find(pending => PATIENTS[pending.visit.patientId]!.characterId === PATIENTS[id]!.characterId)?.visit.patientId ?? id), day), referralsIssued: 0, rngState: generated.seed, daily: emptyConsequences(), settlement: null, budgetHistory: [],
+    return changed({ phase: 'cabinet', day, newspaper, newspaperCopies: [...state.newspaperCopies, newspaperCopy(newspaper, day)], previousMonthBalance, bribeIncome: 0, inspectionFines: 0, shiftCompleted: 0,
+      clockMinutes: SHIFT_START_MINUTES - (14 + Math.floor(arrival.value * 8)),
+      roster: arrangeProgressionRoster(generated.roster.map(id => state.pendingReferrals.find(pending => PATIENTS[pending.visit.patientId]!.characterId === PATIENTS[id]!.characterId)?.visit.patientId ?? id), day), referralsIssued: 0, rngState: arrival.seed, daily: emptyConsequences(), settlement: null, budgetHistory: [],
       papers, nextPaperId: state.nextPaperId + Number(rule !== null) }, 'next-day');
   }
   if (state.phase === 'home') return unchanged('none');
@@ -412,6 +424,15 @@ function transition(state: GameState, action: GameAction): ActionResult {
     if (storing && clips >= GAME_LIMITS.drawerClips) return unchanged('limit-reached');
     if (!storing && clips === 0) return unchanged('item-missing');
     return changed({ drawerItems: { ...state.drawerItems, [drawer]: { manual, clips: clips + (storing ? 1 : -1) } }, clockMinutes: spend(ACTION_MINUTES.handling) }, storing ? 'item-stored' : 'item-retrieved');
+  }
+  if (typeof action === 'object' && (action.type === 'store-newspaper' || action.type === 'retrieve-newspaper' || action.type === 'trash-newspaper')) {
+    const copy = state.newspaperCopies.find(copy => copy.day === action.day);
+    const retrieving = action.type === 'retrieve-newspaper';
+    if (!copy || (retrieving ? copy.location !== (action.drawer ?? 'drawer') : copy.location !== 'desk')) return unchanged('item-missing');
+    const newspaperCopies = action.type === 'trash-newspaper' ? state.newspaperCopies.filter(entry => entry !== copy)
+      : state.newspaperCopies.map(entry => entry === copy ? { ...entry, location: retrieving ? 'desk' as const : action.drawer ?? 'drawer' } : entry);
+    return changed({ newspaperCopies, clockMinutes: spend(ACTION_MINUTES.handling) },
+      action.type === 'trash-newspaper' ? 'newspaper-trashed' : retrieving ? 'item-retrieved' : 'item-stored');
   }
   if (action === 'use-phone') return changed({ clockMinutes: spend(ACTION_MINUTES.handling) }, workDayNumber(state.day) >= 4 ? 'phone-ready' : 'phone-unavailable');
   if (action === 'take-paper') {
@@ -547,6 +568,8 @@ function transition(state: GameState, action: GameAction): ActionResult {
   if (action === 'call-patient') {
     if (state.inspection) return unchanged('inspection-waiting');
     if (state.visit) return unchanged('patient-waiting');
+    if (state.clockMinutes < FIRST_PATIENT_MINUTES) return unchanged('waiting-room-empty');
+    const admissionStart = state.day === 1 ? SHIFT_START_MINUTES : FIRST_PATIENT_MINUTES;
     if (isShiftFinished(state)) return unchanged('shift-finished');
     if (state.patientsProcessed === GAME_LIMITS.patients) return unchanged('limit-reached');
     let admissionSeed = state.rngState, inspectionCheckedAt = state.inspectionCheckedAt;
@@ -558,11 +581,11 @@ function transition(state: GameState, action: GameAction): ActionResult {
         const target = state.recentVisits[Math.floor(targetDraw.value * state.recentVisits.length)]!;
         return changed({ inspection: { target: { ...target }, inspectorId: Math.floor(portraitDraw.value * 3) as 0 | 1 | 2,
           stage: 'identity', idTaken: false, received: [] }, inspectionCheckedAt, rngState: portraitDraw.seed,
-          clockMinutes: Math.max(SHIFT_START_MINUTES, spend(ACTION_MINUTES.handling)) }, 'inspector-arrived');
+          clockMinutes: Math.max(admissionStart, spend(ACTION_MINUTES.handling)) }, 'inspector-arrived');
       }
     }
     const returning = state.pendingReferrals.find(pending => pending.returnDay < state.day
-      || (pending.returnDay === state.day && Math.max(SHIFT_START_MINUTES, state.clockMinutes) >= pending.returnMinute
+      || (pending.returnDay === state.day && state.clockMinutes >= pending.returnMinute
         && (pending.sentDay < state.day || state.shiftCompleted >= pending.returnAfterCompleted)));
     const roster = [...state.roster];
     if (returning) {
@@ -577,7 +600,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
       const visit: Visit = { ...returning.visit, additionalResult,
         noteOrder: returning.visit.noteOrder.includes(entry) ? [...returning.visit.noteOrder] : [...returning.visit.noteOrder, entry] };
       return changed({ roster, visit, inspectionCheckedAt, rngState: admissionSeed, pendingReferrals: state.pendingReferrals.filter(pending => pending !== returning),
-        clockMinutes: Math.max(SHIFT_START_MINUTES, spend(ACTION_MINUTES.handling)), nextPaperId: state.nextPaperId + 1,
+        clockMinutes: Math.max(admissionStart, spend(ACTION_MINUTES.handling)), nextPaperId: state.nextPaperId + 1,
         papers: recordResults([...state.papers, { id: state.nextPaperId, kind: 'additional-result', patientId: visit.patientId,
           day: state.day, location: 'desk', test: returning.test, fit: returning.fit }], visit, state.day) }, 'patient-returned');
     }
@@ -592,7 +615,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
     };
     const characterId = PATIENTS[patientId!]!.characterId;
     const portraitHistory = [...state.portraitHistory.filter(id => id !== characterId), characterId];
-    return changed({ roster, portraitHistory, inspectionCheckedAt, clockMinutes: Math.max(SHIFT_START_MINUTES, spend(ACTION_MINUTES.handling)), visit, rngState: details.seed,
+    return changed({ roster, portraitHistory, inspectionCheckedAt, clockMinutes: Math.max(admissionStart, spend(ACTION_MINUTES.handling)), visit, rngState: details.seed,
       papers: recordResults(state.papers, visit, state.day) }, 'patient-called');
   }
 

@@ -14,7 +14,7 @@ function beginningOfDay(day: number, seed = 71): GameState {
     if (state.phase === 'cabinet') state = applyAction({ ...state, clockMinutes: 840 }, 'end-day').state;
     state = applyAction(state, 'next-day').state;
   }
-  return state;
+  return { ...state, clockMinutes: 480 };
 }
 
 function completeVisit(state: GameState): GameState {

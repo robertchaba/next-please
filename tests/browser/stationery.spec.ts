@@ -16,7 +16,7 @@ function seventhDay(job: number): GameState {
   }
   const patient = PATIENTS.find(patient => patient.jobId === job && patient.general === 'pass'
     && patient.vision === 'pass' && patient.pressure === 'pass' && additionalResultFor(patient, 'audiometry').fit)!;
-  return { ...state, roster: [patient.id, ...state.roster.filter(id => PATIENTS[id]!.characterId !== patient.characterId)] };
+  return { ...state, clockMinutes: 480, roster: [patient.id, ...state.roster.filter(id => PATIENTS[id]!.characterId !== patient.characterId)] };
 }
 
 function resultState(): GameState {
@@ -26,7 +26,7 @@ function resultState(): GameState {
   const returnDay = state.pendingReferrals[0]!.returnDay;
   state = actions({ ...state, clockMinutes: 840 }, 'end-day');
   while (state.day < returnDay) state = actions(state, 'next-day');
-  return actions(state, 'call-patient');
+  return actions({ ...state, clockMinutes: 480 }, 'call-patient');
 }
 
 function envelopeState(): GameState {

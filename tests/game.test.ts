@@ -155,9 +155,9 @@ describe('cabinet work', () => {
     expect(state.settlement).toMatchObject({ income: 1000 + state.shiftCompleted * 50, insuranceCost: 300, fines: 0 });
     const next = applyAction(state, 'next-day');
     expect(next.feedback).toBe('next-day');
-    expect(next.state).toMatchObject({ day: 2, shiftCompleted: 0, money: state.money, patientsProcessed: state.patientsProcessed, clockMinutes: 477, lampOn: false, decoration: 'certificate' });
+    expect(next.state).toMatchObject({ day: 2, shiftCompleted: 0, money: state.money, patientsProcessed: state.patientsProcessed, clockMinutes: expect.any(Number), lampOn: false, decoration: 'certificate' });
     // This assertion covers the next daily queue, independently of inspections.
-    const ready = { ...next.state, inspectionCheckedAt: next.state.patientsProcessed };
+    const ready = { ...next.state, clockMinutes: 480, inspectionCheckedAt: next.state.patientsProcessed };
     expect(act(ready, 'call-patient').visit?.patientId).toBe(next.state.roster[0]);
   });
 
@@ -350,7 +350,7 @@ describe('paperwork and the new instruments', () => {
     expect(state.papers).toBe(papers);
     const called = applyAction(state, 'use-phone');
     expect(called.feedback).toBe('phone-unavailable');
-    expect(called.state).toEqual({ ...state, clockMinutes: 478 });
+    expect(called.state).toEqual({ ...state, clockMinutes: state.clockMinutes + 1 });
   });
 });
 
@@ -526,7 +526,10 @@ describe('general examination and chronological findings', () => {
       shiftCompleted: 0, patientsProcessed: 0, daily: late.daily, papers: late.papers,
       paperClips: [[2]], settlement: { patients: 0, patientBonus: 0, fines: 0 } });
     expect(applyAction(result.state, 'end-day').state).toBe(result.state);
-    expect(act(result.state, 'next-day')).toMatchObject({ phase: 'cabinet', clockMinutes: 477, visit: null });
+    const morning = act(result.state, 'next-day');
+    expect(morning).toMatchObject({ phase: 'cabinet', visit: null });
+    expect(morning.clockMinutes).toBeGreaterThanOrEqual(459);
+    expect(morning.clockMinutes).toBeLessThanOrEqual(466);
   });
 
   it('requires a general examination for every profile, and records findings in action order only once', () => {
