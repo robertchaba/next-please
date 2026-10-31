@@ -5,7 +5,11 @@ import { applyAction, createInitialState } from '../../src/core/game';
 import { encodeSave } from '../../src/core/save';
 
 const trackFiles = readdirSync(new URL('../../public/assets/audio/music/', import.meta.url))
-  .filter(file => file.endsWith('.mp3') && !file.endsWith(' - EOD.mp3') && !file.endsWith(' - SUCCESS.mp3') && file !== 'Game Over.mp3').sort();
+  .filter(file => file.endsWith('.mp3') && ![
+    'Wissenschaftlicher Optimismus - Feierabend.mp3',
+    'Victory Fanfare - All Clear.mp3',
+    'Game Over - The Final Stamp.mp3',
+  ].includes(file)).sort();
 
 // Inspect the actual Howler/Web Audio playback in the built app; no test-only
 // hooks or mocked audio are installed in production code.
@@ -44,21 +48,21 @@ for (const ending of ['bankruptcy', 'hospital'] as const) for (const muted of [t
     await expect(page.getByRole('status')).toContainText('Zapis wczytany');
     await page.locator('#control-back').click();
     await page.locator('#control-start').click();
-    expect(requests.some(src => src.endsWith('Game Over.mp3'))).toBe(false);
+    expect(requests.some(src => src.endsWith('Game Over - The Final Stamp.mp3'))).toBe(false);
     await page.locator('#control-end-day-home').click();
     if (muted) {
       await page.locator('#control-next-track').click();
-      expect(requests.some(src => src.endsWith('Game Over.mp3'))).toBe(false);
+      expect(requests.some(src => src.endsWith('Game Over - The Final Stamp.mp3'))).toBe(false);
       await page.locator('#control-sound').click();
     }
     const gameOverPlaying = async () => (await playing(page)).map(sound => ({ src: sound.src.split('/').at(-1), muted: sound.muted }));
-    await expect.poll(gameOverPlaying).toEqual([{ src: 'Game Over.mp3', muted: false }]);
+    await expect.poll(gameOverPlaying).toEqual([{ src: 'Game Over - The Final Stamp.mp3', muted: false }]);
     for (const control of ['next-track', 'previous-track']) {
       await page.locator(`#control-${control}`).click();
-      await expect.poll(gameOverPlaying).toEqual([{ src: 'Game Over.mp3', muted: false }]);
+      await expect.poll(gameOverPlaying).toEqual([{ src: 'Game Over - The Final Stamp.mp3', muted: false }]);
     }
     await page.evaluate(() => {
-      const sound = window.Howler._howls.find(sound => sound.playing() && decodeURIComponent(String(sound._src)).endsWith('Game Over.mp3'))!;
+      const sound = window.Howler._howls.find(sound => sound.playing() && decodeURIComponent(String(sound._src)).endsWith('Game Over - The Final Stamp.mp3'))!;
       sound.seek(sound.duration() - 0.1);
     });
     await expect.poll(async () => (await playing(page))[0]?.seek).toBeLessThan(2);
@@ -68,17 +72,17 @@ for (const ending of ['bankruptcy', 'hospital'] as const) for (const muted of [t
     await page.locator('#save-input').setInputFiles({ name: 'ending.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(ended)) });
     await expect(page.getByRole('status')).toContainText('Zapis wczytany');
     await page.locator('#control-back').click();
-    await expect.poll(gameOverPlaying).toEqual([{ src: 'Game Over.mp3', muted: false }]);
+    await expect.poll(gameOverPlaying).toEqual([{ src: 'Game Over - The Final Stamp.mp3', muted: false }]);
     await page.locator('#control-sound').click();
     await page.locator('#control-next-track').click();
-    await expect.poll(gameOverPlaying).toEqual([{ src: 'Game Over.mp3', muted: true }]);
+    await expect.poll(gameOverPlaying).toEqual([{ src: 'Game Over - The Final Stamp.mp3', muted: true }]);
     await page.locator('#control-menu').click();
     await page.locator('#control-restart').click();
     await page.locator('#control-restart-confirm').click();
     expect(await playing(page)).toEqual([]);
     await page.locator('#control-sound').click();
-    await expect.poll(async () => (await playing(page)).map(sound => sound.src.split('/').at(-1))).toEqual(['Bureaucratic March 1.mp3']);
-    expect(requests.some(src => src.includes('EOD') || src.includes('Victory'))).toBe(false);
+    await expect.poll(async () => (await playing(page)).map(sound => sound.src.split('/').at(-1))).toEqual(['Bureaucratic March - Opening the Office.mp3']);
+    expect(requests.some(src => src.includes('Wissenschaftlicher Optimismus') || src.includes('Victory'))).toBe(false);
   });
 }
 
@@ -92,7 +96,7 @@ test('music decodes, plays continuously across screens, repeats, and respects pe
   await page.keyboard.press('Escape');
   expect(requests).toEqual([]);
   await page.getByRole('button', { name: 'Włącz dźwięk' }).click();
-  await expect.poll(() => playing(page)).toEqual([{ src: expect.stringContaining('Bureaucratic March 1.mp3'), seek: expect.any(Number), muted: false, state: 'running' }]);
+  await expect.poll(() => playing(page)).toEqual([{ src: expect.stringContaining('Bureaucratic March - Opening the Office.mp3'), seek: expect.any(Number), muted: false, state: 'running' }]);
   await expect.poll(async () => (await playing(page))[0]?.seek).toBeGreaterThan(0.2);
   const position = (await playing(page))[0].seek;
   await page.getByRole('button', { name: 'ROZPOCZNIJ DYŻUR' }).click();
@@ -145,26 +149,26 @@ test('previous/next wrap, support the keyboard in both languages, and preserve m
   await expect(page.getByRole('button', { name: 'Włącz dźwięk' })).toBeVisible();
   expect(requests).toEqual([]);
   await page.getByRole('button', { name: 'Włącz dźwięk' }).click();
-  await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining('Bureaucratic March 2.mp3')]);
+  await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining('Bureaucratic March - The Waiting Room.mp3')]);
 
   await page.getByRole('button', { name: 'Poprzedni utwór' }).focus();
   await page.keyboard.press('Enter');
-  await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining('Bureaucratic March 1.mp3')]);
+  await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining('Bureaucratic March - Opening the Office.mp3')]);
   await page.keyboard.press('Space');
-  await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining('Untitled.mp3')]);
+  await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining('Untitled - A Note in the Margin.mp3')]);
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Następny utwór' })).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining('Bureaucratic March 1.mp3')]);
+  await expect.poll(async () => (await playing(page)).map(sound => sound.src)).toEqual([expect.stringContaining('Bureaucratic March - Opening the Office.mp3')]);
 
   await page.getByRole('button', { name: 'Wycisz dźwięk' }).click();
   await page.getByRole('button', { name: 'Następny utwór' }).click();
-  await expect.poll(async () => (await playing(page)).map(({ src, muted }) => ({ src, muted }))).toEqual([{ src: expect.stringContaining('Bureaucratic March 2.mp3'), muted: true }]);
+  await expect.poll(async () => (await playing(page)).map(({ src, muted }) => ({ src, muted }))).toEqual([{ src: expect.stringContaining('Bureaucratic March - The Waiting Room.mp3'), muted: true }]);
   await page.getByRole('button', { name: 'English', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Next track' })).toHaveAttribute('title', 'Next track');
   await page.getByRole('button', { name: 'Previous track' }).focus();
   await page.keyboard.press('Enter');
-  await expect.poll(async () => (await playing(page)).map(({ src, muted }) => ({ src, muted }))).toEqual([{ src: expect.stringContaining('Bureaucratic March 1.mp3'), muted: true }]);
+  await expect.poll(async () => (await playing(page)).map(({ src, muted }) => ({ src, muted }))).toEqual([{ src: expect.stringContaining('Bureaucratic March - Opening the Office.mp3'), muted: true }]);
   await expect(page.getByRole('button', { name: 'Enable audio' })).toBeVisible();
 });
 

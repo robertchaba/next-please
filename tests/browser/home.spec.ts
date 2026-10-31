@@ -237,7 +237,7 @@ test('EOD music is isolated from the workplace across mute, saves and departure'
   await load(page, homeState());
   await key(page, 'sound');
   const playing = () => page.evaluate(() => window.Howler._howls.filter(sound => sound.playing()).map(sound => String(sound._src)));
-  await expect.poll(playing).toContainEqual(expect.stringContaining('Wissenschaftlicher%20Optimismus%20-%20EOD.mp3'));
+  await expect.poll(playing).toContainEqual(expect.stringContaining('Wissenschaftlicher%20Optimismus%20-%20Feierabend.mp3'));
   await key(page, 'saves');
   await key(page, 'back');
   await key(page, 'home-next');
@@ -245,9 +245,9 @@ test('EOD music is isolated from the workplace across mute, saves and departure'
   await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'work');
   await key(page, 'home-next');
   await expect.poll(async () => (await playing()).filter(src => src.endsWith('.mp3')).length).toBe(1);
-  expect((await playing()).some(src => src.includes('EOD') || src.includes('SUCCESS'))).toBe(false);
+  expect((await playing()).some(src => src.includes('Wissenschaftlicher') || src.includes('Victory'))).toBe(false);
   await key(page, 'sound');
-  expect((await playing()).some(src => src.includes('EOD'))).toBe(false);
+  expect((await playing()).some(src => src.includes('Wissenschaftlicher'))).toBe(false);
 });
 
 test('enabling reduced motion immediately reveals the current page and all later pages', async ({ page }) => {

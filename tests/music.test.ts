@@ -13,7 +13,7 @@ it('accounts for every local MP3 once as work, end-of-day, game-over, or reserve
 
 it('plays Game Over only for terminal failures, including imported endings', () => {
   expect(gameOverPlaylist).toEqual([gameOverMusic]);
-  expect(musicManifest[gameOverMusic].src[0]).toContain('Game%20Over.mp3');
+  expect(musicManifest[gameOverMusic].src[0]).toContain('Game%20Over%20-%20The%20Final%20Stamp.mp3');
   expect(musicPlaylist).not.toContain(gameOverMusic);
   expect(endDayPlaylist).not.toContain(gameOverMusic);
   for (const ending of ['bankruptcy', 'hospital'] as const) {
@@ -28,14 +28,14 @@ it('keeps home and future success recordings out of the working playlist', () =>
   expect(endDayPlaylist).toEqual([endDayMusic]);
   expect(musicPlaylist).not.toContain(endDayMusic);
   const workingFiles = musicPlaylist.map(id => decodeURIComponent(musicManifest[id].src[0].split('/').at(-1)!));
-  expect(workingFiles).not.toContain('Wissenschaftlicher Optimismus - EOD.mp3');
-  expect(Object.values(musicManifest).every(asset => !decodeURIComponent(asset.src[0]).includes(' - SUCCESS.mp3'))).toBe(true);
+  expect(workingFiles).not.toContain('Wissenschaftlicher Optimismus - Feierabend.mp3');
+  expect(Object.values(musicManifest).every(asset => !decodeURIComponent(asset.src[0]).includes('Victory Fanfare - All Clear.mp3'))).toBe(true);
 });
 
 it('reserves the success cue and removes its older duplicate', async () => {
   const files = await readdir(new URL('../public/assets/audio/music/', import.meta.url));
   expect(files).not.toContain('Victory Fanfare.mp3');
-  expect(reservedMusicFiles).toEqual(['Victory Fanfare - SUCCESS.mp3']);
+  expect(reservedMusicFiles).toEqual(['Victory Fanfare - All Clear.mp3']);
   const registeredFiles = Object.values(musicManifest).map(asset => decodeURIComponent(asset.src[0].split('/').at(-1)!));
   expect(registeredFiles).not.toContain(reservedMusicFiles[0]);
   expect(musicPlaylist).toHaveLength(17);
