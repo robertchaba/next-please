@@ -1698,7 +1698,7 @@ export const translations = {
       "directives": {
         "additional-tests": {
           "subject": "Badania dodatkowe",
-          "body": "Wprowadza się badania: hutnik — audiometria, pilot — błędnik, milicjant — psychiatra, górnik — RTG. Druki pobiera się z trzeciej przegródki. Zakreśla się jedno badanie. Akta zostają. Powrót dziś lub w następny dzień pracy. Wskazania: regulamin.",
+          "body": "Z dniem wydania niniejszego pisma wprowadza się obowiązek badań dodatkowych dla wskazanych grup zawodowych. Szczegółowe wskazania i tryb postępowania określa Załącznik 3 do podręcznika.",
           "role": "Sekretarz Izby Lekarskiej",
           "signature": "dr Adam Pieczęć"
         },
@@ -3325,7 +3325,7 @@ export const translations = {
       "directives": {
         "additional-tests": {
           "subject": "Additional examinations",
-          "body": "Tests are instituted: furnace work — hearing; pilots — balance; militia — psychiatry; miners — X-ray. Forms shall be drawn from the third rack slot. One test is circled; records retained. Return: today or next workday. Indications: rulebook.",
+          "body": "With effect from the date of this circular, additional examinations are required for designated occupational groups. Detailed indications and procedures are set out in Annex 3 to the rulebook.",
           "role": "Medical Chamber secretary",
           "signature": "Dr Adam Seale"
         },
