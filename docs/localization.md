@@ -57,6 +57,10 @@ Przegląd objął wszystkie 940 aktualnych tożsamości portretów oraz historyc
 
 Nazwy międzynarodowe, np. David Mensah i Kenji Sato, zachowują swój charakter. Kobiece nazwiska dwuczłonowe zachowują obcy pierwszy człon i otrzymują odpowiednik drugiego. Ten zabieg nie dopisuje postaciom narodowości. Nazwisko autora **Roberta Chaby**, jego link oraz historyczna postać Waryńskiego na zaakceptowanym banknocie pozostają bez adaptacji. Waluta nadal jest oznaczana jako zł.
 
+## Oznaczenia badań
+
+Polskie „Wymogi: WC”, „W” i „C” zachowują swoje znaczenie. Angielskie skierowania używają „Tests: V+BP”, „V” i „BP”: V oznacza vision, BP blood pressure, a V+BP oba badania. Angielski regulamin objaśnia te skróty w punkcie 5 i używa ich również w punktach 6–7. Badanie ogólne, masa i wzrost nadal dotyczą wszystkich pacjentów. Są to lokalizowane etykiety istniejących profili; reguły i zapis gry pozostają takie same.
+
 ## Zapis gry i kontrola jakości
 
 Identyfikatory przypadków, portretów, pracodawców, instytucji, artykułów i ogłoszeń pozostają stałe. Nie zmieniają się płeć, wiek, zawód, wyniki badań, kolejka ani zapisany los. Przełączenie PL/EN lub import starego zapisu wybiera etykietę tej samej osoby i tego samego dokumentu. Format nadal ma wersję 34.

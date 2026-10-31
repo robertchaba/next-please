@@ -109,12 +109,15 @@ describe('patient and occupation catalog', () => {
       expect(patient.id).toBe(id);
       expect(JOBS[patient.jobId]).toBeDefined();
       if (patient.id < 5253) expect(patient.expectedDecision).toBe(decisionForFindings(patient.requirementId, patient));
-      for (const t of Object.values(translations)) {
+      for (const locale of ['pl', 'en'] as const) {
+        const t = translations[locale];
         expect(t.patientNames[id]).toBeTruthy();
         expect(t.patientJobs[id]).toBeTruthy();
         const referral = t.patientReferrals[id]!;
         expect(Object.values(referral).every(value => typeof value === 'string' && value.length > 0)).toBe(true);
-        expect(t.paperwork.requirementCodes[patient.requirementId]).toBe(REQUIREMENTS[patient.requirementId].code);
+        const code = locale === 'pl' ? REQUIREMENTS[patient.requirementId].code
+          : { full: 'V+BP', vision: 'V', pressure: 'BP' }[patient.requirementId];
+        expect(t.paperwork.requirementCodes[patient.requirementId]).toBe(code);
       }
     }
   });

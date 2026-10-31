@@ -7,7 +7,8 @@ export type RequirementId = 'full' | 'vision' | 'pressure';
 export type ExposureId = 'paper-dust' | 'noise' | 'heights' | 'traffic' | 'textile-dust' | 'oil' | 'lifting' | 'stress' | 'fine-detail' | 'heat' | 'chemicals' | 'outdoors' | 'night-work' | 'standing' | 'food' | 'mineral-dust';
 export type WorkPatternId = 'day' | 'early' | 'shifts' | 'night' | 'split' | 'seasonal';
 
-/** Fictional game profiles, not clinical thresholds. The referral prints their code. */
+/** Fictional game profiles, not clinical thresholds. Codes retain their Polish forms;
+ * referrals and the rulebook use localized labels from i18n.ts. */
 export const REQUIREMENTS: Record<RequirementId, { code: string; examinations: readonly ExaminationId[]; disqualifying: readonly ('vision' | 'pressure')[] }> = {
   full: { code: 'WC', examinations: ['general', 'vision', 'pressure', 'measurements'], disqualifying: ['vision', 'pressure'] },
   vision: { code: 'W', examinations: ['general', 'vision', 'measurements'], disqualifying: ['vision'] },
