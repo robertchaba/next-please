@@ -102,7 +102,8 @@ export function createAppointmentDetails(state: Pick<GameState, 'day' | 'shiftCo
   }
   const referral = { ageDays, seal, authentic, phone: employerPhone(patientId) };
   let specialist: SpecialistCertificate | null = null;
-  if (workDay >= 4 && patient.pressure === 'refer' && draw() < 0.25) {
+  if (workDay >= 4 && patient.pressure === 'refer'
+    && REQUIREMENTS[patient.requirementId].disqualifying.includes('pressure') && draw() < 0.25) {
     const matches = draw() >= 1 / 3;
     const jobId = matches ? patient.jobId : (patient.jobId + 1 + Math.floor(draw() * (JOBS.length - 1))) % JOBS.length;
     specialist = { jobId, phone: specialistPhone(patientId) };

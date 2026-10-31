@@ -149,6 +149,16 @@ describe('dated referrals and authenticity', () => {
 });
 
 describe('specialist certificates and telephone conclusions', () => {
+  it.each(['pressure', 'combined'] as const)('does not give a hypertension certificate to a vision-only worker with %s findings', conditionId => {
+    const patient = PATIENTS.find(patient => patient.requirementId === 'vision' && patient.conditionId === conditionId)!;
+    expect(patient.pressure).toBe('refer');
+    for (const day of [6, 7, 9]) {
+      for (let seed = 0; seed < 256; seed++) {
+        const details = createAppointmentDetails({ day, shiftCompleted: 0, rngState: seed }, patient.id);
+        expect(details.specialist).toBeNull();
+      }
+    }
+  });
   it('waives hypertension only for the matching job after the fourth workday', () => {
     const state = formalValid(appointment(6, pressurePatient.id));
     const certificate = { jobId: pressurePatient.jobId, phone: '43-1234' };
@@ -177,11 +187,12 @@ describe('specialist certificates and telephone conclusions', () => {
       expect(applyAction(called, 'call-specialist').feedback).toBe(valid ? 'specialist-valid' : 'specialist-invalid');
     }
   });
-  it('samples a quarter of hypertensive patients, with a third of certificates naming another job', () => {
+  it.each(['full', 'pressure'] as const)('samples a quarter of hypertensive %s workers, with a third of certificates naming another job', requirementId => {
+    const patient = PATIENTS.find(patient => patient.requirementId === requirementId && patient.pressure === 'refer')!;
     let seed = 183, certificates = 0, mismatch = 0;
     for (let sample = 0; sample < 20000; sample++) {
-      const details = createAppointmentDetails({ day: 6, shiftCompleted: 0, rngState: seed }, pressurePatient.id); seed = details.seed;
-      if (details.specialist) { certificates++; mismatch += Number(details.specialist.jobId !== pressurePatient.jobId); }
+      const details = createAppointmentDetails({ day: 6, shiftCompleted: 0, rngState: seed }, patient.id); seed = details.seed;
+      if (details.specialist) { certificates++; mismatch += Number(details.specialist.jobId !== patient.jobId); }
     }
     expect(certificates / 20000).toBeGreaterThan(0.23); expect(certificates / 20000).toBeLessThan(0.27);
     expect(mismatch / certificates).toBeGreaterThan(0.30); expect(mismatch / certificates).toBeLessThan(0.36);
