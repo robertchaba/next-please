@@ -1,7 +1,7 @@
 /** Reproduce the cash-as-opening-balance representation used before save v24. */
 export function legacyBudget(state: unknown): unknown {
   if (!state || typeof state !== 'object') return state;
-  const old = structuredClone(state) as Record<string, unknown>;
+  const old = structuredClone(historicalState(state, 23)) as Record<string, unknown>;
   delete old.portraitHistory;
   delete old.recentVisits; delete old.inspection; delete old.inspectionCheckedAt; delete old.inspectionFines;
   if (Array.isArray(old.banknotes)) old.money = Number(old.money) + old.banknotes.filter(note => !note.credited).length * 100;
@@ -22,9 +22,13 @@ export function legacyBudget(state: unknown): unknown {
   return old;
 }
 
-/** v29 adds admission recency; earlier files have no such top-level field. */
+/** Reproduce exact old fields from current fixture builders. */
 export function historicalState(state: unknown, version: number): unknown {
-  if (version >= 29 || !state || typeof state !== 'object') return state;
-  const { portraitHistory: _history, ...old } = state as Record<string, unknown>;
+  if (!state || typeof state !== 'object') return state;
+  const old = structuredClone(state) as Record<string, unknown>;
+  if (version < 29) delete old.portraitHistory;
+  if (version < 31 && old.drawerItems && typeof old.drawerItems === 'object' && 'drawer' in old.drawerItems) {
+    old.drawerItems = old.drawerItems.drawer;
+  }
   return old;
 }

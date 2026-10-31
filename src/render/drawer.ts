@@ -1,4 +1,4 @@
-import { type GameState, type Paper } from '../core/game';
+import { type DrawerId, type GameState, type Paper } from '../core/game';
 import type { Rect } from '../core/desk';
 import { formatGameDate } from '../core/calendar';
 import { translations, type Locale } from '../i18n';
@@ -15,11 +15,11 @@ const manualBounds: Rect = { x: 444, y: 236, w: 88, h: 48 };
 const clipBounds: Rect = { x: 363, y: 239, w: 62, h: 44 };
 export type DrawerAction = { type: 'paper'; id: number } | { type: 'item'; item: 'manual' | 'clip' } | { type: 'page'; page: number } | { type: 'close' } | { type: 'banknote'; id: number };
 
-export function drawerSheets(state: GameState, page: number) {
+export function drawerSheets(state: GameState, page: number, drawer: DrawerId = 'drawer') {
   const groups = new Map(state.paperClips.flatMap(group => group.map(id => [id, group] as const)));
   const seen = new Set<number>();
   const papers = state.papers.filter(paper => {
-    if (paper.location !== 'drawer' || seen.has(paper.id)) return false;
+    if (paper.location !== drawer || seen.has(paper.id)) return false;
     for (const id of groups.get(paper.id) ?? [paper.id]) if (typeof id === 'number') seen.add(id);
     return true;
   });
@@ -41,25 +41,25 @@ function coverName(paper: Paper, locale: Locale): string {
   return paper.patientId === null ? paperDescription(paper, locale).split('.')[0]! : translations[locale].patientNames[paper.patientId]!;
 }
 
-function storedCash(state: GameState) { return state.banknotes.filter(note => note.location === 'drawer'); }
+function storedCash(state: GameState, drawer: DrawerId) { return state.banknotes.filter(note => note.location === drawer); }
 const cashBounds: Rect = { x: 267, y: 227, w: 92, h: 56 };
 
-export function drawerDescription(state: GameState, locale: Locale, page: number): string {
-  const t = translations[locale], sheets = drawerSheets(state, page);
-  return `${t.drawerViewHelp} ${t.drawerDocuments}: ${sheets.papers.length}. ${t.drawerObjects}: ${Number(state.drawerItems.manual) + state.drawerItems.clips + storedCash(state).length}. ${t.drawerBatch} ${sheets.current + 1}/${sheets.pages}.`;
+export function drawerDescription(state: GameState, locale: Locale, page: number, drawer: DrawerId = 'drawer'): string {
+  const t = translations[locale], sheets = drawerSheets(state, page, drawer);
+  return `${t.drawerNames[drawer]}. ${t.drawerViewHelp} ${t.drawerDocuments}: ${sheets.papers.length}. ${t.drawerObjects}: ${Number(state.drawerItems[drawer].manual) + state.drawerItems[drawer].clips + storedCash(state, drawer).length}. ${t.drawerBatch} ${sheets.current + 1}/${sheets.pages}.`;
 }
 
-export function drawerButtons(state: GameState, locale: Locale, page: number, onAction: (action: DrawerAction) => void): Button[] {
-  const t = translations[locale], sheets = drawerSheets(state, page), cash = storedCash(state);
+export function drawerButtons(state: GameState, locale: Locale, page: number, onAction: (action: DrawerAction) => void, drawer: DrawerId = 'drawer'): Button[] {
+  const t = translations[locale], sheets = drawerSheets(state, page, drawer), cash = storedCash(state, drawer);
   return [
     ...(cash.length ? [{ id: 'drawer-banknote', kind: 'hotspot' as const, ...cashBounds, label: `${t.drawerRetrieve}: ${t.progression.banknote}. ${t.drawerCash}: ${cash.length * 100} zł`, action: () => onAction({ type: 'banknote', id: cash.at(-1)!.id }) }] : []),
     ...sheets.visible.map(({ paper, bounds }): Button => ({ id: `drawer-paper-${paper.id}`, kind: 'hotspot', ...bounds,
       label: `${t.drawerRetrieve}: ${coverName(paper, locale)}. ${formatGameDate(paper.day, locale)}`,
       action: () => onAction({ type: 'paper', id: paper.id }),
     })),
-    ...(state.drawerItems.manual ? [{ id: 'drawer-manual', kind: 'hotspot' as const, ...manualBounds, label: `${t.drawerRetrieve}: ${t.manual}`,
+    ...(state.drawerItems[drawer].manual ? [{ id: 'drawer-manual', kind: 'hotspot' as const, ...manualBounds, label: `${t.drawerRetrieve}: ${t.manual}`,
       action: () => onAction({ type: 'item', item: 'manual' }) }] : []),
-    ...(state.drawerItems.clips ? [{ id: 'drawer-clip', kind: 'hotspot' as const, ...clipBounds, label: `${t.drawerRetrieve}: ${t.paperwork.paperclip}. ${state.drawerItems.clips}`,
+    ...(state.drawerItems[drawer].clips ? [{ id: 'drawer-clip', kind: 'hotspot' as const, ...clipBounds, label: `${t.drawerRetrieve}: ${t.paperwork.paperclip}. ${state.drawerItems[drawer].clips}`,
       action: () => onAction({ type: 'item', item: 'clip' }) }] : []),
     ...(sheets.current > 0 ? [{ id: 'drawer-previous', kind: 'text' as const, x: 30, y: 263, w: 116, h: 19, label: t.drawerPrevious,
       action: () => onAction({ type: 'page', page: sheets.current - 1 }) }] : []),
@@ -69,11 +69,11 @@ export function drawerButtons(state: GameState, locale: Locale, page: number, on
   ];
 }
 
-export function renderDrawer(ctx: CanvasRenderingContext2D, state: GameState, locale: Locale, page: number, activeId = ''): void {
+export function renderDrawer(ctx: CanvasRenderingContext2D, state: GameState, locale: Locale, page: number, activeId = '', drawer: DrawerId = 'drawer'): void {
   drawDrawerInterior(ctx);
-  const cash = storedCash(state);
+  const cash = storedCash(state, drawer);
   for (let index = 0; index < Math.min(8, cash.length); index++) drawBanknote(ctx, 267, 241 - index * 2);
-  const sheets = drawerSheets(state, page);
+  const sheets = drawerSheets(state, page, drawer);
   // Only the labelled upper strip of each generated cover is exposed. The lower
   // cover edges stay inside the paper compartment, away from navigation targets.
   ctx.save(); ctx.beginPath(); ctx.rect(28, 33, 241, 210); ctx.clip();
@@ -82,10 +82,10 @@ export function renderDrawer(ctx: CanvasRenderingContext2D, state: GameState, lo
     if (activeId === `drawer-paper-${paper.id}`) drawDocumentText(ctx, fitLabel(coverName(paper, locale), 96), bounds.x + 9, bounds.y + 10, { color: '#385b78' });
   }
   ctx.restore();
-  if (state.drawerItems.manual) drawManualCover(ctx, manualBounds, false);
-  for (let index = 0; index < Math.min(8, state.drawerItems.clips); index++) {
+  if (state.drawerItems[drawer].manual) drawManualCover(ctx, manualBounds, false);
+  for (let index = 0; index < Math.min(8, state.drawerItems[drawer].clips); index++) {
     drawPaperclip(ctx, clipBounds.x + (index % 4) * 13, clipBounds.y + Math.floor(index / 4) * 14);
   }
-  if (state.drawerItems.clips) drawDocumentText(ctx, String(state.drawerItems.clips), 422, 274, { align: 'right', color: '#d9cfaa' });
+  if (state.drawerItems[drawer].clips) drawDocumentText(ctx, String(state.drawerItems[drawer].clips), 422, 274, { align: 'right', color: '#d9cfaa' });
   if (sheets.pages > 1) drawDocumentText(ctx, `${sheets.current + 1}/${sheets.pages}`, 148, 246, { align: 'center', color: '#d9cfaa' });
 }

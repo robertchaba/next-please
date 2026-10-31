@@ -174,7 +174,7 @@ export function paperDescription(paper: Paper, locale: Locale, clipped = false):
   }
   if (paper.kind !== 'note') text += ` ${p.issued}: ${paper.kind === 'referral' ? referralIssueDate(paper, locale) : formatGameDate(paper.day, locale)}. ${p.reference}: ${paper.id}.`;
   if (clipped) text += ` ${p.clipped}.`;
-  if (paper.location === 'drawer') text += ` ${p.stored}.`;
+  if (paper.location !== 'desk') text += ` ${translations[locale].drawerNames[paper.location]}.`;
   return text;
 }
 

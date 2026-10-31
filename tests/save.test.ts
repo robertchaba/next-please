@@ -1,4 +1,4 @@
-import { legacyBudget } from './fixtures/legacy-budget';
+import { historicalState, legacyBudget } from './fixtures/legacy-budget';
 import { createInitialState } from './fixtures/game';
 import { gunzipSync, gzipSync, strToU8 } from 'fflate';
 import { describe, expect, it } from 'vitest';
@@ -15,6 +15,7 @@ import {
 } from '../src/core/save';
 
 function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
+  if (typeof overrides.version === 'number' && overrides.state) overrides = { ...overrides, state: historicalState(overrides.state, overrides.version) };
   if (typeof overrides.version === 'number' && overrides.version <= 28 && overrides.state && typeof overrides.state === 'object') {
     const { portraitHistory: _history, ...state } = overrides.state as Record<string, unknown>;
     overrides = { ...overrides, state };
@@ -88,7 +89,7 @@ function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
   }
   return gzipSync(strToU8(JSON.stringify({
     game: 'next-please',
-    version: 30,
+    version: 31,
     savedAt: '2026-10-23T12:00:00.000Z',
     state: createInitialState(),
     ...overrides,
@@ -133,7 +134,7 @@ describe('portable saves', () => {
   });
 
   it('rejects unsupported versions without interpreting their state', () => {
-    expectCode(() => decodeSave(envelope({ version: 31, state: {} })), 'unsupported-version');
+    expectCode(() => decodeSave(envelope({ version: 32, state: {} })), 'unsupported-version');
   });
 
   it('rejects a save for another game', () => {
@@ -219,7 +220,7 @@ describe('portable saves', () => {
   it('accepts gzip metadata produced by standard encoders', () => {
     const bytes = gzipSync(strToU8(JSON.stringify({
       game: 'next-please',
-      version: 30,
+      version: 31,
       savedAt: '2026-10-23T12:00:00.000Z',
       state: createInitialState(),
     })), { filename: 'save.json' });
@@ -280,7 +281,7 @@ describe('portable saves', () => {
     const migrated = decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), introStep: 5 }) }));
     const bytes = encodeSave(migrated);
     const exported = JSON.parse(new TextDecoder().decode(gunzipSync(bytes)));
-    expect(exported).toMatchObject({ version: 30, state: { phase: 'cabinet', introStep: 3 } });
+    expect(exported).toMatchObject({ version: 31, state: { phase: 'cabinet', introStep: 3 } });
     expect(decodeSave(bytes)).toEqual(migrated);
   });
 
@@ -506,7 +507,7 @@ describe('version 6 certificate availability', () => {
     expect(migrated).toEqual(withLegacyProgressionDefaults({ ...stamped, clockMinutes: 482, visit: { ...stamped.visit, certificateNamed: true } }, true));
     expect(migrated.visit).toMatchObject({ certificateTaken: true, decision: 'fit' });
     expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(30);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(31);
     const intake = act(createInitialState(), 'skip-intro', 'call-patient', 'take-document');
     expect(decodeSave(envelope({ version: 5, state: asV5(intake) }))).toEqual(withLegacyProgressionDefaults({ ...intake, visit: { ...intake.visit, certificateTaken: true, certificateNamed: true } }, true));
     const waiting = act(createInitialState(), 'skip-intro', 'call-patient');
@@ -621,16 +622,16 @@ describe('version 8 drawer inventory', () => {
     const decoded = decodeSave(encodeSave(state));
     expect(decoded).toEqual(state);
     expect(decoded.drawerItems).not.toBe(state.drawerItems);
-    decoded.drawerItems.clips = 0;
-    expect(state.drawerItems.clips).toBe(2);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(state)))).version).toBe(30);
+    decoded.drawerItems.drawer.clips = 0;
+    expect(state.drawerItems.drawer.clips).toBe(2);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(state)))).version).toBe(31);
   });
 
   it('migrates strictly validated v7 papers in filing order without inventing stored objects', () => {
     const current = stored();
     const { drawerItems: _inventory, ...old } = current;
     const migrated = decodeSave(envelope({ version: 7, state: old }));
-    expect(migrated).toEqual({ ...old, drawerItems: { manual: false, clips: 0 } });
+    expect(migrated).toEqual({ ...old, drawerItems: { drawer: { manual: false, clips: 0 }, 'drawer-2': { manual: false, clips: 0 } } });
     expect(migrated.clockMinutes).toBe(current.clockMinutes);
     expectCode(() => decodeSave(envelope({ version: 7, state: current })), 'invalid-state');
     expectCode(() => decodeSave(envelope({ version: 7, state: { ...old, paperClips: [[999]] } })), 'invalid-state');
@@ -641,11 +642,11 @@ describe('version 8 drawer inventory', () => {
     for (const drawerItems of [undefined, null, [], {}, { manual: false }, { clips: 0 },
       { manual: 1, clips: 0 }, { manual: false, clips: '1' }, { manual: false, clips: -1 },
       { manual: false, clips: 0.5 }, { manual: false, clips: 4097 }, { manual: true, clips: 1, unknown: true }]) {
-      expectCode(() => decodeSave(envelope({ state: { ...state, drawerItems } })), 'invalid-state');
+      expectCode(() => decodeSave(envelope({ state: { ...state, drawerItems: { ...state.drawerItems, drawer: drawerItems } } })), 'invalid-state');
     }
-    expect(decodeSave(envelope({ state: { ...state, drawerItems: { manual: false, clips: 4096 } } })).drawerItems.clips).toBe(4096);
+    expect(decodeSave(envelope({ state: { ...state, drawerItems: { drawer: { manual: false, clips: 4096 }, 'drawer-2': { manual: false, clips: 0 } } } })).drawerItems.drawer.clips).toBe(4096);
     for (const drawerItems of [{ manual: true, clips: 0 }, { manual: false, clips: 1 }]) {
-      expectCode(() => decodeSave(envelope({ state: { ...createInitialState(), drawerItems } })), 'invalid-state');
+      expectCode(() => decodeSave(envelope({ state: { ...createInitialState(), drawerItems: { ...createInitialState().drawerItems, drawer: drawerItems } } })), 'invalid-state');
     }
   });
 });

@@ -40,19 +40,21 @@ export const CABINET_HOTSPOTS = {
   additionalReferralSupply: { x: 507, y: 148, w: 54, h: 14 },
   clipSupply: { x: 296, y: 137, w: 37, h: 36 },
   drawer: { x: 222, y: 299, w: 110, h: 18 },
+  'drawer-2': { x: 350, y: 299, w: 110, h: 18 },
   trash: { x: 478, y: 297, w: 68, h: 23 },
   measurements: { x: 405, y: 61, w: 42, h: 67 },
 } as const satisfies Record<string, Rect>;
 /** Generous storage targets apply only while carrying a compatible item. */
 export const DROP_ZONES = {
-  drawer: { x: 210, y: 278, w: 155, h: 42 },
-  trash: { x: 456, y: 282, w: 114, h: 38 },
+  drawer: { x: 210, y: 278, w: 132, h: 42 },
+  'drawer-2': { x: 342, y: 278, w: 126, h: 42 },
+  trash: { x: 468, y: 282, w: 102, h: 38 },
 } as const satisfies Record<string, Rect>;
 
 export function dropTargetRect(target: keyof typeof DROP_ZONES, held: DeskItemId | null, carried: readonly DeskItemId[] = []): Rect {
   const includesCertificate = held === 'document' || carried.includes('document');
   const compatible = held !== null && !includesCertificate && (held === 'incoming-referral' || held.startsWith('paper-')
-    || held.startsWith('clip-') || (target === 'drawer' && (held === 'manual' || held === 'banknote' || held.startsWith('banknote-'))));
+    || held.startsWith('clip-') || (target !== 'trash' && (held === 'manual' || held === 'banknote' || held.startsWith('banknote-'))));
   return compatible ? { ...DROP_ZONES[target] } : { ...CABINET_HOTSPOTS[target] };
 }
 

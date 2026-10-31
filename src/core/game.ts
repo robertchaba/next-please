@@ -17,6 +17,12 @@ export const CLINIC_CLOSE_MINUTES = 1035;
 export const ACTION_MINUTES = { handling: 1, reading: 1, general: 3, vision: 3, pressure: 4, measurements: 2 } as const;
 export const GAME_LIMITS = { day: 1_000_000, money: 1_000_000_000, patients: 1_000_000_000, papers: 4096, paperId: 1_000_000_000, drawerClips: 4096 } as const;
 
+export const DRAWERS = ['drawer', 'drawer-2'] as const;
+export type DrawerId = typeof DRAWERS[number];
+export type StorageLocation = 'desk' | DrawerId;
+export interface DrawerItems { manual: boolean; clips: number }
+export function isManualStored(state: GameState): boolean { return DRAWERS.some(id => state.drawerItems[id].manual); }
+
 export type Decision = 'fit' | 'unfit';
 export type TestResult = 'pass' | 'refer';
 export type DocumentId = number | 'certificate';
@@ -36,7 +42,7 @@ export interface NoteResults {
 interface PaperBase {
   id: number;
   day: number;
-  location: 'desk' | 'drawer';
+  location: StorageLocation;
 }
 export type Paper =
   | (PaperBase & { kind: 'note'; patientId: number | null; results: NoteResults; examinationOrder: ExaminationId[]; noteOrder: NoteEntryId[]; additionalWritten: boolean; calls: PhoneConclusions; bribe: boolean })
@@ -88,7 +94,7 @@ export interface Banknote {
   id: number;
   patientId: number | null;
   day: number;
-  location: 'desk' | 'drawer';
+  location: StorageLocation;
   /** Only migrated cash was paid before the end of the day. */
   credited: boolean;
 }
@@ -132,7 +138,7 @@ export interface GameState {
   /** Each nonempty group shares one physical clip; singleton clips are valid. */
   paperClips: DocumentId[][];
   /** Stored objects are separate from papers and survive changing shifts. */
-  drawerItems: { manual: boolean; clips: number };
+  drawerItems: Record<DrawerId, DrawerItems>;
 }
 
 export type GameAction =
@@ -147,9 +153,9 @@ export type GameAction =
   | { type: 'hand-additional-referral'; paperId: number }
   | 'take-specialist' | 'call-specialist' | 'call-employer' | 'accept-bribe' | 'return-bribe'
   | { type: 'accept-bribe'; location: Banknote['location'] }
-  | { type: 'store-banknote' | 'retrieve-banknote' | 'return-banknote'; banknoteId: number }
-  | { type: 'store-drawer-item' | 'retrieve-drawer-item'; item: 'manual' | 'clip' }
-  | { type: 'write-note' | 'store-paper' | 'retrieve-paper' | 'trash-paper' | 'open-letter' | 'clip-paper'; paperId: number }
+  | { type: 'store-banknote' | 'retrieve-banknote' | 'return-banknote'; banknoteId: number; drawer?: DrawerId }
+  | { type: 'store-drawer-item' | 'retrieve-drawer-item'; item: 'manual' | 'clip'; drawer?: DrawerId }
+  | { type: 'write-note' | 'store-paper' | 'retrieve-paper' | 'trash-paper' | 'open-letter' | 'clip-paper'; paperId: number; drawer?: DrawerId }
   | { type: 'clip-document'; documentId: DocumentId }
   | { type: 'unclip-document'; documentId: DocumentId }
   | { type: 'join-documents'; documentId: DocumentId; targetId: DocumentId };
@@ -184,7 +190,7 @@ export function createInitialState(seed = globalThis.crypto.getRandomValues(new 
     rngState: generated.seed, roster: generated.roster, insuranceRate: BASE_INSURANCE, daily: emptyConsequences(), settlement: null,
     day: 1, money: 0, bribeIncome: 0, banknotes: [], previousMonthBalance: 0, patientsProcessed: 0,
     phase: 'intro', introStep: 0, shiftCompleted: 0, clockMinutes: ARRIVAL_MINUTES, visit: null,
-    lampOn: true, decoration: 'plant', papers: [], nextPaperId: 1, paperClips: [], drawerItems: { manual: false, clips: 0 },
+    lampOn: true, decoration: 'plant', papers: [], nextPaperId: 1, paperClips: [], drawerItems: { drawer: { manual: false, clips: 0 }, 'drawer-2': { manual: false, clips: 0 } },
   };
 }
 
@@ -397,14 +403,15 @@ function transition(state: GameState, action: GameAction): ActionResult {
   }
   if (typeof action === 'object' && 'item' in action) {
     const storing = action.type === 'store-drawer-item';
-    const { manual, clips } = state.drawerItems;
+    const drawer = action.drawer ?? 'drawer';
+    const { manual, clips } = state.drawerItems[drawer];
     if (action.item === 'manual') {
-      if (manual === storing) return unchanged(storing ? 'item-stored' : 'item-missing');
-      return changed({ drawerItems: { manual: storing, clips }, clockMinutes: spend(ACTION_MINUTES.handling) }, storing ? 'item-stored' : 'item-retrieved');
+      if (storing ? isManualStored(state) : !manual) return unchanged(storing ? 'item-stored' : 'item-missing');
+      return changed({ drawerItems: { ...state.drawerItems, [drawer]: { manual: storing, clips } }, clockMinutes: spend(ACTION_MINUTES.handling) }, storing ? 'item-stored' : 'item-retrieved');
     }
     if (storing && clips >= GAME_LIMITS.drawerClips) return unchanged('limit-reached');
     if (!storing && clips === 0) return unchanged('item-missing');
-    return changed({ drawerItems: { manual, clips: clips + (storing ? 1 : -1) }, clockMinutes: spend(ACTION_MINUTES.handling) }, storing ? 'item-stored' : 'item-retrieved');
+    return changed({ drawerItems: { ...state.drawerItems, [drawer]: { manual, clips: clips + (storing ? 1 : -1) } }, clockMinutes: spend(ACTION_MINUTES.handling) }, storing ? 'item-stored' : 'item-retrieved');
   }
   if (action === 'use-phone') return changed({ clockMinutes: spend(ACTION_MINUTES.handling) }, workDayNumber(state.day) >= 4 ? 'phone-ready' : 'phone-unavailable');
   if (action === 'take-paper') {
@@ -492,12 +499,13 @@ function transition(state: GameState, action: GameAction): ActionResult {
     }, feedback);
     const group = clippedDocuments(state, paper.id);
     if (action.type === 'store-paper') {
-      if (paper.location === 'drawer') return unchanged('paper-stored');
+      const drawer = action.drawer ?? 'drawer';
+      if (paper.location === drawer) return unchanged('paper-stored');
       if (group.includes('certificate')) return unchanged('certificate-in-bundle');
       // Array order records filing order, including an older sheet filed again
       // after retrieval; browsing the drawer must preserve this order.
       return changed({
-        papers: [...state.papers.filter(entry => !group.includes(entry.id)), ...state.papers.filter(entry => group.includes(entry.id)).map(entry => ({ ...entry, location: 'drawer' as const }))],
+        papers: [...state.papers.filter(entry => !group.includes(entry.id)), ...state.papers.filter(entry => group.includes(entry.id)).map(entry => ({ ...entry, location: drawer }))],
         clockMinutes: spend(ACTION_MINUTES.handling),
       }, 'paper-stored');
     }
@@ -595,10 +603,10 @@ function transition(state: GameState, action: GameAction): ActionResult {
       if (!canReturnBanknote(state, note)) return unchanged('bribe-missing');
       return transition(state, 'return-bribe');
     }
-    const location = action.type === 'store-banknote' ? 'drawer' : 'desk';
+    const location = action.type === 'store-banknote' ? action.drawer ?? 'drawer' : 'desk';
     if (note.location === location) return unchanged('none');
     return changed({ banknotes: state.banknotes.map(entry => entry.id === note.id ? { ...entry, location } : entry),
-      clockMinutes: spend(ACTION_MINUTES.handling) }, location === 'drawer' ? 'item-stored' : 'item-retrieved');
+      clockMinutes: spend(ACTION_MINUTES.handling) }, location !== 'desk' ? 'item-stored' : 'item-retrieved');
   }
   const visit = state.visit;
   if (!visit) return unchanged('no-patient');

@@ -267,8 +267,8 @@ describe('generous carrying targets', () => {
 
   it('covers near-corner drops within the viewport while keeping stamp holders outside', () => {
     for (const [target, corners] of [
-      ['drawer', [{ x: 210, y: 278 }, { x: 364, y: 319 }]],
-      ['trash', [{ x: 456, y: 282 }, { x: 569, y: 319 }]],
+      ['drawer', [{ x: 210, y: 278 }, { x: 341, y: 319 }]],
+      ['trash', [{ x: 468, y: 282 }, { x: 569, y: 319 }]],
     ] as const) {
       const rect = dropTargetRect(target, 'paper-1');
       for (const point of corners) expect(containsPoint(rect, point)).toBe(true);

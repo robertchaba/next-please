@@ -21,12 +21,12 @@ describe('separate drawer objects', () => {
     const stored = act(original,
       { type: 'store-drawer-item', item: 'manual' },
       { type: 'store-drawer-item', item: 'clip' }, { type: 'store-drawer-item', item: 'clip' });
-    expect(stored.drawerItems).toEqual({ manual: true, clips: 2 });
+    expect(stored.drawerItems.drawer).toEqual({ manual: true, clips: 2 });
     expect(stored.papers).toBe(original.papers);
     expect(stored.clockMinutes).toBe(original.clockMinutes + 3);
-    expect(original.drawerItems).toEqual({ manual: false, clips: 0 });
+    expect(original.drawerItems.drawer).toEqual({ manual: false, clips: 0 });
     const retrieved = act(stored, { type: 'retrieve-drawer-item', item: 'manual' }, { type: 'retrieve-drawer-item', item: 'clip' });
-    expect(retrieved.drawerItems).toEqual({ manual: false, clips: 1 });
+    expect(retrieved.drawerItems.drawer).toEqual({ manual: false, clips: 1 });
     expect(retrieved.clockMinutes).toBe(stored.clockMinutes + 2);
   });
 
@@ -35,10 +35,10 @@ describe('separate drawer objects', () => {
     for (const item of ['manual', 'clip'] as const) {
       expect(applyAction(empty, { type: 'retrieve-drawer-item', item })).toEqual({ state: empty, feedback: 'item-missing' });
     }
-    const full = { ...empty, drawerItems: { manual: true, clips: GAME_LIMITS.drawerClips } };
+    const full = { ...empty, drawerItems: { drawer: { manual: true, clips: GAME_LIMITS.drawerClips }, 'drawer-2': { manual: false, clips: 0 } } };
     expect(applyAction(full, { type: 'store-drawer-item', item: 'manual' })).toEqual({ state: full, feedback: 'item-stored' });
     expect(applyAction(full, { type: 'store-drawer-item', item: 'clip' })).toEqual({ state: full, feedback: 'limit-reached' });
-    expect(applyAction(createInitialState(), { type: 'store-drawer-item', item: 'manual' }).state.drawerItems.manual).toBe(false);
+    expect(applyAction(createInitialState(), { type: 'store-drawer-item', item: 'manual' }).state.drawerItems.drawer.manual).toBe(false);
   });
 
   it('retains stored objects across visits and days, including actions after closing', () => {
@@ -47,8 +47,8 @@ describe('separate drawer objects', () => {
       state = act(state, 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-fit', 'return-document');
     }
     const closed = { ...state, phase: 'cabinet' as const, settlement: null, clockMinutes: 840 };
-    expect(applyAction(closed, { type: 'retrieve-drawer-item', item: 'clip' }).state).toMatchObject({ clockMinutes: 841, drawerItems: { manual: true, clips: 0 } });
-    expect(act(closed, 'end-day', 'next-day').drawerItems).toEqual({ manual: true, clips: 1 });
+    expect(applyAction(closed, { type: 'retrieve-drawer-item', item: 'clip' }).state).toMatchObject({ clockMinutes: 841, drawerItems: { drawer: { manual: true, clips: 0 }, 'drawer-2': { manual: false, clips: 0 } } });
+    expect(act(closed, 'end-day', 'next-day').drawerItems.drawer).toEqual({ manual: true, clips: 1 });
   });
 });
 

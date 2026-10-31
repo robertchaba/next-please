@@ -57,7 +57,7 @@ describe('drawer presentation', () => {
   });
 
   it('gives objects separate targets and the entire lower edge one closing action', () => {
-    const state = { ...stockedDrawer(1), drawerItems: { manual: true, clips: 4 } };
+    const state = { ...stockedDrawer(1), drawerItems: { drawer: { manual: true, clips: 4 }, 'drawer-2': { manual: false, clips: 0 } } };
     const controls = drawerButtons(state, 'pl', 0, () => {});
     expect(controls.find(button => button.id === 'drawer-close')).toMatchObject(DRAWER_CLOSE);
     for (const id of ['drawer-manual', 'drawer-clip']) {

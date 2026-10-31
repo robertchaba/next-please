@@ -1,7 +1,7 @@
 import { gameDate, isWeekend } from './calendar';
 import { ADDITIONAL_TESTS, additionalNoteEntry, additionalNoteResult, additionalResultFor, additionalTestForJob, nextWorkingDay, type AdditionalTest, type AdditionalResult, type PendingReferral } from './additional-tests';
 import { Gunzip, gzipSync, strToU8 } from 'fflate';
-import { ARRIVAL_MINUTES, CLINIC_CLOSE_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_START_MINUTES, type GameState as LatestGameState, type Visit as CurrentVisit, type Paper as CurrentPaper, type DocumentId, type NoteEntryId } from './game';
+import { ARRIVAL_MINUTES, CLINIC_CLOSE_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_START_MINUTES, type GameState as LatestGameState, type Visit as CurrentVisit, type Paper as LatestPaper, type Banknote, type DrawerItems, type StorageLocation, type DocumentId, type NoteEntryId } from './game';
 
 import { CHARACTER_COUNT, JOBS, compatiblePressureReading, type ExaminationId, type PressureValues, type PatientCase } from './patients';
 import { defaultReferral, directiveForDay, emptyCalls, effectivePatient, employerPhone, specialistPhone, workDayNumber, type ReferralDetails, type SpecialistCertificate, type PhoneConclusions } from './progression';
@@ -11,7 +11,12 @@ export { createInitialState } from './game';
 export type { GameState } from './game';
 
 /** Freeze the pre-progression schema so legacy validators keep exact bounds. */
-type CurrentGameState = Omit<LatestGameState, 'portraitHistory'>;
+type LegacyLocation<T> = T extends { location: StorageLocation } ? Omit<T, 'location'> & { location: 'desk' | 'drawer' } : never;
+type CurrentPaper = LegacyLocation<LatestPaper>;
+type CurrentGameState = Omit<LatestGameState, 'portraitHistory' | 'drawerItems' | 'papers' | 'banknotes'> & {
+  drawerItems: DrawerItems; papers: CurrentPaper[]; banknotes: LegacyLocation<Banknote>[];
+};
+type StateV30 = CurrentGameState & Pick<LatestGameState, 'portraitHistory'>;
 type VisitV18 = Omit<CurrentVisit, 'startedDay' | 'additionalResult' | 'additionalTests'>;
 type PaperV24 = Exclude<CurrentPaper, { kind: 'inspection-id' | 'inspection-fine' }>;
 type StateV25 = Omit<CurrentGameState, 'banknotes'>;
@@ -71,9 +76,9 @@ type GameStateV5 = Omit<GameStateV8, 'visit' | 'paperClips' | 'papers' | 'drawer
 type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<VisitV10, 'certificateNamed'> | null };
 type GameStateV7 = Omit<GameStateV8, 'drawerItems'>;
 
-interface SaveV30 {
+interface SaveV31 {
   game: 'next-please';
-  version: 30;
+  version: 31;
   savedAt: string;
   state: LatestGameState;
 }
@@ -452,7 +457,7 @@ function validateStateV8(value: unknown): GameStateV8 {
 /** Frozen original queue: legacy appointments retain their original positions. */
 function legacyInitialState(): GameState {
   const { portraitHistory: _portraits, banknotes: _banknotes, recentVisits: _recent, inspection: _inspection, inspectionCheckedAt: _checked, inspectionFines: _fines, bribeIncome: _bribes, settlement: _settlement, budgetHistory: _history, pendingReferrals: _pending, referralsIssued: _issued, ...initial } = createInitialState(0x4e505301);
-  return { ...initial, settlement: null, visit: null, papers: [], rngState: 3477621340,
+  return { ...initial, drawerItems: { manual: false, clips: 0 }, settlement: null, visit: null, papers: [], rngState: 3477621340,
     roster: [0, 1, 2, 62, 49, 75, 81, 66, 98, 4, 67, 43, 34, 28, 42, 58, 15, 21, 89, 26, 93, 52, 100, 8, 72, 86, 14, 38] };
 }
 
@@ -1488,8 +1493,8 @@ function validateStateV27(value: unknown, catalogCharacters = V27_CHARACTER_COUN
 }
 
 /** Historical files remember only the admissions supported by their records. */
-function migratePortraitHistory(state: CurrentGameState): LatestGameState {
-  if ('portraitHistory' in state) return state as LatestGameState;
+function migratePortraitHistory(state: CurrentGameState): StateV30 {
+  if ('portraitHistory' in state) return state as StateV30;
   const admissions = [
     ...state.recentVisits,
     ...state.roster.slice(0, state.shiftCompleted).map(patientId => ({ patientId, day: state.day })),
@@ -1504,7 +1509,7 @@ function migratePortraitHistory(state: CurrentGameState): LatestGameState {
   return { ...state, portraitHistory };
 }
 
-function validateStateV29(value: unknown): LatestGameState {
+function validateStateV29(value: unknown): StateV30 {
   if (!isRecord(value) || !Array.isArray(value.portraitHistory)
     || value.portraitHistory.length > CHARACTER_COUNT
     || value.portraitHistory.some(id => !isIntegerInRange(id, 0, CHARACTER_COUNT - 1))
@@ -1515,12 +1520,55 @@ function validateStateV29(value: unknown): LatestGameState {
   return { ...state, portraitHistory: [...portraitHistory] as number[] };
 }
 
+/** Preserve the existing validation rules after checking each physical compartment. */
+function validateStateV31(value: unknown): LatestGameState {
+  const fail = (): never => { throw new SaveError('invalid-state'); };
+  if (!isRecord(value) || !isRecord(value.drawerItems) || !hasOnlyKeys(value.drawerItems, ['drawer', 'drawer-2'])
+    || !Array.isArray(value.papers) || !Array.isArray(value.banknotes) || !Array.isArray(value.paperClips)) return fail();
+  const inventory = (raw: unknown): DrawerItems => {
+    if (!isRecord(raw) || !hasOnlyKeys(raw, ['manual', 'clips']) || typeof raw.manual !== 'boolean'
+      || !isIntegerInRange(raw.clips, 0, GAME_LIMITS.drawerClips)) return fail();
+    return { manual: raw.manual, clips: raw.clips };
+  };
+  const drawerItems = { drawer: inventory(value.drawerItems.drawer), 'drawer-2': inventory(value.drawerItems['drawer-2']) };
+  if (drawerItems.drawer.manual && drawerItems['drawer-2'].manual) return fail();
+  const locations = new Map<unknown, StorageLocation>();
+  const project = (raw: unknown, paper: boolean) => {
+    if (!isRecord(raw) || (raw.location !== 'desk' && raw.location !== 'drawer' && raw.location !== 'drawer-2')) return fail();
+    if (paper) locations.set(raw.id, raw.location);
+    return { ...raw, location: raw.location === 'drawer-2' ? 'drawer' : raw.location };
+  };
+  const papers = value.papers.map(raw => project(raw, true));
+  const banknotes = value.banknotes.map(raw => project(raw, false));
+  // Projection must never hide a bundle split between the two drawers.
+  locations.set('certificate', 'desk');
+  for (const group of value.paperClips) {
+    if (!Array.isArray(group) || group.some(id => locations.get(id) !== locations.get(group[0]))) return fail();
+  }
+  const previous = validateStateV29({ ...value, papers, banknotes, drawerItems: {
+    manual: drawerItems.drawer.manual || drawerItems['drawer-2'].manual,
+    clips: Math.max(drawerItems.drawer.clips, drawerItems['drawer-2'].clips),
+  } });
+  return { ...previous, drawerItems,
+    papers: previous.papers.map(paper => ({ ...paper, location: locations.get(paper.id)! })),
+    banknotes: previous.banknotes.map((note, index) => ({ ...note, location: (value.banknotes as Banknote[])[index]!.location })),
+  };
+}
+
+function migrateDrawers(state: StateV30): LatestGameState {
+  return { ...state, drawerItems: { drawer: { ...state.drawerItems }, 'drawer-2': { manual: false, clips: 0 } } };
+}
+
+function hasTwoDrawers(state: LatestGameState | StateV23 | StateV24 | StateV25 | CurrentGameState): state is LatestGameState {
+  return 'drawer' in state.drawerItems;
+}
+
 export function encodeSave(state: LatestGameState): Uint8Array {
-  const envelope: SaveV30 = {
+  const envelope: SaveV31 = {
     game: 'next-please',
-    version: 30,
+    version: 31,
     savedAt: new Date().toISOString(),
-    state: validateStateV29(state),
+    state: validateStateV31(state),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -1610,11 +1658,13 @@ function decompressSave(bytes: Uint8Array): Uint8Array {
 
 export function decodeSave(bytes: Uint8Array): LatestGameState {
   const migration = { additionalNotes: false };
-  const state = migrateBanknotes(migrateInspection(migrateBribeIncome(decodeState(bytes, migration))));
-  return migratePortraitHistory(migration.additionalNotes ? migrateAdditionalNotes(state) : state);
+  const decoded = decodeState(bytes, migration);
+  if (hasTwoDrawers(decoded)) return decoded;
+  const state = migrateBanknotes(migrateInspection(migrateBribeIncome(decoded)));
+  return migrateDrawers(migratePortraitHistory(migration.additionalNotes ? migrateAdditionalNotes(state) : state));
 }
 
-function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean }): StateV23 | StateV24 | StateV25 | CurrentGameState {
+function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean }): LatestGameState | StateV23 | StateV24 | StateV25 | CurrentGameState {
   const expanded = decompressSave(bytes);
   let envelope: unknown;
   try {
@@ -1625,7 +1675,7 @@ function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean })
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (!isIntegerInRange(envelope.version, 1, 30)) throw new SaveError('unsupported-version');
+  if (!isIntegerInRange(envelope.version, 1, 31)) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -1635,6 +1685,7 @@ function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean })
     throw new SaveError('invalid-file');
   }
   migration.additionalNotes = (envelope.version as number) < 27;
+  if (envelope.version === 31) return validateStateV31(envelope.state);
   if (envelope.version === 30) return validateStateV29(envelope.state);
   if (envelope.version === 29) {
     validateHistoricalCatalog(envelope.state, 5252, CHARACTER_COUNT);

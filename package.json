@@ -1,6 +1,6 @@
 {
   "name": "next-please",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "private": true,
   "type": "module",
   "description": "A browser-only occupational health bureaucracy game.",

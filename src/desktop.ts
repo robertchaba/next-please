@@ -1,5 +1,5 @@
 import './style.css';
-import { advanceClinicTime, applyAction, settleWeekend, CLEANER_WARNING_MINUTES, SHIFT_END_MINUTES, PATIENTS, canEndDay, canReturnBanknote, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction, type ActionResult, type GameState } from './core/game';
+import { DRAWERS, isManualStored, type DrawerId, advanceClinicTime, applyAction, settleWeekend, CLEANER_WARNING_MINUTES, SHIFT_END_MINUTES, PATIENTS, canEndDay, canReturnBanknote, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction, type ActionResult, type GameState } from './core/game';
 import { patientForVisit } from './core/progression';
 import { ClinicClock } from './core/clock';
 import { effectsManifest } from './core/effects';
@@ -59,6 +59,7 @@ let deskState = createDeskState();
 let heldItem: DeskItemId | null = null;
 let nextClipId = 1;
 let drawerPage = 0;
+let activeDrawer: DrawerId = 'drawer';
 let deskBeforePickup = deskState;
 let manualOpen = false;
 let manualPage = 0;
@@ -356,7 +357,7 @@ function reconcileDeskPapers(): void {
   for (const note of gameState.banknotes) if (note.location === 'desk') {
     deskState = addDeskItem(deskState, `banknote-${note.id}`, { x: 100, y: 190 + (note.id % 5) * 8 });
   }
-  if (gameState.drawerItems.manual) deskState = { ...deskState, order: deskState.order.filter(id => id !== 'manual') };
+  if (isManualStored(gameState)) deskState = { ...deskState, order: deskState.order.filter(id => id !== 'manual') };
   else if (!deskState.order.includes('manual')) deskState = raiseDeskItem(deskState, 'manual');
   const visible = new Set(gameState.papers.filter(paper => paper.location === 'desk' && !pendingLetters.has(paper.id)).map(paper => `paper-${paper.id}` as DeskItemId));
   for (const id of deskState.order) {
@@ -439,8 +440,10 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
       announceDesk(t().feedback[result.feedback], focus);
       return;
     }
+    const storageFocus = 'drawer' in action ? action.drawer ?? 'drawer'
+      : action.type === 'accept-bribe' && action.location !== 'desk' ? action.location : 'drawer';
     const focus = action.type === 'select-additional-test' ? `select-additional-test-${action.paperId}-${action.test}` : 'documentId' in action ? itemControlId(documentItem(action.documentId))
-      : paper && gameState.papers.some(record => record.id === paper.id && record.location === 'desk') ? `paper-${paper.id}` : 'drawer';
+      : paper && gameState.papers.some(record => record.id === paper.id && record.location === 'desk') ? `paper-${paper.id}` : storageFocus;
     announceDesk(t().feedback[result.feedback], focus);
     return;
   }
@@ -453,7 +456,8 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     document.querySelector('#announcement')!.textContent = feedback;
     return;
   }
-  if (action === 'drawer') {
+  if (action === 'drawer' || action === 'drawer-2') {
+    activeDrawer = action;
     deskInput.cancel();
     screen = 'drawer'; drawerPage = 0; toast = '';
     playEffect('paper'); syncControls('drawer-close');
@@ -639,13 +643,13 @@ function handleDrawerAction(action: DrawerAction): void {
   if (action.type === 'page') {
     drawerPage = action.page;
     syncControls('drawer-close');
-    document.querySelector('#announcement')!.textContent = drawerDescription(gameState, locale, drawerPage);
+    document.querySelector('#announcement')!.textContent = drawerDescription(gameState, locale, drawerPage, activeDrawer);
     return;
   }
   const result = performAction(action.type === 'paper'
     ? { type: 'retrieve-paper', paperId: action.id }
     : action.type === 'banknote' ? { type: 'retrieve-banknote', banknoteId: action.id }
-    : { type: 'retrieve-drawer-item', item: action.item });
+    : { type: 'retrieve-drawer-item', item: action.item, drawer: activeDrawer });
   if (result.feedback === 'visit-interrupted') { syncControls(); return; }
   if (gameState.phase === 'home') {
     deskInput.cancel(); clearPatientMotion(); clinicSpeech = undefined;
@@ -673,7 +677,7 @@ function openScreen(next: Screen, trigger = 'start'): void {
 }
 function closeScreen(): void {
   deskInput.cancel();
-  if (screen === 'drawer') { screen = 'cabinet'; syncControls('drawer'); return; }
+  if (screen === 'drawer') { screen = 'cabinet'; syncControls(activeDrawer); return; }
   if (screen === 'cabinet' || screen === 'home') { goToMenu(); return; }
   if (screen === 'break-room') { startShift(); return; }
   if (screen === 'restart') { screen = 'break-room'; syncControls('restart'); return; }
@@ -750,7 +754,7 @@ function getButtons(): Button[] {
   if (screen === 'cabinet' && gameState.phase === 'home') return [];
   if (screen === 'home') return [{ id: 'home-next', label: introCharacters < typedContent().length ? t().home.reveal : homePage(gameState, locale, homePageIndex).action,
     ...HOME_ACTION, kind: 'text', action: advanceHome }];
-  if (screen === 'drawer') return drawerButtons(gameState, locale, drawerPage, handleDrawerAction);
+  if (screen === 'drawer') return drawerButtons(gameState, locale, drawerPage, handleDrawerAction, activeDrawer);
   if (screen === 'intro' || screen === 'cabinet') return shiftButtons(gameState, locale, selectedStamp, handleShiftAction, deskView());
   if (screen === 'credits') return [
     { id: 'github', label: t().creatorGithub, x: 104, y: 137, w: 170, h: 17, href: 'https://github.com/robertchaba', kind: 'text' },
@@ -919,14 +923,14 @@ function syncControls(focusId?: string): void {
   buttons = getButtons();
   const heading = document.createElement('h1');
   heading.className = 'sr-only'; heading.id = 'screen-heading';
-  heading.textContent = screen === 'help' ? t().help.title : screen === 'home' ? homePage(gameState, locale, homePageIndex).title : screen === 'drawer' ? t().drawer : screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'break-room' ? t().breakRoomTitle : screen === 'restart' ? t().restartTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
+  heading.textContent = screen === 'help' ? t().help.title : screen === 'home' ? homePage(gameState, locale, homePageIndex).title : screen === 'drawer' ? t().drawerNames[activeDrawer] : screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'break-room' ? t().breakRoomTitle : screen === 'restart' ? t().restartTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
   const description = document.createElement('p');
   description.className = 'sr-only'; description.id = 'screen-description';
   description.textContent = screen === 'credits'
     ? `${t().creatorName}. ${t().creatorPortrait} ${t().aiSupport}. ${t().creditsFooter}`
     : screen === 'help' ? t().help.description
     : screen === 'home' ? `${homePage(gameState, locale, homePageIndex).description} ${homePage(gameState, locale, homePageIndex).text}`
-    : screen === 'drawer' ? drawerDescription(gameState, locale, drawerPage)
+    : screen === 'drawer' ? drawerDescription(gameState, locale, drawerPage, activeDrawer)
     : screen === 'intro' ? t().intro[gameState.introStep].body
     : screen === 'cabinet' ? `${shiftDescription(gameState, locale, [...pendingLetters.keys()], inspectorFarewell?.inspectorId)} ${manualOpen ? manualPageDescription(locale, manualPage, gameState.day) : ''} ${feedback}`
     : screen === 'saves' ? `${t().savesDescription} ${t().savesBody.join(' ')} ${t().sample}. ${t().day}: ${gameState.day}. ${t().patients}: ${gameState.patientsProcessed}. ${t().money}: ${gameState.money}.`
@@ -1105,7 +1109,7 @@ function render(): void {
     renderIntro(ctx, gameState, locale, introCharacters); buttons.forEach(drawButton); drawToast(); return;
   }
   if (screen === 'drawer') {
-    renderDrawer(ctx, gameState, locale, drawerPage, hovered || focused); buttons.forEach(drawButton); return;
+    renderDrawer(ctx, gameState, locale, drawerPage, hovered || focused, activeDrawer); buttons.forEach(drawButton); return;
   }
   if (screen === 'cabinet') {
     renderCabinet(ctx, gameState, locale, selectedStamp, deskView());
@@ -1245,7 +1249,7 @@ const deskInput = installDeskInput(stage, {
     const anchor = itemAnchor(id, deskRect(id));
     const target = point ?? { x: position.x + anchor.x, y: position.y + anchor.y };
     const carried = groupItems(id);
-    const overDrawer = containsPoint(dropTargetRect('drawer', id, carried), target);
+    const overDrawer = DRAWERS.find(drawer => containsPoint(dropTargetRect(drawer, id, carried), target));
     const overTrash = containsPoint(dropTargetRect('trash', id, carried), target);
     const visibleItems = [...deskState.order].reverse().filter(other => !carried.includes(other)
       && (other !== 'document' || gameState.visit?.certificateTaken)
@@ -1295,7 +1299,7 @@ const deskInput = installDeskInput(stage, {
         handleShiftAction(cash ? { type: 'return-banknote', banknoteId: cash.id } : 'return-bribe');
       } else if (overDrawer) {
         heldItem = null;
-        handleShiftAction(cash ? { type: 'store-banknote', banknoteId: cash.id } : 'accept-bribe');
+        handleShiftAction(cash ? { type: 'store-banknote', banknoteId: cash.id, drawer: overDrawer } : { type: 'accept-bribe', location: overDrawer });
       } else {
         heldItem = null;
         if (!cash) handleShiftAction({ type: 'accept-bribe', location: 'desk' });
@@ -1324,7 +1328,7 @@ const deskInput = installDeskInput(stage, {
       }
       const paperId: DeskItemId = `paper-${gameState.nextPaperId - 1}`;
       if (overDrawer || overTrash) {
-        handleShiftAction({ type: overDrawer ? 'store-paper' : 'trash-paper', paperId: gameState.nextPaperId - 1 });
+        handleShiftAction({ type: overDrawer ? 'store-paper' : 'trash-paper', paperId: gameState.nextPaperId - 1, drawer: overDrawer });
         return true;
       }
       if (joinAtClip(paperId)) return true;
@@ -1356,13 +1360,13 @@ const deskInput = installDeskInput(stage, {
     }
     if ((id === 'manual' || id.startsWith('clip-')) && overDrawer) {
       const previous = gameState;
-      const result = performAction({ type: 'store-drawer-item', item: id === 'manual' ? 'manual' : 'clip' });
+      const result = performAction({ type: 'store-drawer-item', item: id === 'manual' ? 'manual' : 'clip', drawer: overDrawer });
       if (result.feedback === 'visit-interrupted') { syncControls(); return true; }
       if (result.state === previous) { announceDesk(t().feedback[result.feedback], itemControlId(id)); return false; }
       gameState = result.state; heldItem = null;
       if (id === 'manual') { manualOpen = false; deskState = { ...deskBeforePickup, order: deskBeforePickup.order.filter(item => item !== id) }; }
       else deskState = removeDeskItem(deskState, id);
-      updateClock(); playEffect('paper'); announceDesk(t().feedback[result.feedback], 'drawer');
+      updateClock(); playEffect('paper'); announceDesk(t().feedback[result.feedback], overDrawer);
       return true;
     }
     const referral = carriedAdditionalReferral(gameState, id, carried);
@@ -1383,7 +1387,7 @@ const deskInput = installDeskInput(stage, {
       const paperId = Number(id.slice(6));
       if (overDrawer || overTrash) {
         heldItem = null;
-        handleShiftAction({ type: overDrawer ? 'store-paper' : 'trash-paper', paperId });
+        handleShiftAction({ type: overDrawer ? 'store-paper' : 'trash-paper', paperId, drawer: overDrawer });
         if (gameState.papers.some(paper => paper.id === paperId && paper.location === 'desk')) {
           deskState = deskBeforePickup;
           syncControls(id);

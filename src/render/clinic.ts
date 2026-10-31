@@ -153,6 +153,9 @@ function roomNumber(ctx: CanvasRenderingContext2D): void {
 export function drawCabinet(ctx: CanvasRenderingContext2D, options: CabinetArtOptions): void {
   rect(ctx, 0, 0, 570, 320, '#171e18');
   asset(ctx, 'cabinet-workstation', 0, 0, 570, 320);
+  // Repeat the existing generated drawer at native resolution in the empty panel.
+  const cabinet = images.get('cabinet-workstation');
+  if (cabinet?.complete && cabinet.naturalWidth) ctx.drawImage(cabinet, 216, 298, 123, 20, 344, 298, 123, 20);
   roomNumber(ctx);
   wallClock(ctx, options.clockMinutes);
   const decoration = CABINET_HOTSPOTS.decoration;

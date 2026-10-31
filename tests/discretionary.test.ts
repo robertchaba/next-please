@@ -1,3 +1,4 @@
+import { historicalState } from './fixtures/legacy-budget';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
 import { applyAction, createInitialState, type GameState } from '../src/core/game';
@@ -11,7 +12,7 @@ import { translations } from '../src/i18n';
 import { act, attachReport, discretionaryAppointment, receiveDiscretionary, sendDiscretionary } from './fixtures/discretionary';
 
 const newCases = PATIENTS.slice(DISCRETIONARY_CASE_START);
-const file = (state: unknown, version = 30) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-31T12:00:00.000Z', state })));
+const file = (state: unknown, version = 31) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-31T12:00:00.000Z', state: historicalState(state, version) })));
 const roundTrip = (state: GameState) => expect(decodeSave(encodeSave(state))).toEqual(state);
 
 describe('medical judgement at the limits', () => {

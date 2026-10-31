@@ -122,7 +122,7 @@ test('large stacks can be browsed in filing order and closing leaves every sheet
   await activate(page, 'drawer-previous');
   await page.keyboard.press('Escape');
   await expect(page.locator('[id^="control-paper-"]')).toHaveCount(0);
-  await expect(page.locator('#control-drawer')).toHaveAccessibleName(/^Szuflada z dokumentacją: 29\./);
+  await expect(page.locator('#control-drawer')).toHaveAccessibleName(/^Lewa szuflada: 29\./);
 });
 
 async function exportState(page: Page): Promise<GameState> {
@@ -145,15 +145,15 @@ test('near-corner drops use large targets only while carrying, and saved storage
   expect(await targetRect(page, 'trash')).toEqual({ x: 478, y: 297, w: 68, h: 23 });
   await nativeClick(page, 211, 279);
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
-  for (const [x, y] of [[211, 279], [364, 319]]) {
+  for (const [x, y] of [[211, 279], [341, 319]]) {
     await activate(page, 'take-paper');
-    expect(await targetRect(page, 'drawer')).toEqual({ x: 210, y: 278, w: 155, h: 42 });
-    expect(await targetRect(page, 'trash')).toEqual({ x: 456, y: 282, w: 114, h: 38 });
+    expect(await targetRect(page, 'drawer')).toEqual({ x: 210, y: 278, w: 132, h: 42 });
+    expect(await targetRect(page, 'trash')).toEqual({ x: 468, y: 282, w: 102, h: 38 });
     await nativeClick(page, x!, y!);
     await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
     expect(await targetRect(page, 'drawer')).toEqual({ x: 222, y: 299, w: 110, h: 18 });
   }
-  for (const [x, y] of [[457, 283], [569, 319]]) {
+  for (const [x, y] of [[469, 283], [569, 319]]) {
     await activate(page, 'take-paper');
     await nativeClick(page, x!, y!);
     await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
@@ -259,4 +259,115 @@ test('names appear only on the folder label on hover or keyboard focus', async (
     await page.locator('#stage').screenshot({ path: info.outputPath(`drawer-name-${locale}.png`) });
     await page.keyboard.press('Escape');
   }
+});
+
+test('the second drawer repeats the first artwork, has localized names and restores its own focus', async ({ page }, info) => {
+  await enter(page);
+  await page.waitForFunction(() => Array.from(document.images).every(image => image.complete));
+  // Clinic images are detached; wait for the same generated handles on the canvas.
+  await expect.poll(() => page.locator('canvas').first().evaluate(canvas => {
+    const context = (canvas as HTMLCanvasElement).getContext('2d')!;
+    const first = context.getImageData(216, 298, 123, 20).data;
+    const second = context.getImageData(344, 298, 123, 20).data;
+    return first.some((value, index) => index % 4 !== 3 && value > 100) && first.every((value, index) => value === second[index]);
+  })).toBe(true);
+  expect(await targetRect(page, 'drawer-2')).toEqual({ x: 350, y: 299, w: 110, h: 18 });
+  for (const locale of ['pl', 'en'] as const) {
+    await page.getByRole('button', { name: locale === 'pl' ? 'Polski' : 'English', exact: true }).click();
+    await expect(page.locator('#control-drawer')).toHaveAccessibleName(new RegExp(locale === 'pl' ? '^Lewa szuflada: 0' : '^Left drawer: 0'));
+    await expect(page.locator('#control-drawer-2')).toHaveAccessibleName(new RegExp(locale === 'pl' ? '^Prawa szuflada: 0' : '^Right drawer: 0'));
+    await page.locator('#stage').screenshot({ path: info.outputPath(`two-drawers-${locale}.png`) });
+    const clock = await page.locator('#controls').getAttribute('data-clock-minutes');
+    await activate(page, 'drawer-2');
+    await expect(page.locator('#screen-heading')).toHaveText(locale === 'pl' ? 'Prawa szuflada' : 'Right drawer');
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#control-drawer-close')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#control-drawer-2')).toBeFocused();
+    await expect(page.locator('#controls')).toHaveAttribute('data-clock-minutes', clock!);
+    await nativeClick(page, 405, 308);
+    await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'drawer');
+    await nativeClick(page, 285, 310);
+    await expect(page.locator('#control-drawer-2')).toBeFocused();
+  }
+});
+
+test('keyboard transfers documents, the rulebook and loose clips between independently saved drawers', async ({ page }) => {
+  await enter(page);
+  await activate(page, 'take-paper');
+  await activate(page, 'drawer');
+  await activate(page, 'take-paper');
+  await activate(page, 'drawer-2');
+  await page.locator('#control-manual').focus();
+  await page.keyboard.press('Space');
+  await activate(page, 'drawer-2');
+  await activate(page, 'take-clip');
+  await activate(page, 'drawer-2');
+  await expect(page.locator('#control-manual')).toHaveCount(0);
+  let saved = await exportState(page);
+  expect(saved.papers.map(paper => paper.location)).toEqual(['drawer', 'drawer-2']);
+  expect(saved.drawerItems).toEqual({ drawer: { manual: false, clips: 0 }, 'drawer-2': { manual: true, clips: 1 } });
+  await importState(page, saved);
+  await activate(page, 'drawer');
+  await expect(page.locator('#control-drawer-paper-1')).toBeVisible();
+  await expect(page.locator('#control-drawer-paper-2')).toHaveCount(0);
+  await expect(page.locator('#control-drawer-manual')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  for (const id of ['paper-2', 'manual', 'clip']) {
+    await activate(page, 'drawer-2');
+    await activate(page, `drawer-${id}`);
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'true');
+    await activate(page, 'drawer');
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+  }
+  saved = await exportState(page);
+  expect(saved.papers.every(paper => paper.location === 'drawer')).toBe(true);
+  expect(saved.drawerItems).toEqual({ drawer: { manual: true, clips: 1 }, 'drawer-2': { manual: false, clips: 0 } });
+  await activate(page, 'drawer-2');
+  await expect(page.locator('[id^="control-drawer-paper-"], #control-drawer-manual, #control-drawer-clip')).toHaveCount(0);
+});
+
+test('pointer drops distinguish both drawer edges and trash, including a referral straight from the tray', async ({ page }) => {
+  await enter(page);
+  for (const [x, destination] of [[341, 'drawer'], [342, 'drawer-2'], [467, 'drawer-2'], [469, 'trash']] as const) {
+    await activate(page, 'take-paper');
+    expect(await targetRect(page, 'drawer-2')).toEqual({ x: 342, y: 278, w: 126, h: 42 });
+    await nativeClick(page, x, 310);
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+    await expect(page.locator(`#control-${destination}`)).toBeAttached();
+  }
+  await activate(page, 'call-patient');
+  await page.locator('#control-take-document').click();
+  await nativeClick(page, 405, 310);
+  const saved = await exportState(page);
+  expect(saved.papers.map(paper => [paper.id, paper.location])).toEqual([[1, 'drawer'], [2, 'drawer-2'], [3, 'drawer-2'], [5, 'drawer-2']]);
+  expect(saved.papers.at(-1)?.kind).toBe('referral');
+});
+
+test('second-drawer bundles and cash survive import and invalid imports preserve both compartments', async ({ page }) => {
+  await enter(page);
+  let state = applyAction({ ...createInitialState(17), day: 8, money: 5000, shiftCompleted: 1, patientsProcessed: 1, clockMinutes: 484 }, 'skip-intro').state;
+  for (const action of ['call-patient', { type: 'accept-bribe', location: 'drawer-2' }, 'take-paper', 'take-paper',
+    { type: 'clip-document', documentId: 1 }, { type: 'join-documents', documentId: 2, targetId: 1 },
+    { type: 'store-paper', paperId: 1, drawer: 'drawer-2' }] as const) state = applyAction(state, action).state;
+  await importState(page, state);
+  await activate(page, 'drawer-2');
+  await expect(page.locator('[id^="control-drawer-paper-"]')).toHaveCount(1);
+  await activate(page, 'drawer-paper-1');
+  await expect(page.locator('#control-paper-1')).toHaveAttribute('data-held', 'true');
+  await expect(page.locator('#control-paper-2')).toHaveAttribute('data-held', 'true');
+  await activate(page, 'drawer');
+  await activate(page, 'drawer-2');
+  await activate(page, 'drawer-banknote');
+  await activate(page, 'drawer');
+  await activate(page, 'saves');
+  await page.locator('#save-input').setInputFiles({ name: 'broken.npsave', mimeType: 'application/gzip', buffer: Buffer.from('invalid') });
+  await expect(page.locator('#announcement')).toContainText('Nieprawidłowy lub uszkodzony plik zapisu.');
+  await activate(page, 'back');
+  const saved = await exportState(page);
+  expect(saved.papers.map(paper => paper.location)).toEqual(['drawer', 'drawer']);
+  expect(saved.paperClips).toEqual([[1, 2]]);
+  expect(saved.banknotes[0]?.location).toBe('drawer');
+  expect(saved.bribeIncome).toBe(100);
+  expect(saved.money).toBe(5000);
 });
