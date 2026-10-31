@@ -3,7 +3,7 @@ import { type NewspaperDeskItemId, type Rect } from '../core/desk';
 import { classifiedPhone, type ClassifiedId, type NewspaperState, type PressArticleId } from '../core/newspaper';
 import { workDayNumber } from '../core/progression';
 import { translations, type Locale } from '../i18n';
-import { drawDocumentHeading, drawDocumentText, measureDocumentHeading, measureDocumentText } from './font';
+import { drawText, drawDocumentText, measureText, measureDocumentText } from './font';
 import { drawManualArt, drawNewspaperArt, drawNewspaperMasthead } from './clinic';
 import { manualControls } from './manual';
 
@@ -12,12 +12,13 @@ export type NewspaperViews = Partial<Record<NewspaperDeskItemId, { open: boolean
 export const NEWSPAPER_COLUMN_WIDTH = 130;
 export const NEWSPAPER_TITLE_WIDTH = 274;
 export const NEWSPAPER_BODY_BOTTOM = 158;
+const HEADLINE_LINE_HEIGHT = 12;
 type NewspaperContent = Pick<NewspaperState, 'articleIds' | 'classifiedIds'>;
 export const newspaperPageCount = (state: NewspaperContent): number => state.articleIds.length + Number(state.classifiedIds.length > 0);
 export const newspaperControls = manualControls;
 
 export function wrapNews(text: string, width = NEWSPAPER_COLUMN_WIDTH, heading = false): string[] {
-  const measure = heading ? measureDocumentHeading : measureDocumentText;
+  const measure = heading ? measureText : measureDocumentText;
   const lines: string[] = [];
   let line = '';
   for (const word of text.split(' ')) {
@@ -34,11 +35,11 @@ export function wrapNews(text: string, width = NEWSPAPER_COLUMN_WIDTH, heading =
  */
 export function newspaperArticleLayout(id: PressArticleId, locale: Locale) {
   const copy = translations[locale].newspaper.articles[id];
-  const title = wrapNews(copy.title, NEWSPAPER_TITLE_WIDTH / 2, true);
+  const title = wrapNews(copy.title, NEWSPAPER_TITLE_WIDTH, true);
   const body = wrapNews(copy.body);
   const split = Math.ceil(body.length / 2);
   const columns = [body.slice(0, split), body.slice(split)];
-  const bodyY = 56 + title.length * 14 + 5;
+  const bodyY = 56 + title.length * HEADLINE_LINE_HEIGHT + 5;
   return { title, body, columns, bodyY, bottom: bodyY + split * 8 };
 }
 
@@ -82,7 +83,7 @@ export function drawNewspaper(ctx: CanvasRenderingContext2D, bounds: Rect, state
   drawDocumentText(ctx, t.strapline, x + 150, y + 43, { align: 'center', color: muted });
   drawDocumentText(ctx, `${t.issue} ${workDayNumber(day)}`, x + w - 14, y + 43, { align: 'right', color: ink });
   if (page === state.articleIds.length && state.classifiedIds.length) {
-    drawDocumentHeading(ctx, t.classifiedTitle, x + 13, y + 56, { scale: 2, color: ink });
+    drawText(ctx, t.classifiedTitle, x + 13, y + 56, { color: ink });
     for (const ad of newspaperClassifiedLayout(state.classifiedIds, locale)) {
       drawDocumentText(ctx, ad.lines.join('\n'), x + ad.x, y + ad.y, { color: ink });
       if (ad.phoneText && ad.phoneRect) drawDocumentText(ctx, ad.phoneText, x + ad.phoneRect.x, y + ad.phoneRect.y + 1, { color: ink });
@@ -90,7 +91,8 @@ export function drawNewspaper(ctx: CanvasRenderingContext2D, bounds: Rect, state
   } else {
     const id = state.articleIds[page]!, copy = t.articles[id];
     const layout = newspaperArticleLayout(id, locale);
-    layout.title.forEach((line, index) => drawDocumentHeading(ctx, line, x + 13, y + 56 + index * 14, { scale: 2, color: ink }));
+    // The larger original face keeps headline strokes on the native 1× pixel grid.
+    layout.title.forEach((line, index) => drawText(ctx, line, x + 13, y + 56 + index * HEADLINE_LINE_HEIGHT, { color: ink }));
     layout.columns.forEach((lines, column) => drawDocumentText(ctx, lines.join('\n'), x + 13 + column * 144, y + layout.bodyY, { color: ink }));
     drawDocumentText(ctx, copy.byline, x + 18, y + h - 13, { color: muted });
   }

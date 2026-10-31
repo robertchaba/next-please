@@ -4,7 +4,7 @@ import { applyAction, createInitialState, type GameState } from '../src/core/gam
 import { CLASSIFIEDS, CLASSIFIED_CALL_RESULTS, classifiedPhone, createNewspaper, nextNewspaper } from '../src/core/newspaper';
 import { decodeSave, encodeSave } from '../src/core/save';
 import { newspaperClassifiedLayout, newspaperDescription, newspaperPageCount, NEWSPAPER_BODY_BOTTOM, NEWSPAPER_COLUMN_WIDTH, NEWSPAPER_TITLE_WIDTH } from '../src/render/newspaper';
-import { measureDocumentHeading, measureDocumentText } from '../src/render/font';
+import { measureText, measureDocumentText } from '../src/render/font';
 import { translations } from '../src/i18n';
 import { historicalState } from './fixtures/legacy-budget';
 
@@ -171,7 +171,7 @@ describe('classified newspaper page', () => {
     for (const locale of ['pl', 'en'] as const) {
       const t = translations[locale].newspaper;
       expect(Object.keys(t.classifieds)).toEqual(CLASSIFIEDS.map(ad => ad.id));
-      expect(measureDocumentHeading(t.classifiedTitle) * 2).toBeLessThanOrEqual(NEWSPAPER_TITLE_WIDTH);
+      expect(measureText(t.classifiedTitle)).toBeLessThanOrEqual(NEWSPAPER_TITLE_WIDTH);
       expect(measureDocumentText(`${t.shortTitle} 03.11.1983`)).toBeLessThanOrEqual(120);
       for (const ad of CLASSIFIEDS) {
         for (const layout of newspaperClassifiedLayout([ad.id, ad.id, ad.id, ad.id], locale)) {

@@ -4,7 +4,7 @@ import { advanceClinicTime, applyAction, createInitialState, type GameState } fr
 import { createNewspaper, nextNewspaper, PRESS_ARTICLES } from '../src/core/newspaper';
 import { decodeSave, encodeSave } from '../src/core/save';
 import { NEWSPAPER_BODY_BOTTOM, NEWSPAPER_COLUMN_WIDTH, NEWSPAPER_TITLE_WIDTH, newspaperArticleLayout, newspaperDescription } from '../src/render/newspaper';
-import { measureDocumentHeading, measureDocumentText } from '../src/render/font';
+import { measureText, measureDocumentText } from '../src/render/font';
 import { translations } from '../src/i18n';
 import { createDeskState, itemRect, moveDeskItem, pickUpDeskItem, NEWSPAPER_OPEN_POSITION, NEWSPAPER_OPEN_SIZE } from '../src/core/desk';
 
@@ -116,7 +116,7 @@ describe('morning newspaper', () => {
       for (const article of PRESS_ARTICLES) {
         const layout = newspaperArticleLayout(article.id, locale);
         expect(layout.bottom, `${locale} ${article.id}`).toBeLessThanOrEqual(NEWSPAPER_BODY_BOTTOM);
-        for (const line of layout.title) expect(measureDocumentHeading(line) * 2, line).toBeLessThanOrEqual(NEWSPAPER_TITLE_WIDTH);
+        for (const line of layout.title) expect(measureText(line), line).toBeLessThanOrEqual(NEWSPAPER_TITLE_WIDTH);
         for (const line of layout.body) expect(measureDocumentText(line), line).toBeLessThanOrEqual(NEWSPAPER_COLUMN_WIDTH);
         expect(layout.body.join(' ')).toBe(t.articles[article.id].body);
         expect(layout.columns.flat()).toEqual(layout.body);
