@@ -2,9 +2,9 @@ import type { Paper } from './game';
 
 /** Temporary desk layout. Item positions are deliberately absent from gameplay saves. */
 export type FixedDeskItemId = 'document' | 'incoming-referral' | 'stamp-fit' | 'stamp-unfit' | 'manual' | 'newspaper' | 'banknote';
-export type NewspaperDeskItemId = 'newspaper' | `newspaper-${number}`;
-export const isNewspaperItem = (id: string): id is NewspaperDeskItemId => id === 'newspaper' || /^newspaper-\d+$/.test(id);
-export const newspaperItemId = (day: number, currentDay: number): NewspaperDeskItemId => day === currentDay ? 'newspaper' : `newspaper-${day}`;
+export type NewspaperDeskItemId = 'newspaper' | `newspaper-${number}` | `union-newspaper-${number}`;
+export const isNewspaperItem = (id: string): id is NewspaperDeskItemId => id === 'newspaper' || /^(union-)?newspaper-\d+$/.test(id);
+export const newspaperItemId = (day: number, currentDay: number, publication: 'kurier' | 'glos' = 'kurier'): NewspaperDeskItemId => publication === 'glos' ? `union-newspaper-${day}` : day === currentDay ? 'newspaper' : `newspaper-${day}`;
 export type DeskItemId = FixedDeskItemId | NewspaperDeskItemId | `paper-${number}` | `clip-${number}` | `banknote-${number}`;
 
 export interface Point {

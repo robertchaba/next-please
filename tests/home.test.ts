@@ -1,5 +1,6 @@
+import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
-import { applyAction, createInitialState, settleWeekend, type GameState } from '../src/core/game';
+import { applyAction, settleWeekend, type GameState } from '../src/core/game';
 import { HOME_AMOUNT_RIGHT, homePage, homePages } from '../src/scenes/home';
 import { measureText } from '../src/render/font';
 import { translations } from '../src/i18n';

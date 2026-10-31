@@ -1,12 +1,13 @@
+import { createInitialState } from './fixtures/routine';
 import { legacyBudget } from './fixtures/legacy-budget';
 import { gzipSync, strToU8 } from 'fflate';
 import { describe, expect, it } from 'vitest';
-import { applyAction, createInitialState, PATIENTS, type GameAction, type GameState } from '../src/core/game';
+import { applyAction, PATIENTS, type GameAction, type GameState } from '../src/core/game';
 import { decodeSave, encodeSave } from '../src/core/save';
 import { defaultReferral, effectivePatient } from '../src/core/progression';
 
 const act = (state: GameState, ...actions: GameAction[]): GameState => actions.reduce((next, action) => applyAction(next, action).state, state);
-const file = (state: unknown): Uint8Array => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 34, savedAt: '2026-10-26T12:00:00.000Z', state })));
+const file = (state: unknown): Uint8Array => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 35, savedAt: '2026-10-26T12:00:00.000Z', state })));
 const reject = (state: unknown): void => { expect(() => decodeSave(file(state))).toThrowError(expect.objectContaining({ code: 'invalid-state' })); };
 const hypertensive = PATIENTS.find(patient => patient.id >= 553 && patient.pressure === 'refer' && patient.general === 'pass')!;
 

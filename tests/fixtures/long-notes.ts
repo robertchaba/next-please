@@ -1,5 +1,6 @@
+import { createInitialState } from './routine';
 import { ADDITIONAL_TESTS } from '../../src/core/additional-tests';
-import { applyAction, createInitialState, type GameAction, type GameState } from '../../src/core/game';
+import { applyAction, type GameAction, type GameState } from '../../src/core/game';
 import { PATIENTS } from '../../src/core/patients';
 
 const act = (state: GameState, ...actions: GameAction[]) => actions.reduce((value, action) => applyAction(value, action).state, state);

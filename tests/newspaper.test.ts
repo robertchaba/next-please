@@ -1,6 +1,8 @@
+import { historicalState } from './fixtures/legacy-budget';
+import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
-import { advanceClinicTime, applyAction, createInitialState, type GameState } from '../src/core/game';
+import { advanceClinicTime, applyAction, type GameState } from '../src/core/game';
 import { createNewspaper, nextNewspaper, newspaperCopy, PRESS_ARTICLES } from '../src/core/newspaper';
 import { decodeSave, encodeSave } from '../src/core/save';
 import { NEWSPAPER_BODY_BOTTOM, NEWSPAPER_COLUMN_WIDTH, NEWSPAPER_TITLE_WIDTH, newspaperArticleLayout, newspaperDescription } from '../src/render/newspaper';
@@ -9,7 +11,7 @@ import { translations } from '../src/i18n';
 import { createDeskState, itemRect, moveDeskItem, pickUpDeskItem, NEWSPAPER_OPEN_POSITION, NEWSPAPER_OPEN_SIZE } from '../src/core/desk';
 
 const nextDay = (state: GameState) => applyAction(applyAction({ ...state, clockMinutes: 840 }, 'end-day').state, 'next-day').state;
-const file = (state: unknown, version = 34) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-31T12:00:00.000Z', state })));
+const file = (state: unknown, version = 35) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-31T12:00:00.000Z', state: version < 35 ? historicalState(state, 34) : state })));
 
 describe('morning newspaper', () => {
   it('delivers the first copy on 4 November, preserving the pending issue through saves', () => {

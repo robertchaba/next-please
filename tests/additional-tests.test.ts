@@ -1,7 +1,8 @@
+import { createInitialState } from './fixtures/routine';
 import { historicalState, legacyBudget, withMigratedNewspaper } from './fixtures/legacy-budget';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
-import { applyAction, advanceClinicTime, createInitialState, GAME_LIMITS, type GameState, type GameAction, type NoteEntryId } from '../src/core/game';
+import { applyAction, advanceClinicTime, GAME_LIMITS, type GameState, type GameAction, type NoteEntryId } from '../src/core/game';
 import { ADDITIONAL_TESTS, additionalNoteEntry, additionalNoteResult, additionalTestForJob, additionalResultFor, type AdditionalTest } from '../src/core/additional-tests';
 import { PATIENTS, createRoster, randomStep } from '../src/core/patients';
 import { expectedVisitDecision, patientForAppointment } from '../src/core/progression';
@@ -168,7 +169,7 @@ describe('day seven additional examinations', () => {
 
   it('rejects forged result, return schedule, unknown fields and duplicate pending identities', () => {
     const state = send(appointment(), 'vestibular');
-    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 34, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
+    const payload = (candidate: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 35, savedAt: '2026-10-26T12:00:00.000Z', state: candidate })));
     for (const change of [
       (s: GameState) => { s.pendingReferrals[0]!.fit = false; },
       (s: GameState) => { s.pendingReferrals[0]!.returnDay += 7; },

@@ -1,5 +1,6 @@
+import { createInitialState } from '../fixtures/routine';
 import { expect, test } from '@playwright/test';
-import { applyAction, createInitialState, type GameAction } from '../../src/core/game';
+import { applyAction, type GameAction } from '../../src/core/game';
 import { PATIENTS, PATIENT_IDENTITIES, CURATED_CASE_START, CASES_PER_IDENTITY, patientAge } from '../../src/core/patients';
 import { gameDate } from '../../src/core/calendar';
 import { encodeSave } from '../../src/core/save';

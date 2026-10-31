@@ -1,4 +1,5 @@
 import { ADDITIONAL_PORTRAITS, IDENTITY_PROFILES } from './patient-identities';
+import { STORY_JOBS, STORY_PATIENTS, storyIdentity, storyPatientForId } from './story-patients';
 
 /** Stable fictional case catalog: no real diagnostic thresholds or medical advice. */
 export type PatientCondition = 'healthy' | 'vision' | 'pressure' | 'combined' | 'general';
@@ -77,6 +78,7 @@ export const JOBS: readonly JobDefinition[] = [
   job(45, 'militia-officer', 'full', ['stress', 'night-work'], [24]),
   job(46, 'pilot', 'full', ['heights', 'noise', 'stress'], [25]),
   job(47, 'miner', 'full', ['noise', 'lifting', 'mineral-dust'], [26]),
+  ...STORY_JOBS,
 ];
 
 export interface VisionValues { left: number; right: number }
@@ -128,7 +130,7 @@ export interface PatientCase {
   expectedDecision: 'fit' | 'unfit';
   birthDate: string;
   sex: 'female' | 'male';
-  examination: 'initial' | 'periodic';
+  examination: 'initial' | 'periodic' | 'control';
   managerial: boolean;
   weight: number;
   height: number;
@@ -147,6 +149,7 @@ export const GENERAL_FINDING_COUNT = 18;
 
 /** Fixed case findings, shared by repeats and archived notes; no random draw. */
 export function generalFindingIndex(patient: Pick<PatientCase, 'id' | 'general'>): number | null {
+  if (storyPatientForId(patient.id)?.encounterId === 'H1') return 18;
   return patient.general === 'refer' ? patient.id % GENERAL_FINDING_COUNT : null;
 }
 
@@ -293,6 +296,8 @@ export const PATIENT_IDENTITIES: readonly PatientIdentity[] = IDENTITY_PROFILES.
 
 /** The saved case ID resolves its entire identity; no extra random or save field. */
 export function patientIdentity(patient: Pick<PatientCase, 'id'>): PatientIdentity | undefined {
+  const story = storyIdentity(patient.id);
+  if (story) return story;
   return patient.id < CURATED_CASE_START ? undefined : PATIENT_IDENTITIES[patient.id >= DISCRETIONARY_CASE_START
     ? patient.id - DISCRETIONARY_CASE_START : Math.floor((patient.id - CURATED_CASE_START) / CASES_PER_IDENTITY)];
 }
@@ -329,7 +334,7 @@ export const PATIENTS: readonly PatientCase[] = [...establishedPatients, ...PATI
     vision: vision ? 'refer' : 'pass', visionValues: vision ? { left: -6, right: -2 } : original.visionValues,
     pressure: pressure ? 'refer' : 'pass', pressureValues: pressure ? { systolic: 160, diastolic: 100 } : original.pressureValues,
     expectedDecision: 'unfit' };
-})];
+}), ...STORY_PATIENTS];
 
 const CASES_BY_CHARACTER = Array.from({ length: CHARACTER_COUNT }, (_, characterId) => PATIENTS
   .filter(patient => patient.id >= CURATED_CASE_START && patient.id < DISCRETIONARY_CASE_START && patient.characterId === characterId).map(patient => patient.id));

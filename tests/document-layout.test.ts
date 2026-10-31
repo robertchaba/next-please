@@ -1,5 +1,6 @@
+import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
-import { PATIENTS, applyAction, createInitialState, type Paper } from '../src/core/game';
+import { PATIENTS, applyAction, type Paper } from '../src/core/game';
 import { ADDITIONAL_TESTS } from '../src/core/additional-tests';
 import { drawCertificate, drawPaperwork, paperDescription, wrapDocumentLines } from '../src/render/paperwork';
 import { paperDesktopSize, CLINICAL_PAPER_SIZE } from '../src/core/desk';

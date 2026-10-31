@@ -1,6 +1,7 @@
+import { createInitialState } from '../fixtures/routine';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { applyAction, createInitialState, PATIENTS, type GameState } from '../../src/core/game';
+import { applyAction, PATIENTS, type GameState } from '../../src/core/game';
 import { encodeSave, decodeSave } from '../../src/core/save';
 
 async function key(page: Page, id: string): Promise<void> {

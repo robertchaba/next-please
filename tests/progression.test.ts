@@ -1,5 +1,6 @@
+import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
-import { applyAction, advanceClinicTime, createInitialState, type GameAction, type GameState } from '../src/core/game';
+import { applyAction, advanceClinicTime, type GameAction, type GameState } from '../src/core/game';
 import { JOBS, PATIENTS, visionAssessment, createRoster, randomStep } from '../src/core/patients';
 import { arrangeProgressionRoster, createAppointmentDetails, createDailyRoster, directiveForDay, effectivePatient, expectedVisitDecision, patientForAppointment, referralDate, workDayNumber } from '../src/core/progression';
 import { decodeSave, encodeSave } from '../src/core/save';

@@ -1,5 +1,6 @@
+import { createInitialState } from '../fixtures/routine';
 import { expect, test } from '@playwright/test';
-import { applyAction, createInitialState, type GameAction } from '../../src/core/game';
+import { applyAction, type GameAction } from '../../src/core/game';
 import { PATIENTS } from '../../src/core/patients';
 import { encodeSave } from '../../src/core/save';
 import { translations } from '../../src/i18n';
@@ -26,7 +27,7 @@ test('all 25 new patients load distinct portraits and retain their identities th
     });
     await expect(page.locator('#announcement')).toContainText(/Zapis wczytany|Save loaded/);
     await page.locator('#control-back').click();
-    await expect(page.locator('#screen-description')).toContainText(translations.pl.patientNames[patient.id]!);
+    await expect(page.locator('#screen-description')).toContainText(translations[person > 12 ? 'en' : 'pl'].patientNames[patient.id]!);
     await expect(page.locator('#control-run-general')).toBeVisible();
     // Wait for the restored scene to draw, then compare the actual patient area.
     const pixels = await page.locator('#game').evaluate(async canvas => {

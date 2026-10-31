@@ -1,12 +1,15 @@
 import { isWeekend } from './calendar';
 import { DISCRETIONARY_CASE_START, JOBS, type MedicalAssessment, type PatientCase } from './patients';
 import type { Visit } from './game';
+import { storyPatientForId } from './story-patients';
 
 export const ADDITIONAL_TESTS = ['audiometry', 'vestibular', 'psychiatry', 'chest-xray'] as const;
 export type AdditionalTest = typeof ADDITIONAL_TESTS[number];
 /** fit means unequivocal clearance; the immutable case distinguishes doubtful reports. */
-export interface AdditionalResult { test: AdditionalTest; fit: boolean }
+export interface AdditionalResult { test: AdditionalTest; fit: boolean; source?: 'provided' }
 export function additionalAssessment(patient: Pick<PatientCase, 'id' | 'jobId' | 'caseVariant'>, result: AdditionalResult): MedicalAssessment {
+  const story = storyPatientForId(patient.id);
+  if (story?.actorId === 'printer' && result.test === 'audiometry') return result.fit ? 'fit' : 'discretionary';
   return result.fit ? 'fit' : patient.id >= DISCRETIONARY_CASE_START && patient.caseVariant === 4
     && additionalTestForJob(patient) === result.test ? 'discretionary' : 'unfit';
 }
@@ -35,6 +38,7 @@ export interface PendingReferral {
 export function additionalTestForJob(patient: Pick<PatientCase, 'jobId'>): AdditionalTest | null {
   switch (JOBS[patient.jobId]?.key) {
     case 'furnace-operator': return 'audiometry';
+    case 'offset-operator': return 'audiometry';
     case 'pilot': return 'vestibular';
     case 'militia-officer': return 'psychiatry';
     case 'miner': return 'chest-xray';
@@ -48,6 +52,7 @@ export function additionalTestForPatient(patient: Pick<PatientCase, 'jobId' | 'g
 
 /** A fixed case result, never sampled while reading or drawing the report. */
 export function additionalResultFor(patient: Pick<PatientCase, 'id' | 'jobId' | 'general' | 'caseVariant'>, test: AdditionalTest): AdditionalResult {
+  if (storyPatientForId(patient.id)?.actorId === 'printer' && test === 'audiometry') return { test, fit: false };
   const relevant = additionalTestForJob(patient) === test;
   return { test, fit: !relevant || patient.caseVariant !== 4 || (patient.id < DISCRETIONARY_CASE_START && patient.id % 2 === 0) };
 }

@@ -1,6 +1,7 @@
+import { createInitialState } from './fixtures/routine';
 import { expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
-import { applyAction, advanceClinicTime, createInitialState, settleWeekend, type GameAction, type GameState } from '../src/core/game';
+import { applyAction, advanceClinicTime, settleWeekend, type GameAction, type GameState } from '../src/core/game';
 import { decodeSave, encodeSave, importSave } from '../src/core/save';
 import { homePage, homePages } from '../src/scenes/home';
 import { historicalState, legacyBudget } from './fixtures/legacy-budget';

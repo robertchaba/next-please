@@ -2,6 +2,7 @@ import { gameDate, isWeekend } from './calendar';
 import { additionalAssessment, additionalResultFor, additionalTestForJob, additionalTestForPatient } from './additional-tests';
 import { JOBS, PATIENTS, REQUIREMENTS, createRoster, patientIdentity, randomStep, pressureAssessment, visionAssessment, type MedicalAssessment, type PatientCase } from './patients';
 import type { GameState, Visit } from './game';
+import { storyPatientForId } from './story-patients';
 
 export type DirectiveRule = 'dates' | 'specialist' | 'authenticity' | 'additional-tests';
 export interface ReferralDetails {
@@ -32,7 +33,8 @@ export function directiveForDay(day: number): DirectiveRule | null {
   return workDay === 3 ? 'dates' : workDay === 4 ? 'specialist' : workDay === 5 ? 'authenticity' : workDay === 7 ? 'additional-tests' : null;
 }
 
-export const employerPhone = (patientId: number): string => `42-${String(1000 + PATIENTS[patientId]!.employerId * 137).padStart(4, '0')}`;
+export const employerPhone = (patientId: number): string => storyPatientForId(patientId)?.encounterId === 'H1' ? '46-0104'
+  : `42-${String(1000 + PATIENTS[patientId]!.employerId * 137).padStart(4, '0')}`;
 export const specialistPhone = (patientId: number): string => `43-${String(1000 + (patientId * 31) % 9000).padStart(4, '0')}`;
 /** Safe migration defaults never add a new offence to an existing appointment. */
 export const defaultReferral = (_day: number, patientId: number): ReferralDetails => ({ ageDays: 0, seal: 'clear', authentic: true, phone: employerPhone(patientId) });
@@ -48,6 +50,7 @@ export function referralDate(day: number, ageDays: number): { year: number; mont
 /** A bribe variant changes findings, never the established identity or job. */
 export function effectivePatient(patientId: number, bribery = false): PatientCase {
   const patient = PATIENTS[patientId]!;
+  if (storyPatientForId(patientId)) return patient;
   if (!bribery) return patient;
   const relevant = REQUIREMENTS[patient.requirementId].disqualifying;
   const vision = relevant.includes('vision') && (patient.vision === 'refer' || !relevant.includes('pressure'));
@@ -68,6 +71,8 @@ export function expectedVisitDecision(state: Pick<GameState, 'day' | 'visit'>): 
   const day = workDayNumber(state.day), patient = patientForAppointment(visit);
   if (day >= 3 && visit.referral.ageDays > 3) return 'unfit';
   if (day >= 5 && !visit.referral.authentic) return 'unfit';
+  // The supplied results belong to Lis, while the requested certificate names Sikora.
+  if (storyPatientForId(visit.patientId)?.encounterId === 'I1') return 'unfit';
   const additional = day >= 7 ? additionalTestForPatient(patient) : null;
   const received = additional && visit.additionalResult?.test === additional
     ? additionalAssessment(patient, visit.additionalResult) : null;
@@ -91,6 +96,7 @@ export function createAppointmentDetails(state: Pick<GameState, 'day' | 'shiftCo
   referral: ReferralDetails; specialist: SpecialistCertificate | null; bribe: BribeState; seed: number;
 } {
   let seed = state.rngState;
+  if (storyPatientForId(patientId)) return { referral: defaultReferral(state.day, patientId), specialist: null, bribe: 'none', seed };
   const draw = (): number => { const random = randomStep(seed); seed = random.seed; return random.value; };
   const workDay = workDayNumber(state.day), patient = PATIENTS[patientId]!;
   const ageDays = draw() < 0.05 ? 4 + Math.floor(draw() * 7) : Math.floor(draw() * 4);

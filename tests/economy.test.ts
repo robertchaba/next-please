@@ -20,8 +20,8 @@ function submit(patientId: number, decision: 'fit' | 'unfit', fraction: number, 
 
 describe('patient catalog and deterministic queues', () => {
   it('preserves the original 103 case fixtures while adding five identities per portrait', () => {
-    expect(PATIENTS).toHaveLength(6193);
-    expect(new Set(PATIENTS.map(patient => patient.characterId)).size).toBe(188);
+    expect(PATIENTS).toHaveLength(6211);
+    expect(new Set(PATIENTS.map(patient => patient.characterId)).size).toBe(198);
     for (let character = 3; character < 28; character += 1) {
       const cases = PATIENTS.slice(0, 103).filter(patient => patient.characterId === character);
       expect(cases).toHaveLength(4);

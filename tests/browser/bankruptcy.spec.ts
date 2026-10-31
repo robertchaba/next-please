@@ -1,6 +1,7 @@
+import { createInitialState } from '../fixtures/routine';
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { applyAction, createInitialState } from '../../src/core/game';
+import { applyAction } from '../../src/core/game';
 import { decodeSave, encodeSave } from '../../src/core/save';
 import { translations } from '../../src/i18n';
 

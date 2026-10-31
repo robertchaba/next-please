@@ -1,6 +1,7 @@
+import { createInitialState } from '../fixtures/routine';
 import { defaultReferral } from '../../src/core/progression';
 import { expect, test, type Page } from '@playwright/test';
-import { createInitialState, encodeSave } from '../../src/core/save';
+import { encodeSave } from '../../src/core/save';
 
 async function activate(page: Page, id: string): Promise<void> {
   await page.locator(`#control-${id}`).focus();

@@ -1,7 +1,8 @@
+import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { gameDate } from '../src/core/calendar';
-import { applyAction, createInitialState, settleWeekend, type GameState } from '../src/core/game';
+import { applyAction, settleWeekend, type GameState } from '../src/core/game';
 import { decodeSave, encodeSave } from '../src/core/save';
 import { homePage } from '../src/scenes/home';
 import { NEW_WEEKEND_ILLUSTRATIONS, ordinaryWeekendIllustrations, weekendTripIllustration } from '../src/scenes/weekend';

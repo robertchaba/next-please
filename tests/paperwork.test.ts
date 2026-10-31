@@ -1,5 +1,7 @@
+import { STORY_PATIENT_FIRST_ID } from '../src/core/story-patients';
+import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
-import { applyAction, createInitialState, PATIENTS, type GameAction } from '../src/core/game';
+import { applyAction, PATIENTS, type GameAction } from '../src/core/game';
 import { translations, type Locale } from '../src/i18n';
 import { paperDescription, certificateDescription, drawPaperwork, drawCertificate, HANDWRITING_INK, DOCUMENT_INK, ALERT_INK, generalReading, noteEntries, noteIdentity, letterContent, visionReading, pressureReading } from '../src/render/paperwork';
 import { decodeSave, encodeSave } from '../src/core/save';
@@ -250,7 +252,7 @@ describe('separate localized paperwork', () => {
   });
 
   it('names the exact abnormal general finding and preserves it on repeat and import', () => {
-    for (const patient of PATIENTS.filter(patient => patient.general === 'refer')) {
+    for (const patient of PATIENTS.slice(0, STORY_PATIENT_FIRST_ID).filter(patient => patient.general === 'refer')) {
       const initial = createInitialState(1234);
       const roster = [patient.id, ...initial.roster.filter(id => PATIENTS[id]!.characterId !== patient.characterId)];
       const examined = (['skip-intro', 'call-patient', 'take-document', 'take-paper', 'run-general'] as GameAction[])

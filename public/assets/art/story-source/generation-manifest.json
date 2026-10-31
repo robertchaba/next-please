@@ -1,0 +1,392 @@
+[
+  {
+    "id": "story-agent",
+    "prompt": "Use case: illustration-story. Asset type: original transparent patient sprite for Next, Please! Match the supplied approved patient reference for restrained painterly pixel-art materials, muted olive/charcoal/cream 1983 institutional palette and warm clinic lighting. A single NEW fictional seated adult, waist up, centered, full natural-scale head, full shoulders and forearms, both hands resting together at desk level. No desk or scenery. Keep a generous completely transparent margin around the entire silhouette, including hair and elbows. Final sprite is 94 by 96 pixels so silhouette and facial features must read clearly at small size; do not imitate the reference person's identity. No readable text, no insignia, no flag, no country, no fantasy effects or exaggerated caricature. Character: Roman Kurek, man aged 43, quiet ordinary expression, narrow oval face, short straight ash-brown hair parted to the side, clean-shaven, plain worn charcoal olive work jacket over beige collared shirt. Unremarkable working man, no spy accessories.",
+    "refs": [
+      "public/assets/art/patients-source/patient-103.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-c3c5371e-d8f0-4350-b8a3-fa8b8323e2ba.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "story-strike-leader",
+    "prompt": "Use case: illustration-story. Asset type: original transparent patient sprite for Next, Please! Match the supplied approved patient reference for restrained painterly pixel-art materials, muted olive/charcoal/cream 1983 institutional palette and warm clinic lighting. A single NEW fictional seated adult, waist up, centered, full natural-scale head, full shoulders and forearms, both hands resting together at desk level. No desk or scenery. Keep a generous completely transparent margin around the entire silhouette, including hair and elbows. Final sprite is 94 by 96 pixels so silhouette and facial features must read clearly at small size; do not imitate the reference person's identity. No readable text, no insignia, no flag, no country, no fantasy effects or exaggerated caricature. Character: Stefan Wolski, man aged 44, tired matter-of-fact expression, broad square face, thick dark mustache, short dark receding hair, worn slate olive worker jacket over dull blue shirt. Natural credible worker, no heroic symbols.",
+    "refs": [
+      "public/assets/art/patients-source/patient-103.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-4fd0e701-7055-41ea-8943-f531b1823dc4.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "story-printer",
+    "prompt": "Use case: illustration-story. Asset type: original transparent patient sprite for Next, Please! Match the supplied approved patient reference for restrained painterly pixel-art materials, muted olive/charcoal/cream 1983 institutional palette and warm clinic lighting. A single NEW fictional seated adult, waist up, centered, full natural-scale head, full shoulders and forearms, both hands resting together at desk level. No desk or scenery. Keep a generous completely transparent margin around the entire silhouette, including hair and elbows. Final sprite is 94 by 96 pixels so silhouette and facial features must read clearly at small size; do not imitate the reference person's identity. No readable text, no insignia, no flag, no country, no fantasy effects or exaggerated caricature. Character: Jerzy Borkowski, man aged 46, reserved expression, thin face, slightly tousled brown hair with gray temples, small wire-frame reading glasses, simple dark navy printer's work apron over cream shirt with rolled sleeves, a few tiny dark ink stains on the apron. Hands together calmly.",
+    "refs": [
+      "public/assets/art/patients-source/patient-103.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-bd124d0e-9807-44fc-9c69-ec94704cccde.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "story-dispatcher",
+    "prompt": "Use case: illustration-story. Asset type: original transparent patient sprite for Next, Please! Match the supplied approved patient reference for restrained painterly pixel-art materials, muted olive/charcoal/cream 1983 institutional palette and warm clinic lighting. A single NEW fictional seated adult, waist up, centered, full natural-scale head, full shoulders and forearms, both hands resting together at desk level. No desk or scenery. Keep a generous completely transparent margin around the entire silhouette, including hair and elbows. Final sprite is 94 by 96 pixels so silhouette and facial features must read clearly at small size; do not imitate the reference person's identity. No readable text, no insignia, no flag, no country, no fantasy effects or exaggerated caricature. Character: Antoni Rybak, man aged 65, calm expert with lined oblong face, neatly combed silver hair, full silver eyebrows, clean-shaven, worn medium-brown tweed jacket and dark olive V-neck pullover over a pale shirt. Upright capable posture, not frail or caricatured.",
+    "refs": [
+      "public/assets/art/patients-source/patient-103.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-7b0ae352-3f03-4899-b633-35337118d4c6.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "story-sergeant",
+    "prompt": "Use case: illustration-story. Asset type: original transparent patient sprite for Next, Please! Match the supplied approved patient reference for restrained painterly pixel-art materials, muted olive/charcoal/cream 1983 institutional palette and warm clinic lighting. A single NEW fictional seated adult, waist up, centered, full natural-scale head, full shoulders and forearms, both hands resting together at desk level. No desk or scenery. Keep a generous completely transparent margin around the entire silhouette, including hair and elbows. Final sprite is 94 by 96 pixels so silhouette and facial features must read clearly at small size; do not imitate the reference person's identity. No readable text, no insignia, no flag, no country, no fantasy effects or exaggerated caricature. Character: Marek Czarnecki, man aged 39, stern formal but ordinary face, close-cropped dark blond hair, clean-shaven, square jaw. Gray-blue militia uniform with simple shoulder tabs, blue shirt and black tie, consistent with reference uniform cut, no real-world emblem, national symbol or identifiable service badge.",
+    "refs": [
+      "public/assets/art/patients-source/patient-76.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-07ecf1b3-500f-4fc9-9c0f-7abce8e49e14.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "story-proofreader",
+    "prompt": "Use case: illustration-story. Asset type: original transparent patient sprite for Next, Please! Match the supplied approved patient reference for restrained painterly pixel-art materials, muted olive/charcoal/cream 1983 institutional palette and warm clinic lighting. A single NEW fictional seated adult, waist up, centered, full natural-scale head, full shoulders and forearms, both hands resting together at desk level. No desk or scenery. Keep a generous completely transparent margin around the entire silhouette, including hair and elbows. Final sprite is 94 by 96 pixels so silhouette and facial features must read clearly at small size; do not imitate the reference person's identity. No readable text, no insignia, no flag, no country, no fantasy effects or exaggerated caricature. Character: Zofia Witek, woman aged 61, reserved calm expression, slim long face, short carefully pinned silver-gray hair, fine oval glasses, understated dark-brown knitted cardigan over a muted green blouse. A credible older office worker, restrained posture.",
+    "refs": [
+      "public/assets/art/patients-source/patient-103.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-1104e904-ac95-42e9-b4fd-71ee21c9d433.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "story-malec",
+    "prompt": "Use case: illustration-story. Asset type: original transparent patient sprite for Next, Please! Match the supplied approved patient reference for restrained painterly pixel-art materials, muted olive/charcoal/cream 1983 institutional palette and warm clinic lighting. A single NEW fictional seated adult, waist up, centered, full natural-scale head, full shoulders and forearms, both hands resting together at desk level. No desk or scenery. Keep a generous completely transparent margin around the entire silhouette, including hair and elbows. Final sprite is 94 by 96 pixels so silhouette and facial features must read clearly at small size; do not imitate the reference person's identity. No readable text, no insignia, no flag, no country, no fantasy effects or exaggerated caricature. Character: Henryk Malec, man aged 52, self-assured faintly smug expression without grotesque caricature, broad fleshy face, receding neatly combed dark hair with gray temples, short tidy salt-and-pepper mustache. Immaculate charcoal wool suit jacket, pale cream shirt and muted burgundy tie. Sits straight with shoulders back, hands neatly together.",
+    "refs": [
+      "public/assets/art/patients-source/patient-103.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-51b8546d-446b-44a3-a563-ef36ac93d570.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "story-volunteer",
+    "prompt": "Use case: illustration-story. Asset type: original transparent patient sprite for Next, Please! Match the supplied approved patient reference for restrained painterly pixel-art materials, muted olive/charcoal/cream 1983 institutional palette and warm clinic lighting. A single NEW fictional seated adult, waist up, centered, full natural-scale head, full shoulders and forearms, both hands resting together at desk level. No desk or scenery. Keep a generous completely transparent margin around the entire silhouette, including hair and elbows. Final sprite is 94 by 96 pixels so silhouette and facial features must read clearly at small size; do not imitate the reference person's identity. No readable text, no insignia, no flag, no country, no fantasy effects or exaggerated caricature. Character: Tadeusz Kania, man aged 48, anxious restrained expression, long lean face, noticeably high forehead and thinning straight dark hair, small neat mustache, faded slate-blue worker's shirt with rolled sleeves and dark olive vest. His hands are held tensely together, no visible injury. Clearly different face from references.",
+    "refs": [
+      "public/assets/art/patients-source/patient-103.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-d08d5ed9-0ec7-4ea9-8192-b7dd1f1b6203.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "story-storekeeper",
+    "prompt": "Use case: illustration-story. Asset type: original transparent patient sprite for Next, Please! Match the supplied approved patient reference for restrained painterly pixel-art materials, muted olive/charcoal/cream 1983 institutional palette and warm clinic lighting. A single NEW fictional seated adult, waist up, centered, full natural-scale head, full shoulders and forearms, both hands resting together at desk level. No desk or scenery. Keep a generous completely transparent margin around the entire silhouette, including hair and elbows. Final sprite is 94 by 96 pixels so silhouette and facial features must read clearly at small size; do not imitate the reference person's identity. No readable text, no insignia, no flag, no country, no fantasy effects or exaggerated caricature. Character: Edward Król, man aged 53, bald crown with short dark gray hair around the sides, broad round face, clean-shaven with a firm mouth, ordinary matter-of-fact expression. Wears a faded dark green work jacket over an ochre collarless shirt. Natural posture and both hands together, nothing visibly diagnosing dizziness. Clearly different face from references.",
+    "refs": [
+      "public/assets/art/patients-source/patient-103.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-efe44f59-6c3e-452d-8401-8fe47cd73444.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "story-alias",
+    "prompt": "Use case: illustration-story. Asset type: original transparent patient sprite for Next, Please! Match the supplied approved patient reference for restrained painterly pixel-art materials, muted olive/charcoal/cream 1983 institutional palette and warm clinic lighting. A single NEW fictional seated adult, waist up, centered, full natural-scale head, full shoulders and forearms, both hands resting together at desk level. No desk or scenery. Keep a generous completely transparent margin around the entire silhouette, including hair and elbows. Final sprite is 94 by 96 pixels so silhouette and facial features must read clearly at small size; do not imitate the reference person's identity. No readable text, no insignia, no flag, no country, no fantasy effects or exaggerated caricature. Character: Andrzej Lis, man aged 41, tense and quietly worried expression, lean angular face and prominent cheekbones, short dark straight hair, light stubble, slightly crooked nose, beige wool pullover over dark brown collared shirt. Ordinary working man, no disguise, hat or accessories. Clearly different face from references.",
+    "refs": [
+      "public/assets/art/patients-source/patient-103.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-1a477468-a4af-466d-aa58-23fd4a91d194.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "malec-photo",
+    "prompt": "Use case: identity-preserve. Asset type: tiny monochrome newspaper portrait for Next, Please! Preserve exactly the man in supplied reference: Henryk Malec, age 52, broad face, receding combed dark hair with gray temples, tidy salt-and-pepper mustache, charcoal suit and tie, self-assured slight smile. Create a formal press photograph head and shoulders facing camera, cropped to landscape 6:5 ratio (final 48 by 40 pixels), with plain pale gray backdrop. Restrained period newspaper black-ink halftone raster, legible face at tiny size, no border, no lettering, no logos, no national symbols. New image should convincingly show the same man and hairstyle.",
+    "refs": [
+      "public/assets/art/story-source/story-malec.png"
+    ],
+    "transparent": false,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-cb1fe132-b287-4e59-add4-57a11051db44.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "ending-e1",
+    "prompt": "Use case: illustration-story. Asset type: original epilogue background for Next, Please!, matching the approved title/clinic/reference artwork. Wide 57:32 composition, final 570×320 pixels, understated 1983 occupational health clinic in an unnamed country. The LEFT 59% is a calm very dark olive-charcoal wall/floor with only subtle material texture, absolutely no high-contrast objects or people there, reserved for text rendered later. All meaningful action, documents and recognizable objects occupy the RIGHT 41%. Restrained painterly pixel art, hard pixel clusters with no blur, ordinary worn wood and institutional olive enamel, muted warm cream light. No embedded captions, lettering, date, UI, logos, flags, national symbols or watermark. Match reference mood and color, not a collage. Scene: Interior of a quiet clinic consulting room after loss of office: on the right a worn wooden desk with a pale duplicated sheet laid flat and an unused mechanical rubber stamp resting beside it. Behind it at far right a plain civilian administrator in an ordinary gray suit stands in the open door holding a folder. No violence, no flames; the stamp is merely set aside. Lamp casts a small tired pool of light on the papers.",
+    "refs": [
+      "public/assets/art/title-clinic.png",
+      "public/assets/art/bankruptcy-cloakroom.png",
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": false,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-ec41e118-5ac2-4cf3-91c9-2a15ccb24969.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "ending-e2",
+    "prompt": "Use case: illustration-story. Asset type: original epilogue background for Next, Please!, matching the approved title/clinic/reference artwork. Wide 57:32 composition, final 570×320 pixels, understated 1983 occupational health clinic in an unnamed country. The LEFT 59% is a calm very dark olive-charcoal wall/floor with only subtle material texture, absolutely no high-contrast objects or people there, reserved for text rendered later. All meaningful action, documents and recognizable objects occupy the RIGHT 41%. Restrained painterly pixel art, hard pixel clusters with no blur, ordinary worn wood and institutional olive enamel, muted warm cream light. No embedded captions, lettering, date, UI, logos, flags, national symbols or watermark. Match reference mood and color, not a collage. Scene: Clinic corridor, on the right a CLOSED dark wooden consulting-room door with a small blank rectangular room-number plate that will be lettered separately. The appointment sign has been taken down and lies on a small table with a thick worn olive case folder and an official cream letter. Brass door handle, green tiled lower wall. No people. Calm bureaucratic finality.",
+    "refs": [
+      "public/assets/art/title-clinic.png",
+      "public/assets/art/bankruptcy-cloakroom.png",
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": false,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-b018c117-48ae-480e-a306-c9b491d0db42.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "ending-e3",
+    "prompt": "Use case: illustration-story. Asset type: original epilogue background for Next, Please!, matching the approved title/clinic/reference artwork. Wide 57:32 composition, final 570×320 pixels, understated 1983 occupational health clinic in an unnamed country. The LEFT 59% is a calm very dark olive-charcoal wall/floor with only subtle material texture, absolutely no high-contrast objects or people there, reserved for text rendered later. All meaningful action, documents and recognizable objects occupy the RIGHT 41%. Restrained painterly pixel art, hard pixel clusters with no blur, ordinary worn wood and institutional olive enamel, muted warm cream light. No embedded captions, lettering, date, UI, logos, flags, national symbols or watermark. Match reference mood and color, not a collage. Scene: A now-empty doctor's consulting room on the right. Two sober ordinary middle-aged officials wearing gray/brown civilian overcoats are gathering a few cream records into an official worn folder. The doctor's chair is empty and desk drawers are visibly open. No guns, violence, hats hiding faces, police emblems or dramatic action. A quiet administrative seizure of records, dim institutional light.",
+    "refs": [
+      "public/assets/art/title-clinic.png",
+      "public/assets/art/bankruptcy-cloakroom.png",
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": false,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-9cc808d7-22fc-4274-86af-cafbc0bd7571.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "ending-e4",
+    "prompt": "Use case: illustration-story. Asset type: original epilogue background for Next, Please!, matching the approved title/clinic/reference artwork. Wide 57:32 composition, final 570×320 pixels, understated 1983 occupational health clinic in an unnamed country. The LEFT 59% is a calm very dark olive-charcoal wall/floor with only subtle material texture, absolutely no high-contrast objects or people there, reserved for text rendered later. All meaningful action, documents and recognizable objects occupy the RIGHT 41%. Restrained painterly pixel art, hard pixel clusters with no blur, ordinary worn wood and institutional olive enamel, muted warm cream light. No embedded captions, lettering, date, UI, logos, flags, national symbols or watermark. Match reference mood and color, not a collage. Scene: Clinic desk at dawn, on the RIGHT a carefully aligned wooden-handled mechanical rubber stamp, an official cream letter with a very modest dry brick-red seal and no readable text. The letter rests beside an olive rotary phone. In the background at far right a single civilian silhouette waits at the doorway. Quiet sense of institutional protection carrying expectations, no celebration or luxury.",
+    "refs": [
+      "public/assets/art/title-clinic.png",
+      "public/assets/art/bankruptcy-cloakroom.png",
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": false,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-3a49da28-2dff-4f8a-9b2c-9d9cdc0d57ae.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "ending-e5",
+    "prompt": "Use case: illustration-story. Asset type: original epilogue background for Next, Please!, matching the approved title/clinic/reference artwork. Wide 57:32 composition, final 570×320 pixels, understated 1983 occupational health clinic in an unnamed country. The LEFT 59% is a calm very dark olive-charcoal wall/floor with only subtle material texture, absolutely no high-contrast objects or people there, reserved for text rendered later. All meaningful action, documents and recognizable objects occupy the RIGHT 41%. Restrained painterly pixel art, hard pixel clusters with no blur, ordinary worn wood and institutional olive enamel, muted warm cream light. No embedded captions, lettering, date, UI, logos, flags, national symbols or watermark. Match reference mood and color, not a collage. Scene: Clinic corridor before work. On the far RIGHT a closed dark olive door, with a small private cream note quietly slipped partway beneath it. Behind the note toward the right edge an ordinary small queue of workers sits and stands in subdued dim dawn light, wool coats and work jackets, patient ordinary faces. The note is blank, its identifying mark will be composited separately by the game. No raised fists, banners, heroic pose or crowd demonstration. Quiet gratitude amid routine.",
+    "refs": [
+      "public/assets/art/title-clinic.png",
+      "public/assets/art/bankruptcy-cloakroom.png",
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": false,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-a260c5ea-1761-420f-be85-2366302236b4.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "ending-e6",
+    "prompt": "Use case: illustration-story. Asset type: original epilogue background for Next, Please!, matching the approved title/clinic/reference artwork. Wide 57:32 composition, final 570×320 pixels, understated 1983 occupational health clinic in an unnamed country. The LEFT 59% is a calm very dark olive-charcoal wall/floor with only subtle material texture, absolutely no high-contrast objects or people there, reserved for text rendered later. All meaningful action, documents and recognizable objects occupy the RIGHT 41%. Restrained painterly pixel art, hard pixel clusters with no blur, ordinary worn wood and institutional olive enamel, muted warm cream light. No embedded captions, lettering, date, UI, logos, flags, national symbols or watermark. Match reference mood and color, not a collage. Scene: An EMPTY ordinary clinic consulting room before the next shift. On the RIGHT the worn wooden desk has an olive rotary telephone and fresh neatly folded newspaper with no readable lettering, two closed drawers, a mechanical rubber stamp and plain form. Empty visitor chair, coat peg and a pool of subdued morning light from an off-screen window. No reward, badge, trophy or person. Continuity of everyday work.",
+    "refs": [
+      "public/assets/art/title-clinic.png",
+      "public/assets/art/bankruptcy-cloakroom.png",
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": false,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-474f1a2f-2469-4650-8374-7369b62b373f.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "leaflet",
+    "prompt": "Use case: illustration-story. Asset type: original paper prop for Next, Please! Match supplied approved paper and clinic artwork: restrained charcoal, olive, cream and muted ink palette, worn ordinary 1983 office material, hard pixel clusters suitable for final 200×168 display. Show only ONE requested paper object straight-on, flat, no perspective, against fully transparent surroundings with a small clear margin on all sides. Broad smooth clean blank interior for text rendered by the game. No readable text, letters, dates, names, stamps, logos, national symbols, ornament, colored frame or external watermark. Requested object: A thin gray-cream duplicated union leaflet, inexpensive slightly uneven paper, faint central horizontal fold, very subtle copying smudges only at the outer edges. Natural nearly rectangular 200:168 outline, no printed lines.",
+    "refs": [
+      "public/assets/art/sprites/workstation-paper.png",
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-645d7f2f-01eb-4600-8800-8e484bc4a5b0.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "warning",
+    "prompt": "Use case: illustration-story. Asset type: original paper prop for Next, Please! Match supplied approved paper and clinic artwork: restrained charcoal, olive, cream and muted ink palette, worn ordinary 1983 office material, hard pixel clusters suitable for final 200×168 display. Show only ONE requested paper object straight-on, flat, no perspective, against fully transparent surroundings with a small clear margin on all sides. Broad smooth clean blank interior for text rendered by the game. No readable text, letters, dates, names, stamps, logos, national symbols, ornament, colored frame or external watermark. Requested object: A small unfolded twice-folded austere gray typewritten warning note, nearly rectangular 200:168, slight horizontal/vertical fold traces, tired gray paper without decorations. Keep the entire central writing area empty and smooth.",
+    "refs": [
+      "public/assets/art/sprites/workstation-paper.png",
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-8f7215c5-8fd3-4adb-86ea-f2b01439c637.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "exposure",
+    "prompt": "Use case: illustration-story. Asset type: original paper prop for Next, Please! Match supplied approved paper and clinic artwork: restrained charcoal, olive, cream and muted ink palette, worn ordinary 1983 office material, hard pixel clusters suitable for final 200×168 display. Show only ONE requested paper object straight-on, flat, no perspective, against fully transparent surroundings with a small clear margin on all sides. Broad smooth clean blank interior for text rendered by the game. No readable text, letters, dates, names, stamps, logos, national symbols, ornament, colored frame or external watermark. Requested object: A worn cream duplicated evidence sheet in 200:168 proportion, subtle photocopy or mimeograph edge streaks. Two extremely faint traces of pasted rectangular certificate fragments near lower half, with both fragment interiors and upper header completely blank. No heavy boxes or ornamental frame.",
+    "refs": [
+      "public/assets/art/sprites/workstation-paper.png",
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-2c07273f-cb74-402e-a4ee-18fd17dd5247.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "carbon-copy",
+    "prompt": "Use case: illustration-story. Asset type: original paper prop for Next, Please! Match supplied approved paper and clinic artwork: restrained charcoal, olive, cream and muted ink palette, worn ordinary 1983 office material, hard pixel clusters suitable for final 200×168 display. Show only ONE requested paper object straight-on, flat, no perspective, against fully transparent surroundings with a small clear margin on all sides. Broad smooth clean blank interior for text rendered by the game. No readable text, letters, dates, names, stamps, logos, national symbols, ornament, colored frame or external watermark. Requested object: A thin slightly crumpled administrative carbon-copy sheet in 200:168 proportion, pale lavender tint and faint violet transfer smudges only near edges, subtle bends, broad flat blank writing area.",
+    "refs": [
+      "public/assets/art/sprites/workstation-paper.png",
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-17024f95-e9ee-4400-86c7-0917d1c04c46.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "private-note",
+    "prompt": "Use case: illustration-story. Asset type: original paper prop for Next, Please! Match supplied approved paper and clinic artwork: restrained charcoal, olive, cream and muted ink palette, worn ordinary 1983 office material, hard pixel clusters suitable for final 200×168 display. Show only ONE requested paper object straight-on, flat, no perspective, against fully transparent surroundings with a small clear margin on all sides. Broad smooth clean blank interior for text rendered by the game. No readable text, letters, dates, names, stamps, logos, national symbols, ornament, colored frame or external watermark. Requested object: A small private folded cream paper note opened flat in 200:168 proportion, one subtle horizontal fold and slight curled corner, unprinted smooth interior reserved for blue handwritten text. No torn excessive edges.",
+    "refs": [
+      "public/assets/art/sprites/workstation-paper.png",
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-5aed10f8-3a9f-4dab-9063-f47f3b00b3bd.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "bhp-paraph",
+    "prompt": "Use case: illustration-story. Asset type: original dry-ink impression for the Next, Please! bureaucracy game. Match supplied muted period seal/signature reference and cream/olive clinic style. Single isolated impression on truly transparent background including inside the impression, front-on, with clear margin around every edge. Irregular lightly worn dry ink, sharp pixels suitable for tiny native sprite. No paper, no background color, no real national emblem, no organization copied from reality, no watermark. All institution names will be composited separately as localized text; the image contains no readable lettering, numbers or words. Requested impression: Small blue institutional safety-officer handwritten paraf, short angular illegible handwritten initials followed by one brief underline, clearly an abstract autograph but not a readable name. Wide 46:20 silhouette. Distinct from editorial signature.",
+    "refs": [
+      "public/assets/art/sprites/document-signature.png",
+      "public/assets/art/sprites/document-seal-chamber.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-1ebaab6a-5d13-441b-b5e2-2d1c8eb851cb.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "editor-paraph",
+    "prompt": "Use case: illustration-story. Asset type: original dry-ink impression for the Next, Please! bureaucracy game. Match supplied muted period seal/signature reference and cream/olive clinic style. Single isolated impression on truly transparent background including inside the impression, front-on, with clear margin around every edge. Irregular lightly worn dry ink, sharp pixels suitable for tiny native sprite. No paper, no background color, no real national emblem, no organization copied from reality, no watermark. All institution names will be composited separately as localized text; the image contains no readable lettering, numbers or words. Requested impression: Small faded violet editorial-office handwritten paraf, rounded looped quick illegible signature with a short rising end stroke. Wide 46:20 silhouette. Clearly different from angular safety-officer blue signature.",
+    "refs": [
+      "public/assets/art/sprites/document-signature.png",
+      "public/assets/art/sprites/document-seal-chamber.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-d1a39a6f-86ec-4a53-b9a9-0197a839e115.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "committee-seal",
+    "prompt": "Use case: illustration-story. Asset type: original dry-ink impression for the Next, Please! bureaucracy game. Match supplied muted period seal/signature reference and cream/olive clinic style. Single isolated impression on truly transparent background including inside the impression, front-on, with clear margin around every edge. Irregular lightly worn dry ink, sharp pixels suitable for tiny native sprite. No paper, no background color, no real national emblem, no organization copied from reality, no watermark. All institution names will be composited separately as localized text; the image contains no readable lettering, numbers or words. Requested impression: Restrained brick-red committee rubber-stamp seal: dry worn double oval perimeter, plain inner small abstract geometric rosette (not a star or national emblem), roomy blank upper/lower interior spaces for short localized institution caption. Native 42×36. No actual lettering.",
+    "refs": [
+      "public/assets/art/sprites/document-signature.png",
+      "public/assets/art/sprites/document-seal-chamber.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-cdb754e7-b9f7-4785-9f75-5e73bded87df.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "security-seal",
+    "prompt": "Use case: illustration-story. Asset type: original dry-ink impression for the Next, Please! bureaucracy game. Match supplied muted period seal/signature reference and cream/olive clinic style. Single isolated impression on truly transparent background including inside the impression, front-on, with clear margin around every edge. Irregular lightly worn dry ink, sharp pixels suitable for tiny native sprite. No paper, no background color, no real national emblem, no organization copied from reality, no watermark. All institution names will be composited separately as localized text; the image contains no readable lettering, numbers or words. Requested impression: Austere cool dark-blue rectangular administrative rubber-stamp impression with clipped corners, thin uneven double perimeter, open blank center and very small abstract three-bar mark at lower edge. Native 46×30. Distinct from round committee/medical seals, no symbols of a real agency.",
+    "refs": [
+      "public/assets/art/sprites/document-signature.png",
+      "public/assets/art/sprites/document-seal-chamber.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-69590e12-1bbb-4767-b229-e7cea6076b80.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "voluntary-imprint",
+    "prompt": "Use case: illustration-story. Asset type: original dry-ink impression for the Next, Please! bureaucracy game. Match supplied muted period seal/signature reference and cream/olive clinic style. Single isolated impression on truly transparent background including inside the impression, front-on, with clear margin around every edge. Irregular lightly worn dry ink, sharp pixels suitable for tiny native sprite. No paper, no background color, no real national emblem, no organization copied from reality, no watermark. All institution names will be composited separately as localized text; the image contains no readable lettering, numbers or words. Requested impression: Very long low horizontal purple rubber-stamp rectangular perimeter only with faint dry-ink breaks and a tiny bit of uneven ink at the four corners. Large fully transparent EMPTY center is reserved for a two-line localized stamp phrase, no letters drawn by you. Final 162×24; width is about 7 times height. No decorative flourishes, only ordinary worn purple rectangular stamp border.",
+    "refs": [
+      "public/assets/art/sprites/document-signature.png",
+      "public/assets/art/sprites/document-seal-chamber.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-d68cbdf4-71ca-4480-a2b5-38c25112e746.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "party-card-cover",
+    "prompt": "Use case: illustration-story. Asset type: original party membership booklet CLOSED front cover for Next, Please! Match supplied clinic's understated 1983 office pixel-art materials and muted colors. One small closed burgundy cloth-covered identity booklet, front view without perspective, 112:144 portrait proportion, slightly softened worn edges, plain unprinted cover with a small subtle blind-embossed rectangular central depression reserved for separately drawn title. Not a passport and no national emblem. Transparent background and margins. No readable words, letters, names, dates, photos, logo, national symbols, ornamental frames, watermark or UI. Text and portrait will be composited separately.",
+    "refs": [
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-55bd42c3-fe01-4590-87ea-3371cc1e8264.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "party-card-open",
+    "prompt": "Use case: illustration-story. Asset type: original OPEN party membership booklet for Next, Please! Match supplied clinic's understated 1983 office pixel-art materials and muted colors. A single thin booklet opened flat, 200:168 landscape proportion. Burgundy cloth rim, two cream unprinted pages, shallow central fold, blank left page with a subtle empty photo area toward lower-left and broad blank right page for data. Plain ordinary paper, very slight edge wear. Front view without perspective. Transparent background and margins. No readable words, letters, names, dates, photos, logo, national symbols, ornamental frames, watermark or UI. Text and portrait will be composited separately.",
+    "refs": [
+      "public/assets/art/cabinet-workstation.png",
+      "public/assets/art/sprites/workstation-paper.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-fc4f29ac-72f8-4175-b6b0-977c20f1508c.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "union-folded",
+    "prompt": "Use case: illustration-story. Asset type: original folded small trade-union weekly newspaper for Next, Please! Use the approved folded newspaper only as material/silhouette reference. One thin folded newspaper straight front view, landscape 88:56 ratio, modest pale gray cheap newsprint, visibly poorer paper than warm beige daily, slightly uneven thin edges, abstract dark ink column texture with a rough dark masthead shape but absolutely no readable text, date, number or recognizable logo. No photographs. Hard-edged subdued pixel-art material, transparent background and clear margins, no table.",
+    "refs": [
+      "public/assets/art/sprites/newspaper-folded.png",
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-a5f6e7b5-0e45-4f1f-acf5-e71140243a7a.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "union-spread",
+    "prompt": "Use case: illustration-story. Asset type: original blank open trade-union weekly newspaper for Next, Please! Match supplied approved open newspaper footprint and restrained pixel-art material, but use poorer pale gray cheap newsprint instead of warm oat beige, visibly thin paper with shallow vertical central fold and nearly straight slightly worn edges. Front view with no perspective, one unfolded spread landscape 5:3 ratio, final 300×180. Entire interior blank for localized masthead/articles: at most one very faint thin printer's rule near top and one near bottom, no colored or ornamental borders, no words, photos, dates, numbers or logos. Transparent surroundings, clear margins, no table.",
+    "refs": [
+      "public/assets/art/sprites/newspaper-spread.png",
+      "public/assets/art/cabinet-workstation.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-95a5595b-e4a7-4e11-8445-fae42a3cda61.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "union-masthead-pl",
+    "prompt": "Use case: logo-brand. Asset type: transparent masthead title for fictional 1983 trade-union weekly in Next, Please! Exact text only: \"Głos Wzajemności\". Preserve correct Polish ł and ś. One single horizontal line of bold compact original hand-set newspaper lettering in very dark charcoal ink, subtle uneven letterpress texture. Use lettering rhythm and dry brush energy of the supplied Wzajemność reference as a stylistic cue only, restrained for a small readable newspaper title. Do NOT include the flag, crowd, raised fists, underline swoosh or any image from the reference; only the requested two words. Keep full letter shapes and accents entirely inside clear transparent margins. Suitable for final 252×30 pixels. No paper or other background, no ornaments, no additional text.",
+    "refs": [
+      "external-docs/wzajemnosc_logo.png",
+      "public/assets/art/sprites/newspaper-masthead-pl.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-c174cf25-e5bc-4af1-87a9-d3ada80a0c05.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  },
+  {
+    "id": "union-masthead-en",
+    "prompt": "Use case: logo-brand. Asset type: transparent masthead title for fictional 1983 trade-union weekly in Next, Please! Exact text only: \"Voice of Mutuality\". One single horizontal line of bold compact original hand-set newspaper lettering in very dark charcoal ink, subtle uneven letterpress texture. Use lettering rhythm and dry brush energy of the supplied Wzajemność reference as a stylistic cue only, restrained for a small readable newspaper title. Do NOT include the flag, crowd, raised fists, underline swoosh or any image from the reference; only the requested three words. Keep full letter shapes entirely inside clear transparent margins. Suitable for final 252×30 pixels. No paper or other background, no ornaments, no additional text.",
+    "refs": [
+      "external-docs/wzajemnosc_logo.png",
+      "public/assets/art/sprites/newspaper-masthead-pl.png"
+    ],
+    "transparent": true,
+    "source": "/Users/user/.codex/generated_images/01a1943b-2bd8-71e2-8dfb-c240e4df3523/exec-228f4de1-b7ec-417a-9690-9d9c72fe6528.png",
+    "generatedAt": "2026-11-01",
+    "method": "built-in image_gen"
+  }
+]

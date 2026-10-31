@@ -1,6 +1,7 @@
+import { createInitialState } from '../fixtures/routine';
 import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
-import { applyAction, createInitialState, type GameState } from '../../src/core/game';
+import { applyAction, type GameState } from '../../src/core/game';
 import { decodeSave, encodeSave } from '../../src/core/save';
 import { DRAWER_BATCH_SIZE } from '../../src/render/drawer';
 

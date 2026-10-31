@@ -7,11 +7,13 @@ import { measureText } from '../src/render/font';
 describe('release identity', () => {
   it('uses the package version and preserves published names in both languages', () => {
     expect(GAME_VERSION).toBe(version);
-    expect(releaseLabel('pl')).toBe('WERSJA 0.8.9 / BIBUŁA');
+    expect(releaseLabel('pl')).toBe('WERSJA 1.0.0 / BIBUŁA');
+    expect(releaseLabel('pl', '0.8.9')).toBe('WERSJA 0.8.9 / BIBUŁA');
     expect(releaseLabel('pl', '0.8.8')).toBe('WERSJA 0.8.8 / ARCHIWUM');
     expect(releaseLabel('pl', '0.8.7')).toBe('WERSJA 0.8.7 / REJESTRACJA');
     expect(releaseLabel('pl', '0.8.6')).toBe('WERSJA 0.8.6 / PARAFKA');
-    expect(releaseLabel('en')).toBe('VERSION 0.8.9 / BLOTTER');
+    expect(releaseLabel('en')).toBe('VERSION 1.0.0 / BLOTTER');
+    expect(releaseLabel('en', '0.8.9')).toBe('VERSION 0.8.9 / BLOTTER');
     expect(releaseLabel('en', '0.8.8')).toBe('VERSION 0.8.8 / ARCHIVE');
     expect(releaseLabel('en', '0.8.7')).toBe('VERSION 0.8.7 / RECEPTION');
     expect(releaseLabel('en', '0.8.6')).toBe('VERSION 0.8.6 / INITIALS');

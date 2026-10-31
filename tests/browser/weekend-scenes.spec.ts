@@ -1,5 +1,6 @@
+import { createInitialState } from '../fixtures/routine';
 import { expect, test, type Page } from '@playwright/test';
-import { applyAction, createInitialState, settleWeekend, type GameState } from '../../src/core/game';
+import { applyAction, settleWeekend, type GameState } from '../../src/core/game';
 import { encodeSave } from '../../src/core/save';
 import { homePage } from '../../src/scenes/home';
 import { NEW_WEEKEND_ILLUSTRATIONS } from '../../src/scenes/weekend';

@@ -1,5 +1,6 @@
+import { createInitialState } from '../fixtures/routine';
 import { expect, test } from '@playwright/test';
-import { applyAction, createInitialState } from '../../src/core/game';
+import { applyAction } from '../../src/core/game';
 import { PATIENTS } from '../../src/core/patients';
 import { encodeSave } from '../../src/core/save';
 import { translations } from '../../src/i18n';

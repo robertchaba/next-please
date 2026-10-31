@@ -825,7 +825,10 @@
     "Żur": "Wyatt",
     "Żurawski": "Wynn",
     "Żuławski": "Fenwick",
-    "Żyto": "York"
+    "Żyto": "York",
+    "Wolszak": "Welsby",
+    "Borkowski": "Birkett",
+    "Czarnecki": "Blackwell"
   },
   "places": {
     "Szkolna": "Alder Street",
@@ -856,7 +859,7 @@
     "Głębia": "Deepwell",
     "ZUS": "SIO",
     "LOT": "NAL",
-    "Wzajemność": "Fellowship"
+    "Wzajemność": "Mutuality"
   },
   "familyPlurals": {
     "Bielskis": "Blakes",

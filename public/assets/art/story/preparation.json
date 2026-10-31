@@ -1,0 +1,547 @@
+[
+  {
+    "name": "story-agent",
+    "width": 94,
+    "height": 96,
+    "destination": "sprites/story-agent.png",
+    "alpha": true,
+    "position": "bottom",
+    "source": "story-source/story-agent.png",
+    "sourceWidth": 1241,
+    "sourceHeight": 1267,
+    "crop": {
+      "left": 30,
+      "top": 75,
+      "width": 1191,
+      "height": 1142
+    },
+    "sha256": "3570b69c5d1cdb2cc30e44ae58cab8b602136afc8fe07497ed6d5cad433cc58c"
+  },
+  {
+    "name": "story-strike-leader",
+    "width": 94,
+    "height": 96,
+    "destination": "sprites/story-strike-leader.png",
+    "alpha": true,
+    "position": "bottom",
+    "source": "story-source/story-strike-leader.png",
+    "sourceWidth": 1242,
+    "sourceHeight": 1266,
+    "crop": {
+      "left": 21,
+      "top": 72,
+      "width": 1205,
+      "height": 1172
+    },
+    "sha256": "3e4bc858882bd650b56b3bc736209684c0424cf3f457803d20f5893502db5053"
+  },
+  {
+    "name": "story-printer",
+    "width": 94,
+    "height": 96,
+    "destination": "sprites/story-printer.png",
+    "alpha": true,
+    "position": "bottom",
+    "source": "story-source/story-printer.png",
+    "sourceWidth": 1241,
+    "sourceHeight": 1267,
+    "crop": {
+      "left": 49,
+      "top": 74,
+      "width": 1149,
+      "height": 1148
+    },
+    "sha256": "bb75b7bbb2bf8530c481cf7b281aab5d484efbb401c38eaf77ffa411de5adfe3"
+  },
+  {
+    "name": "story-dispatcher",
+    "width": 94,
+    "height": 96,
+    "destination": "sprites/story-dispatcher.png",
+    "alpha": true,
+    "position": "bottom",
+    "source": "story-source/story-dispatcher.png",
+    "sourceWidth": 1241,
+    "sourceHeight": 1267,
+    "crop": {
+      "left": 22,
+      "top": 88,
+      "width": 1207,
+      "height": 1143
+    },
+    "sha256": "f3a799a49f671306eca45ed944ba12c83a99a51b97a511c9ea31de8c3206e1a0"
+  },
+  {
+    "name": "story-sergeant",
+    "width": 94,
+    "height": 96,
+    "destination": "sprites/story-sergeant.png",
+    "alpha": true,
+    "position": "bottom",
+    "source": "story-source/story-sergeant.png",
+    "sourceWidth": 1241,
+    "sourceHeight": 1268,
+    "crop": {
+      "left": 14,
+      "top": 80,
+      "width": 1216,
+      "height": 1141
+    },
+    "sha256": "98934a73ef8ad9a3f3379c19c04806ff8b725b1f1c38e0668fc384c70ab44a3f"
+  },
+  {
+    "name": "story-proofreader",
+    "width": 94,
+    "height": 96,
+    "destination": "sprites/story-proofreader.png",
+    "alpha": true,
+    "position": "bottom",
+    "source": "story-source/story-proofreader.png",
+    "sourceWidth": 1241,
+    "sourceHeight": 1267,
+    "crop": {
+      "left": 41,
+      "top": 63,
+      "width": 1165,
+      "height": 1169
+    },
+    "sha256": "6d74f41fd820a8b16a8366aa66179ad5b0bfd94b5844499bb84287dfaa55bb97"
+  },
+  {
+    "name": "story-volunteer",
+    "width": 94,
+    "height": 96,
+    "destination": "sprites/story-volunteer.png",
+    "alpha": true,
+    "position": "bottom",
+    "source": "story-source/story-volunteer.png",
+    "sourceWidth": 1241,
+    "sourceHeight": 1268,
+    "crop": {
+      "left": 42,
+      "top": 50,
+      "width": 1173,
+      "height": 1177
+    },
+    "sha256": "870be433e6d17db055a940fc8402042dd24815619d4af6af9b998a9e15065cb6"
+  },
+  {
+    "name": "story-storekeeper",
+    "width": 94,
+    "height": 96,
+    "destination": "sprites/story-storekeeper.png",
+    "alpha": true,
+    "position": "bottom",
+    "source": "story-source/story-storekeeper.png",
+    "sourceWidth": 1241,
+    "sourceHeight": 1267,
+    "crop": {
+      "left": 11,
+      "top": 70,
+      "width": 1221,
+      "height": 1161
+    },
+    "sha256": "26be81ecf5b83a36e1a5c3babb1d489430d64bd0cf0d46f7e980a20be2cc6ef0"
+  },
+  {
+    "name": "story-alias",
+    "width": 94,
+    "height": 96,
+    "destination": "sprites/story-alias.png",
+    "alpha": true,
+    "position": "bottom",
+    "source": "story-source/story-alias.png",
+    "sourceWidth": 1241,
+    "sourceHeight": 1267,
+    "crop": {
+      "left": 30,
+      "top": 66,
+      "width": 1194,
+      "height": 1169
+    },
+    "sha256": "bfc1150393dc14f019d3ffe77863d9f2aa5cddc610f2e7048e3a133969cce047"
+  },
+  {
+    "name": "story-malec",
+    "width": 94,
+    "height": 96,
+    "destination": "sprites/story-malec.png",
+    "alpha": true,
+    "position": "bottom",
+    "source": "story-source/story-malec.png",
+    "sourceWidth": 1241,
+    "sourceHeight": 1267,
+    "crop": {
+      "left": 19,
+      "top": 71,
+      "width": 1204,
+      "height": 1157
+    },
+    "sha256": "ae86ead1f9b85e1f1b70b7e2935ad6cacdacfe6f797d3fe6155c9938d4dabd9e"
+  },
+  {
+    "name": "ending-e1",
+    "width": 570,
+    "height": 320,
+    "alpha": false,
+    "source": "story-source/ending-e1.png",
+    "destination": "story/ending-e1.png",
+    "sourceWidth": 1675,
+    "sourceHeight": 939,
+    "crop": null,
+    "sha256": "d496be1b6f1e238826987d4c98edd8f9f0694991c59c0463db1a9dde73554953"
+  },
+  {
+    "name": "ending-e2",
+    "width": 570,
+    "height": 320,
+    "alpha": false,
+    "source": "story-source/ending-e2.png",
+    "destination": "story/ending-e2.png",
+    "sourceWidth": 1676,
+    "sourceHeight": 939,
+    "crop": null,
+    "sha256": "f2cf9a3fa865a00be9ddb38a0b9ab0002098d311bb1708b0d25a063f58d0da60"
+  },
+  {
+    "name": "ending-e3",
+    "width": 570,
+    "height": 320,
+    "alpha": false,
+    "source": "story-source/ending-e3.png",
+    "destination": "story/ending-e3.png",
+    "sourceWidth": 1672,
+    "sourceHeight": 941,
+    "crop": null,
+    "sha256": "2574a4fbd66d309919ee99d7b21565485ad11098a89541844321e3abc124017f"
+  },
+  {
+    "name": "ending-e4",
+    "width": 570,
+    "height": 320,
+    "alpha": false,
+    "source": "story-source/ending-e4.png",
+    "destination": "story/ending-e4.png",
+    "sourceWidth": 1675,
+    "sourceHeight": 939,
+    "crop": null,
+    "sha256": "0c186de0e568f6facce0356b7c1ae1f01afd31d8e9017592b5414133ce06e44f"
+  },
+  {
+    "name": "ending-e5",
+    "width": 570,
+    "height": 320,
+    "alpha": false,
+    "source": "story-source/ending-e5.png",
+    "destination": "story/ending-e5.png",
+    "sourceWidth": 1675,
+    "sourceHeight": 939,
+    "crop": null,
+    "sha256": "c487f2773d482c3c56954fd129e79fe9740a494055ed1b620ef4f43b121b07d5"
+  },
+  {
+    "name": "ending-e6",
+    "width": 570,
+    "height": 320,
+    "alpha": false,
+    "source": "story-source/ending-e6.png",
+    "destination": "story/ending-e6.png",
+    "sourceWidth": 1674,
+    "sourceHeight": 939,
+    "crop": null,
+    "sha256": "82319e5246828bf10c6bc94ca696664601401a3cd1bf7cc95582504d014e96e4"
+  },
+  {
+    "name": "leaflet",
+    "width": 200,
+    "height": 168,
+    "alpha": true,
+    "fit": "fill",
+    "source": "story-source/leaflet.png",
+    "destination": "story/leaflet.png",
+    "sourceWidth": 1368,
+    "sourceHeight": 1149,
+    "crop": {
+      "left": 44,
+      "top": 57,
+      "width": 1282,
+      "height": 1038
+    },
+    "sha256": "dd89da60ce6c3c16c12b766eda0c1b5c81793671a8fcad4121e62c3ecd72e3e6"
+  },
+  {
+    "name": "warning",
+    "width": 200,
+    "height": 168,
+    "alpha": true,
+    "fit": "fill",
+    "source": "story-source/warning.png",
+    "destination": "story/warning.png",
+    "sourceWidth": 1368,
+    "sourceHeight": 1149,
+    "crop": {
+      "left": 37,
+      "top": 50,
+      "width": 1331,
+      "height": 1050
+    },
+    "sha256": "63a645b3fe372f12da3952ce4f6952eba55d80f89e8df9d2f71a71ed1ebca8b9"
+  },
+  {
+    "name": "exposure",
+    "width": 200,
+    "height": 168,
+    "alpha": true,
+    "fit": "fill",
+    "source": "story-source/exposure.png",
+    "destination": "story/exposure.png",
+    "sourceWidth": 1368,
+    "sourceHeight": 1149,
+    "crop": {
+      "left": 34,
+      "top": 68,
+      "width": 1303,
+      "height": 1030
+    },
+    "sha256": "67c8113e7ebca323dd0b7cac785e698cc7e0f8f8f5745cee6aa87f24fc4a8995"
+  },
+  {
+    "name": "carbon-copy",
+    "width": 200,
+    "height": 168,
+    "alpha": true,
+    "fit": "fill",
+    "source": "story-source/carbon-copy.png",
+    "destination": "story/carbon-copy.png",
+    "sourceWidth": 1368,
+    "sourceHeight": 1149,
+    "crop": {
+      "left": 35,
+      "top": 72,
+      "width": 1298,
+      "height": 1025
+    },
+    "sha256": "144908f6742647a61db37b49e3ddece294a6de79e3d1c63e3f6da5f0519a14ca"
+  },
+  {
+    "name": "private-note",
+    "width": 200,
+    "height": 168,
+    "alpha": true,
+    "fit": "fill",
+    "source": "story-source/private-note.png",
+    "destination": "story/private-note.png",
+    "sourceWidth": 1368,
+    "sourceHeight": 1149,
+    "crop": {
+      "left": 44,
+      "top": 52,
+      "width": 1293,
+      "height": 1043
+    },
+    "sha256": "551d8fcfcf51965e3dec1e923d13c3604703136c87de9a308fc0a84bcc86af2a"
+  },
+  {
+    "name": "malec-photo",
+    "width": 48,
+    "height": 40,
+    "alpha": false,
+    "source": "story-source/malec-photo.png",
+    "destination": "story/malec-photo.png",
+    "sourceWidth": 1374,
+    "sourceHeight": 1145,
+    "crop": null,
+    "sha256": "3c6603de24d74971465c2690db22b5b9403876b9ecaac5b743f56e561bd7768e"
+  },
+  {
+    "name": "bhp-paraph",
+    "width": 46,
+    "height": 20,
+    "alpha": true,
+    "source": "story-source/bhp-paraph.png",
+    "destination": "story/bhp-paraph.png",
+    "sourceWidth": 1902,
+    "sourceHeight": 827,
+    "crop": {
+      "left": 70,
+      "top": 276,
+      "width": 1760,
+      "height": 317
+    },
+    "sha256": "8fde642fb31149cfa0c28072423693bb96a860d7af22d125f13eb370e4869758"
+  },
+  {
+    "name": "editor-paraph",
+    "width": 46,
+    "height": 20,
+    "alpha": true,
+    "source": "story-source/editor-paraph.png",
+    "destination": "story/editor-paraph.png",
+    "sourceWidth": 1902,
+    "sourceHeight": 827,
+    "crop": {
+      "left": 78,
+      "top": 212,
+      "width": 1786,
+      "height": 398
+    },
+    "sha256": "43ffb4e662821b417687511c69d0da38ba2ff30b859b57f4e597cce4bbde2026"
+  },
+  {
+    "name": "committee-seal",
+    "width": 42,
+    "height": 36,
+    "alpha": true,
+    "source": "story-source/committee-seal.png",
+    "destination": "story/committee-seal.png",
+    "sourceWidth": 1355,
+    "sourceHeight": 1161,
+    "crop": {
+      "left": 112,
+      "top": 183,
+      "width": 1128,
+      "height": 801
+    },
+    "sha256": "18e223306978ce044492ad22fc879a9c81d8905c6ad69d2d52f1ec805ac0b9f9"
+  },
+  {
+    "name": "security-seal",
+    "width": 46,
+    "height": 30,
+    "alpha": true,
+    "source": "story-source/security-seal.png",
+    "destination": "story/security-seal.png",
+    "sourceWidth": 1552,
+    "sourceHeight": 1013,
+    "crop": {
+      "left": 96,
+      "top": 179,
+      "width": 1356,
+      "height": 665
+    },
+    "sha256": "d363bfc19af4c7da8e93a203f2499d62c1625fba4383b3c17a8ba523538267f2"
+  },
+  {
+    "name": "voluntary-imprint",
+    "width": 162,
+    "height": 24,
+    "alpha": true,
+    "source": "story-source/voluntary-imprint.png",
+    "destination": "story/voluntary-imprint.png",
+    "sourceWidth": 2172,
+    "sourceHeight": 724,
+    "crop": {
+      "left": 32,
+      "top": 228,
+      "width": 2108,
+      "height": 260
+    },
+    "sha256": "603cce432ee66be2c149b8c3df9d76197bca6ba27ed57641c88b80cad7d3c680"
+  },
+  {
+    "name": "party-card-cover",
+    "width": 112,
+    "height": 144,
+    "alpha": true,
+    "source": "story-source/party-card-cover.png",
+    "destination": "story/party-card-cover.png",
+    "sourceWidth": 1106,
+    "sourceHeight": 1422,
+    "crop": {
+      "left": 118,
+      "top": 147,
+      "width": 872,
+      "height": 1139
+    },
+    "sha256": "b1a7f1ca4f92697c150d9c7378251d08e1406724d5cf6e89cdb792bc26ec6982"
+  },
+  {
+    "name": "party-card-open",
+    "width": 200,
+    "height": 168,
+    "alpha": true,
+    "fit": "fill",
+    "source": "story-source/party-card-open.png",
+    "destination": "story/party-card-open.png",
+    "sourceWidth": 1368,
+    "sourceHeight": 1149,
+    "crop": {
+      "left": 31,
+      "top": 173,
+      "width": 1309,
+      "height": 800
+    },
+    "sha256": "8eaeb93a53b03283a90988a4ec7e3dd69ee76e951a83885e3ffe82595c8644ef"
+  },
+  {
+    "name": "union-folded",
+    "width": 88,
+    "height": 56,
+    "alpha": true,
+    "source": "story-source/union-folded.png",
+    "destination": "story/union-folded.png",
+    "sourceWidth": 1572,
+    "sourceHeight": 1001,
+    "crop": {
+      "left": 131,
+      "top": 175,
+      "width": 1313,
+      "height": 701
+    },
+    "sha256": "166f6ae3385fa95251b147171970ed6621e4084a473db66c75f82bb4e2e59142"
+  },
+  {
+    "name": "union-spread",
+    "width": 300,
+    "height": 180,
+    "alpha": true,
+    "fit": "fill",
+    "source": "story-source/union-spread.png",
+    "destination": "story/union-spread.png",
+    "sourceWidth": 1619,
+    "sourceHeight": 971,
+    "crop": {
+      "left": 16,
+      "top": 66,
+      "width": 1588,
+      "height": 843
+    },
+    "sha256": "4601d19acd3b0105feed6ed0511330753daad64eeb760817f9a3d3edf6686964"
+  },
+  {
+    "name": "union-masthead-pl",
+    "width": 268,
+    "height": 30,
+    "alpha": true,
+    "fit": "fill",
+    "source": "story-source/union-masthead-pl.png",
+    "destination": "story/union-masthead-pl.png",
+    "sourceWidth": 1967,
+    "sourceHeight": 799,
+    "crop": {
+      "left": 26,
+      "top": 192,
+      "width": 1923,
+      "height": 427
+    },
+    "sha256": "2c7e2ac1f57fbc91635f1a1638519e736a37f9d58fa9ad4bf55f3c95ebd8f0ef"
+  },
+  {
+    "name": "union-masthead-en",
+    "width": 268,
+    "height": 30,
+    "alpha": true,
+    "fit": "fill",
+    "source": "story-source/union-masthead-en.png",
+    "destination": "story/union-masthead-en.png",
+    "sourceWidth": 1983,
+    "sourceHeight": 793,
+    "crop": {
+      "left": 22,
+      "top": 186,
+      "width": 1941,
+      "height": 426
+    },
+    "sha256": "69982e0014815c8597699f4471b4186590dc2c289b2abeb16c1bb0d0560caf12"
+  }
+]

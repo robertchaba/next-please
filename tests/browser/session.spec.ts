@@ -1,3 +1,4 @@
+import { createInitialState as createRoutineState } from '../fixtures/routine';
 import { PATIENTS } from '../../src/core/patients';
 import { loadKnownQueue, knownQueueState } from './fixtures';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
@@ -147,7 +148,7 @@ for (const phase of ['intro', 'cabinet'] as const) {
     await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'break-room');
     await expect(page.getByRole('button', { name: 'TECZKA ZAPISÓW' })).toBeFocused();
     await activate(page, 'saves');
-    const state = { ...createInitialState(), phase, introStep: phase === 'cabinet' ? 3 : 2, day: 7, money: 30, patientsProcessed: 4 };
+    const state = { ...createRoutineState(), phase, introStep: phase === 'cabinet' ? 3 : 2, day: 7, money: 30, patientsProcessed: 4 };
     await importState(page, state);
     await expect(page.getByRole('status')).toContainText('Zapis wczytany');
     await expect(page.getByRole('dialog')).toContainText('DZIEŃ: 7');
@@ -182,7 +183,7 @@ test('a delayed import cannot overwrite a newly restarted game', async ({ page }
   const reading = page.evaluate(() => new Promise<void>(resolve => {
     window.addEventListener('delayed-save-ready', () => resolve(), { once: true });
   }));
-  await importState(page, { ...createInitialState(), day: 42, introStep: 2, money: 999 }, 'delayed.npsave');
+  await importState(page, { ...createRoutineState(), day: 42, introStep: 2, money: 999 }, 'delayed.npsave');
   await reading;
   await expect(page.getByRole('status')).toContainText('Odczytywanie akt');
   await activate(page, 'back');

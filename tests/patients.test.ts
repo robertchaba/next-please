@@ -1,7 +1,9 @@
+import { STORY_PATIENT_FIRST_ID, STORY_CHARACTER_COUNT } from '../src/core/story-patients';
+import { createInitialState } from './fixtures/routine';
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { CURATED_CASE_START, CASES_PER_IDENTITY, PATIENT_IDENTITIES, patientIdentity, CHARACTER_COUNT, GENERAL_FINDING_COUNT, JOBS, LEGACY_CASE_COUNT, PATIENTS, REQUIREMENTS, createRoster, decisionForFindings, generalFindingIndex, hasRequiredExaminations, significantVisionDefect, disqualifyingPressure, veryHighPressure, patientAge } from '../src/core/patients';
-import { applyAction, createInitialState, type GameAction } from '../src/core/game';
+import { applyAction, type GameAction } from '../src/core/game';
 import { ADDITIONAL_PORTRAITS } from '../src/core/patient-identities';
 import { gameDate } from '../src/core/calendar';
 import { translations } from '../src/i18n';
@@ -98,13 +100,13 @@ describe('patient and occupation catalog', () => {
     }
   });
 
-  it('provides 188 portraits, 48 occupations and 27 localized employers with stable references', () => {
+  it('provides 188 ordinary and 10 story portraits, 59 occupations and 44 localized employers', () => {
     expect(CHARACTER_COUNT).toBe(188);
-    expect(PATIENTS).toHaveLength(6193);
-    expect(JOBS).toHaveLength(48);
-    expect(new Set(PATIENTS.map(patient => patient.characterId)).size).toBe(188);
-    expect(new Set(PATIENTS.map(patient => patient.jobId)).size).toBe(48);
-    expect(new Set(PATIENTS.map(patient => patient.employerId)).size).toBe(27);
+    expect(PATIENTS).toHaveLength(6211);
+    expect(JOBS).toHaveLength(59);
+    expect(new Set(PATIENTS.map(patient => patient.characterId)).size).toBe(CHARACTER_COUNT + STORY_CHARACTER_COUNT);
+    expect(new Set(PATIENTS.map(patient => patient.jobId)).size).toBe(59);
+    expect(new Set(PATIENTS.map(patient => patient.employerId)).size).toBe(44);
     for (const [id, patient] of PATIENTS.entries()) {
       expect(patient.id).toBe(id);
       expect(JOBS[patient.jobId]).toBeDefined();
@@ -185,7 +187,7 @@ describe('patient and occupation catalog', () => {
       expect(unfit).toBeLessThanOrEqual(Math.floor(CHARACTER_COUNT * 0.33));
       expect(roster.every(id => id >= CURATED_CASE_START)).toBe(true);
     }
-    expect(seenCases.size).toBe(PATIENTS.length - CURATED_CASE_START);
+    expect(seenCases.size).toBe(STORY_PATIENT_FIRST_ID - CURATED_CASE_START);
   });
 
   it('completes a visit with its own required tests and does not penalize an unrelated finding', () => {
@@ -235,10 +237,10 @@ describe('numerical clinical findings', () => {
   });
 
   it('covers eighteen fixed general findings, each disqualifying every job profile', () => {
-    const abnormal = PATIENTS.filter(patient => patient.general === 'refer');
+    const abnormal = PATIENTS.slice(0, STORY_PATIENT_FIRST_ID).filter(patient => patient.general === 'refer');
     expect(new Set(abnormal.map(generalFindingIndex)).size).toBe(GENERAL_FINDING_COUNT);
     expect(GENERAL_FINDING_COUNT).toBe(18);
-    for (const patient of PATIENTS) {
+    for (const patient of PATIENTS.slice(0, STORY_PATIENT_FIRST_ID)) {
       const finding = generalFindingIndex(patient);
       if (patient.general === 'pass') { expect(finding).toBeNull(); continue; }
       expect(finding).toBeGreaterThanOrEqual(0);
@@ -247,8 +249,8 @@ describe('numerical clinical findings', () => {
       for (const job of JOBS) expect(decisionForFindings(job.requirementId, { general: patient.general, vision: 'pass', pressure: 'pass' })).toBe('unfit');
     }
     for (const t of Object.values(translations)) {
-      expect(t.generalFindings).toHaveLength(GENERAL_FINDING_COUNT);
-      expect(new Set(t.generalFindings).size).toBe(GENERAL_FINDING_COUNT);
+      expect(t.generalFindings).toHaveLength(GENERAL_FINDING_COUNT + 1);
+      expect(new Set(t.generalFindings.slice(0, GENERAL_FINDING_COUNT)).size).toBe(GENERAL_FINDING_COUNT);
     }
   });
 });

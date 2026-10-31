@@ -1,3 +1,6 @@
+import { storyContactResponse, type StoryContactResponseId } from './core/story-content';
+import { storyPatientForId } from './core/story-patients';
+import { epilogueButtons, epilogueContent, epilogueDescription, epilogueDocumentPages, renderEpilogue, type EpilogueAction } from './scenes/epilogue';
 import { newspaperDescription, newspaperPageCount, type NewspaperViews } from './render/newspaper';
 import { CLASSIFIED_CALL_RESULTS, type ClassifiedCallResult } from './core/newspaper';
 import './style.css';
@@ -15,7 +18,7 @@ import { installDeskInput } from './core/desk-input';
 import { drawCreatorPortrait, drawPaper, drawPanelIllustration, loadClinicArt, PATIENT_MOTION_FRAMES, type CabinetArtOptions } from './render/clinic';
 import { drawText } from './render/font';
 import { drawHelpText, helpLayout, HELP_PANEL, HELP_VIEW } from './render/help';
-import { paperClipTargetRect, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries } from './render/paperwork';
+import { paperClipTargetRect, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries, paperPagination } from './render/paperwork';
 import { paginateNoteEntries, notePageLabel } from './render/note-pages';
 import { drawerButtons, drawerDescription, renderDrawer, type DrawerAction } from './render/drawer';
 import { installCursor, installDisplay, WIDTH, HEIGHT } from './core/display';
@@ -26,7 +29,7 @@ import { createInitialState, downloadSave, importSave, SaveError } from './core/
 import { sharePage } from './core/share';
 import { releaseLabel } from './core/release';
 
-type Screen = 'welcome' | 'intro' | 'cabinet' | 'credits' | 'help' | 'saves' | 'break-room' | 'restart' | 'drawer' | 'home';
+type Screen = 'welcome' | 'intro' | 'cabinet' | 'credits' | 'help' | 'saves' | 'break-room' | 'restart' | 'drawer' | 'home' | 'epilogue';
 const app = document.querySelector<HTMLElement>('#app')!;
 let desktopActive = !app.hidden;
 let desktopFocus: string | undefined;
@@ -53,6 +56,7 @@ let selectedStamp: SelectedStamp = null;
 let feedback = '';
 let introCharacters = 0;
 let homePageIndex = 0;
+let epilogueDocumentPage: number | null = null;
 let typingKey = '';
 let activeMusicPlaylist: readonly string[] = musicPlaylist;
 let typingTimer: ReturnType<typeof setInterval> | undefined;
@@ -79,7 +83,7 @@ let inspectorFarewell: { inspectorId: number; remaining: number } | undefined;
 let visionSpeechAttempt = 0;
 let previousNormalComment = -1;
 let clinicSpeech: { emptyRoom?: boolean; comment?: ExaminationComment; speaker: 'doctor' | 'cleaner'; remaining: number } | undefined;
-let phoneCall: ({ kind: 'specialist' | 'employer'; valid: boolean } | { kind: 'classified'; result: ClassifiedCallResult }) & { elapsed: number } | undefined;
+let phoneCall: ({ kind: 'specialist' | 'employer'; valid: boolean } | { kind: 'classified'; result: ClassifiedCallResult } | { kind: 'story'; response: StoryContactResponseId }) & { elapsed: number } | undefined;
 let phoneToneTimer: ReturnType<typeof setTimeout> | undefined;
 let interruptedPatient: number | undefined;
 // Delivery is presentation only: consequences and correspondence are already saved.
@@ -106,7 +110,7 @@ function deskItemHelp(id: DeskItemId): string {
   if (id.startsWith('paper-')) {
     const paper = gameState.papers.find(record => record.id === Number(id.slice(6)));
     if (paper?.kind === 'additional-referral') return t().additionalTests.selectionHelp;
-    return paper && (paper.kind === 'letter' || paper.kind === 'directive') && !paper.opened ? t().letterHelp : t().paperHelp;
+    return paper && (paper.kind === 'letter' || paper.kind === 'directive' || paper.kind === 'story-document') && !paper.opened ? t().letterHelp : t().paperHelp;
   }
   return t().dragHelp;
 }
@@ -169,6 +173,7 @@ function stopPhone(): void {
 function phoneCallText(): string | undefined {
   if (!phoneCall) return;
   const d = t().progression.dialogue;
+  if (phoneCall.kind === 'story') return phoneCall.elapsed < 3900 ? d.dialing : t().story.phones[phoneCall.response];
   if (phoneCall.kind === 'classified') return phoneCall.elapsed < 3900 ? d.dialing : t().feedback[phoneCall.result];
   if (phoneCall.elapsed < 1500) return d.dialing;
   if (phoneCall.elapsed < 3300) return d[phoneCall.kind === 'specialist' ? 'specialistQuestion' : 'employerQuestion'];
@@ -210,6 +215,22 @@ function advanceHome(): void {
   else if (gameState.ending === 'bankruptcy') restartGame();
   else if (gameState.ending === 'hospital') { screen = 'break-room'; syncControls('restart'); }
   else handleShiftAction('next-day');
+}
+
+function handleEpilogue(action: EpilogueAction): void {
+  if (action === 'continue') {
+    if (gameState.story.resolution?.terminal) { screen = 'break-room'; syncControls('restart'); return; }
+    const result = performAction('continue-story');
+    gameState = result.state;
+    if (result.feedback === 'limit-reached') { notify(t().feedback[result.feedback]); return; }
+    epilogueDocumentPage = null; clearPatientMotion(); stopPhone(); reconcileDeskPapers();
+    screen = gameState.phase; clockMinutes = gameState.clockMinutes; clockTransition = undefined;
+    syncControls('call-patient'); return;
+  }
+  const count = epilogueDocumentPages(gameState, locale).length;
+  epilogueDocumentPage = action === 'close-document' ? null : action === 'document' ? 0
+    : Math.max(0, Math.min(count - 1, (epilogueDocumentPage ?? 0) + (action === 'next' ? 1 : -1)));
+  playEffect('paper'); syncControls(epilogueDocumentPage === null ? 'epilogue-document' : 'epilogue-close-document');
 }
 
 function startShift(): void {
@@ -269,7 +290,7 @@ function clinicSpeechText(): string {
 /** Every action path, including carrying and drawer operations, observes closing. */
 function performAction(action: GameAction): ActionResult {
   const elapsed = sampleClinicClock();
-  if (elapsed?.state.phase === 'home') return elapsed;
+  if (elapsed && elapsed.state.phase !== 'cabinet') return elapsed;
   const previous = gameState;
   const result = applyAction(previous, action);
   acceptResult(previous, result);
@@ -284,7 +305,7 @@ function acceptResult(previous: GameState, result: ActionResult): void {
   if (gameState === previous) return;
   if (gameState.day !== previous.day) {
     // Give yesterday's physical copy a dated identity before today's delivery.
-    const old = previous.newspaperCopies.find(copy => copy.day === previous.day && copy.location === 'desk');
+    const old = previous.newspaperCopies.find(copy => copy.day === previous.day && copy.publication !== 'glos' && copy.location === 'desk');
     if (old && deskState.positions.newspaper) {
       const id = newspaperItemId(old.day, gameState.day);
       deskState = addDeskItem(deskState, id, deskState.positions.newspaper);
@@ -298,6 +319,9 @@ function acceptResult(previous: GameState, result: ActionResult): void {
     if (paper.kind === 'letter' && paper.id >= previous.nextPaperId) {
       pendingLetters.set(paper.id, { patientId: paper.patientId, remaining: 2000 });
     }
+  }
+  if (gameState.papers.some(paper => paper.kind === 'story-document' && !paper.opened && paper.id >= previous.nextPaperId)) {
+    notify(t().story.ui.received);
   }
   if (previous.phase === 'cabinet' && previous.clockMinutes < CLEANER_WARNING_MINUTES && gameState.clockMinutes >= CLEANER_WARNING_MINUTES) {
     clinicSpeech = { speaker: 'cleaner', remaining: 3600 };
@@ -333,8 +357,8 @@ function setNewspaperOpen(id: NewspaperDeskItemId, open: boolean): void {
 }
 
 function newspaperReadingDescription(): string {
-  return gameState.newspaperCopies.filter(copy => copy.location === 'desk' && newspaperViews[newspaperItemId(copy.day, gameState.day)]?.open)
-    .map(copy => newspaperDescription(copy, copy.day, locale, newspaperViews[newspaperItemId(copy.day, gameState.day)]!.page)).join(' ');
+  return gameState.newspaperCopies.filter(copy => copy.location === 'desk' && newspaperViews[newspaperItemId(copy.day, gameState.day, copy.publication)]?.open)
+    .map(copy => newspaperDescription(copy, copy.day, locale, newspaperViews[newspaperItemId(copy.day, gameState.day, copy.publication)]!.page)).join(' ');
 }
 
 function setManualOpen(open: boolean): void {
@@ -376,13 +400,13 @@ function arrangeDocumentGroup(active: DeskItemId, held: boolean, raise = false):
 }
 
 function reconcileDeskPapers(): void {
-  const copies = new Set(gameState.newspaperCopies.filter(copy => copy.location === 'desk').map(copy => newspaperItemId(copy.day, gameState.day)));
+  const copies = new Set(gameState.newspaperCopies.filter(copy => copy.location === 'desk').map(copy => newspaperItemId(copy.day, gameState.day, copy.publication)));
   for (const id of deskState.order) if (isNewspaperItem(id) && !copies.has(id)) {
     deskState = removeDeskItem(deskState, id); delete newspaperViews[id];
   }
   for (const id of copies) {
     const added = !deskState.positions[id];
-    deskState = addDeskItem(deskState, id, NEWSPAPER_SHELF_POSITION);
+    deskState = addDeskItem(deskState, id, id.startsWith('union-') ? { x: NEWSPAPER_SHELF_POSITION.x - 18, y: NEWSPAPER_SHELF_POSITION.y - 13 } : NEWSPAPER_SHELF_POSITION);
     // Imported older copies sit under the fresh delivery until picked up.
     if (added && id !== 'newspaper' && deskState.order.includes('newspaper')) {
       const order = deskState.order.filter(item => item !== id);
@@ -440,25 +464,25 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
   if (action === 'reserved-form') return;
   if (typeof action === 'object') {
     if (action.type === 'read-newspaper') {
-      const copy = gameState.newspaperCopies.find(copy => copy.day === action.day && copy.location === 'desk');
+      const copy = gameState.newspaperCopies.find(copy => copy.day === action.day && (copy.publication ?? 'kurier') === (action.publication ?? 'kurier') && copy.location === 'desk');
       if (!copy) return;
-      const id = newspaperItemId(copy.day, gameState.day);
+      const id = newspaperItemId(copy.day, gameState.day, copy.publication);
       const reading = newspaperViews[id] ?? { open: false, page: 0 };
       if (action.turn === 'next' || action.turn === 'prev') {
         if (!reading.open) return;
-        newspaperViews[id] = { open: true, page: Math.max(0, Math.min(newspaperPageCount(copy) - 1, reading.page + (action.turn === 'next' ? 1 : -1))) };
+        newspaperViews[id] = { open: true, page: Math.max(0, Math.min(newspaperPageCount(copy, locale) - 1, reading.page + (action.turn === 'next' ? 1 : -1))) };
       } else setNewspaperOpen(id, action.turn === 'toggle' && !reading.open);
       spendTime('read-manual'); playEffect('paper');
       const next = newspaperViews[id]!;
       feedback = next.open ? newspaperDescription(copy, copy.day, locale, next.page) : t().newspaper.closed;
-      syncControls(!next.open ? id : next.page === newspaperPageCount(copy) - 1 ? `${id}-prev` : `${id}-next`);
+      syncControls(!next.open ? id : next.page === newspaperPageCount(copy, locale) - 1 ? `${id}-prev` : `${id}-next`);
       document.querySelector('#announcement')!.textContent = feedback;
       return;
     }
     if (action.type === 'store-drawer-item' || action.type === 'retrieve-drawer-item') return;
     if (action.type === 'call-classified') {
-      const id = newspaperItemId(action.day, gameState.day), reading = newspaperViews[id];
-      const copy = gameState.newspaperCopies.find(copy => copy.day === action.day);
+      const id = newspaperItemId(action.day, gameState.day, action.publication), reading = newspaperViews[id];
+      const copy = gameState.newspaperCopies.find(copy => copy.day === action.day && (copy.publication ?? 'kurier') === (action.publication ?? 'kurier'));
       if (heldItem !== null || !reading?.open || reading.page !== copy?.articleIds.length) return;
       const result = performAction(action);
       gameState = result.state;
@@ -473,10 +497,10 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     }
     const paper = 'paperId' in action ? gameState.papers.find(record => record.id === action.paperId) : undefined;
     if (action.type === 'note-page') {
-      if (paper?.kind !== 'note' || paper.location !== 'desk' || heldItem !== null || deskRect(`paper-${paper.id}`).x < RIGHT_DESK_X) return;
-      const entries = noteEntries(paper, locale);
-      const current = paginateNoteEntries(entries, deskRect(`paper-${paper.id}`).w - 22, notePages[paper.id]);
-      const next = paginateNoteEntries(entries, deskRect(`paper-${paper.id}`).w - 22, current.page + action.direction);
+      if (!paper || !paperPagination(paper, locale, 0, gameState.story) || paper.location !== 'desk' || heldItem !== null || deskRect(`paper-${paper.id}`).x < RIGHT_DESK_X) return;
+      const paginate = (page = 0) => paperPagination(paper, locale, page, gameState.story)!;
+      const current = paginate(notePages[paper.id]);
+      const next = paginate(current.page + action.direction);
       if (next.page === current.page) return;
       notePages[paper.id] = next.page;
       spendTime('read-manual'); playEffect('paper');
@@ -485,7 +509,7 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
       return;
     }
     if (action.type === 'read-paper') {
-      if (paper) { spendTime('read-manual'); announceDesk(paperDescription(paper, locale, isDocumentClipped(gameState, paper.id)), `paper-${paper.id}`); }
+      if (paper) { spendTime('read-manual'); announceDesk(paperDescription(paper, locale, isDocumentClipped(gameState, paper.id), gameState.story), `paper-${paper.id}`); }
       return;
     }
     const previousState = gameState;
@@ -494,6 +518,16 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     if (result.feedback === 'visit-interrupted') { syncControls(); return; }
     updateClock(); reconcileDeskPapers();
     playEffect('paper');
+    if (action.type === 'call-story') {
+      stopPhone();
+      const source = paper?.kind === 'story-document' ? paper.data.definitionId : paper?.kind === 'referral' ? 'H-REF' : null;
+      const response = result.feedback === 'phone-ready' ? storyContactResponse(action.contactId, source, gameState.story, gameState.day) : null;
+      if (response) { playEffect('phone-dial'); phoneCall = { kind: 'story', response, elapsed: 0 }; }
+      const callFocus = paper ? `${paper.kind === 'referral' ? 'call-employer' : 'story-call'}-${paper.id}`
+        : `${newspaperItemId(action.day ?? gameState.day, gameState.day, 'kurier')}-call-story`;
+      announceDesk(response ? t().story.phones[response] : t().feedback[result.feedback], callFocus);
+      return;
+    }
     if (action.type === 'hand-inspection-paper') {
       const focus = finishInspectionPresentation(previousState) ?? 'talk-inspector';
       announceDesk(t().feedback[result.feedback], focus);
@@ -611,6 +645,10 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
     stopPhone(); clinicSpeech = undefined;
     animatePatient(gameState.visit!.patientId, 'enter');
     say(gameState.visit!.patientId, result.feedback === 'patient-returned' ? 'returned' : gameState.visit!.bribe === 'offered' ? 'bribe' : choosePatientSpeech('arrival', { day: gameState.day, patientId: gameState.visit!.patientId }));
+    const scripted = storyPatientForId(gameState.visit!.patientId);
+    if (scripted && result.feedback === 'patient-called') {
+      patientSpeech = t().story.speech[scripted.encounterId] ? { patientId: gameState.visit!.patientId, line: 'greeting', storyLine: scripted.encounterId, remaining: 4500, departure: false } : undefined;
+    }
   } else if (actual === 'take-document' && result.feedback === 'document-taken') {
     playEffect('paper'); focusId = 'run-general';
     if (gameState !== previousState) newSheet = `paper-${gameState.nextPaperId - 1}`;
@@ -680,6 +718,9 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
       say(previousState.visit.patientId, choosePatientSpeech('departure', {
         day: previousState.day, patientId: previousState.visit.patientId, decision: previousState.visit.decision,
       }), true);
+      const scripted = storyPatientForId(previousState.visit.patientId);
+      if (scripted) patientSpeech = scripted.encounterId === 'B1' && previousState.visit.decision === 'fit'
+        ? { patientId: previousState.visit.patientId, line: 'thanks', storyLine: 'thanks', remaining: 1500, departure: true } : undefined;
       animatePatient(previousState.visit.patientId, 'exit');
     }
     selectedStamp = null; playEffect('paper'); focusId = canEndDay(gameState) ? 'end-day' : 'call-patient';
@@ -699,6 +740,7 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
   }
   else if (actual === 'toggle-lamp') focusId = 'lamp';
   else if (actual === 'change-decoration') focusId = 'decoration';
+  if (screen === 'epilogue') { clearPatientMotion(); stopPhone(); epilogueDocumentPage = null; focusId = 'epilogue-document'; }
   syncControls(focusId);
   if (newSheet && carryNewSheet) {
     deskInput.pickUp(newSheet, false);
@@ -724,7 +766,7 @@ function handleDrawerAction(action: DrawerAction): void {
   }
   const result = performAction(action.type === 'paper'
     ? { type: 'retrieve-paper', paperId: action.id }
-    : action.type === 'newspaper' ? { type: 'retrieve-newspaper', day: action.day, drawer: activeDrawer }
+    : action.type === 'newspaper' ? { type: 'retrieve-newspaper', day: action.day, publication: action.publication, drawer: activeDrawer }
     : action.type === 'banknote' ? { type: 'retrieve-banknote', banknoteId: action.id }
     : { type: 'retrieve-drawer-item', item: action.item, drawer: activeDrawer });
   if (result.feedback === 'visit-interrupted') { syncControls(); return; }
@@ -739,7 +781,7 @@ function handleDrawerAction(action: DrawerAction): void {
   if (!['paper-retrieved', 'item-retrieved'].includes(result.feedback)) return;
   gameState = result.state;
   updateClock(); reconcileDeskPapers();
-  const id: DeskItemId = action.type === 'paper' ? `paper-${action.id}` : action.type === 'newspaper' ? newspaperItemId(action.day, gameState.day) : action.type === 'banknote' ? `banknote-${action.id}` : action.item === 'manual' ? 'manual' : `clip-${nextClipId++}`;
+  const id: DeskItemId = action.type === 'paper' ? `paper-${action.id}` : action.type === 'newspaper' ? newspaperItemId(action.day, gameState.day, action.publication) : action.type === 'banknote' ? `banknote-${action.id}` : action.item === 'manual' ? 'manual' : `clip-${nextClipId++}`;
   if (id.startsWith('clip-')) deskState = addDeskItem(deskState, id, { x: 304, y: 155 });
   screen = 'cabinet';
   deskInput.pickUp(id, false);
@@ -755,7 +797,7 @@ function openScreen(next: Screen, trigger = 'start'): void {
 function closeScreen(): void {
   deskInput.cancel();
   if (screen === 'drawer') { screen = 'cabinet'; syncControls(activeDrawer); return; }
-  if (screen === 'cabinet' || screen === 'home') { goToMenu(); return; }
+  if (screen === 'cabinet' || screen === 'home' || screen === 'epilogue') { goToMenu(); return; }
   if (screen === 'break-room') { startShift(); return; }
   if (screen === 'restart') { screen = 'break-room'; syncControls('restart'); return; }
   const isPanel = screen === 'credits' || screen === 'help' || screen === 'saves';
@@ -828,6 +870,7 @@ function updateMusicMeter(): void {
 }
 
 function getButtons(): Button[] {
+  if (screen === 'epilogue') return epilogueButtons(gameState, locale, epilogueDocumentPage, handleEpilogue);
   if (screen === 'cabinet' && gameState.phase === 'home') return [];
   if (screen === 'home') return [{ id: 'home-next', label: introCharacters < typedContent().length ? t().home.reveal : homePage(gameState, locale, homePageIndex).action,
     ...HOME_ACTION, kind: 'text', action: advanceHome }];
@@ -905,7 +948,7 @@ function syncUtilityControls(modal: boolean): void {
   sessionControls.replaceChildren();
   utilityControls.inert = modal;
   sessionControls.inert = modal;
-  if (screen === 'cabinet' || screen === 'home') {
+  if (screen === 'cabinet' || screen === 'home' || screen === 'epilogue') {
     for (const [id, label, action] of [
       ['menu', t().menu, goToMenu],
       ['saves', t().archive, () => openScreen('saves', 'saves')],
@@ -975,6 +1018,11 @@ function syncControls(focusId?: string): void {
     screen = 'home'; homePageIndex = 0; typingKey = ''; startTyping(); focusId = 'home-next';
   }
 
+  if (gameState.phase === 'epilogue' && (screen === 'cabinet' || screen === 'drawer' || screen === 'home')) {
+    deskInput.cancel(); clearPatientMotion(); stopPhone(); clinicSpeech = undefined;
+    screen = 'epilogue'; epilogueDocumentPage = null; focusId = 'epilogue-document';
+  }
+
   // A canceled or rejected drop restores an older carry snapshot. Keep any
   // correspondence delivered meanwhile present in both geometry and controls.
   reconcileDeskPapers();
@@ -1000,10 +1048,10 @@ function syncControls(focusId?: string): void {
   buttons = getButtons();
   const heading = document.createElement('h1');
   heading.className = 'sr-only'; heading.id = 'screen-heading';
-  heading.textContent = screen === 'help' ? t().help.title : screen === 'home' ? homePage(gameState, locale, homePageIndex).title : screen === 'drawer' ? t().drawerNames[activeDrawer] : screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'break-room' ? t().breakRoomTitle : screen === 'restart' ? t().restartTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
+  heading.textContent = screen === 'epilogue' ? epilogueContent(gameState, locale).title : screen === 'help' ? t().help.title : screen === 'home' ? homePage(gameState, locale, homePageIndex).title : screen === 'drawer' ? t().drawerNames[activeDrawer] : screen === 'credits' ? t().creditsTitle : screen === 'saves' ? t().savesTitle : screen === 'break-room' ? t().breakRoomTitle : screen === 'restart' ? t().restartTitle : screen === 'intro' ? t().introTitle : screen === 'cabinet' ? t().cabinetTitle : 'Next, Please!';
   const description = document.createElement('p');
   description.className = 'sr-only'; description.id = 'screen-description';
-  description.textContent = screen === 'credits'
+  description.textContent = screen === 'epilogue' ? epilogueDescription(gameState, locale, epilogueDocumentPage) : screen === 'credits'
     ? `${t().creatorName}. ${t().creatorPortrait} ${t().aiSupport}. ${t().creditsFooter}`
     : screen === 'help' ? t().help.description
     : screen === 'home' ? `${homePage(gameState, locale, homePageIndex).description} ${homePage(gameState, locale, homePageIndex).text}`
@@ -1172,11 +1220,14 @@ function render(): void {
   const speechElement = document.getElementById('patient-speech')!;
   const speechText = screen === 'cabinet' && inspectorFarewell
     ? `${t().inspection.names[inspectorFarewell.inspectorId]}: ${t().inspection.farewell}`
-    : speech ? `${t().patientNames[speech.patientId]}: ${t().patientSpeech[speech.line]}` : '';
+    : speech ? `${t().patientNames[speech.patientId]}: ${speech.storyLine ? t().story.speech[speech.storyLine] : t().patientSpeech[speech.line]}` : '';
   if (speechElement.textContent !== speechText) speechElement.textContent = speechText;
   const clinicSpeechElement = document.getElementById('clinic-speech')!;
   const clinicText = screen === 'cabinet' ? [clinicSpeech ? `${t().examinationSpeech[clinicSpeech.speaker]}: ${clinicSpeechText()}` : '', phoneCallText() ?? ''].filter(Boolean).join(' ') : '';
   if (clinicSpeechElement.textContent !== clinicText) clinicSpeechElement.textContent = clinicText;
+  if (screen === 'epilogue') {
+    renderEpilogue(ctx, gameState, locale, epilogueDocumentPage); buttons.forEach(drawButton); drawToast(); return;
+  }
   if (screen === 'home') {
     renderHome(ctx, gameState, locale, homePageIndex, introCharacters);
     if (focused === 'home-next') outline(HOME_ACTION.x, HOME_ACTION.y, HOME_ACTION.w, HOME_ACTION.h, colors.bone);
@@ -1248,14 +1299,14 @@ fileInput.addEventListener('change', async () => {
     if (readId !== saveReadId) return;
     deskInput.cancel(); clearPatientMotion(); deskState = createDeskState();
     pendingLetters.clear(); stopPhone(); clinicSpeech = undefined; inspectorFarewell = undefined; interruptedPatient = undefined;
-    gameState = loadedState; homePageIndex = 0; typingKey = ''; shiftStarted = true; selectedStamp = null; feedback = '';
+    gameState = loadedState; epilogueDocumentPage = null; homePageIndex = 0; typingKey = ''; shiftStarted = true; selectedStamp = null; feedback = '';
     clinicClock.reset(performance.now());
     nextClipId = 1; reconcileDeskPapers();
     manualOpen = false; manualPage = 0; newspaperViews = {}; notePages = {}; clockMinutes = gameState.clockMinutes; clockTransition = undefined;
-    if (panelReturn === 'intro' || panelReturn === 'cabinet' || panelReturn === 'home') panelReturn = loadedState.phase;
+    if (panelReturn === 'intro' || panelReturn === 'cabinet' || panelReturn === 'home' || panelReturn === 'epilogue') panelReturn = loadedState.phase;
     // File reads can finish after the player closes the archive. Reconcile the
     // active scene as well as the saved data before rebuilding its controls.
-    if (screen === 'intro' || screen === 'cabinet' || screen === 'drawer' || screen === 'home') {
+    if (screen === 'intro' || screen === 'cabinet' || screen === 'drawer' || screen === 'home' || screen === 'epilogue') {
       drawerPage = 0; screen = loadedState.phase;
       if (screen === 'intro' || screen === 'home') startTyping();
     }
@@ -1440,10 +1491,10 @@ const deskInput = installDeskInput(stage, {
       return true;
     }
     if (isNewspaperItem(id) && (overDrawer || overTrash)) {
-      const copy = gameState.newspaperCopies.find(copy => newspaperItemId(copy.day, gameState.day) === id);
+      const copy = gameState.newspaperCopies.find(copy => newspaperItemId(copy.day, gameState.day, copy.publication) === id);
       if (!copy) return false;
       const previous = gameState;
-      const result = performAction({ type: overDrawer ? 'store-newspaper' : 'trash-newspaper', day: copy.day, drawer: overDrawer });
+      const result = performAction({ type: overDrawer ? 'store-newspaper' : 'trash-newspaper', day: copy.day, publication: copy.publication, drawer: overDrawer });
       if (result.feedback === 'visit-interrupted' || gameState.phase !== 'cabinet') { syncControls(); return true; }
       if (result.state === previous) { announceDesk(t().feedback[result.feedback], id); return false; }
       heldItem = null; delete newspaperViews[id];
@@ -1560,7 +1611,7 @@ const deskInput = installDeskInput(stage, {
         y: target.y - Math.floor(size.h / 2),
       }, false, false, open);
       spendTime('handle-item'); playEffect('paper');
-      const copy = gameState.newspaperCopies.find(copy => newspaperItemId(copy.day, gameState.day) === id)!;
+      const copy = gameState.newspaperCopies.find(copy => newspaperItemId(copy.day, gameState.day, copy.publication) === id)!;
       feedback = open ? newspaperDescription(copy, copy.day, locale, page) : t().newspaper.closed;
       document.querySelector('#announcement')!.textContent = feedback;
       acted = true;
@@ -1703,8 +1754,8 @@ document.addEventListener('keydown', event => {
     event.preventDefault();
     const openNewspaper = [...deskState.order].reverse().find(id => isNewspaperItem(id) && newspaperViews[id]?.open);
     if (screen === 'cabinet' && openNewspaper && (!manualOpen || deskState.order.indexOf(openNewspaper) > deskState.order.indexOf('manual'))) {
-      const copy = gameState.newspaperCopies.find(copy => newspaperItemId(copy.day, gameState.day) === openNewspaper)!;
-      handleShiftAction({ type: 'read-newspaper', day: copy.day, turn: 'close' });
+      const copy = gameState.newspaperCopies.find(copy => newspaperItemId(copy.day, gameState.day, copy.publication) === openNewspaper)!;
+      handleShiftAction({ type: 'read-newspaper', day: copy.day, publication: copy.publication, turn: 'close' });
     }
     else if (screen === 'cabinet' && manualOpen) handleShiftAction('manual-close');
     else closeScreen();

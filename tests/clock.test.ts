@@ -1,6 +1,7 @@
+import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
 import { ClinicClock } from '../src/core/clock';
-import { advanceClinicTime, applyAction, createInitialState, type GameAction } from '../src/core/game';
+import { advanceClinicTime, applyAction, type GameAction } from '../src/core/game';
 import { decodeSave, encodeSave } from '../src/core/save';
 
 const cabinet = () => applyAction(createInitialState(1234), 'skip-intro').state;

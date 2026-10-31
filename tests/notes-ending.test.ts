@@ -1,7 +1,8 @@
+import { createInitialState } from './fixtures/routine';
 import { historicalState, legacyBudget, withMigratedNewspaper } from './fixtures/legacy-budget';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, gunzipSync, strToU8 } from 'fflate';
-import { applyAction, advanceClinicTime, createInitialState, type GameAction, type GameState, type Paper } from '../src/core/game';
+import { applyAction, advanceClinicTime, type GameAction, type GameState, type Paper } from '../src/core/game';
 import { decodeSave, encodeSave } from '../src/core/save';
 import { noteEntries } from '../src/render/paperwork';
 import { homePage, homePages } from '../src/scenes/home';
@@ -102,7 +103,7 @@ describe('bankruptcy ending', () => {
       expect(act(state, 'next-day').day).toBe(2);
     }
     expect(decodeSave(encodeSave(bankrupt))).toEqual(bankrupt);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(bankrupt)))).version).toBe(34);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(bankrupt)))).version).toBe(35);
   });
 
   it('also ends at forced closing without awarding an unfinished appointment', () => {

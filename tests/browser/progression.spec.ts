@@ -1,6 +1,7 @@
+import { createInitialState } from '../fixtures/routine';
 import { readFile } from 'node:fs/promises';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { applyAction, createInitialState, type GameAction, type GameState, type Visit } from '../../src/core/game';
+import { applyAction, type GameAction, type GameState, type Visit } from '../../src/core/game';
 import { PATIENTS } from '../../src/core/patients';
 import { expectedVisitDecision } from '../../src/core/progression';
 import { decodeSave, encodeSave } from '../../src/core/save';

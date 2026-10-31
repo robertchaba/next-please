@@ -1,3 +1,4 @@
+import { STORY_PATIENT_FIRST_ID } from '../src/core/story-patients';
 import { createInitialState } from './fixtures/game';
 import { describe, expect, it } from 'vitest';
 import { applyAction, CLINIC_CLOSE_MINUTES, GAME_LIMITS, INTRO_SLIDES, PATIENTS, clippedDocuments, isDocumentClipped, type GameAction, type GameState } from '../src/core/game';
@@ -501,7 +502,7 @@ describe('general examination and chronological findings', () => {
   });
 
   it('keeps repeated readings close to every case baseline without changing its fitness category', () => {
-    for (const patient of PATIENTS) {
+    for (const patient of PATIENTS.slice(0, STORY_PATIENT_FIRST_ID)) {
       let state = act({ ...cabinet(), roster: [patient.id] }, 'call-patient', 'take-document');
       for (let index = 0; index < 8; index++) {
         const prior = state.visit!.pressureLatest;

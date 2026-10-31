@@ -1,6 +1,7 @@
+import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
-import { applyAction, createInitialState, type GameState } from '../src/core/game';
+import { applyAction, type GameState } from '../src/core/game';
 import { CLASSIFIEDS, CLASSIFIED_CALL_RESULTS, classifiedPhone, createNewspaper, nextNewspaper } from '../src/core/newspaper';
 import { decodeSave, encodeSave } from '../src/core/save';
 import { newspaperClassifiedLayout, newspaperDescription, newspaperPageCount, NEWSPAPER_BODY_BOTTOM, NEWSPAPER_COLUMN_WIDTH, NEWSPAPER_TITLE_WIDTH } from '../src/render/newspaper';
@@ -8,7 +9,7 @@ import { measureText, measureDocumentText } from '../src/render/font';
 import { translations } from '../src/i18n';
 import { historicalState } from './fixtures/legacy-budget';
 
-const file = (state: unknown, version = 34) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-31T12:00:00.000Z', state })));
+const file = (state: unknown, version = 35) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-31T12:00:00.000Z', state })));
 function next(state: GameState): GameState {
   let result = applyAction({ ...state, clockMinutes: 840 }, 'end-day').state;
   do { result = applyAction(result, 'next-day').state; } while (result.phase === 'home');

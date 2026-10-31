@@ -1,9 +1,10 @@
+import { newspaperTitle } from './newspaper';
 import { type DrawerId, type GameState, type Paper } from '../core/game';
 import type { Rect } from '../core/desk';
 import { formatGameDate } from '../core/calendar';
 import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
-import { drawDrawerInterior, drawPaperclip, drawBanknote, drawArchiveFolder, drawNewspaperArt } from './clinic';
+import { drawDrawerInterior, drawPaperclip, drawBanknote, drawArchiveFolder, drawNewspaperArt, drawStoryArt } from './clinic';
 import { drawManualCover } from './manual';
 import { paperDescription } from './paperwork';
 import { drawDocumentText, measureDocumentText } from './font';
@@ -14,7 +15,7 @@ export const DRAWER_NEWSPAPER_BATCH_SIZE = 8;
 export const DRAWER_CLOSE: Rect = { x: 0, y: 288, w: 570, h: 32 };
 const manualBounds: Rect = { x: 444, y: 216, w: 88, h: 48 };
 const clipBounds: Rect = { x: 363, y: 239, w: 62, h: 44 };
-export type DrawerAction = { type: 'newspaper'; day: number } | { type: 'paper'; id: number } | { type: 'item'; item: 'manual' | 'clip' } | { type: 'page'; page: number } | { type: 'close' } | { type: 'banknote'; id: number };
+export type DrawerAction = { type: 'newspaper'; day: number; publication?: 'kurier' | 'glos' } | { type: 'paper'; id: number } | { type: 'item'; item: 'manual' | 'clip' } | { type: 'page'; page: number } | { type: 'close' } | { type: 'banknote'; id: number };
 
 export function drawerNewspapers(state: GameState, page: number, drawer: DrawerId) {
   const copies = state.newspaperCopies.filter(copy => copy.location === drawer).sort((a, b) => a.day - b.day)
@@ -64,8 +65,8 @@ export function drawerDescription(state: GameState, locale: Locale, page: number
 export function drawerButtons(state: GameState, locale: Locale, page: number, onAction: (action: DrawerAction) => void, drawer: DrawerId = 'drawer'): Button[] {
   const t = translations[locale], sheets = drawerSheets(state, page, drawer), cash = storedCash(state, drawer);
   return [
-    ...drawerNewspapers(state, sheets.current, drawer).map(({ copy, bounds }): Button => ({ id: `drawer-newspaper-${copy.day}`, kind: 'hotspot', ...bounds,
-      label: `${t.drawerRetrieve}: ${t.newspaper.shortTitle} ${formatGameDate(copy.day, locale)}`, action: () => onAction({ type: 'newspaper', day: copy.day }),
+    ...drawerNewspapers(state, sheets.current, drawer).map(({ copy, bounds }): Button => ({ id: `drawer-${copy.publication === 'glos' ? 'union-' : ''}newspaper-${copy.day}`, kind: 'hotspot', ...bounds,
+      label: `${t.drawerRetrieve}: ${newspaperTitle(copy, locale)} ${formatGameDate(copy.day, locale)}`, action: () => onAction({ type: 'newspaper', day: copy.day, publication: copy.publication }),
     })),
     ...(cash.length ? [{ id: 'drawer-banknote', kind: 'hotspot' as const, ...cashBounds, label: `${t.drawerRetrieve}: ${t.progression.banknote}. ${t.drawerCash}: ${cash.length * 100} zł`, action: () => onAction({ type: 'banknote', id: cash.at(-1)!.id }) }] : []),
     ...sheets.visible.map(({ paper, bounds }): Button => ({ id: `drawer-paper-${paper.id}`, kind: 'hotspot', ...bounds,
@@ -99,8 +100,9 @@ export function renderDrawer(ctx: CanvasRenderingContext2D, state: GameState, lo
   }
   ctx.restore();
   for (const { copy, artwork } of drawerNewspapers(state, sheets.current, drawer)) {
-    drawNewspaperArt(ctx, false, artwork.x, artwork.y, artwork.w, artwork.h);
-    if (activeId === `drawer-newspaper-${copy.day}`) drawDocumentText(ctx, `${t.newspaper.shortTitle} ${formatGameDate(copy.day, locale)}`, artwork.x + 44, 23, { align: 'center', color: '#d9cfaa' });
+    if (copy.publication === 'glos') drawStoryArt(ctx, 'union-folded', artwork.x, artwork.y, artwork.w, artwork.h);
+    else drawNewspaperArt(ctx, false, artwork.x, artwork.y, artwork.w, artwork.h);
+    if (activeId === `drawer-${copy.publication === 'glos' ? 'union-' : ''}newspaper-${copy.day}`) drawDocumentText(ctx, `${newspaperTitle(copy, locale)} ${formatGameDate(copy.day, locale)}`, artwork.x + 44, 23, { align: 'center', color: '#d9cfaa' });
   }
   if (state.drawerItems[drawer].manual) drawManualCover(ctx, manualBounds, false);
   for (let index = 0; index < Math.min(8, state.drawerItems[drawer].clips); index++) {

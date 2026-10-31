@@ -1,5 +1,6 @@
 import { isWeekend } from '../../src/core/calendar';
 import { createNewspaper, newspaperCopy } from '../../src/core/newspaper';
+import { createStory } from '../../src/core/story';
 
 /** Reproduce the cash-as-opening-balance representation used before save v24. */
 export function legacyBudget(state: unknown): unknown {
@@ -29,6 +30,12 @@ export function legacyBudget(state: unknown): unknown {
 export function historicalState(state: unknown, version: number): unknown {
   if (!state || typeof state !== 'object') return state;
   const old = structuredClone(state) as Record<string, unknown>;
+  if (version < 35) {
+    delete old.story;
+    if (Array.isArray(old.newspaperCopies)) for (const copy of old.newspaperCopies) {
+      for (const key of ['id', 'publication', 'issueNumber', 'storyArticleIds', 'storyClassifiedIds']) delete copy[key];
+    }
+  }
   if (version < 34) {
     if (old.newspaper && typeof old.newspaper === 'object') delete (old.newspaper as Record<string, unknown>).classifiedIds;
     if (Array.isArray(old.newspaperCopies)) for (const copy of old.newspaperCopies) delete copy.classifiedIds;
@@ -49,5 +56,5 @@ export function withMigratedNewspaper(state: unknown): unknown {
   const newspaper = { ...createNewspaper((state.rngState ^ state.day) >>> 0), classifiedIds: [] };
   let day = state.day;
   while (isWeekend(day)) day--;
-  return { ...state, newspaper, newspaperCopies: day === 1 ? [] : [newspaperCopy(newspaper, day)] };
+  return { ...state, story: createStory('legacy-disabled'), newspaper, newspaperCopies: day === 1 ? [] : [newspaperCopy(newspaper, day)] };
 }

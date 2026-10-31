@@ -8,7 +8,7 @@ import { CABINET_HOTSPOTS, containsPoint, dropTargetRect } from '../src/core/des
 
 const act = (state: GameState, ...actions: GameAction[]) => actions.reduce((current, action) => applyAction(current, action).state, state);
 const cabinet = () => act(createInitialState(), 'skip-intro');
-const file = (state: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 34, savedAt: '2026-10-31T12:00:00.000Z', state })));
+const file = (state: unknown) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 35, savedAt: '2026-10-31T12:00:00.000Z', state })));
 
 describe.each(DRAWERS)('%s independent storage', drawer => {
   const other = drawer === 'drawer' ? 'drawer-2' : 'drawer';

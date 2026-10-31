@@ -1,6 +1,7 @@
+import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
 import { ADDITIONAL_TESTS } from '../src/core/additional-tests';
-import { applyAction, createInitialState, type Paper } from '../src/core/game';
+import { applyAction, type Paper } from '../src/core/game';
 import { PATIENTS } from '../src/core/patients';
 import { addDeskItem, CABINET_HOTSPOTS, createDeskState, PAPER_SIZE, itemRect } from '../src/core/desk';
 import { translations } from '../src/i18n';

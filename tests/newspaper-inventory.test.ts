@@ -1,6 +1,7 @@
+import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
-import { applyAction, createInitialState, type GameState } from '../src/core/game';
+import { applyAction, type GameState } from '../src/core/game';
 import { newspaperCopy } from '../src/core/newspaper';
 import { decodeSave, encodeSave } from '../src/core/save';
 import { DRAWER_NEWSPAPER_BATCH_SIZE, drawerButtons, drawerNewspapers, drawerSheets } from '../src/render/drawer';
@@ -13,7 +14,7 @@ function next(state: GameState): GameState {
   do { result = applyAction(result, 'next-day').state; } while (result.phase === 'home');
   return result;
 }
-const file = (state: unknown, version = 34) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-31T12:00:00.000Z', state })));
+const file = (state: unknown, version = 35) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-31T12:00:00.000Z', state: version < 35 ? historicalState(state, 34) : state })));
 
 describe('physical newspaper copies', () => {
   it('keeps dated editions across weekdays, weekends, both drawers and save imports', () => {

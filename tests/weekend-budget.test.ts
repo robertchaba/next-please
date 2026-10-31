@@ -1,7 +1,8 @@
+import { createInitialState } from './fixtures/routine';
 import { historicalState, legacyBudget, withMigratedNewspaper } from './fixtures/legacy-budget';
 import { gunzipSync, gzipSync, strToU8 } from 'fflate';
 import { describe, expect, it } from 'vitest';
-import { applyAction, createInitialState, type GameState } from '../src/core/game';
+import { applyAction, type GameState } from '../src/core/game';
 import { decodeSave, encodeSave, importSave } from '../src/core/save';
 import { createRoster } from '../src/core/patients';
 import { homePage, homePages } from '../src/scenes/home';
@@ -152,7 +153,7 @@ describe('weekend saves', () => {
     expect(next(decodeSave(encodeSave(fri)))).toEqual(sat);
     expect(next(decodeSave(encodeSave(sat)))).toEqual(next(sat));
     expect(applyAction(decodeSave(encodeSave(sat)), 'end-day').state).toEqual(sat);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(34);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(sat)))).version).toBe(35);
   });
 
   it('preserves the whole weekend budget through saving, month rollover and Monday', () => {

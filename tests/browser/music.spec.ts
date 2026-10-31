@@ -1,7 +1,8 @@
+import { createInitialState } from '../fixtures/routine';
 import { test, expect, type Page } from '@playwright/test';
 import { readdirSync } from 'node:fs';
 import type { Howl } from 'howler';
-import { applyAction, createInitialState } from '../../src/core/game';
+import { applyAction } from '../../src/core/game';
 import { encodeSave } from '../../src/core/save';
 
 const trackFiles = readdirSync(new URL('../../public/assets/audio/music/', import.meta.url))

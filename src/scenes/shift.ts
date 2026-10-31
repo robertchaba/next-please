@@ -1,6 +1,8 @@
-import { drawNewspaper, newspaperControls, newspaperPageCount, newspaperDescription, newspaperClassifiedLayout, type NewspaperViews } from '../render/newspaper';
+import { storyPatientForId } from '../core/story-patients';
+import { storyPaperLayout, storyPhoneRect } from '../render/story-paper';
+import { drawNewspaper, newspaperControls, newspaperPageCount, newspaperDescription, newspaperAds, newspaperIsClassifiedPage, newspaperTitle, type NewspaperViews } from '../render/newspaper';
 import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, drawDeskCalendar, drawBanknote, drawInspectionForm, type CabinetArtOptions } from '../render/clinic';
-import { drawPaperwork, paperDescription, paperActionRect, paperClipTargetRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries } from '../render/paperwork';
+import { drawPaperwork, paperDescription, paperActionRect, paperClipTargetRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries, paperPagination } from '../render/paperwork';
 import { paginateNoteEntries, notePageControls, notePageLabel } from '../render/note-pages';
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
@@ -16,12 +18,12 @@ import { isNewspaperItem, newspaperItemId, CABINET_HOTSPOTS, CLINICAL_PAPER_SIZE
 export { manualPageCount, manualPageDescription } from '../render/manual';
 
 export type ShiftAction = GameAction | 'select-fit' | 'select-unfit' | 'apply-stamp' | 'manual'
-  | { type: 'read-newspaper'; day: number; turn: 'toggle' | 'prev' | 'next' | 'close' }
+  | { type: 'read-newspaper'; day: number; publication?: 'kurier' | 'glos'; turn: 'toggle' | 'prev' | 'next' | 'close' }
   | 'manual-prev' | 'manual-next' | 'manual-close' | 'put-away-fit' | 'put-away-unfit'
   | 'take-clip' | 'drawer' | 'drawer-2' | 'trash' | 'reserved-form' | { type: 'read-paper'; paperId: number }
   | { type: 'note-page'; paperId: number; direction: -1 | 1 };
 export type SelectedStamp = 'fit' | 'unfit' | null;
-export type PatientSpeech = { patientId: number; line: keyof typeof translations.pl.patientSpeech };
+export type PatientSpeech = { patientId: number; line: keyof typeof translations.pl.patientSpeech; storyLine?: keyof typeof translations.pl.story.speech };
 export type DeskPresentation = {
   desk: DeskState; held: DeskItemId | null; heldItems?: readonly DeskItemId[];
   manualOpen: boolean; manualPage: number; newspaperViews?: NewspaperViews; clockMinutes?: number;
@@ -85,7 +87,7 @@ export function shiftDescription(state: GameState, locale: Locale, hiddenPaperId
       : state.inspection ? t.inspection.inspector : departingInspectorId !== undefined
         ? `${t.inspection.names[departingInspectorId]}: ${t.inspection.farewell}` : isShiftFinished(state) ? t.shiftDone : t.emptyChair,
     ...(visit?.certificateTaken ? [certificateDescription(state, locale)] : []),
-    ...state.papers.filter(paper => paper.location === 'desk' && !hiddenPaperIds.includes(paper.id)).map(paper => paperDescription(paper, locale, isDocumentClipped(state, paper.id))),
+    ...state.papers.filter(paper => paper.location === 'desk' && !hiddenPaperIds.includes(paper.id)).map(paper => paperDescription(paper, locale, isDocumentClipped(state, paper.id), state.story)),
   ].join(' ');
 }
 
@@ -150,31 +152,35 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     hotspot('trash', t.trash, dropTargetRect('trash', view.held, view.heldItems), 'trash'),
     ...state.papers.filter(paper => paper.location === 'desk' && !view.hiddenPaperIds?.includes(paper.id)).flatMap(paper => {
       const id: DeskItemId = `paper-${paper.id}`;
-      const action: ShiftAction = (paper.kind === 'letter' || paper.kind === 'directive') && !paper.opened ? { type: 'open-letter', paperId: paper.id }
+      const action: ShiftAction = (paper.kind === 'letter' || paper.kind === 'directive' || paper.kind === 'story-document') && !paper.opened ? { type: 'open-letter', paperId: paper.id }
         : { type: 'read-paper', paperId: paper.id };
       const bounds = visiblePaperRect(paper, itemRect(view.desk, id, false, isLifted(view, id)));
       const canAct = !isLifted(view, id) && bounds.x >= RIGHT_DESK_X
-        && ((paper.kind === 'letter' || paper.kind === 'directive') && !paper.opened);
+        && ((paper.kind === 'letter' || paper.kind === 'directive' || paper.kind === 'story-document') && !paper.opened);
       const callable = !isLifted(view, id) && bounds.x >= RIGHT_DESK_X && paper.day === state.visit?.startedDay && paper.patientId === state.visit?.patientId
         && ((paper.kind === 'specialist' && workDayNumber(state.day) >= 4) || (paper.kind === 'referral' && workDayNumber(state.day) >= 5));
       const selectable = paper.kind === 'additional-referral' && paper.patientId === state.visit?.patientId && paper.day === state.visit?.startedDay
         && !isLifted(view, id) && bounds.x >= RIGHT_DESK_X;
-      const note = paper.kind === 'note' ? paginateNoteEntries(noteEntries(paper, locale), CLINICAL_PAPER_SIZE.w - 22, view.notePages?.[paper.id]) : undefined;
+      const note = paperPagination(paper, locale, view.notePages?.[paper.id], state.story);
+      const storyContact = paper.kind === 'story-document' && paper.opened ? storyPaperLayout(paper, locale, 0, 200, state.story).copy.contact : null;
       const noteCorners = notePageControls(bounds);
       const canTurnNote = note && note.count > 1 && !isLifted(view, id) && bounds.x >= RIGHT_DESK_X;
-      const description = paperDescription(paper, locale, isDocumentClipped(state, paper.id))
-        + (note && note.count > 1 ? ` ${notePageLabel(locale, note.page, note.count)}. ${t.notePagination.help}` : '');
+      const pageLabels = paper.kind === 'note' ? { previous: t.notePagination.previous, next: t.notePagination.next } : { previous: t.story.ui.previousPage, next: t.story.ui.nextPage };
+      const pageLabel = (page: number) => paper.kind === 'note' ? notePageLabel(locale, page, note!.count) : `${t.story.ui.page} ${page + 1}/${note!.count}`;
+      const description = paperDescription(paper, locale, isDocumentClipped(state, paper.id), state.story)
+        + (note && note.count > 1 ? ` ${pageLabel(note.page)}. ${t.notePagination.help}` : '');
       return [{ ...item(id, description, id, action), ...bounds },
-        ...(canTurnNote && note.page > 0 ? [{ ...hotspot(`note-prev-${paper.id}`, `${t.notePagination.previous}. ${notePageLabel(locale, note.page - 1, note.count)}`, noteCorners.previous,
+        ...(canTurnNote && note.page > 0 ? [{ ...hotspot(`note-prev-${paper.id}`, `${pageLabels.previous}. ${pageLabel(note.page - 1)}`, noteCorners.previous,
           { type: 'note-page', paperId: paper.id, direction: -1 }), owner: id }] : []),
-        ...(canTurnNote && note.page < note.count - 1 ? [{ ...hotspot(`note-next-${paper.id}`, `${t.notePagination.next}. ${notePageLabel(locale, note.page + 1, note.count)}`, noteCorners.next,
+        ...(canTurnNote && note.page < note.count - 1 ? [{ ...hotspot(`note-next-${paper.id}`, `${pageLabels.next}. ${pageLabel(note.page + 1)}`, noteCorners.next,
           { type: 'note-page', paperId: paper.id, direction: 1 }), owner: id }] : []),
         ...(selectable ? ADDITIONAL_TESTS.map(test => ({ ...hotspot(`select-additional-test-${paper.id}-${test}`,
           `${t.additionalTests.choose}: ${t.additionalTests.tests[test]}`, additionalTestRect(bounds, test),
           { type: 'select-additional-test', paperId: paper.id, test }), owner: id, pressed: paper.test === test })) : []),
+        ...(paper.kind === 'story-document' && paper.opened && storyContact && !isLifted(view, id) && bounds.x >= RIGHT_DESK_X ? [{ ...hotspot(`story-call-${paper.id}`, t.story.ui.call, storyPhoneRect(bounds), { type: 'call-story', paperId: paper.id, contactId: storyContact }), owner: id }] : []),
         ...(callable ? [{ ...hotspot(`${paper.kind === 'specialist' ? 'call-specialist' : 'call-employer'}-${paper.id}`,
           paper.kind === 'specialist' ? t.progression.callSpecialist : t.progression.callEmployer, paperPhoneRect(bounds),
-          paper.kind === 'specialist' ? 'call-specialist' : 'call-employer'), owner: id }] : []),
+          paper.kind === 'specialist' ? 'call-specialist' : paper.kind === 'referral' && storyPatientForId(paper.patientId)?.encounterId === 'H1' ? { type: 'call-story', paperId: paper.id, contactId: 'CALL-WAREHOUSE' } : 'call-employer'), owner: id }] : []),
         ...(canAct ? [{ ...hotspot(`paper-action-${paper.id}`, t.paperwork.open, paperActionRect(bounds), action), owner: id }] : []),
         ...(!isLifted(view, id) && visibleDocumentClip(state, paper.id, view)
           ? [{ ...hotspot(`paper-clip-${paper.id}`, t.paperwork.unclip, paperClipTargetRect(bounds, view.held), { type: 'unclip-document', documentId: paper.id }), owner: id }] : [])];
@@ -182,20 +188,22 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     ...view.desk.order.filter(id => id.startsWith('clip-')).map(id => item(id, t.paperwork.paperclip, id)),
     { ...item('stamp-fit', t.stampFit, 'stamp-fit', 'select-fit'), pressed: selected === 'fit' },
     { ...item('stamp-unfit', t.stampUnfit, 'stamp-unfit', 'select-unfit'), pressed: selected === 'unfit' },
-    ...state.newspaperCopies.filter(copy => copy.location === 'desk' && view.desk.positions[newspaperItemId(copy.day, state.day)]).flatMap(copy => {
-      const id = newspaperItemId(copy.day, state.day), reading = view.newspaperViews?.[id];
+    ...state.newspaperCopies.filter(copy => copy.location === 'desk' && view.desk.positions[newspaperItemId(copy.day, state.day, copy.publication)]).flatMap(copy => {
+      const id = newspaperItemId(copy.day, state.day, copy.publication), reading = view.newspaperViews?.[id];
       const page = reading?.page ?? 0;
       const bounds = itemRect(view.desk, id, false, false, false, reading?.open);
       const corners = newspaperControls(bounds);
-      return [item(id, `${t.newspaper.title}. ${formatGameDate(copy.day, locale)}. ${reading?.open ? newspaperDescription(copy, copy.day, locale, page) : t.newspaper.open}`, id, { type: 'read-newspaper', day: copy.day, turn: 'toggle' }),
+      const ads = newspaperAds(copy, locale);
+      return [item(id, `${newspaperTitle(copy, locale)}. ${formatGameDate(copy.day, locale)}. ${reading?.open ? newspaperDescription(copy, copy.day, locale, page) : t.newspaper.open}`, id, { type: 'read-newspaper', day: copy.day, publication: copy.publication, turn: 'toggle' }),
         ...(view.held !== id && reading?.open ? [
-          ...(page === copy.articleIds.length ? newspaperClassifiedLayout(copy.classifiedIds, locale).flatMap(ad => ad.phoneRect ? [{
+          ...(newspaperIsClassifiedPage(copy, locale, page) ? ads.ordinary.flatMap(ad => ad.phoneRect ? [{
             ...hotspot(`${id}-call-${ad.id}`, `${t.newspaper.callClassified}: ${t.newspaper.classifieds[ad.id]} ${ad.phoneText}`,
               { ...ad.phoneRect, x: bounds.x + ad.phoneRect.x, y: bounds.y + ad.phoneRect.y },
               { type: 'call-classified', day: copy.day, classifiedId: ad.id }), owner: id,
           }] : []) : []),
-          ...(page > 0 ? [{ ...hotspot(`${id}-prev`, t.newspaper.previous, corners.previous, { type: 'read-newspaper', day: copy.day, turn: 'prev' }), owner: id }] : []),
-          ...(page < newspaperPageCount(copy) - 1 ? [{ ...hotspot(`${id}-next`, t.newspaper.next, corners.next, { type: 'read-newspaper', day: copy.day, turn: 'next' }), owner: id }] : []),
+          ...(newspaperIsClassifiedPage(copy, locale, page) && ads.story ? [{ ...hotspot(`${id}-call-story`, `${t.story.ui.call}: ${ads.story.text}`, { ...ads.story.phoneRect, x: bounds.x + ads.story.phoneRect.x, y: bounds.y + ads.story.phoneRect.y }, { type: 'call-story', day: copy.day, contactId: ads.story.contactId }), owner: id }] : []),
+          ...(page > 0 ? [{ ...hotspot(`${id}-prev`, t.newspaper.previous, corners.previous, { type: 'read-newspaper', day: copy.day, publication: copy.publication, turn: 'prev' }), owner: id }] : []),
+          ...(page < newspaperPageCount(copy, locale) - 1 ? [{ ...hotspot(`${id}-next`, t.newspaper.next, corners.next, { type: 'read-newspaper', day: copy.day, publication: copy.publication, turn: 'next' }), owner: id }] : []),
         ] : []),
       ];
     }),
@@ -221,7 +229,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
   const patient = patientForVisit(state);
   drawCabinet(ctx, { patientId: visit?.patientId ?? view.departingPatientId ?? null, lampOn: state.lampOn, decoration: state.decoration,
     clockMinutes: view.clockMinutes ?? state.clockMinutes, patientMotion: view.patientMotion, inspectorId: state.inspection?.inspectorId ?? view.departingInspectorId });
-  if (view.patientSpeech) drawPatientSpeech(ctx, t.patientSpeech[view.patientSpeech.line]);
+  if (view.patientSpeech) drawPatientSpeech(ctx, view.patientSpeech.storyLine ? t.story.speech[view.patientSpeech.storyLine] : t.patientSpeech[view.patientSpeech.line]);
   drawDeskRests(ctx);
   drawWorkstationObjects(ctx, state.papers.filter(paper => paper.location !== 'desk').length, workDayNumber(state.day) >= 7);
   drawDeskCalendar(ctx, state.day, locale);
@@ -242,7 +250,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     }
     if (id.startsWith('paper-')) {
       const paper = state.papers.find(entry => `paper-${entry.id}` === id && entry.location === 'desk');
-      if (paper && !view.hiddenPaperIds?.includes(paper.id)) drawPaperwork(ctx, paper, bounds, locale, lifted, visibleDocumentClip(state, paper.id, view), true, view.notePages?.[paper.id]);
+      if (paper && !view.hiddenPaperIds?.includes(paper.id)) drawPaperwork(ctx, paper, bounds, locale, lifted, visibleDocumentClip(state, paper.id, view), true, view.notePages?.[paper.id], state.story);
       continue;
     }
     if (id.startsWith('clip-')) {
@@ -250,7 +258,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
       continue;
     }
     if (isNewspaperItem(id)) {
-      const copy = state.newspaperCopies.find(copy => newspaperItemId(copy.day, state.day) === id && copy.location === 'desk');
+      const copy = state.newspaperCopies.find(copy => newspaperItemId(copy.day, state.day, copy.publication) === id && copy.location === 'desk');
       const reading = view.newspaperViews?.[id];
       if (copy) drawNewspaper(ctx, bounds, copy, copy.day, locale, reading?.open ?? false, reading?.page ?? 0, lifted);
       continue;

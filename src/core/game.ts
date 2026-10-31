@@ -1,5 +1,9 @@
 import { createNewspaper, nextNewspaper, newspaperCopy, classifiedPhone, CLASSIFIED_CALL_RESULTS, type ClassifiedId, type ClassifiedCallResult, type NewspaperState, type NewspaperCopy } from './newspaper';
 import { gameDate, isWeekend } from './calendar';
+import { createStory, finishStoryDay, presentStoryEnding, recordStoryContact, type NarrativeState } from './story';
+import { storyDocumentCopy, storyContactResponse, type StoryPaperData, type StoryContactId } from './story-content';
+import { storyPatientForEncounter, storyPatientForId } from './story-patients';
+import { arrangeStoryRoster, startStoryVisit, completedStoryVisit, finishStoryShift, storyMorningEnding, deliverStoryMorning } from './story-integration';
 import { additionalNoteEntry, additionalResultFor, additionalTestForJob, additionalTestForPatient, nextWorkingDay, type AdditionalNoteEntry, type AdditionalTest, type AdditionalResult, type PendingReferral } from './additional-tests';
 import { PATIENTS, CHARACTER_COUNT, randomStep, hasRequiredExaminations, compatiblePressureReading, type ExaminationId, type VisionValues, type PressureValues } from './patients';
 import { BASE_INSURANCE, emptyConsequences, settleDay, type DailyConsequences, type DaySettlement } from './economy';
@@ -29,7 +33,7 @@ export function isManualStored(state: GameState): boolean { return DRAWERS.some(
 export type Decision = 'fit' | 'unfit';
 export type TestResult = 'pass' | 'refer';
 export type DocumentId = number | 'certificate';
-export type NoteEntryId = ExaminationId | 'history' | 'pressure-repeat' | 'call-specialist' | 'call-employer' | AdditionalNoteEntry;
+export type NoteEntryId = ExaminationId | 'history' | 'pressure-repeat' | 'call-specialist' | 'call-employer' | AdditionalNoteEntry | `story-call:${StoryContactId}`;
 
 export { PATIENTS } from './patients';
 
@@ -48,6 +52,7 @@ interface PaperBase {
   location: StorageLocation;
 }
 export type Paper =
+  | (PaperBase & { kind: 'story-document'; patientId: number | null; opened: boolean; data: StoryPaperData })
   | (PaperBase & { kind: 'note'; patientId: number | null; results: NoteResults; examinationOrder: ExaminationId[]; noteOrder: NoteEntryId[]; additionalWritten: boolean; calls: PhoneConclusions; bribe: boolean })
   | (PaperBase & { kind: 'referral'; patientId: number; details: ReferralDetails })
   | (PaperBase & { kind: 'additional-referral'; patientId: number; test: AdditionalTest | null })
@@ -103,6 +108,7 @@ export interface Banknote {
 }
 
 export interface GameState {
+  story: NarrativeState;
   newspaper: NewspaperState;
   newspaperCopies: NewspaperCopy[];
   /** Unique admitted portraits, oldest appearance first; spans working days. */
@@ -124,7 +130,7 @@ export interface GameState {
   bribeIncome: number;
   banknotes: Banknote[];
   patientsProcessed: number;
-  phase: 'intro' | 'cabinet' | 'home';
+  phase: 'intro' | 'cabinet' | 'home' | 'epilogue';
   rngState: number;
   roster: number[];
   insuranceRate: number;
@@ -147,6 +153,8 @@ export interface GameState {
 }
 
 export type GameAction =
+  | 'continue-story'
+  | { type: 'call-story'; contactId: StoryContactId; paperId?: number; day?: number }
   | 'advance-intro' | 'skip-intro' | 'call-patient' | 'take-document' | 'take-certificate' | 'write-certificate'
   | 'run-general' | 'run-vision' | 'run-pressure' | 'run-measurements' | 'stamp-fit' | 'stamp-unfit'
   | 'end-day' | 'return-document' | 'toggle-lamp' | 'change-decoration' | 'next-day'
@@ -160,8 +168,8 @@ export type GameAction =
   | { type: 'accept-bribe'; location: Banknote['location'] }
   | { type: 'store-banknote' | 'retrieve-banknote' | 'return-banknote'; banknoteId: number; drawer?: DrawerId }
   | { type: 'store-drawer-item' | 'retrieve-drawer-item'; item: 'manual' | 'clip'; drawer?: DrawerId }
-  | { type: 'store-newspaper' | 'retrieve-newspaper' | 'trash-newspaper'; day: number; drawer?: DrawerId }
-  | { type: 'call-classified'; day: number; classifiedId: ClassifiedId }
+  | { type: 'store-newspaper' | 'retrieve-newspaper' | 'trash-newspaper'; day: number; publication?: 'kurier' | 'glos'; drawer?: DrawerId }
+  | { type: 'call-classified'; day: number; publication?: 'kurier' | 'glos'; classifiedId: ClassifiedId }
   | { type: 'write-note' | 'store-paper' | 'retrieve-paper' | 'trash-paper' | 'open-letter' | 'clip-paper'; paperId: number; drawer?: DrawerId }
   | { type: 'clip-document'; documentId: DocumentId }
   | { type: 'unclip-document'; documentId: DocumentId }
@@ -191,6 +199,7 @@ export function createInitialState(seed = globalThis.crypto.getRandomValues(new 
   const generated = createDailyRoster(seed >>> 0, 1);
   const newspaper = createNewspaper(seed);
   return {
+    story: createStory(),
     newspaper, newspaperCopies: [],
     portraitHistory: [],
     recentVisits: [], inspection: null, inspectionCheckedAt: 0, inspectionFines: 0,
@@ -264,7 +273,12 @@ function settleClinicDay(state: GameState) {
 /** Pure transitions: all results and rewards are reproducible from saved state. */
 export function applyAction(state: GameState, action: GameAction): ActionResult {
   const result = transition(state, action);
-  if (state.phase !== 'cabinet' || result.state === state || result.state.clockMinutes < CLINIC_CLOSE_MINUTES) return result;
+  if (state.phase !== 'cabinet' || result.state === state) return result;
+  if (result.state.clockMinutes < CLINIC_CLOSE_MINUTES) {
+    if (result.state.phase !== 'home') return result;
+    const finished = finishStoryShift(result.state);
+    return finished ? { ...result, state: finished } : { state, feedback: 'limit-reached' };
+  }
   // A procedure which reaches closing cannot finish the appointment. Settle
   // from its prior state so it cannot award a bonus or issue a complaint.
   return finishAtClosing(state);
@@ -288,7 +302,7 @@ export function advanceClinicTime(state: GameState, minutes: number): ActionResu
 }
 
 function finishAtClosing(state: GameState): ActionResult {
-  const resumed = state.visit?.additionalResult ? state.visit : null;
+  const resumed = state.visit?.additionalResult && (state.visit.additionalResult.source !== 'provided' || state.visit.additionalTests.length > 1) ? state.visit : null;
   const returnDay = nextWorkingDay(state.day);
   const test = resumed?.additionalTests.at(-1);
   const pendingReferrals = resumed && test && returnDay <= GAME_LIMITS.day
@@ -300,8 +314,10 @@ function finishAtClosing(state: GameState): ActionResult {
     paperClips: state.paperClips.map(group => group.filter(id => id !== 'certificate' && !identityIds.has(id))).filter(group => group.length > 0) };
   const settlement = settleClinicDay(closed);
   if (Math.abs(settlement.settlement.closingBalance) > GAME_LIMITS.money) return { state, feedback: 'limit-reached' };
-  return { state: { ...closed, ...settlement, banknotes: [], phase: 'home', money: settlement.settlement.closingBalance,
-    ending: settledEnding(state, settlement.settlement.closingBalance) },
+  const finished = finishStoryShift({ ...closed, ...settlement, banknotes: [], phase: 'home', money: settlement.settlement.closingBalance,
+    ending: settledEnding(state, settlement.settlement.closingBalance) });
+  if (!finished) return { state, feedback: 'limit-reached' };
+  return { state: finished,
     feedback: state.visit ? 'visit-interrupted' : 'shift-finished' };
 }
 
@@ -310,6 +326,11 @@ function transition(state: GameState, action: GameAction): ActionResult {
   const changed = (changes: Partial<GameState>, feedback: GameFeedback): ActionResult => ({ state: { ...state, ...changes }, feedback });
 
   if (state.ending === 'hospital' || state.ending === 'bankruptcy') return unchanged('game-over');
+  if (state.phase === 'epilogue') {
+    if (action !== 'continue-story' || !state.story.resolution || state.story.resolution.terminal) return unchanged('game-over');
+    return transition({ ...state, phase: 'home', story: presentStoryEnding(state.story) }, 'next-day');
+  }
+  if (action === 'continue-story') return unchanged('none');
 
   if (state.phase === 'intro') {
     if (action === 'skip-intro' || (action === 'advance-intro' && state.introStep === INTRO_SLIDES - 1)) {
@@ -323,11 +344,14 @@ function transition(state: GameState, action: GameAction): ActionResult {
     if (state.phase !== 'home') return unchanged('shift-unfinished');
     if (state.day === GAME_LIMITS.day) return unchanged('limit-reached');
     const day = state.day + 1;
+    const story = finishStoryDay(state.story, state.day);
+    const morningEnding = storyMorningEnding({ ...state, story }, day);
+    if (morningEnding !== undefined) return morningEnding ? { state: morningEnding, feedback: 'game-over' } : unchanged('limit-reached');
     const previousMonthBalance = gameDate(day).month !== gameDate(state.day).month ? state.money : state.previousMonthBalance;
     if (isWeekend(day)) {
       const result = settleDay({ ...state, day, shiftCompleted: 0, daily: emptyConsequences(), restDay: true });
       if (Math.abs(result.settlement.closingBalance) > GAME_LIMITS.money) return unchanged('limit-reached');
-      return changed({ ...result, day, previousMonthBalance, bribeIncome: 0, inspectionFines: 0, phase: 'home', shiftCompleted: 0, roster: [],
+      return changed({ ...result, story, day, previousMonthBalance, bribeIncome: 0, inspectionFines: 0, phase: 'home', shiftCompleted: 0, roster: [],
         budgetHistory: [...state.budgetHistory, ...(state.settlement ? [state.settlement] : [])],
         clockMinutes: SHIFT_END_MINUTES, referralsIssued: 0, daily: emptyConsequences(), money: result.settlement.closingBalance,
         ending: settledEnding(state, result.settlement.closingBalance) }, 'next-day');
@@ -343,10 +367,12 @@ function transition(state: GameState, action: GameAction): ActionResult {
     if (rule && (state.papers.length >= GAME_LIMITS.papers || state.nextPaperId > GAME_LIMITS.paperId)) return unchanged('limit-reached');
     const papers: Paper[] = rule ? [...state.papers, { id: state.nextPaperId, kind: 'directive', patientId: null, day,
       location: 'desk', sender: rule === 'specialist' || rule === 'additional-tests' ? 'chamber' : 'zus', rule, opened: false }] : state.papers;
-    return changed({ phase: 'cabinet', day, newspaper, newspaperCopies: [...state.newspaperCopies, newspaperCopy(newspaper, day)], previousMonthBalance, bribeIncome: 0, inspectionFines: 0, shiftCompleted: 0,
+    const morning = changed({ phase: 'cabinet', story, day, newspaper, newspaperCopies: [...state.newspaperCopies, newspaperCopy(newspaper, day)], previousMonthBalance, bribeIncome: 0, inspectionFines: 0, shiftCompleted: 0,
       clockMinutes: SHIFT_START_MINUTES - (14 + Math.floor(arrival.value * 8)),
       roster: arrangeProgressionRoster(generated.roster.map(id => state.pendingReferrals.find(pending => PATIENTS[pending.visit.patientId]!.characterId === PATIENTS[id]!.characterId)?.visit.patientId ?? id), day), referralsIssued: 0, rngState: arrival.seed, daily: emptyConsequences(), settlement: null, budgetHistory: [],
       papers, nextPaperId: state.nextPaperId + Number(rule !== null) }, 'next-day');
+    const delivered = deliverStoryMorning(morning.state);
+    return delivered ? { state: { ...delivered, roster: arrangeStoryRoster(delivered, delivered.roster) }, feedback: 'next-day' } : unchanged('limit-reached');
   }
   if (state.phase === 'home') return unchanged('none');
   if (action === 'end-day') {
@@ -430,7 +456,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
     return changed({ drawerItems: { ...state.drawerItems, [drawer]: { manual, clips: clips + (storing ? 1 : -1) } }, clockMinutes: spend(ACTION_MINUTES.handling) }, storing ? 'item-stored' : 'item-retrieved');
   }
   if (typeof action === 'object' && (action.type === 'store-newspaper' || action.type === 'retrieve-newspaper' || action.type === 'trash-newspaper')) {
-    const copy = state.newspaperCopies.find(copy => copy.day === action.day);
+    const copy = state.newspaperCopies.find(copy => copy.day === action.day && (copy.publication ?? 'kurier') === (action.publication ?? 'kurier'));
     const retrieving = action.type === 'retrieve-newspaper';
     if (!copy || (retrieving ? copy.location !== (action.drawer ?? 'drawer') : copy.location !== 'desk')) return unchanged('item-missing');
     const newspaperCopies = action.type === 'trash-newspaper' ? state.newspaperCopies.filter(entry => entry !== copy)
@@ -439,8 +465,29 @@ function transition(state: GameState, action: GameAction): ActionResult {
       action.type === 'trash-newspaper' ? 'newspaper-trashed' : retrieving ? 'item-retrieved' : 'item-stored');
   }
   if (action === 'use-phone') return changed({ clockMinutes: spend(ACTION_MINUTES.handling) }, 'phone-ready');
+  if (typeof action === 'object' && action.type === 'call-story') {
+    const paper = state.papers.find(paper => paper.id === action.paperId && paper.location === 'desk');
+    const warehouse = paper?.kind === 'referral' && storyPatientForId(paper.patientId)?.encounterId === 'H1' && action.contactId === 'CALL-WAREHOUSE';
+    const fromPaper = paper?.kind === 'story-document' && paper.opened && storyDocumentCopy(paper.data, 'pl', state.story).contact === action.contactId;
+    const fromAd = action.contactId === 'CALL-PRINT' && action.day !== undefined && state.newspaperCopies.some(copy => copy.day === action.day && copy.location === 'desk' && copy.storyClassifiedIds?.includes('C-AD'));
+    if (!fromPaper && !fromAd && !warehouse) return unchanged('document-needed');
+    const source = fromPaper && paper.kind === 'story-document' ? paper.data.definitionId : warehouse ? 'H-REF' : null;
+    if (!storyContactResponse(action.contactId, source, state.story, state.day)) return unchanged('phone-unavailable');
+    const encounterId = fromPaper && paper.kind === 'story-document' ? paper.data.encounterId : warehouse ? 'H1' : null;
+    const story = recordStoryContact(state.story, action.contactId, encounterId);
+    const entry: NoteEntryId = `story-call:${action.contactId}`;
+    const patientId = encounterId ? storyPatientForEncounter(encounterId).patient.id : null;
+    const visit = patientId !== null && state.visit?.patientId === patientId && !state.visit.noteOrder.includes(entry)
+      ? { ...state.visit, noteOrder: [...state.visit.noteOrder, entry] } : state.visit;
+    const pendingReferrals = state.pendingReferrals.map(pending => pending.visit.patientId === patientId && !pending.visit.noteOrder.includes(entry)
+      ? { ...pending, visit: { ...pending.visit, noteOrder: [...pending.visit.noteOrder, entry] } } : pending);
+    // A call about an archived file annotates that file, never the person now in the chair.
+    const papers = state.papers.map(paper => paper.kind === 'note' && patientId !== null && paper.patientId === patientId && !paper.noteOrder.includes(entry)
+      ? { ...paper, noteOrder: [...paper.noteOrder, entry] } : paper);
+    return changed({ story, visit, pendingReferrals, papers: recordResults(papers, visit, state.day), clockMinutes: spend(3) }, 'phone-ready');
+  }
   if (typeof action === 'object' && action.type === 'call-classified') {
-    const copy = state.newspaperCopies.find(copy => copy.day === action.day && copy.location === 'desk');
+    const copy = state.newspaperCopies.find(copy => copy.day === action.day && (copy.publication ?? 'kurier') === (action.publication ?? 'kurier') && copy.location === 'desk');
     if (!copy?.classifiedIds.includes(action.classifiedId) || !classifiedPhone(action.classifiedId)) return unchanged('item-missing');
     const draw = randomStep(state.rngState);
     return changed({ rngState: draw.seed, clockMinutes: spend(3) }, CLASSIFIED_CALL_RESULTS[Math.floor(draw.value * CLASSIFIED_CALL_RESULTS.length)]!);
@@ -555,7 +602,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
     }
     if (action.type === 'clip-paper') return applyAction(state, { type: 'clip-document', documentId: paper.id });
     if (action.type === 'open-letter') {
-      if (paper.kind !== 'letter' && paper.kind !== 'directive') return unchanged('paper-missing');
+      if (paper.kind !== 'letter' && paper.kind !== 'directive' && paper.kind !== 'story-document') return unchanged('paper-missing');
       return paper.opened ? unchanged('letter-opened') : updatePaper({ ...paper, opened: true }, 'letter-opened');
     }
     if (paper.kind !== 'note') return unchanged('paper-missing');
@@ -625,8 +672,10 @@ function transition(state: GameState, action: GameAction): ActionResult {
     };
     const characterId = PATIENTS[patientId!]!.characterId;
     const portraitHistory = [...state.portraitHistory.filter(id => id !== characterId), characterId];
-    return changed({ roster, portraitHistory, inspectionCheckedAt, clockMinutes: Math.max(admissionStart, spend(ACTION_MINUTES.handling)), visit, rngState: details.seed,
+    const called = changed({ roster, portraitHistory, inspectionCheckedAt, clockMinutes: Math.max(admissionStart, spend(ACTION_MINUTES.handling)), visit, rngState: details.seed,
       papers: recordResults(state.papers, visit, state.day) }, 'patient-called');
+    const scripted = startStoryVisit(called.state);
+    return scripted ? { ...called, state: { ...scripted, papers: recordResults(scripted.papers, scripted.visit, scripted.day) } } : unchanged('limit-reached');
   }
 
   if (typeof action === 'object' && (action.type === 'store-banknote' || action.type === 'retrieve-banknote' || action.type === 'return-banknote')) {
@@ -774,6 +823,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
     daily = { ...daily, refusals: daily.refusals + 1, insuranceIncrease: daily.insuranceIncrease + increase };
   }
   const completion: Partial<GameState> = {
+    story: completedStoryVisit(state),
     ending: visit.bribe === 'accepted' && visit.decision === 'unfit' ? 'assault-pending' : state.ending,
     visit: null,
     shiftCompleted: state.shiftCompleted + 1,

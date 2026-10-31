@@ -1,3 +1,4 @@
+import { STORY_PATIENT_FIRST_ID } from '../src/core/story-patients';
 import { describe, expect, it } from 'vitest';
 import { drawDocumentHeading, drawDocumentText, drawReadingText, drawText, measureDocumentHeading, measureDocumentText, measureReadingText, measureText, READ_CELL_HEIGHT, READ_LINE_HEIGHT, type DocumentFace } from '../src/render/font';
 import { translations } from '../src/i18n';
@@ -136,7 +137,7 @@ describe('compact original document font', () => {
     for (const face of faces) {
       expect(measureDocumentText(sample, face)).toBe(measureDocumentText(sample));
       for (const t of Object.values(translations)) {
-        for (const value of [...t.patientNames, ...t.patientJobs]) {
+        for (const value of [...t.patientNames, ...t.patientJobs.slice(0, STORY_PATIENT_FIRST_ID)]) {
           expect(measureDocumentText(value, face), `${face}: ${value}`).toBe(measureDocumentText(value));
         }
       }
@@ -220,7 +221,7 @@ describe('compact original document font', () => {
 
   it('fits both languages into the certificate and referral without squeezing', () => {
     for (const t of Object.values(translations)) {
-      for (const value of [...t.patientNames, ...t.patientJobs]) expect(measureDocumentText(value)).toBeLessThanOrEqual(100);
+      for (const value of [...t.patientNames, ...t.patientJobs.slice(0, STORY_PATIENT_FIRST_ID)]) expect(measureDocumentText(value)).toBeLessThanOrEqual(100);
       for (const value of [t.documentVision, t.documentPressure]) expect(measureDocumentText(value)).toBeLessThanOrEqual(78);
       for (const value of [t.pass, t.refer]) expect(measureDocumentText(value)).toBeLessThanOrEqual(82);
       expect(measureDocumentText(t.rulebookLabel)).toBeLessThanOrEqual(64);

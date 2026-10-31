@@ -1,7 +1,8 @@
+import { createInitialState } from './fixtures/routine';
 import { historicalState, withMigratedNewspaper } from './fixtures/legacy-budget';
 import { describe, expect, it } from 'vitest';
 import { gzipSync, strToU8 } from 'fflate';
-import { applyAction, createInitialState, type GameState } from '../src/core/game';
+import { applyAction, type GameState } from '../src/core/game';
 import { additionalAssessment, additionalResultFor, additionalTestForJob } from '../src/core/additional-tests';
 import { DISCRETIONARY_CASE_START, PATIENTS, createRoster, medicalAssessment, pressureAssessment, visionAssessment } from '../src/core/patients';
 import { createDailyRoster, expectedVisitDecision } from '../src/core/progression';

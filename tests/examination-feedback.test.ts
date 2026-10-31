@@ -1,6 +1,7 @@
+import { createInitialState } from './fixtures/routine';
 import { expect, it } from 'vitest';
 import { examinationComment, examinationCommentText } from '../src/core/examination-feedback';
-import { applyAction, createInitialState, type GameAction } from '../src/core/game';
+import { applyAction, type GameAction } from '../src/core/game';
 import { PATIENTS } from '../src/core/patients';
 import { measureDocumentText } from '../src/render/font';
 

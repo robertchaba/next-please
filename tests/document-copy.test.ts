@@ -1,3 +1,5 @@
+import { storyPatientForId } from '../src/core/story-patients';
+import { paperPagination } from '../src/render/paperwork';
 import { describe, expect, it } from 'vitest';
 import { PATIENTS } from '../src/core/patients';
 import type { Paper } from '../src/core/game';
@@ -51,9 +53,20 @@ describe('institutional document copy', () => {
       for (const field of copy.fields) expect(printed).toContain(field.value.replace(/\s+/g, ' '));
       for (const row of copy.rows) expect(fieldLabelWidth(row.label) + measureReadingText(row.value), row.label + row.value).toBeLessThanOrEqual(REFERRAL_BODY_WIDTH);
       expect(measureReadingText(copy.instruction)).toBeLessThanOrEqual(REFERRAL_BODY_WIDTH);
-      expect(copy.rows.length, `${locale} ${patient.id}: ${copy.lines.join(' | ')}`).toBeLessThanOrEqual(8);
-      expect(REFERRAL_BODY_Y + (copy.rows.length - 1) * REFERRAL_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThanOrEqual(CLINICAL_PAPER_SIZE.h - 29);
-      if (copy.institution === 'employer') expect(wrapFormText(copy.masthead.toUpperCase(), 104).length, copy.masthead).toBeLessThanOrEqual(2);
+      if (storyPatientForId(patient.id)) {
+        const paper: Extract<Paper, { kind: 'referral' }> = { kind: 'referral', id: 1, day: 29, patientId: patient.id,
+          location: 'desk', details: { ageDays: 0, seal: 'clear', authentic: true, phone: '42-1000' } };
+        const first = paperPagination(paper, locale)!;
+        const lines = Array.from({ length: first.count }, (_, page) => paperPagination(paper, locale, page)!.lines).flat();
+        const rendered = lines.map(line => line.text).join(' ');
+        expect(rendered).toContain(t.patientJobs[patient.id]);
+        expect(rendered).toContain(t.patientReferrals[patient.id]!.work);
+        for (const line of lines) expect(measureDocumentText(line.text)).toBeLessThanOrEqual(REFERRAL_BODY_WIDTH);
+      } else {
+        expect(copy.rows.length, `${locale} ${patient.id}: ${copy.lines.join(' | ')}`).toBeLessThanOrEqual(8);
+        expect(REFERRAL_BODY_Y + (copy.rows.length - 1) * REFERRAL_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThanOrEqual(CLINICAL_PAPER_SIZE.h - 29);
+        if (copy.institution === 'employer') expect(wrapFormText(copy.masthead.toUpperCase(), 104).length, copy.masthead).toBeLessThanOrEqual(2);
+      }
     }
   });
 

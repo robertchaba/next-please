@@ -20,15 +20,21 @@ const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate
   'manual-cover-v083', 'manual-spread-v083', 'manual-corner-left-v083', 'manual-corner-right-v083',
   'newspaper-folded', 'newspaper-spread', 'newspaper-masthead-pl', 'newspaper-masthead-en', 'paper-envelope-postage'] as const;
 export const PATIENT_MOTION_FRAMES = 12;
+const storyArtNames = ['ending-e1', 'ending-e2', 'ending-e3', 'ending-e4', 'ending-e5', 'ending-e6',
+  'leaflet', 'warning', 'exposure', 'carbon-copy', 'private-note', 'bhp-paraph', 'editor-paraph', 'committee-seal',
+  'voluntary-imprint', 'security-seal', 'party-card-cover', 'party-card-open', 'malec-photo',
+  'union-folded', 'union-spread', 'union-masthead-pl', 'union-masthead-en'] as const;
+export type StoryArt = typeof storyArtNames[number];
 
 export async function loadClinicArt(): Promise<void> {
   const files = ['bankruptcy-cloakroom', 'home-evening', 'homecoming', 'going-to-work', 'weekend-budget', 'weekend-modest', 'weekend-mountain-resort', 'weekend-seaside-resort', ...NEW_WEEKEND_ILLUSTRATIONS, 'cabinet-workstation', 'archives-clinic', 'break-room', 'drawer-interior', 'creator-robert', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`), ...['employer', 'militia', 'lot'].map(name => `stamps-revision/${name}`)];
+  files.push(...storyArtNames.map(name => `story/${name}`));
   await Promise.all(files.map(name => new Promise<void>((resolve, reject) => {
     const image = new Image();
     images.set(name, image);
     image.onload = () => {
       if (name === 'creator-robert') creatorPhotograph = prepareCreatorPhotograph(image);
-      if (name.startsWith('sprites/patient-')) {
+      if (name.startsWith('sprites/patient-') || name.startsWith('sprites/story-')) {
         const shadow = document.createElement('canvas');
         shadow.width = image.naturalWidth; shadow.height = image.naturalHeight;
         const shadowContext = shadow.getContext('2d')!;
@@ -43,6 +49,10 @@ export async function loadClinicArt(): Promise<void> {
     image.onerror = () => reject(new Error(`Cannot load local artwork: ${name}`));
     image.src = `${import.meta.env.BASE_URL}assets/art/${name}.png`;
   })));
+}
+
+export function drawStoryArt(ctx: CanvasRenderingContext2D, name: StoryArt, x: number, y: number, w: number, h: number): void {
+  asset(ctx, `story/${name}`, x, y, w, h);
 }
 
 function asset(ctx: CanvasRenderingContext2D, name: string, x: number, y: number, w: number, h: number): void {

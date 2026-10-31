@@ -1,7 +1,8 @@
+import { createInitialState } from './fixtures/routine';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { applyAction, createInitialState } from '../src/core/game';
+import { applyAction } from '../src/core/game';
 import { PATIENT_IDENTITIES, PATIENTS, patientAge, createRoster } from '../src/core/patients';
 import { ADDITIONAL_PORTRAITS } from '../src/core/patient-identities';
 import { decodeSave, encodeSave } from '../src/core/save';
@@ -56,7 +57,7 @@ describe('uniformed patients and fourth portrait expansion', () => {
       expect(bytes.readUInt32BE(20)).toBe(96);
       hashes.add(createHash('sha256').update(bytes).digest('hex'));
     }
-    expect(portraits.size).toBe(188);
+    expect(portraits.size).toBe(198);
     expect(hashes.size).toBe(portraits.size);
   });
 });

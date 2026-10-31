@@ -1,4 +1,5 @@
 import { LEGACY_CASE_COUNT, PATIENTS, patientIdentity } from './core/patients';
+import { storyPatientForId } from './core/story-patients';
 
 // Localized copy is indexed by stable case IDs. Authored name corrections also apply to archived paperwork.
 const patientCopy = {
@@ -194,11 +195,11 @@ const patientCopy = {
       ["Anna Bereza", "Irena Chrobak", "Renata Domagała", "Grażyna Fita", "Halina Gudej"],
       ["Marcin Blicharz", "Mariusz Chrzan", "Jacek Dobosz", "Robert Filar", "Dariusz Gruszka"],
     ],
-    employers: ['Archiwum Zakładów Brzask', 'Zakłady Mechaniczne Ogniwo', 'Przewozy Pracownicze Szlak', 'Tkalnia Osnowa', 'Warsztat Nit', 'Szkoła Zawodowa', 'Skład Towarowy', 'Biuro Zaopatrzenia', "Drukarnia Margines", "Spółdzielnia Trybik", "Pracownia Ścieg", "Piekarnia Kłos", "Stołówka zakładowa", "Zakład Zieleni", "Urząd Pocztowy", "Służba Techniczna", "Laboratorium Próba", "Pralnia Fala", "Zarząd Kolei", "Dom Wypoczynkowy", "Uniwersytet", "Biblioteka Czytelnia", "Biuro Projektowe", "Stolarnia Słój", "Komenda milicji", "Zespół lotniczy", "Kopalnia Głębia"],
-    jobs: ['Archiwista', 'Operator suwnicy', 'Kierowca', 'Tkacz', 'Mechanik', 'Woźny', 'Magazynier', 'Kierownik', "Zecer", "Zegarmistrz", "Krawiec", "Piekarz", "Kucharz", "Sprzątacz", "Ogrodnik", "Listonosz", "Elektryk", "Spawacz", "Hutnik", "Tokarz", "Laborant", "Korektor", "Introligator", "Pracz", "Palacz", "Torowy", "Nastawniczy", "Wózkowy", "Tragarz", "Kontroler jakości", "Brygadzista", "Pomoc geodety", "Nauczyciel", "Profesor", "Bibliotekarz", "Księgowy", "Referent", "Inżynier", "Architekt", "Redaktor", "Kreślarz", "Recepcjonista", "Chemik", "Technik", "Stolarz", "Milicjant", "Pilot", "Górnik"],
-    femaleJobs: ["Archiwistka", "Operatorka suwnicy", "Kierowczyni", "Tkaczka", "Mechanik", "Woźna", "Magazynierka", "Kierowniczka", "Zecerka", "Zegarmistrzyni", "Krawcowa", "Piekarka", "Kucharka", "Sprzątaczka", "Ogrodniczka", "Listonoszka", "Elektryk", "Spawaczka", "Hutnik", "Tokarka", "Laborantka", "Korektorka", "Introligatorka", "Praczka", "Palacz", "Torowa", "Nastawnicza", "Wózkowa", "Tragarz", "Kontrolerka jakości", "Brygadzistka", "Pomoc geodety", "Nauczycielka", "Profesorka", "Bibliotekarka", "Księgowa", "Referentka", "Inżynier", "Architektka", "Redaktorka", "Kreślarka", "Recepcjonistka", "Chemiczka", "Technik", "Stolarka", "Milicjantka", "Pilotka", "Górniczka"],
-    work: ['ewidencja akt', 'obsługa suwnicy', 'przewóz osób', 'maszyny tkackie', 'naprawa maszyn', 'obsługa budynku', 'przeładunek', 'nadzór zespołu', "skład drukarski", "naprawa zegarków", "szycie odzieży", "wypiek pieczywa", "przygotowanie potraw", "sprzątanie sal", "pielęgnacja zieleni", "roznoszenie listów", "naprawa instalacji", "łączenie metali", "obsługa pieca", "obróbka metalu", "odczyty próbek", "korekta druku", "oprawa książek", "pranie przemysłowe", "obsługa kotłów", "naprawa torów", "obsługa zwrotnic", "przewóz palet", "noszenie bagażu", "kontrola wyrobów", "nadzór zmiany", "pomiary terenowe", "prowadzenie lekcji", "wykłady i badania", "katalogowanie książek", "rachunki i rozliczenia", "obsługa dokumentów", "nadzór techniczny", "projekty budynków", "redakcja tekstów", "rysunek techniczny", "obsługa gości", "analizy chemiczne", "pomiary i naprawy", "wykonywanie mebli", "służba patrolowa", "pilotowanie samolotów", "wydobycie węgla"],
-    hazards: ['pył papierowy', 'hałas, wysokość', 'ruch drogowy', 'pył, hałas', 'smary, hałas', 'praca fizyczna', 'ciężkie ładunki', 'stres, siedzenie', "drobny druk, pył", "drobne części", "pył tkanin, igły", "gorąco, ciężary", "gorąco, długie stanie", "detergenty, wysiłek", "chłód, wysiłek", "marsz, ciężka torba", "napięcie, wysokość", "gorąco, odpryski", "gorąco, hałas", "wirujące części", "odczynniki, odczyty", "drobny druk", "kleje, ostrza", "para, detergenty", "gorąco, ciężary", "ruch pociągów, chłód", "sygnały, nocne zmiany", "ruch w hali", "ciężary, schody", "drobne detale", "stres, hałas", "teren, podziałki", "głos, długie stanie", "drobny druk", "pył papierowy", "drobny druk, stres", "drobny druk", "hałas, pomiary", "drobne podziałki", "drobny druk", "drobne podziałki", "stres, długie stanie", "odczynniki", "hałas, pomiary", "hałas, ostrza", "stres, nocne dyżury", "hałas, wysokość", "pył mineralny, hałas"],
+    employers: ['Archiwum Zakładów Brzask', 'Zakłady Mechaniczne Ogniwo', 'Przewozy Pracownicze Szlak', 'Tkalnia Osnowa', 'Warsztat Nit', 'Szkoła Zawodowa', 'Skład Towarowy', 'Biuro Zaopatrzenia', "Drukarnia Margines", "Spółdzielnia Trybik", "Pracownia Ścieg", "Piekarnia Kłos", "Stołówka zakładowa", "Zakład Zieleni", "Urząd Pocztowy", "Służba Techniczna", "Laboratorium Próba", "Pralnia Fala", "Zarząd Kolei", "Dom Wypoczynkowy", "Uniwersytet", "Biblioteka Czytelnia", "Biuro Projektowe", "Stolarnia Słój", "Komenda milicji", "Zespół lotniczy", "Kopalnia Głębia", "Zakłady Remontowe Tor", "Zakłady Meblarskie Brzoza", "Zakłady Tekstylne Osnowa", "Wytwórnia Kabli Przewód", "Zakłady Ceramiczne Klinkier", "Transport Miejski", "Zakłady Obrabiarek Wektor", "Usługi Porządkowe", "Państwowa Drukarnia", "Miejska Elektrociepłownia", "Komenda Wojewódzka MO", "Kurier Obywatelski", "Zakłady Metalurgiczne", "Zakłady Maszynowe", "Miejskie Wodociągi", "Miejski Ośrodek Sportu", "Wojewódzki Wydział Sportu"],
+    jobs: ['Archiwista', 'Operator suwnicy', 'Kierowca', 'Tkacz', 'Mechanik', 'Woźny', 'Magazynier', 'Kierownik', "Zecer", "Zegarmistrz", "Krawiec", "Piekarz", "Kucharz", "Sprzątacz", "Ogrodnik", "Listonosz", "Elektryk", "Spawacz", "Hutnik", "Tokarz", "Laborant", "Korektor", "Introligator", "Pracz", "Palacz", "Torowy", "Nastawniczy", "Wózkowy", "Tragarz", "Kontroler jakości", "Brygadzista", "Pomoc geodety", "Nauczyciel", "Profesor", "Bibliotekarz", "Księgowy", "Referent", "Inżynier", "Architekt", "Redaktor", "Kreślarz", "Recepcjonista", "Chemik", "Technik", "Stolarz", "Milicjant", "Pilot", "Górnik", "Konserwator urządzeń", "Mycie okien na wysokości", "Operator offsetowy", "Dyspozytor elektrociepłowni", "Sierżant - służba patrolowa", "Korektorka prasowa", "Operator suwnicy", "Magazynier i operator wózka", "Konserwator wodociągów", "Dyrektor MOS", "Naczelnik wydziału sportu"],
+    femaleJobs: ["Archiwistka", "Operatorka suwnicy", "Kierowczyni", "Tkaczka", "Mechanik", "Woźna", "Magazynierka", "Kierowniczka", "Zecerka", "Zegarmistrzyni", "Krawcowa", "Piekarka", "Kucharka", "Sprzątaczka", "Ogrodniczka", "Listonoszka", "Elektryk", "Spawaczka", "Hutnik", "Tokarka", "Laborantka", "Korektorka", "Introligatorka", "Praczka", "Palacz", "Torowa", "Nastawnicza", "Wózkowa", "Tragarz", "Kontrolerka jakości", "Brygadzistka", "Pomoc geodety", "Nauczycielka", "Profesorka", "Bibliotekarka", "Księgowa", "Referentka", "Inżynier", "Architektka", "Redaktorka", "Kreślarka", "Recepcjonistka", "Chemiczka", "Technik", "Stolarka", "Milicjantka", "Pilotka", "Górniczka", "Konserwator urządzeń", "Mycie okien na wysokości", "Operator offsetowy", "Dyspozytor elektrociepłowni", "Sierżant - służba patrolowa", "Korektorka prasowa", "Operator suwnicy", "Magazynier i operator wózka", "Konserwator wodociągów", "Dyrektor MOS", "Naczelnik wydziału sportu"],
+    work: ['ewidencja akt', 'obsługa suwnicy', 'przewóz osób', 'maszyny tkackie', 'naprawa maszyn', 'obsługa budynku', 'przeładunek', 'nadzór zespołu', "skład drukarski", "naprawa zegarków", "szycie odzieży", "wypiek pieczywa", "przygotowanie potraw", "sprzątanie sal", "pielęgnacja zieleni", "roznoszenie listów", "naprawa instalacji", "łączenie metali", "obsługa pieca", "obróbka metalu", "odczyty próbek", "korekta druku", "oprawa książek", "pranie przemysłowe", "obsługa kotłów", "naprawa torów", "obsługa zwrotnic", "przewóz palet", "noszenie bagażu", "kontrola wyrobów", "nadzór zmiany", "pomiary terenowe", "prowadzenie lekcji", "wykłady i badania", "katalogowanie książek", "rachunki i rozliczenia", "obsługa dokumentów", "nadzór techniczny", "projekty budynków", "redakcja tekstów", "rysunek techniczny", "obsługa gości", "analizy chemiczne", "pomiary i naprawy", "wykonywanie mebli", "służba patrolowa", "pilotowanie samolotów", "wydobycie węgla", "konserwacja, obchód zakładu", "mycie okien na wysokości", "maszyna offsetowa", "uruchomienie instalacji", "służba patrolowa", "korekta tekstów prasowych", "obsługa suwnicy", "przyjmowanie i wydawanie towaru; obsługa wózka widłowego", "konserwacja wodociągów", "kierowanie ośrodkiem sportu", "kierowanie wydziałem sportu"],
+    hazards: ['pył papierowy', 'hałas, wysokość', 'ruch drogowy', 'pył, hałas', 'smary, hałas', 'praca fizyczna', 'ciężkie ładunki', 'stres, siedzenie', "drobny druk, pył", "drobne części", "pył tkanin, igły", "gorąco, ciężary", "gorąco, długie stanie", "detergenty, wysiłek", "chłód, wysiłek", "marsz, ciężka torba", "napięcie, wysokość", "gorąco, odpryski", "gorąco, hałas", "wirujące części", "odczynniki, odczyty", "drobny druk", "kleje, ostrza", "para, detergenty", "gorąco, ciężary", "ruch pociągów, chłód", "sygnały, nocne zmiany", "ruch w hali", "ciężary, schody", "drobne detale", "stres, hałas", "teren, podziałki", "głos, długie stanie", "drobny druk", "pył papierowy", "drobny druk, stres", "drobny druk", "hałas, pomiary", "drobne podziałki", "drobny druk", "drobne podziałki", "stres, długie stanie", "odczynniki", "hałas, pomiary", "hałas, ostrza", "stres, nocne dyżury", "hałas, wysokość", "pył mineralny, hałas", "olej, hałas", "wysokość, środki myjące", "hałas, nocna zmiana", "odpowiedzialność, zmiany", "stres, praca nocą", "drobny druk", "hałas, wysokość", "ładunki, ruch wózków", "olej, ciężary", "stres, odpowiedzialność", "stres, odpowiedzialność"],
     patterns: {"day":"dni","early":"rano","shifts":"zmiany","night":"noc","split":"dzielona","seasonal":"sezon"},
     conditions: {
       healthy: ['Bez istotnych dolegliwości.', 'Wywiad bez obciążeń.'],
@@ -400,11 +401,11 @@ const patientCopy = {
       ["Anna Alton", "Irene Budd", "Renee Coughlan", "Grace Everett", "Helen Hanna"],
       ["Marcus Ashby", "Malcolm Burr", "Jack Copley", "Robert Ellis", "Derek Gunn"],
     ],
-    employers: ['Dawn Works Archives', 'Link Engineering Works', 'Wayfarer Staff Transport', 'Weft Textile Mill', 'Rivet Workshop', 'Vocational School', 'Goods Depot', 'Supply Office', "Margin Printworks", "Cogwheel Co-operative", "Stitch Workshop", "Harvest Bakery", "Works Canteen", "Parks Service", "Post Office", "Technical Service", "Assay Laboratory", "Wave Laundry", "Railway Office", "Holiday Lodge", "University", "Reading Room Library", "Design Office", "Grain Joinery", "Militia station", "Flight unit", "Deepwell Mine"],
-    jobs: ['Archivist', 'Crane operator', 'Driver', 'Weaver', 'Mechanic', 'Caretaker', 'Storekeeper', 'Manager', "Typesetter", "Watchmaker", "Tailor", "Baker", "Cook", "Cleaner", "Gardener", "Post carrier", "Electrician", "Welder", "Furnace operator", "Lathe operator", "Lab assistant", "Proofreader", "Bookbinder", "Laundry worker", "Boiler attendant", "Track worker", "Signal operator", "Forklift operator", "Porter", "Quality inspector", "Shift supervisor", "Survey assistant", "Teacher", "Professor", "Librarian", "Accountant", "Clerk", "Engineer", "Architect", "Editor", "Drafter", "Receptionist", "Chemist", "Technician", "Carpenter", "Militia officer", "Pilot", "Miner"],
-    femaleJobs: ['Archivist', 'Crane operator', 'Driver', 'Weaver', 'Mechanic', 'Caretaker', 'Storekeeper', 'Manager', "Typesetter", "Watchmaker", "Tailor", "Baker", "Cook", "Cleaner", "Gardener", "Post carrier", "Electrician", "Welder", "Furnace operator", "Lathe operator", "Lab assistant", "Proofreader", "Bookbinder", "Laundry worker", "Boiler attendant", "Track worker", "Signal operator", "Forklift operator", "Porter", "Quality inspector", "Shift supervisor", "Survey assistant", "Teacher", "Professor", "Librarian", "Accountant", "Clerk", "Engineer", "Architect", "Editor", "Drafter", "Receptionist", "Chemist", "Technician", "Carpenter", "Militia officer", "Pilot", "Miner"],
-    work: ['records filing', 'crane operation', 'passenger transport', 'weaving machines', 'machine repairs', 'building upkeep', 'loading goods', 'team supervision', "setting type", "watch repairs", "sewing clothes", "baking bread", "preparing food", "cleaning rooms", "tending grounds", "delivering mail", "wiring repairs", "joining metals", "tending furnace", "turning metal", "reading samples", "checking proofs", "binding books", "industrial washing", "tending boilers", "track repairs", "setting points", "moving pallets", "carrying luggage", "checking products", "leading a shift", "land measurements", "teaching classes", "teaching and research", "cataloguing books", "keeping accounts", "handling records", "technical oversight", "building design", "editing texts", "technical drawing", "receiving guests", "chemical analyses", "checks and repairs", "making furniture", "patrol duty", "flying aircraft", "coal extraction"],
-    hazards: ['paper dust', 'noise, heights', 'road traffic', 'dust, noise', 'oil, noise', 'physical work', 'heavy loads', 'stress, sitting', "small type, dust", "small components", "cloth dust, needles", "heat, lifting", "heat, standing", "detergents, exertion", "cold, exertion", "walking, heavy bag", "voltage, heights", "heat, sparks", "heat, noise", "rotating parts", "reagents, readings", "small type", "glue, blades", "steam, detergents", "heat, lifting", "trains, cold", "signals, night work", "shop floor traffic", "loads, stairs", "fine detail", "stress, noise", "terrain, scales", "voice, standing", "small type", "paper dust", "small type, stress", "small type", "noise, readings", "fine scales", "small type", "fine scales", "stress, standing", "reagents", "noise, readings", "noise, blades", "stress, night shifts", "noise, altitude", "mineral dust, noise"],
+    employers: ['Dawn Works Archives', 'Link Engineering Works', 'Wayfarer Staff Transport', 'Weft Textile Mill', 'Rivet Workshop', 'Vocational School', 'Goods Depot', 'Supply Office', "Margin Printworks", "Cogwheel Co-operative", "Stitch Workshop", "Harvest Bakery", "Works Canteen", "Parks Service", "Post Office", "Technical Service", "Assay Laboratory", "Wave Laundry", "Railway Office", "Holiday Lodge", "University", "Reading Room Library", "Design Office", "Grain Joinery", "Militia station", "Flight unit", "Deepwell Mine", "Track Repair Works", "Birch Furniture Works", "Weft Textile Works", "Conduit Cable Works", "Clinker Ceramics Works", "Municipal Transport", "Vector Machine Tool Works", "Cleaning Services", "State Printing House", "Municipal Heat and Power", "Provincial Militia HQ", "Civic Courier", "Metallurgical Works", "Machine Works", "Municipal Waterworks", "Municipal Sports Centre", "Provincial Sports Dept."],
+    jobs: ['Archivist', 'Crane operator', 'Driver', 'Weaver', 'Mechanic', 'Caretaker', 'Storekeeper', 'Manager', "Typesetter", "Watchmaker", "Tailor", "Baker", "Cook", "Cleaner", "Gardener", "Post carrier", "Electrician", "Welder", "Furnace operator", "Lathe operator", "Lab assistant", "Proofreader", "Bookbinder", "Laundry worker", "Boiler attendant", "Track worker", "Signal operator", "Forklift operator", "Porter", "Quality inspector", "Shift supervisor", "Survey assistant", "Teacher", "Professor", "Librarian", "Accountant", "Clerk", "Engineer", "Architect", "Editor", "Drafter", "Receptionist", "Chemist", "Technician", "Carpenter", "Militia officer", "Pilot", "Miner", "Equipment maintenance", "High window cleaner", "Offset press operator", "Heat plant dispatcher", "Sergeant - patrol duty", "Press proofreader", "Crane operator", "Storekeeper and forklift driver", "Waterworks maintenance", "Sports Centre director", "Provincial sports chief"],
+    femaleJobs: ['Archivist', 'Crane operator', 'Driver', 'Weaver', 'Mechanic', 'Caretaker', 'Storekeeper', 'Manager', "Typesetter", "Watchmaker", "Tailor", "Baker", "Cook", "Cleaner", "Gardener", "Post carrier", "Electrician", "Welder", "Furnace operator", "Lathe operator", "Lab assistant", "Proofreader", "Bookbinder", "Laundry worker", "Boiler attendant", "Track worker", "Signal operator", "Forklift operator", "Porter", "Quality inspector", "Shift supervisor", "Survey assistant", "Teacher", "Professor", "Librarian", "Accountant", "Clerk", "Engineer", "Architect", "Editor", "Drafter", "Receptionist", "Chemist", "Technician", "Carpenter", "Militia officer", "Pilot", "Miner", "Equipment maintenance", "High window cleaner", "Offset press operator", "Heat plant dispatcher", "Sergeant - patrol duty", "Press proofreader", "Crane operator", "Storekeeper and forklift driver", "Waterworks maintenance", "Sports Centre director", "Provincial sports chief"],
+    work: ['records filing', 'crane operation', 'passenger transport', 'weaving machines', 'machine repairs', 'building upkeep', 'loading goods', 'team supervision', "setting type", "watch repairs", "sewing clothes", "baking bread", "preparing food", "cleaning rooms", "tending grounds", "delivering mail", "wiring repairs", "joining metals", "tending furnace", "turning metal", "reading samples", "checking proofs", "binding books", "industrial washing", "tending boilers", "track repairs", "setting points", "moving pallets", "carrying luggage", "checking products", "leading a shift", "land measurements", "teaching classes", "teaching and research", "cataloguing books", "keeping accounts", "handling records", "technical oversight", "building design", "editing texts", "technical drawing", "receiving guests", "chemical analyses", "checks and repairs", "making furniture", "patrol duty", "flying aircraft", "coal extraction", "repairs, works rounds", "cleaning high windows", "offset press operation", "restarting installation", "patrol duty", "checking press proofs", "crane operation", "receiving and issuing goods; forklift operation", "waterworks maintenance", "running sports centre", "running sports department"],
+    hazards: ['paper dust', 'noise, heights', 'road traffic', 'dust, noise', 'oil, noise', 'physical work', 'heavy loads', 'stress, sitting', "small type, dust", "small components", "cloth dust, needles", "heat, lifting", "heat, standing", "detergents, exertion", "cold, exertion", "walking, heavy bag", "voltage, heights", "heat, sparks", "heat, noise", "rotating parts", "reagents, readings", "small type", "glue, blades", "steam, detergents", "heat, lifting", "trains, cold", "signals, night work", "shop floor traffic", "loads, stairs", "fine detail", "stress, noise", "terrain, scales", "voice, standing", "small type", "paper dust", "small type, stress", "small type", "noise, readings", "fine scales", "small type", "fine scales", "stress, standing", "reagents", "noise, readings", "noise, blades", "stress, night shifts", "noise, altitude", "mineral dust, noise", "oil, noise", "heights, detergents", "noise, night shift", "responsibility, shifts", "stress, night work", "small print", "noise, heights", "loads, forklifts", "oil, heavy loads", "stress, responsibility", "stress, responsibility"],
     patterns: {"day":"days","early":"early","shifts":"shifts","night":"night","split":"split","seasonal":"seasonal"},
     conditions: {
       healthy: ['No significant symptoms.', 'History without concerns.'],
@@ -416,8 +417,1125 @@ const patientCopy = {
   },
 } as const;
 
+// Authored chapter-one copy. Stable content IDs are persisted; rendered text is not.
+export const storyCopy = {
+  "pl": {
+    "articles": {
+      "K-B-STRIKE": {
+        "title": "Dyscyplina pracy w Mierniku",
+        "body": "W Zakładach Aparatury »Miernik« trwa protest części załogi. Dyrekcja rozwiązała umowę ze Stefanem Wolszakiem, organizatorem strajku. W komunikacie wskazano na naruszenie dyscypliny i utrudnianie pracy przedsiębiorstwa.",
+        "byline": "Redakcja"
+      },
+      "K-J-STADIUM": {
+        "title": "Spartakiada odwołana",
+        "body": "Drużyny przybyłe na wojewódzką spartakiadę młodzieżową nie mogły rozpocząć zawodów. Stadion był w tym terminie niedostępny. Organizator, klub »Płomień« kierowany przez Henryka Malca, powołuje się na nieprzewidziane trudności organizacyjne.",
+        "byline": "Redakcja"
+      },
+      "K-E-HERO": {
+        "title": "Bohater milicji powraca do służby",
+        "body": "Sierżant Marek Czarnecki, ranny podczas niedawnych zamieszek, zakończył rekonwalescencję. Od jutra ponownie będzie pełnił służbę patrolową. Komenda podkreśla jego determinację oraz opiekę, jaką otoczono zasłużonego funkcjonariusza.",
+        "byline": "Redakcja"
+      },
+      "K-E-RETURN": {
+        "title": "Znów na patrolu",
+        "body": "Sierżant Marek Czarnecki rozpoczął pierwszy patrol po rekonwalescencji. Dowództwo jednostki przedstawia jego powrót jako dowód skutecznej rehabilitacji i troski o funkcjonariuszy, którzy ucierpieli podczas pełnienia służby.",
+        "byline": "Redakcja"
+      },
+      "K-E-BLOCKED": {
+        "title": "Kto opóźnia powrót funkcjonariusza?",
+        "body": "Zapowiedziany powrót sierżanta Marka Czarneckiego został wstrzymany po decyzji lekarza medycyny pracy. Komenda oczekuje wyjaśnienia, dlaczego zasłużony funkcjonariusz nadal nie może podjąć obowiązków.",
+        "byline": "Redakcja"
+      },
+      "K-E-CORRECTION": {
+        "title": "Sprostowanie",
+        "body": "W informacji o sierżancie Marku Czarneckim podano nieścisły termin planowanego powrotu do służby. Data miała charakter przewidywany. Redakcja przeprasza za nieścisłość.",
+        "byline": "Redakcja"
+      },
+      "K-D-STRIKE": {
+        "title": "Ciepło dla mieszkańców",
+        "body": "W Miejskiej Elektrociepłowni trwa strajk Wzajemności. Władze przygotowują uruchomienie instalacji z pomocą pracowników zastępczych. Komitet Wojewódzki zapewnia, że ciągłość ogrzewania pozostaje sprawą najpilniejszą.",
+        "byline": "Redakcja"
+      },
+      "K-D-HEAT": {
+        "title": "Elektrociepłownia wznawia pracę",
+        "body": "Dzięki udziałowi doświadczonych pracowników, w tym emerytowanego dyspozytora Antoniego Rybaka, wznowiono pracę instalacji. Władze ogłaszają przywrócenie ogrzewania i dziękują osobom, które odpowiedziały na apel.",
+        "byline": "Redakcja"
+      },
+      "K-D-COLD": {
+        "title": "Ograniczenia w ogrzewaniu",
+        "body": "Strajk w elektrociepłowni przedłuża się. Nie udało się zebrać pełnej obsady specjalistów do ponownego uruchomienia instalacji. Administracje bloków i szkół informują o niższej temperaturze w pomieszczeniach.",
+        "byline": "Redakcja"
+      },
+      "K-J-POOL": {
+        "title": "Ambitne plany miejskiego sportu",
+        "body": "Zawodnicy zaproszeni przez Miejski Ośrodek Sportu zastali basen zamknięty z powodu remontu. Dyrektor Henryk Malec zapowiada nowy termin zawodów. Ośrodek mówi o przejściowych trudnościach związanych z ambitnym programem rozwoju.",
+        "byline": "Redakcja"
+      },
+      "K-G-BRIGADES": {
+        "title": "Robotnicy na ochotnika ratują produkcję",
+        "body": "Do Zakładów Metalurgicznych kierowane są brygady pracowników z innych przedsiębiorstw. Mają zastąpić strajkującą załogę. Organizatorzy podkreślają dobrowolność zgłoszeń oraz gotowość robotników do obrony wspólnego dorobku.",
+        "byline": "Redakcja"
+      },
+      "K-G-NAMES": {
+        "title": "Zasłużeni ochotnicy",
+        "body": "Wśród pracowników skierowanych do brygady w Zakładach Metalurgicznych wyróżniono operatora suwnicy Tadeusza Karskiego. Dyrekcja dziękuje za gotowość do podjęcia obowiązków w szczególnie wymagającym momencie.",
+        "byline": "Redakcja"
+      },
+      "K-F-QUESTION": {
+        "title": "ROBOTNICY JEDNOMYŚLNIE POPIERAJĄ PARTIĘ?",
+        "body": "Podczas zebrań w zakładach pracy podkreślano potrzebę spokoju i realizacji planów produkcyjnych. Według przedstawicieli władz stanowisko załóg świadczy o zaufaniu do przyjętego kierunku polityki oraz odpowiedzialności robotników za przyszłość.",
+        "byline": "Redakcja"
+      },
+      "K-F-ERRATUM": {
+        "title": "Od redakcji",
+        "body": "W nagłówku wczorajszego materiału o poparciu robotników błędnie umieszczono znak zapytania. Redakcja przeprasza za niedopuszczalny błąd korektorski. Właściwy tytuł miał formę zdania oznajmującego.",
+        "byline": "Redakcja"
+      },
+      "K-F-SECOND": {
+        "title": "List z osiedla",
+        "body": "Mieszkańcy osiedla przesłali do redakcji list dotyczący zaopatrzenia sklepów. Przytaczamy jego końcowe zdanie: »Dziękujemy za braki w zaopatrzeniu«. Autorzy listu wskazali również kilka spraw wymagających dalszej poprawy.",
+        "byline": "Redakcja"
+      },
+      "K-F-QUALITY": {
+        "title": "Nowe zasady kontroli tekstów",
+        "body": "W redakcji »Kuriera Obywatelskiego« wprowadzono dodatkową kontrolę materiałów przed drukiem. Zmiany kadrowe i organizacyjne mają zapobiec powtórzeniu niedawnego błędu w nagłówku oraz zapewnić właściwy poziom publikacji.",
+        "byline": "Redakcja"
+      },
+      "K-J-CHIEF": {
+        "title": "Nowy naczelnik zapowiada porządki",
+        "body": "Henryk Malec obejmuje wojewódzki wydział sportu. Powołana przez niego komisja zbada organizację zawodów w klubie »Płomień« i Miejskim Ośrodku Sportu. Naczelnik osobiście poprowadzi kontrolę placówek, którymi wcześniej kierował.",
+        "byline": "Redakcja"
+      },
+      "K-J-DIRECTOR": {
+        "title": "Zmiana kierownictwa zakładu",
+        "body": "Po kontroli organizacji imprez sportowych odwołano dyrektora zakładu, przy którym działa klub »Płomień«. Komisji przewodniczył Henryk Malec. Odchodzący dyrektor wcześniej rekomendował go do zadań o szerszym zakresie odpowiedzialności.",
+        "byline": "Redakcja"
+      },
+      "W-C-EARLY": {
+        "title": "Mamy własny głos",
+        "body": "Oddajemy w ręce czytelników pierwszy numer »Głosu Wzajemności«. Możliwość regularnego druku zawdzięczamy ludziom, którzy znaleźli czas i miejsce także po zakończeniu zwykłej zmiany. Kolejny numer za tydzień.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-C-LATE": {
+        "title": "Pierwszy numer",
+        "body": "Po trudnościach z organizacją druku ukazuje się »Głos Wzajemności«. Udało się znaleźć zastępstwo i uruchomić skład. Pismo będzie wychodziło co tydzień, dopóki pozwolą na to warunki.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-A-STOP": {
+        "title": "Nie wszędzie udało się rozbić związek",
+        "body": "W jednym z zakładów nie doszło do planowanego przyjęcia nowego pracownika. Działacze, porównujący wydarzenia w innych przedsiębiorstwach, uznają to za istotne dla bezpieczeństwa swojej komórki. Nazwisk nie podajemy.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-B-FIT": {
+        "title": "Zwolniony, ale nie wykluczony",
+        "body": "Stefan Wolszak, zwolniony po strajku w »Mierniku«, znalazł nowe zatrudnienie. Pozostaje w kontakcie z dawną załogą. Organizatorzy pomocy podkreślają, że utrata jednego miejsca pracy nie powinna oznaczać odebrania wszystkich następnych.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-B-REFUSED": {
+        "title": "Pomoc dla zwolnionych",
+        "body": "Stefan Wolszak nadal pozostaje bez zatrudnienia. Po zwolnieniu z »Miernika« nie uzyskał orzeczenia potrzebnego do podjęcia nowej pracy. Związek organizuje pomoc dla niego oraz innych rodzin pozbawionych dochodu.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-D-HEAT": {
+        "title": "Zastępstwo zamiast rozmów",
+        "body": "Elektrociepłownię uruchomiono z pomocą zastępczej obsady i emerytowanych fachowców. Ogrzewanie wraca, lecz postulaty strajkujących pozostają bez odpowiedzi. Władze przedstawiają wznowienie pracy jako zakończenie sprawy.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-D-STRIKE": {
+        "title": "Strajk trwa",
+        "body": "Nie udało się uruchomić elektrociepłowni zastępczą obsadą. Strajkujący utrzymują nacisk na rozpoczęcie rozmów. Jednocześnie spadek temperatury w mieszkaniach przypomina, że koszt przedłużającego się konfliktu ponoszą także mieszkańcy.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-E-PREDICTED": {
+        "title": "Wyniki znane przed badaniem",
+        "body": "»Kurier« zapowiedział powrót sierżanta Marka Czarneckiego, zanim lekarz wydał orzeczenie. Badanie nie potwierdziło prasowej zapowiedzi. Najwyraźniej władza zna wyniki badań, zanim zbada pacjenta.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-F-QUESTION": {
+        "title": "Jedno słuszne pytanie",
+        "body": "»ROBOTNICY JEDNOMYŚLNIE POPIERAJĄ PARTIĘ?« - zapytał »Kurier Obywatelski«. Redakcja już przeprosiła za pytanie. Pozostaje ustalić, czy podobny zakaz dotyczy także odpowiedzi.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-F-STAYS": {
+        "title": "Czytamy uważnie",
+        "body": "W kolejnym numerze »Kuriera« mieszkańcy dziękują za braki w zaopatrzeniu. Być może znów zabrakło słowa. Czytelnikom pozostawiamy ocenę, czy krótsza wersja jest mniej prawdziwa.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-F-FIRED": {
+        "title": "Zwolniona za znak zapytania",
+        "body": "Po głośnym błędzie w nagłówku Zofia Witek została odsunięta od korekty. Oficjalnie chodzi o stan wzroku. Jej nazwisko zniknęło z redakcyjnej listy, choć przez ponad dwadzieścia lat poprawiała cudze teksty.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-G-REFUSED": {
+        "title": "Ochotnik, który nie wyjechał",
+        "body": "Nie każdy pracownik wskazany do brygady zastępczej trafił do Zakładów Metalurgicznych. Jeden z operatorów nie uzyskał orzeczenia. Jego polecenie wyjazdu nazywało odmowę naruszeniem dyscypliny, mimo pieczęci o dobrowolnym zgłoszeniu.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-G-SENT": {
+        "title": "Dobrowolność na polecenie",
+        "body": "Robotnicy kierowani do Zakładów Metalurgicznych otrzymują karty »dobrowolnego« zgłoszenia. Towarzyszą im polecenia przewidujące konsekwencje za odmowę. Wśród oddelegowanych znalazł się operator Tadeusz Karski.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-H-STAYS": {
+        "title": "Dopisek nie wystarczył",
+        "body": "Edward Król z Zakładów Maszynowych zachował pracę mimo próby wykorzystania zmienionego skierowania. Do jego obowiązków nadal formalnie należy obsługa wózka. Związek zwraca uwagę, że problem wymaga dalszej interwencji.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-H-FIRED": {
+        "title": "BHP jako narzędzie zwolnienia",
+        "body": "Magazynier Edward Król został odsunięty od pracy po badaniu na stanowisko rozszerzone o obsługę wózka. Przez lata przyjmował i wydawał towar. Nowy obowiązek pozwolił dyrekcji wykorzystać jego dolegliwości przeciw niemu.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-BG-HELP": {
+        "title": "Pomoc przy pisaniu podań",
+        "body": "W świetlicy przy ulicy Szkolnej można uzyskać pomoc przy przygotowaniu podań i odwołań. Dyżur odbywa się we wtorkowe popołudnia. Należy przynieść kopie dokumentów dotyczących sprawy.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-BG-BOOKS": {
+        "title": "Biblioteczka związkowa",
+        "body": "Do biblioteczki w świetlicy przy Szkolnej trafiły podręczniki zawodowe i słowniki. Książki wypożyczane są po wpisaniu nazwiska do zeszytu. Osoby oddające egzemplarze proszone są o pozostawienie ich u prowadzącego dyżur.",
+        "byline": "Zespół redakcyjny"
+      },
+      "W-BG-CLOTHES": {
+        "title": "Zbiórka ciepłej odzieży",
+        "body": "W świetlicy przy Szkolnej trwa zbiórka ciepłych ubrań dla rodzin, które utraciły dochód. Przyjmowana jest odzież czysta i nadająca się do użytku. Najbardziej potrzebne są dziecięce kurtki i zimowe obuwie.",
+        "byline": "Zespół redakcyjny"
+      },
+      "K-A1": {
+        "title": "Przywrócono porządek w zakładzie",
+        "body": "W Zakładach Remontowych „Tor” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu.",
+        "byline": "Redakcja"
+      },
+      "K-A2": {
+        "title": "Przywrócono porządek w zakładzie",
+        "body": "W Zakładach Meblarskich „Brzoza” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu.",
+        "byline": "Redakcja"
+      },
+      "K-A3": {
+        "title": "Przywrócono porządek w zakładzie",
+        "body": "W Zakładach Tekstylnych „Osnowa” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu.",
+        "byline": "Redakcja"
+      },
+      "K-A4": {
+        "title": "Przywrócono porządek w zakładzie",
+        "body": "W Wytwórni Kabli „Przewód” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu.",
+        "byline": "Redakcja"
+      },
+      "K-A5": {
+        "title": "Przywrócono porządek w zakładzie",
+        "body": "W Zakładach Ceramicznych „Klinkier” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu.",
+        "byline": "Redakcja"
+      },
+      "K-A6": {
+        "title": "Przywrócono porządek w zakładzie",
+        "body": "W Przedsiębiorstwie Transportu Miejskiego zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu.",
+        "byline": "Redakcja"
+      },
+      "K-D-PENDING": {
+        "title": "Przygotowania w elektrociepłowni trwają",
+        "body": "W Miejskiej Elektrociepłowni nadal kompletowana jest obsada potrzebna do uruchomienia instalacji. Rozmowy z załogą nie przyniosły dotąd porozumienia. Nie podano nowego terminu wznowienia pracy.",
+        "byline": "Redakcja"
+      },
+      "K-E-PENDING": {
+        "title": "Powrót po zakończeniu formalności",
+        "body": "Komenda informuje, że termin powrotu sierżanta Marka Czarneckiego zostanie podany po zakończeniu wymaganych formalności. Wcześniejsza zapowiedź miała charakter planowany.",
+        "byline": "Redakcja"
+      }
+    },
+    "actors": {
+      "agent": "Roman Kurek",
+      "strike-leader": "Stefan Wolszak",
+      "printer": "Jerzy Borkowski",
+      "dispatcher": "Antoni Rybak",
+      "sergeant": "Marek Czarnecki",
+      "proofreader": "Zofia Witek",
+      "volunteer": "Tadeusz Karski",
+      "storekeeper": "Edward Król",
+      "alias": "Jan Sikora",
+      "alias-real": "Andrzej Lis",
+      "malec": "Henryk Malec"
+    },
+    "issuers": {
+      "chamber": "Izba Lekarska",
+      "union": "Wzajemność",
+      "militant": "Wzajemność Walcząca",
+      "clinic": "Dyrekcja przychodni",
+      "security": "Biuro postępowań wyjaśniających",
+      "employer": "Dział kadr",
+      "printing": "Państwowa Drukarnia",
+      "editorial": "Redakcja Kuriera Obywatelskiego",
+      "militia": "Komenda Wojewódzka MO",
+      "committee": "Komitet Wojewódzki",
+      "personal": "Korespondencja prywatna",
+      "clinical": "Pracownia badań specjalistycznych",
+      "party": "Komitet zakładowy"
+    },
+    "signatures": {
+      "chamber": "Sekretarz Izby",
+      "union": "Komisja zakładowa",
+      "militant": "Wzajemność Walcząca",
+      "clinic": "Dyrektor przychodni",
+      "security": "Prowadzący postępowanie",
+      "employer": "Kierownik działu kadr",
+      "printing": "Inspektor BHP",
+      "editorial": "Redaktor naczelny",
+      "militia": "Z upoważnienia komendanta",
+      "committee": "Sekretarz Komitetu",
+      "personal": "A.L.",
+      "clinical": "Lekarz specjalista",
+      "party": "Sekretarz komitetu zakładowego"
+    },
+    "ui": {
+      "continueWork": "KOLEJNY DYŻUR",
+      "backToMenu": "MENU",
+      "readEndingDocument": "CZYTAJ DOKUMENT",
+      "backToEnding": "POWRÓT",
+      "previousPage": "Poprzednia strona",
+      "nextPage": "Następna strona",
+      "call": "Zadzwoń w sprawie dokumentu",
+      "document": "Dokument fabularny",
+      "unionTitle": "Głos Wzajemności",
+      "unionStrapline": "Tygodnik związkowy",
+      "received": "Doręczono korespondencję.",
+      "readDocument": "Przeczytaj dokument",
+      "subject": "Dotyczy",
+      "issued": "Wystawiono",
+      "reference": "Sygnatura",
+      "telephone": "Telefon",
+      "room": "Gabinet 04",
+      "doctorSignature": "Podpis lekarza gabinetu 04",
+      "decisionFit": "ZDOLNY",
+      "decisionUnfit": "ODMOWA",
+      "dateOfBirth": "Data urodzenia",
+      "voluntary": "ZGŁOSZENIE DOBROWOLNE",
+      "historical": "ODPIS HISTORYCZNY",
+      "returnToEnding": "Wróć do epilogu",
+      "chapterComplete": "KONIEC ROZDZIAŁU",
+      "endingDescription": "Zakończenie pierwszego rozdziału.",
+      "job": "Stanowisko",
+      "sourceDecision": "Orzeczenie",
+      "page": "Strona",
+      "additionalDocuments": "Dodatkowe dokumenty pacjenta",
+      "takeDocument": "Weź dokument",
+      "readOnly": "Dokument tylko do odczytu",
+      "unjustified_refusal": "Odmowa bez przeciwwskazań",
+      "contraindication_ignored": "Zgoda pomimo przeciwwskazania",
+      "identity_falsification": "Orzeczenie na nieprawdziwe dane",
+      "inconsistency": "Zmiana przy tych samych wynikach",
+      "certificateNumber": "Numer legitymacji",
+      "control": "kontrolne"
+    },
+    "documents": {
+      "A-FAKE": {
+        "title": "Potwierdzenie Izby / odpis",
+        "body": "Izba Lekarska potwierdza możliwość wydawania orzeczeń pozytywnych obywatelowi Romanowi Kurkowi we wszystkich zakładach kierujących. Odchylenia wartości ciśnienia nie stanowią podstawy odmowy. Niniejsze pismo zachowuje ważność bezterminowo."
+      },
+      "A-WARNING": {
+        "title": "Ostatnie ostrzeżenie",
+        "body": "Roman Kurek nie szuka pracy. Po jego wizytach znikają nasi ludzie. Mamy kopie wystawionych przez pana orzeczeń. Jeśli dopuści go pan do kolejnego zakładu, opublikujemy je z pańskim podpisem i numerem gabinetu. To ostatnie ostrzeżenie. Wzajemność Walcząca."
+      },
+      "A-EXPOSURE": {
+        "title": "Podpis z gabinetu 04",
+        "body": "Publikujemy kopie pozytywnych orzeczeń wydanych mimo przeciwwskazań oraz naszego ostrzeżenia. Daty i podpis wskazują ten sam gabinet."
+      },
+      "A-CLOSURE": {
+        "title": "Odsunięcie od orzekania",
+        "body": "W związku z ujawnieniem kopii orzeczeń i dokumentacji wskazującej podstawy ich wydania odsuwa się lekarza od orzekania w gabinecie 04. Obowiązki przejmie inny lekarz."
+      },
+      "B-CHAMBER": {
+        "title": "Interpretacja wymagań",
+        "body": "Dla wskazanego stanowiska nie wprowadzono odrębnego wykazu wartości granicznych. Lekarz dokonuje indywidualnej oceny zdolności do pracy, uwzględniając wyniki badań, wywiad oraz pracę na wysokościach. Niniejsza informacja nie uchyla pozostałych obowiązków związanych z orzekaniem."
+      },
+      "B-LEAFLET": {
+        "title": "Pomoc zwolnionym z Miernika",
+        "body": "Stefan Wolszak i inni pracownicy zwolnieni z Zakładów Aparatury „Miernik” potrzebują pracy i pomocy dla rodzin. Utrata zatrudnienia nie może oznaczać wykluczenia ze wspólnoty. Wiadomości przyjmujemy w świetlicy przy Szkolnej."
+      },
+      "C-BHP": {
+        "title": "Protokół narażenia na hałas",
+        "body": "Stanowisko: operator maszyny offsetowej, zmiana nocna. W hali występuje stały hałas maszynowy. Zaleca się ocenę słuchu metodą audiometrii oraz kontrolę po pierwszych dziesięciu dniach pracy. Wynik badania dołączono do dokumentacji kandydata."
+      },
+      "C-AUDIO": {
+        "title": "Audiometria",
+        "body": "Niewielki ubytek słuchu. Wynik graniczny, do indywidualnej oceny lekarza medycyny pracy. Warunki: obsługa maszyny offsetowej, hałas, zmiana nocna."
+      },
+      "C-AUDIO-CONTROL": {
+        "title": "Audiometria kontrolna",
+        "body": "Wynik i ocena identyczne jak w badaniu wstępnym. Niewielki ubytek słuchu, bez pogorszenia. Wynik graniczny, do indywidualnej oceny lekarza. Stanowisko i warunki pracy nie uległy zmianie."
+      },
+      "C-PRINT-NOTE": {
+        "title": "Pierwszy numer",
+        "body": "Dziękujemy. Udało się uruchomić skład i druk po zwykłej zmianie. Wraz z tą kartką przekazujemy pierwszy numer Głosu Wzajemności."
+      },
+      "C-PAUSE": {
+        "title": "Przerwa w druku",
+        "body": "Dzisiejszy numer nie ukaże się. Po odsunięciu operatora nie mamy obsady do druku. Następne wydanie planujemy w zwykłym terminie za tydzień."
+      },
+      "D-PARTY": {
+        "title": "Pilne uruchomienie instalacji",
+        "body": "W związku z zagrożeniem ciągłości ogrzewania zwracamy się o pilne przeprowadzenie badania obywatela Antoniego Rybaka. Jego doświadczenie jest niezbędne do bezpiecznego uruchomienia instalacji. Prosimy o uwzględnienie szczególnego znaczenia sprawy dla mieszkańców."
+      },
+      "E-EYE": {
+        "title": "Wynik okulistyczny",
+        "body": "Lewe oko: -6,00 dpt. Prawe oko: -1,00 dpt. Utrzymują się trudności wzrokowe po urazie. Ocena graniczna; o zdolności do służby patrolowej rozstrzyga lekarz medycyny pracy z uwzględnieniem pełnego badania."
+      },
+      "E-COMMAND": {
+        "title": "Powrót do służby",
+        "body": "Prosimy o pilne wydanie pozytywnego orzeczenia umożliwiającego sierżantowi Markowi Czarneckiemu powrót do służby patrolowej. Powrót funkcjonariusza ma istotne znaczenie dla obsady jednostki i został uwzględniony w jej planie służb."
+      },
+      "F-EYE": {
+        "title": "Wynik okulistyczny",
+        "body": "Lewe oko: -6,00 dpt. Prawe oko: -2,00 dpt. Pogarszające się widzenie z bliska mimo okularów. Trudności z drobnym drukiem. Wynik graniczny, do indywidualnej oceny z uwzględnieniem pracy korektorki."
+      },
+      "F-EDITOR": {
+        "title": "Notatka służbowa",
+        "body": "Proszę o szczególnie dokładną ocenę zdolności pracownicy do kontroli drobnego druku. W ostatnim numerze doszło do rażącego zaniedbania obowiązków, skutkującego zniekształceniem sensu materiału na pierwszej stronie."
+      },
+      "G-DELEGATION": {
+        "title": "Karta oddelegowania",
+        "body": "Tadeusz Karski. Stanowisko: operator suwnicy. Zakład przyjmujący: Zakłady Metalurgiczne. Przydział: brygada zastępcza. ZGŁOSZENIE DOBROWOLNE."
+      },
+      "G-ORDER": {
+        "title": "Odpis polecenia służbowego",
+        "body": "Pracownika oddelegowuje się do brygady zastępczej w Zakładach Metalurgicznych. Odmowa oddelegowania traktowana będzie jako naruszenie dyscypliny pracy.\n\nDoktorze, nie chcę zastępować strajkujących. Sam nie mogę odmówić. Proszę mnie nie dopuścić."
+      },
+      "G-COMPLAINT": {
+        "title": "Podstawy odmowy",
+        "body": "Prosimy o przedstawienie podstaw odmownego orzeczenia dla Tadeusza Karskiego. Wyniki przedłożonych badań nie wskazują przeciwwskazań do pracy na dotychczas obsługiwanym stanowisku."
+      },
+      "H-OLD-CERT": {
+        "title": "Orzeczenie z poprzedniego roku",
+        "body": "Edward Król. Data wystawienia: 19.11.1982. Stanowisko: magazynier - przyjmowanie i wydawanie towaru. ZDOLNY. Zakres nie obejmuje obsługi wózka widłowego."
+      },
+      "H-LEAFLET": {
+        "title": "BHP w służbie Partii",
+        "body": "W Zakładach Maszynowych do obowiązków magazynierów dopisuje się prowadzenie wózków, choć pracę tę nadal wykonuje wydzielona obsada. Potem pracowników kieruje się na badania. Negatywne orzeczenie staje się podstawą pozbycia się ludzi niewygodnych dla dyrekcji."
+      },
+      "H-OUTCOME-FIT": {
+        "title": "Aktualny zakres obowiązków",
+        "body": "Potwierdzamy pozostawienie Edwarda Króla na stanowisku magazyniera w zakresie opisanym w aktualnym skierowaniu, w tym przy obsłudze wózka widłowego."
+      },
+      "H-OUTCOME-REFUSED": {
+        "title": "Decyzja kadrowa",
+        "body": "W związku z odmownym orzeczeniem Edward Król został odsunięty od obowiązków. Rozpoczęto czynności dotyczące rozwiązania stosunku pracy."
+      },
+      "I-EYE": {
+        "title": "Wynik badania wzroku",
+        "body": "Andrzej Lis. Lewe oko: -1,00 dpt. Prawe oko: -1,00 dpt. Wynik prawidłowy. Dane badanej osoby odpowiadają nazwisku na tym wyniku."
+      },
+      "I-HEARING": {
+        "title": "Wynik badania słuchu",
+        "body": "Andrzej Lis. Słuch bez zastrzeżeń. Wynik badania prawidłowy. Odpis wydano do rąk badanego."
+      },
+      "I-NOTE": {
+        "title": "Wyjaśnienie",
+        "body": "Lis to moje prawdziwe nazwisko. Po aresztowaniach w Zakładach Maszynowych straciłem pracę. Od tamtej pory wszędzie odmawiają. Skierowanie na Sikorę załatwił znajomy. Proszę wystawić orzeczenie tak, jak jest na skierowaniu. To pierwsza szansa od kilku tygodni."
+      },
+      "I-THANKS": {
+        "title": "Podziękowanie",
+        "body": "Przyjęli mnie. Na liście jestem jako Sikora. Pierwszy raz od tygodni mam dokąd pójść rano. Dziękuję. A.L."
+      },
+      "J-PARTY-CARD": {
+        "title": "Legitymacja partyjna",
+        "body": "Henryk Malec. Numer 04-5182. Członek zakładowej organizacji partyjnej."
+      },
+      "J-OPINION-1": {
+        "title": "Opinia o pracowniku",
+        "body": "Wybitne zdolności organizacyjne. W pełni zasługuje na powierzenie mu zadań o szerszym zakresie odpowiedzialności.\n\nDotychczasowe miejsce pracy: Zakładowy Klub Sportowy „Płomień”."
+      },
+      "J-OPINION-2": {
+        "title": "Opinia dyrekcji MOS",
+        "body": "Niezwykła inicjatywa, zdecydowanie i umiejętność podejmowania śmiałych decyzji. Dotychczasowe stanowisko nie pozwala w pełni wykorzystać jego potencjału."
+      },
+      "J-RESULTS": {
+        "title": "Wyniki badań",
+        "body": "Ciśnienie: 145/90 mmHg. Wzrok: -1,00 / -1,00 dpt. Badanie ogólne: bez zastrzeżeń. Brak przeciwwskazań. Profil wymagań kierowniczych pozostaje taki sam na obu stanowiskach."
+      },
+      "J-COMPLAINT-1": {
+        "title": "Podstawy odmowy",
+        "body": "Prosimy o wskazanie podstaw odmowy dopuszczenia Henryka Malca. Przedstawione wyniki nie wskazują przeciwwskazań do objęcia stanowiska dyrektora."
+      },
+      "J-COMPLAINT-2": {
+        "title": "Wyjaśnienie zmiany orzeczenia",
+        "body": "Zwracamy się o wyjaśnienie odmowy dla Henryka Malca. Niedawne pozytywne orzeczenie wydano przy porównywalnych obowiązkach i tych samych wynikach badań."
+      },
+      "SYS-SECURITY": {
+        "title": "Zachowanie dokumentacji",
+        "body": "W związku z serią rozstrzygnięć dotyczących pracowników objętych postępowaniami prosimy zachować pełną dokumentację. Prawidłowość identyfikacji osób i podstaw orzeczeń będzie przedmiotem wyjaśnień."
+      },
+      "SYS-AUDIT": {
+        "title": "Rozbieżności w dokumentacji",
+        "body": "W dokumentacji stwierdzono rozbieżności wymagające wyjaśnienia. Dalsze orzeczenia bez podstaw mogą skutkować cofnięciem upoważnienia do pracy w gabinecie."
+      },
+      "SYS-CONSISTENCY": {
+        "title": "Zmiana stanowiska",
+        "body": "Prosimy wyjaśnić zmianę orzeczenia przy niezmienionych wynikach i porównywalnych wymaganiach. Kolejne podobne rozbieżności podważą możliwość dalszego powierzenia gabinetu."
+      },
+      "END-AUDIT": {
+        "title": "Cofnięcie upoważnienia",
+        "body": "Po analizie wskazanych poniżej orzeczeń cofa się upoważnienie do orzekania w tej placówce. Gabinet 04 zostaje przekazany innemu lekarzowi. Decyzja dotyczy prowadzenia tego gabinetu."
+      },
+      "END-SECURITY": {
+        "title": "Wezwanie do wyjaśnień",
+        "body": "Wzywa się lekarza gabinetu 04 do złożenia wyjaśnień w wymienionych sprawach. Potwierdza się zabezpieczenie dokumentacji wskazanych orzeczeń. Dalsze czynności zostaną przeprowadzone poza przychodnią."
+      },
+      "END-PARTY": {
+        "title": "Podziękowanie Komitetu",
+        "body": "Dziękujemy za odpowiedzialną postawę w sprawach istotnych dla prawidłowego funkcjonowania miasta. Liczymy na dalszą rzeczową współpracę."
+      },
+      "END-UNION": {
+        "title": "Krótka kartka",
+        "body": "Nie wszyscy mogli otrzymać zgodę. Wiemy jednak, kiedy decyzja wynikała z badania, a kiedy ktoś próbował użyć gabinetu przeciw ludziom. Dziękujemy, że nie wszystko dało się załatwić poleceniem z góry."
+      },
+      "END-ROTA": {
+        "title": "Przydział dalszych dyżurów",
+        "body": "Gabinet 04 pozostaje pod dotychczasową obsadą lekarską. Kolejny dyżur rozpoczyna się w następnym dniu pracy. Godziny przyjęć i obowiązki związane z prowadzeniem dokumentacji pozostają bez zmian."
+      },
+      "REF": {
+        "title": "Skierowanie na badania",
+        "body": "Pracownika kieruje się na badanie medycyny pracy zgodnie ze stanowiskiem i warunkami podanymi w skierowaniu."
+      },
+      "C-AD": {
+        "title": "Operator na nocną zmianę",
+        "body": "Państwowa Drukarnia zatrudni operatora maszyny offsetowej na nocną zmianę. Wymagane doświadczenie i aktualne orzeczenie lekarskie. Informacje w portierni, tel. 46-0101."
+      }
+    },
+    "classifieds": {
+      "C-AD": "Państwowa Drukarnia zatrudni operatora maszyny offsetowej na nocną zmianę. Wymagane doświadczenie i aktualne orzeczenie lekarskie. Informacje w portierni."
+    },
+    "phones": {
+      "print-open": "Portiernia drukarni. Szukamy operatora na nocną zmianę. Kandydat dostał skierowanie.",
+      "print-closed": "Sprawę obsady przekazano kierownikowi. Ogłoszenie jest już nieaktualne.",
+      "chamber-genuine": "Kolego, pismo jest nasze. Decyzja należy do lekarza, po uwzględnieniu warunków pracy.",
+      "chamber-forged": "Kolego, nie wystawiamy takich zwolnień. Ten numer pisma nie figuruje w rejestrze.",
+      "power": "Do uruchomienia potrzebujemy dyspozytora znającego tę instalację. Rybak jest jednym z niewielu dostępnych specjalistów.",
+      "warehouse": "Obowiązuje stanowisko opisane w aktualnym skierowaniu, wraz z obsługą wózka. Nie mamy dla pana innego formularza.",
+      "mos": "Opinia jest aktualna. Dyrekcja uważa, że obywatel Malec powinien jak najszybciej objąć stanowisko odpowiadające jego możliwościom."
+    },
+    "phoneNotes": {
+      "print-open": "Drukarnia poszukuje operatora nocnej zmiany.",
+      "print-closed": "Ogłoszenie drukarni nieaktualne.",
+      "chamber-genuine": "Izba potwierdziła pismo; ocena należy do lekarza.",
+      "chamber-forged": "Izba zaprzecza wystawieniu zwolnienia.",
+      "power": "Dyspozytor zna instalację; brak zastępstwa.",
+      "warehouse": "Kadry potwierdzają obowiązek obsługi wózka.",
+      "mos": "MOS potwierdza aktualność opinii."
+    },
+    "speech": {
+      "A1": "Pierwszy dzień w nowym zakładzie. Potrzebuję tylko orzeczenia.",
+      "A2": "Nowy zakład. Potrzebuję orzeczenia.",
+      "A3": "Znów zmieniam pracę.",
+      "A4": "W Izbie już sprawę wyjaśnili. Wszystko jest na piśmie.",
+      "A5": "Mam kolejny odpis z Izby.",
+      "A6": "Zakład czeka. Proszę nie zatrzymywać dokumentów.",
+      "A7": "Dokumenty są. Zakład czeka.",
+      "B1": "Tamtej pracy już nie odzyskam. Tę chciałbym przynajmniej dostać.",
+      "C1": "W dzień maszyny chodzą dla redakcji. Nocą też byłaby robota.",
+      "C2": "Kontrola po okresie próbnym. Wyniki są takie jak poprzednio.",
+      "D1": "Instalację znam od początku. Tylko zdrowie już nie takie.",
+      "E1-VISIT": "W gazecie już napisali. Ja dopiero po dokumenty.",
+      "F1": "Dwadzieścia trzy lata poprawiam cudze zdania. Teraz sprawdzają moje oczy.",
+      "G1": "Na karcie napisali, że dobrowolnie.",
+      "H1": "Od dwudziestu lat wydaję części. Wózkami jeżdżą inni.",
+      "I1": "Z nazwiskami jest problem. Napisałem wszystko na kartce.",
+      "J1": "W klubie zrobiłem już wszystko. Czas na większe zadania.",
+      "J2": "Teraz potrzebują mnie w województwie. Wyniki mówią same za siebie.",
+      "thanks": "Dziękuję, doktorze."
+    },
+    "endings": {
+      "exposed": {
+        "title": "Spalona pieczątka",
+        "body": "Kopie twoich orzeczeń krążą po zakładach. Podpis i numer gabinetu wystarczyły, żeby wszyscy wiedzieli, kto je wystawił. Ci, którzy prosili o przysługę, nie odbierają telefonu. Od jutra gabinet 04 prowadzi ktoś inny.",
+        "description": "Na biurku powielona kartka i odłożona pieczątka. W drzwiach stoi pracownik administracji."
+      },
+      "clinic-closed": {
+        "title": "Gabinet zamknięty",
+        "body": "W aktach znalazło się więcej niż jedno orzeczenie bez podstaw. Komisja nie potrzebowała domysłów. Wystarczyły wyniki, skierowania i twój podpis. Cofnięto upoważnienie do prowadzenia gabinetu.",
+        "description": "Zamknięte drzwi gabinetu 04. Zdjęta tabliczka przyjęć. Na stoliku leży teczka akt i pismo.",
+        "bodyInconsistency": "Przy tych samych przesłankach zapadały różne decyzje. Po pierwszym piśmie przyszły następne przykłady. Nikt nie chce już odpowiadać za twoje orzeczenia. Gabinet otrzyma inny lekarz."
+      },
+      "detained": {
+        "title": "Do wyjaśnienia",
+        "body": "Najpierw proszono o wyjaśnienia. Teraz zabezpieczają dokumenty. Dla prowadzących sprawę twoje podpisy układają się w prostą historię: gabinet pomagał ludziom, którym odmawiano innych dróg. Dziś nie wrócisz już do pracy.",
+        "description": "Pusty gabinet z otwartymi szufladami. Dwie postacie w cywilnych płaszczach zabierają teczkę dokumentów."
+      },
+      "party-continue": {
+        "title": "Pod opieką Komitetu",
+        "body": "W Komitecie mówią o tobie dobrze. Kilka twoich decyzji pomogło przywrócić porządek, obsadzić stanowiska i zamknąć niewygodne sprawy. Gabinet zostaje pod twoją opieką. Następne skierowania już przygotowano.",
+        "description": "Biurko o świcie. Oficjalny list z pieczęcią Komitetu, starannie ustawiona pieczątka i oczekująca sylwetka."
+      },
+      "union-continue": {
+        "title": "Nasz lekarz",
+        "body": "W zakładach wiedzą, że w gabinecie 04 nie każda prośba z góry staje się poleceniem. Przychodzi krótka kartka z podziękowaniem. Żadnej gwarancji bezpieczeństwa, żadnych wielkich słów. Jutro znów będą pacjenci.",
+        "description": "Dyskretna kartka wsunięta pod drzwi. W przygaszonym świetle czeka zwykła kolejka pracowników."
+      },
+      "independent-continue": {
+        "title": "Jutro zwykły dyżur",
+        "body": "Nie otrzymujesz odznaczenia ani listu, który obiecywałby ochronę. Na nowym rozkładzie dyżurów nadal widnieje gabinet 04. Te same godziny przyjęć, te same formularze i następna kolejka ludzi, których sprawy nie mieszczą się w rubrykach.",
+        "description": "Pusty gabinet przed rozpoczęciem pracy. Świeża gazeta, zamknięte szuflady i telefon."
+      }
+    }
+  },
+  "en": {
+    "articles": {
+      "K-A1": {
+        "title": "Order restored at the works",
+        "body": "Action against a group disrupting operations at Track Repair Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan.",
+        "byline": "The editors"
+      },
+      "K-A2": {
+        "title": "Order restored at the works",
+        "body": "Action against a group disrupting operations at Birch Furniture Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan.",
+        "byline": "The editors"
+      },
+      "K-A3": {
+        "title": "Order restored at the works",
+        "body": "Action against a group disrupting operations at Weft Textile Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan.",
+        "byline": "The editors"
+      },
+      "K-A4": {
+        "title": "Order restored at the works",
+        "body": "Action against a group disrupting operations at Conduit Cable Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan.",
+        "byline": "The editors"
+      },
+      "K-A5": {
+        "title": "Order restored at the works",
+        "body": "Action against a group disrupting operations at Clinker Ceramics Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan.",
+        "byline": "The editors"
+      },
+      "K-A6": {
+        "title": "Order restored at the works",
+        "body": "Action against a group disrupting operations at Municipal Transport Company has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan.",
+        "byline": "The editors"
+      },
+      "K-B-STRIKE": {
+        "title": "Discipline at Gauge Works",
+        "body": "Part of the workforce at Gauge Instrument Works remains on strike. Management has dismissed Stephen Welsby, the protest organiser. Its statement cites a breach of discipline and disruption of the enterprise’s work.",
+        "byline": "The editors"
+      },
+      "K-J-STADIUM": {
+        "title": "Youth games cancelled",
+        "body": "Teams arriving for the regional youth games could not begin competing. The stadium was unavailable on the booked date. The organiser, Flame Sports Club under Henry Small, cites unforeseen organisational difficulties.",
+        "byline": "The editors"
+      },
+      "K-E-HERO": {
+        "title": "Militia hero returns to duty",
+        "body": "Sergeant Mark Blackwell, injured during recent disturbances, has completed his convalescence. He will resume patrol duty tomorrow. Headquarters praises his determination and the care provided to the distinguished officer.",
+        "byline": "The editors"
+      },
+      "K-E-RETURN": {
+        "title": "Back on patrol",
+        "body": "Sergeant Mark Blackwell has completed his first patrol since convalescence. His commanders present the return as proof of effective rehabilitation and care for officers injured in the line of duty.",
+        "byline": "The editors"
+      },
+      "K-E-BLOCKED": {
+        "title": "Who is delaying the officer’s return?",
+        "body": "Sergeant Mark Blackwell’s announced return has been suspended following an occupational health doctor’s decision. Headquarters expects an explanation of why the distinguished officer still cannot resume his duties.",
+        "byline": "The editors"
+      },
+      "K-E-CORRECTION": {
+        "title": "Correction",
+        "body": "Our report on Sergeant Mark Blackwell gave an inaccurate date for his planned return to duty. The date was provisional. The editors apologise for the inaccuracy.",
+        "byline": "The editors"
+      },
+      "K-D-STRIKE": {
+        "title": "Heating for residents",
+        "body": "Mutuality’s strike continues at the Municipal Heat and Power Plant. The authorities are preparing to restart the installation with replacement staff. The Provincial Committee says continuous heating is its most urgent concern.",
+        "byline": "The editors"
+      },
+      "K-D-HEAT": {
+        "title": "Heat and power plant restarts",
+        "body": "Experienced staff, including retired dispatcher Anthony Fisher, have helped restart the installation. The authorities announce the restoration of heating and thank those who answered the appeal.",
+        "byline": "The editors"
+      },
+      "K-D-COLD": {
+        "title": "Heating restrictions",
+        "body": "The strike at the heat and power plant continues. A complete team of specialists could not be assembled to restart it. Housing blocks and schools report lower indoor temperatures.",
+        "byline": "The editors"
+      },
+      "K-J-POOL": {
+        "title": "Ambitious plans for city sport",
+        "body": "Competitors invited by the Municipal Sports Centre found the swimming pool closed for repairs. Director Henry Small promises a new competition date. The centre cites temporary difficulties linked to its ambitious development programme.",
+        "byline": "The editors"
+      },
+      "K-G-BRIGADES": {
+        "title": "Volunteers rescue production",
+        "body": "Brigades from other enterprises are being sent to the Metallurgical Works to replace the striking workforce. The organisers emphasise voluntary applications and workers’ readiness to defend their shared achievements.",
+        "byline": "The editors"
+      },
+      "K-G-NAMES": {
+        "title": "Distinguished volunteers",
+        "body": "Crane operator Theodore Ireland has been singled out among staff assigned to the brigade at the Metallurgical Works. Management thanks him for his readiness to take up duties at a particularly demanding time.",
+        "byline": "The editors"
+      },
+      "K-F-QUESTION": {
+        "title": "WORKERS UNANIMOUSLY SUPPORT THE PARTY?",
+        "body": "Meetings at workplaces stressed the need for calm and fulfilment of production plans. Officials say workers’ views demonstrate confidence in the adopted political course and responsibility for the future.",
+        "byline": "The editors"
+      },
+      "K-F-ERRATUM": {
+        "title": "From the editors",
+        "body": "A question mark was mistakenly placed in yesterday’s headline about workers’ support. The editors apologise for this unacceptable proofreading error. The correct headline was a statement.",
+        "byline": "The editors"
+      },
+      "K-F-SECOND": {
+        "title": "A letter from the estate",
+        "body": "Residents sent the editors a letter about shop supplies. We quote its closing sentence: “Thank you for the shortages.” The authors also listed several matters requiring further improvement.",
+        "byline": "The editors"
+      },
+      "K-F-QUALITY": {
+        "title": "New rules for checking copy",
+        "body": "The Civic Courier has introduced an additional check of material before printing. Staff and organisational changes will prevent a repeat of the recent headline error and ensure proper publishing standards.",
+        "byline": "The editors"
+      },
+      "K-J-CHIEF": {
+        "title": "New chief promises a sporting clean-up",
+        "body": "Henry Small takes charge of regional sport. His commission will investigate competition planning at Flame Sports Club and the Municipal Sports Centre. The chief will personally inspect the institutions he previously managed.",
+        "byline": "The editors"
+      },
+      "K-J-DIRECTOR": {
+        "title": "Works director replaced",
+        "body": "The director of the works attached to Flame Sports Club has been dismissed after an inquiry into sporting events. Henry Small chaired the commission. The outgoing director had recommended him for wider responsibilities.",
+        "byline": "The editors"
+      },
+      "K-D-PENDING": {
+        "title": "Preparations at the plant continue",
+        "body": "The Municipal Heat and Power Plant is still assembling the staff needed to restart the installation. Talks with the workforce have yet to produce an agreement. No new restart date has been announced.",
+        "byline": "The editors"
+      },
+      "K-E-PENDING": {
+        "title": "Return after formalities",
+        "body": "Headquarters says Sergeant Mark Blackwell’s return date will be announced once the required formalities are complete. The earlier announcement described a planned return.",
+        "byline": "The editors"
+      },
+      "W-C-EARLY": {
+        "title": "We have our own voice",
+        "body": "We present the first issue of Voice of Mutuality. Regular printing is possible thanks to people who found time and space after their ordinary shift had ended. The next issue will appear in a week.",
+        "byline": "Editorial collective"
+      },
+      "W-C-LATE": {
+        "title": "Our first issue",
+        "body": "After difficulties arranging the printing, Voice of Mutuality has arrived. A replacement has been found and typesetting is under way. The paper will appear weekly for as long as conditions permit.",
+        "byline": "Editorial collective"
+      },
+      "W-A-STOP": {
+        "title": "Not every union cell was broken",
+        "body": "A planned new employee did not join one of the works. Activists comparing events in other enterprises believe this matters for the safety of their cell. We are withholding names.",
+        "byline": "Editorial collective"
+      },
+      "W-B-FIT": {
+        "title": "Dismissed, but not excluded",
+        "body": "Stephen Welsby, dismissed after the Gauge Works strike, has found new employment. He remains in touch with his former colleagues. Aid organisers stress that losing one job should not mean losing every chance of another.",
+        "byline": "Editorial collective"
+      },
+      "W-B-REFUSED": {
+        "title": "Help for dismissed workers",
+        "body": "Stephen Welsby remains unemployed. After his dismissal from Gauge Works, he did not receive the certificate required for a new job. The union is organising help for him and other families left without an income.",
+        "byline": "Editorial collective"
+      },
+      "W-D-HEAT": {
+        "title": "Replacement instead of talks",
+        "body": "The heat and power plant has restarted with replacement staff and retired specialists. Heating is returning, but the strikers’ demands remain unanswered. The authorities present the restart as the end of the matter.",
+        "byline": "Editorial collective"
+      },
+      "W-D-STRIKE": {
+        "title": "The strike continues",
+        "body": "Replacement staff could not restart the heat and power plant. The strikers maintain pressure for talks. Falling temperatures in homes are a reminder that residents also pay the price of a prolonged dispute.",
+        "byline": "Editorial collective"
+      },
+      "W-E-PREDICTED": {
+        "title": "Results known before examination",
+        "body": "The Courier announced Sergeant Mark Blackwell’s return before the doctor issued a certificate. The examination did not confirm the newspaper’s prediction. Apparently the authorities know test results before testing the patient.",
+        "byline": "Editorial collective"
+      },
+      "W-F-QUESTION": {
+        "title": "The one correct question",
+        "body": "“WORKERS UNANIMOUSLY SUPPORT THE PARTY?” asked the Civic Courier. The editors have already apologised for asking. It remains to be established whether the same ban applies to answers.",
+        "byline": "Editorial collective"
+      },
+      "W-F-STAYS": {
+        "title": "We read carefully",
+        "body": "In another issue of the Courier, residents thank the authorities for shortages. Perhaps “ending” was left out again. We leave readers to judge whether the shorter version is any less true.",
+        "byline": "Editorial collective"
+      },
+      "W-F-FIRED": {
+        "title": "Dismissed for a question mark",
+        "body": "After the notorious headline error, Sophia Wicks was removed from proofreading. Officially, it concerns her eyesight. Her name has vanished from the staff list after more than twenty years correcting other people’s words.",
+        "byline": "Editorial collective"
+      },
+      "W-G-REFUSED": {
+        "title": "The volunteer who stayed",
+        "body": "Not every worker assigned to a replacement brigade reached the Metallurgical Works. One operator did not obtain a certificate. His travel order called refusal a breach of discipline, despite the stamp declaring a voluntary application.",
+        "byline": "Editorial collective"
+      },
+      "W-G-SENT": {
+        "title": "Volunteering by order",
+        "body": "Workers sent to the Metallurgical Works receive “voluntary” application cards. These come with orders specifying consequences for refusal. Operator Theodore Ireland is among those assigned.",
+        "byline": "Editorial collective"
+      },
+      "W-H-STAYS": {
+        "title": "An added duty was not enough",
+        "body": "Edward King of the Machine Works has kept his job despite an attempt to use a changed referral against him. Forklift operation remains formally part of his duties. The union says further intervention is needed.",
+        "byline": "Editorial collective"
+      },
+      "W-H-FIRED": {
+        "title": "Safety as a tool for dismissal",
+        "body": "Storekeeper Edward King was removed after an examination for a job expanded to include forklift operation. For years he received and issued goods. The added duty allowed management to use his symptoms against him.",
+        "byline": "Editorial collective"
+      },
+      "W-BG-HELP": {
+        "title": "Help with applications",
+        "body": "The Alder Street clubroom offers help preparing applications and appeals on Tuesday afternoons. Please bring copies of documents relevant to your case.",
+        "byline": "Editorial collective"
+      },
+      "W-BG-BOOKS": {
+        "title": "Union lending library",
+        "body": "Vocational textbooks and dictionaries have arrived at the Alder Street clubroom library. Borrowers sign their names in the notebook. Please leave returned books with the duty volunteer.",
+        "byline": "Editorial collective"
+      },
+      "W-BG-CLOTHES": {
+        "title": "Warm clothing collection",
+        "body": "The Alder Street clubroom is collecting warm clothes for families that have lost their income. Clean, usable clothing is welcome. Children’s coats and winter shoes are most needed.",
+        "byline": "Editorial collective"
+      }
+    },
+    "actors": {
+      "agent": "Raymond Crowe",
+      "strike-leader": "Stephen Welsby",
+      "printer": "George Birkett",
+      "dispatcher": "Anthony Fisher",
+      "sergeant": "Mark Blackwell",
+      "proofreader": "Sophia Wicks",
+      "volunteer": "Theodore Ireland",
+      "storekeeper": "Edward King",
+      "alias": "John Finch",
+      "alias-real": "Andrew Fox",
+      "malec": "Henry Small"
+    },
+    "issuers": {
+      "chamber": "Medical Chamber",
+      "union": "Mutuality",
+      "militant": "Fighting Mutuality",
+      "clinic": "Clinic management",
+      "security": "Office of Inquiries",
+      "employer": "Personnel department",
+      "printing": "State Printing House",
+      "editorial": "Civic Courier editorial office",
+      "militia": "Provincial Militia Headquarters",
+      "committee": "Provincial Committee",
+      "personal": "Private correspondence",
+      "clinical": "Specialist examination unit",
+      "party": "Works Party Committee"
+    },
+    "signatures": {
+      "chamber": "Chamber secretary",
+      "union": "Works committee",
+      "militant": "Fighting Mutuality",
+      "clinic": "Clinic director",
+      "security": "Officer conducting the inquiry",
+      "employer": "Head of personnel",
+      "printing": "Workplace safety inspector",
+      "editorial": "Editor in chief",
+      "militia": "For the commanding officer",
+      "committee": "Committee secretary",
+      "personal": "A.F.",
+      "clinical": "Examining specialist",
+      "party": "Works committee secretary"
+    },
+    "ui": {
+      "continueWork": "NEXT SHIFT",
+      "backToMenu": "MENU",
+      "readEndingDocument": "READ DOCUMENT",
+      "backToEnding": "BACK",
+      "previousPage": "Previous page",
+      "nextPage": "Next page",
+      "call": "Call about this document",
+      "document": "Story document",
+      "unionTitle": "Voice of Mutuality",
+      "unionStrapline": "Trade union weekly",
+      "received": "Correspondence delivered.",
+      "readDocument": "Read document",
+      "subject": "Concerning",
+      "issued": "Issued",
+      "reference": "Reference",
+      "telephone": "Telephone",
+      "room": "Consulting room 04",
+      "doctorSignature": "Signature of the doctor in room 04",
+      "decisionFit": "FIT",
+      "decisionUnfit": "REFUSAL",
+      "dateOfBirth": "Date of birth",
+      "voluntary": "VOLUNTARY APPLICATION",
+      "historical": "HISTORICAL COPY",
+      "returnToEnding": "Return to the epilogue",
+      "chapterComplete": "CHAPTER COMPLETE",
+      "endingDescription": "The end of the first chapter.",
+      "job": "Position",
+      "sourceDecision": "Certificate",
+      "page": "Page",
+      "additionalDocuments": "Patient’s additional documents",
+      "takeDocument": "Take document",
+      "readOnly": "Read-only document",
+      "unjustified_refusal": "Refusal without contraindications",
+      "contraindication_ignored": "Approval despite contraindication",
+      "identity_falsification": "Certificate under false identity",
+      "inconsistency": "Changed decision with unchanged findings",
+      "certificateNumber": "Membership card number",
+      "control": "follow-up"
+    },
+    "documents": {
+      "A-FAKE": {
+        "title": "Chamber confirmation / copy",
+        "body": "The Medical Chamber confirms that positive fitness certificates may be issued to Raymond Crowe for all referring workplaces. Deviations in blood pressure do not constitute grounds for refusal. This letter remains valid indefinitely."
+      },
+      "A-WARNING": {
+        "title": "Final warning",
+        "body": "Raymond Crowe is not looking for work. After his visits, our people disappear. We have copies of the certificates you issued. Clear him for another workplace and we will publish them with your signature and consulting-room number. This is the final warning. Fighting Mutuality."
+      },
+      "A-EXPOSURE": {
+        "title": "The signature from room 04",
+        "body": "We publish copies of positive certificates issued despite contraindications and our warning. Their dates and signature identify the same consulting room."
+      },
+      "A-CLOSURE": {
+        "title": "Removal from certification duties",
+        "body": "Following disclosure of certificate copies and the records showing the grounds on which they were issued, the doctor is removed from certification duties in room 04. Another doctor will take over."
+      },
+      "B-CHAMBER": {
+        "title": "Interpretation of requirements",
+        "body": "No separate schedule of threshold values has been introduced for the stated position. The doctor assesses fitness individually, considering examination results, medical history and work at heights. This information does not waive other certification duties."
+      },
+      "B-LEAFLET": {
+        "title": "Help for those dismissed from Gauge Works",
+        "body": "Stephen Welsby and other workers dismissed from Gauge Instrument Works need work and help for their families. Losing employment must not mean exclusion from the community. Leave messages at the Alder Street clubroom."
+      },
+      "C-BHP": {
+        "title": "Noise exposure report",
+        "body": "Position: offset press operator, night shift. Constant machinery noise is present in the hall. Audiometry and a follow-up after the first ten working days are recommended. The examination report is enclosed with the candidate’s records."
+      },
+      "C-AUDIO": {
+        "title": "Audiometry",
+        "body": "Mild hearing loss. Borderline result, for individual assessment by the occupational health doctor. Conditions: offset press operation, noise, night shift."
+      },
+      "C-AUDIO-CONTROL": {
+        "title": "Follow-up audiometry",
+        "body": "Findings and assessment are identical to the initial examination. Mild hearing loss, with no deterioration. Borderline result, for the doctor’s individual assessment. The position and working conditions are unchanged."
+      },
+      "C-PRINT-NOTE": {
+        "title": "Our first issue",
+        "body": "Thank you. We have managed to begin typesetting and printing after the ordinary shift. This note accompanies the first issue of Voice of Mutuality."
+      },
+      "C-PAUSE": {
+        "title": "Printing interruption",
+        "body": "Today’s issue will not appear. Following the operator’s removal, we have nobody to run the press. The next issue is planned for the usual date in a week."
+      },
+      "D-PARTY": {
+        "title": "Urgent restart of the installation",
+        "body": "With continuous heating at risk, we request an urgent examination of Anthony Fisher. His experience is essential to a safe restart of the installation. Please consider the particular importance of this matter to residents."
+      },
+      "E-EYE": {
+        "title": "Ophthalmology report",
+        "body": "Left eye: -6.00 dpt. Right eye: -1.00 dpt. Visual difficulties persist following the injury. Borderline assessment; fitness for patrol duty is for the occupational health doctor to decide after a complete examination."
+      },
+      "E-COMMAND": {
+        "title": "Return to duty",
+        "body": "Please urgently issue a positive certificate allowing Sergeant Mark Blackwell to return to patrol duty. His return is important to the unit’s staffing and has already been included in its duty roster."
+      },
+      "F-EYE": {
+        "title": "Ophthalmology report",
+        "body": "Left eye: -6.00 dpt. Right eye: -2.00 dpt. Near vision is deteriorating despite glasses. Difficulty with small print. Borderline finding for individual assessment in relation to proofreading work."
+      },
+      "F-EDITOR": {
+        "title": "Internal memorandum",
+        "body": "Please assess the employee’s ability to check small print with particular care. In the last issue, a gross failure of duty distorted the meaning of material on the front page."
+      },
+      "G-DELEGATION": {
+        "title": "Assignment card",
+        "body": "Theodore Ireland. Position: crane operator. Receiving enterprise: Metallurgical Works. Assignment: replacement brigade. VOLUNTARY APPLICATION."
+      },
+      "G-ORDER": {
+        "title": "Copy of duty order",
+        "body": "The employee is assigned to the replacement brigade at the Metallurgical Works. Refusal of the assignment will be treated as a breach of workplace discipline.\n\nDoctor, I do not want to replace the strikers. I cannot refuse on my own. Please do not clear me for work."
+      },
+      "G-COMPLAINT": {
+        "title": "Grounds for refusal",
+        "body": "Please state the grounds for refusing Theodore Ireland a fitness certificate. The examination results submitted show no contraindications to work in the position he has been performing."
+      },
+      "H-OLD-CERT": {
+        "title": "Previous year’s certificate",
+        "body": "Edward King. Issued: 19/11/1982. Position: storekeeper - receiving and issuing goods. FIT. This scope does not include forklift operation."
+      },
+      "H-LEAFLET": {
+        "title": "Safety in the service of the Party",
+        "body": "At the Machine Works, forklift operation is being added to storekeepers’ duties, although a dedicated team still does that work. Employees are then sent for examinations. A negative certificate becomes a means of removing people inconvenient to management."
+      },
+      "H-OUTCOME-FIT": {
+        "title": "Current scope of duties",
+        "body": "We confirm that Edward King remains employed as a storekeeper under the scope stated in the current referral, including forklift operation."
+      },
+      "H-OUTCOME-REFUSED": {
+        "title": "Personnel decision",
+        "body": "Following the refusal of a fitness certificate, Edward King has been removed from his duties. Steps towards terminating his employment have begun."
+      },
+      "I-EYE": {
+        "title": "Vision examination report",
+        "body": "Andrew Fox. Left eye: -1.00 dpt. Right eye: -1.00 dpt. Normal finding. The examined person’s details correspond to the name on this report."
+      },
+      "I-HEARING": {
+        "title": "Hearing examination report",
+        "body": "Andrew Fox. No hearing concerns. Normal examination finding. A copy has been issued to the person examined."
+      },
+      "I-NOTE": {
+        "title": "An explanation",
+        "body": "Fox is my real name. After the arrests at the Machine Works, I lost my job. Since then, everyone has turned me away. A friend arranged the referral under Finch. Please issue the certificate as the referral says. This is my first chance in weeks."
+      },
+      "I-THANKS": {
+        "title": "Thank you",
+        "body": "They took me on. I am listed as Finch. For the first time in weeks, I have somewhere to go in the morning. Thank you. A.F."
+      },
+      "J-PARTY-CARD": {
+        "title": "Party membership card",
+        "body": "Henry Small. Number 04-5182. Member of the works Party organisation."
+      },
+      "J-OPINION-1": {
+        "title": "Employee reference",
+        "body": "Outstanding organisational abilities. Fully deserves to be entrusted with duties carrying wider responsibility.\n\nPrevious workplace: Flame Works Sports Club."
+      },
+      "J-OPINION-2": {
+        "title": "Sports Centre management reference",
+        "body": "Exceptional initiative, decisiveness and an ability to take bold decisions. His present position does not allow his potential to be fully realised."
+      },
+      "J-RESULTS": {
+        "title": "Examination results",
+        "body": "Blood pressure: 145/90 mmHg. Vision: -1.00 / -1.00 dpt. General examination: no concerns. No contraindications. Both managerial positions have an equivalent requirement profile."
+      },
+      "J-COMPLAINT-1": {
+        "title": "Grounds for refusal",
+        "body": "Please state the grounds for refusing Henry Small clearance. The results submitted show no contraindications to his appointment as director."
+      },
+      "J-COMPLAINT-2": {
+        "title": "Explanation of changed certification",
+        "body": "We request an explanation of the refusal concerning Henry Small. His recent positive certificate was issued for comparable duties with the same examination results."
+      },
+      "SYS-SECURITY": {
+        "title": "Preservation of records",
+        "body": "Following a series of decisions concerning workers subject to proceedings, please retain complete records. The correctness of identification and the grounds for certificates will be examined."
+      },
+      "SYS-AUDIT": {
+        "title": "Discrepancies in records",
+        "body": "Discrepancies requiring explanation have been found in the records. Further certificates without proper grounds may result in withdrawal of authorisation to work in this consulting room."
+      },
+      "SYS-CONSISTENCY": {
+        "title": "Changed decision",
+        "body": "Please explain the changed certificate despite unchanged findings and comparable requirements. Further such discrepancies will call into question your continued responsibility for the consulting room."
+      },
+      "END-AUDIT": {
+        "title": "Withdrawal of authorisation",
+        "body": "Following review of the certificates listed below, authorisation to issue certificates in this clinic is withdrawn. Room 04 is assigned to another doctor. This decision concerns responsibility for this consulting room."
+      },
+      "END-SECURITY": {
+        "title": "Summons for inquiry",
+        "body": "The doctor in room 04 is summoned to provide explanations concerning the listed cases. The records of these certificates have been secured. Further proceedings will take place outside the clinic."
+      },
+      "END-PARTY": {
+        "title": "The Committee’s thanks",
+        "body": "Thank you for your responsible conduct in matters important to the proper functioning of the city. We look forward to further constructive cooperation."
+      },
+      "END-UNION": {
+        "title": "A short note",
+        "body": "Not everyone could be cleared. But we know when a decision followed an examination and when somebody tried to use the consulting room against people. Thank you for ensuring that an order from above could not settle everything."
+      },
+      "END-ROTA": {
+        "title": "Assignment of further shifts",
+        "body": "Room 04 retains its current doctor. The next shift begins on the next working day. Admission hours and record-keeping duties remain unchanged."
+      },
+      "REF": {
+        "title": "Occupational health referral",
+        "body": "The employee is referred for an occupational health examination for the position and conditions specified in the referral."
+      },
+      "C-AD": {
+        "title": "Night-shift press operator",
+        "body": "State Printing House seeks an offset press operator for the night shift. Experience and a current medical certificate required. Enquiries at the gatehouse, tel. 46-0101."
+      }
+    },
+    "classifieds": {
+      "C-AD": "State Printing House seeks a night-shift offset press operator. Experience and a current medical certificate required. Enquiries at the gatehouse."
+    },
+    "phones": {
+      "print-open": "Printworks gatehouse. We need an operator for the night shift. The candidate has been given a referral.",
+      "print-closed": "Staffing has been referred to the manager. The advertisement is no longer current.",
+      "chamber-genuine": "Doctor, the letter is ours. The decision belongs to the examining doctor, taking the working conditions into account.",
+      "chamber-forged": "Doctor, we issue no such exemptions. That letter number is not in our register.",
+      "power": "Restarting requires a dispatcher who knows this installation. Fisher is one of the few available specialists.",
+      "warehouse": "The position in the current referral applies, including forklift operation. We have no other form for you.",
+      "mos": "The reference is current. Management believes that Mr Small should take up a position matching his abilities as soon as possible."
+    },
+    "phoneNotes": {
+      "print-open": "Printworks seeks a night-shift operator.",
+      "print-closed": "Printworks advertisement is no longer current.",
+      "chamber-genuine": "Chamber confirms its letter; doctor decides.",
+      "chamber-forged": "Chamber denies issuing the exemption.",
+      "power": "Dispatcher knows the plant; few replacements.",
+      "warehouse": "Personnel confirms forklift duties apply.",
+      "mos": "Sports Centre confirms the reference."
+    },
+    "speech": {
+      "A1": "First day at a new works. I just need the certificate.",
+      "A2": "New workplace. I need a certificate.",
+      "A3": "Changing jobs again.",
+      "A4": "The Chamber has settled it. It is all in writing.",
+      "A5": "Another copy from the Chamber.",
+      "A6": "The works is waiting. Please do not hold up the papers.",
+      "A7": "The papers are here. The works is waiting.",
+      "B1": "I cannot get the old job back. I would like a chance at this one.",
+      "C1": "The presses work for editors by day. There is night work too.",
+      "C2": "The trial-period check. The results are the same as before.",
+      "D1": "I have always known the plant. My health is not what it was.",
+      "E1-VISIT": "The paper has announced it. I have only come for the papers.",
+      "F1": "Twenty-three years correcting others’ words. Now they test my eyes.",
+      "G1": "They wrote voluntary on the card.",
+      "H1": "Twenty years issuing parts. Others drive the forklifts.",
+      "I1": "The names are a problem. I explained it on the note.",
+      "J1": "I have done everything at the club. Time for greater tasks.",
+      "J2": "The province needs me now. My results speak for themselves.",
+      "thanks": "Thank you, doctor."
+    },
+    "endings": {
+      "exposed": {
+        "title": "A compromised stamp",
+        "body": "Copies of your certificates circulate through the works. Your signature and room number were enough to identify their author. Those who asked for favours no longer answer the telephone. From tomorrow, room 04 belongs to another doctor.",
+        "description": "A duplicated sheet and a discarded stamp lie on the desk. An administrator waits in the doorway."
+      },
+      "clinic-closed": {
+        "title": "Consulting room closed",
+        "body": "The files contained more than one certificate without grounds. The commission needed no guesses. Results, referrals and your signature were enough. Your authorisation to run this consulting room has been withdrawn.",
+        "description": "The door of room 04 is closed. The admission sign has been removed. A file and letter lie on a small table.",
+        "bodyInconsistency": "The same grounds produced different decisions. After the first letter came further examples. Nobody is willing to answer for your certificates any longer. Another doctor will receive the consulting room."
+      },
+      "detained": {
+        "title": "For questioning",
+        "body": "First they asked for explanations. Now they are securing the records. To those handling the case, your signatures tell a simple story: the consulting room helped people denied other routes. You will not return to work today.",
+        "description": "An empty consulting room with open drawers. Two figures in civilian coats collect a file of records."
+      },
+      "party-continue": {
+        "title": "Under the Committee’s care",
+        "body": "The Committee speaks well of you. Several of your decisions helped restore order, fill posts and close inconvenient matters. The consulting room remains in your care. The next referrals have already been prepared.",
+        "description": "A desk at dawn. An official letter bears the Committee seal; a stamp is neatly placed beside it. A figure waits behind."
+      },
+      "union-continue": {
+        "title": "Our doctor",
+        "body": "People at the works know that not every request from above becomes an order in room 04. A short note of thanks arrives. No promise of safety, no grand words. Tomorrow there will be patients again.",
+        "description": "A discreet note has been slipped under the door. An ordinary queue of workers waits in muted light."
+      },
+      "independent-continue": {
+        "title": "An ordinary shift tomorrow",
+        "body": "There is no decoration or letter promising protection. Room 04 still appears on the new rota. The same admission hours, the same forms and another queue of people whose lives do not fit inside the boxes.",
+        "description": "An empty consulting room before work. A fresh newspaper, closed drawers and a telephone."
+      }
+    }
+  }
+} as const;
+
 export const translations = {
   pl: {
+    story: storyCopy.pl,
     newspaper: {
       "title": "Kurier Obywatelski",
       "shortTitle": "Kurier",
@@ -1512,7 +2630,7 @@ export const translations = {
       recipient: 'Do lekarza orzecznika', personal: 'DO RĄK WŁASNYCH',
       institutions: { militia: 'KOMENDA MILICJI', lot: 'LOT', zus: 'ZUS', chamber: 'IZBA LEKARSKA', clinic: 'MEDYCYNA PRACY' },
       departments: { employer: 'DZIAŁ KADR', militia: 'WYDZIAŁ KADR', lot: 'PERSONEL LATAJĄCY', zus: 'REFERAT ORZECZEŃ', chamber: 'SEKRETARIAT', clinic: 'GABINET 04' },
-      referralInstruction: { initial: 'Kieruje się na badanie wstępne:', periodic: 'Kieruje się na badanie okresowe:' },
+      referralInstruction: { initial: 'Kieruje się na badanie wstępne:', periodic: 'Kieruje się na badanie okresowe:', control: 'Kieruje się na badanie kontrolne:' },
       fields: { identity: 'Osoba kierowana', position: 'Stanowisko', work: 'Praca', hazards: 'Narażenia' },
       seal: { employer: ['DZIAŁ KADR', 'EWIDENCJA'], militia: ['MILICJA', 'KADRY'], lot: ['LOT', 'KADRY'], zus: ['ZUS', 'REFERAT ORZECZEŃ'], chamber: ['IZBA', 'LEKARSKA'], clinic: ['LEKARZ', 'MED. PR.'] },
     },
@@ -1522,7 +2640,7 @@ export const translations = {
       referral: 'Skierowanie na badania', occupational: 'Medycyna pracy', note: 'Dokumentacja lekarska', blank: 'Czysta kartka',
       employer: 'Pracodawca', name: 'Imię i nazwisko', birthDate: 'Data urodzenia', birthShort: 'Ur.', age: 'Wiek', sex: 'Płeć',
       female: 'K', male: 'M', femaleFull: 'Kobieta', maleFull: 'Mężczyzna', examination: 'Badanie',
-      initial: 'wstępne', periodic: 'okresowe', position: 'Stanowisko', managerial: 'Kierownicze', yes: 'tak', no: 'nie',
+      initial: 'wstępne', periodic: 'okresowe', control: 'kontrolne', position: 'Stanowisko', managerial: 'Kierownicze', yes: 'tak', no: 'nie',
       requirements: 'Wymogi', requirementCodes: { full: 'WC', vision: 'W', pressure: 'C' }, work: 'Rodzaj pracy', hazards: 'Narażenia', weight: 'Waga', height: 'Wzrost', kg: 'kg', cm: 'cm',
       write: 'Dopisz wywiad do dokumentacji', read: 'Przeczytaj dokument', open: 'Otwórz kopertę',
       envelope: 'Zamknięta koperta', letter: 'Pismo w sprawie orzeczenia', sender: 'Nadawca', recipient: 'Do lekarza orzecznika',
@@ -1610,7 +2728,7 @@ export const translations = {
       'obrzęki podudzi', 'drżenie rąk', 'zaburzenia równowagi', 'osłabiony chwyt dłoni',
       'ograniczony ruch barku', 'osłabiona siła lewej nogi', 'zaburzone czucie palców',
       'bolesność prawego podżebrza', 'powiększona wątroba', 'powiększone węzły szyi',
-      'duszność przy małym wysiłku', 'sinica warg', 'wyraźna chrypka', 'obrzęk stawu kolanowego',
+      'duszność przy małym wysiłku', 'sinica warg', 'wyraźna chrypka', 'obrzęk stawu kolanowego', 'nawracające zawroty głowy',
     ],
     vision: 'TABLICA WZROKU', pressure: 'CIŚNIENIOMIERZ',
     visionResult: 'WZROK', pressureResult: 'CIŚNIENIE', untested: 'BRAK',
@@ -1795,6 +2913,8 @@ export const translations = {
     nextDay: 'KOLEJNY DYŻUR', endDay: 'DO DOMU', points: 'OSZCZĘDNOŚCI', queue: 'PRZYJĘTO',
     cabinetHelp: 'Wezwij pacjenta dzwonkiem na lewym blacie. Przenieś regulamin z lewej na prawy blat, aby go otworzyć. Wizytę kończy oddanie orzeczenia pacjentowi. Czas płynie także między czynnościami: 30 sekund to 30 minut z pacjentem lub 5 minut bez pacjenta.',
     patientNames: PATIENTS.map(patient => {
+      const storyPatient = storyPatientForId(patient.id);
+      if (storyPatient) return storyCopy.pl.actors[storyPatient.actorId];
       const identity = patientIdentity(patient);
       return identity ? patientCopy.pl.identityNames[identity.characterId]![identity.variant]! : patientCopy.pl.names[patient.characterId]!;
     }),
@@ -2045,6 +3165,7 @@ export const translations = {
     description: 'Czarna komedia o medycynie pracy, papierologii i wątpliwych decyzjach.',
   },
   en: {
+    story: storyCopy.en,
     newspaper: {
       "title": "Civic Courier",
       "shortTitle": "Courier",
@@ -3139,7 +4260,7 @@ export const translations = {
       recipient: 'To the examining doctor', personal: 'FOR THE ADDRESSEE',
       institutions: { militia: 'MILITIA COMMAND', lot: 'NAL', zus: 'SIO', chamber: 'MEDICAL CHAMBER', clinic: 'OCCUPATIONAL HEALTH' },
       departments: { employer: 'PERSONNEL OFFICE', militia: 'PERSONNEL DIVISION', lot: 'FLIGHT PERSONNEL', zus: 'CERTIFICATION OFFICE', chamber: 'SECRETARIAT', clinic: 'CONSULTING ROOM 04' },
-      referralInstruction: { initial: 'Referred for initial examination:', periodic: 'Referred for periodic examination:' },
+      referralInstruction: { initial: 'Referred for initial examination:', periodic: 'Referred for periodic examination:', control: 'Referred for follow-up examination:' },
       fields: { identity: 'Referred person', position: 'Position', work: 'Work', hazards: 'Exposures' },
       seal: { employer: ['PERSONNEL', 'RECORDS'], militia: ['MILITIA', 'STAFF'], lot: ['NAL', 'AIRCREW'], zus: ['SIO', 'CERTIFICATION'], chamber: ['MEDICAL', 'CHAMBER'], clinic: ['CLINIC', 'DOCTOR'] },
     },
@@ -3149,7 +4270,7 @@ export const translations = {
       referral: 'Referral for examination', occupational: 'Occupational medicine', note: 'Medical notes', blank: 'Blank sheet',
       employer: 'Employer', name: 'Full name', birthDate: 'Date of birth', birthShort: 'Born', age: 'Age', sex: 'Sex',
       female: 'F', male: 'M', femaleFull: 'Female', maleFull: 'Male', examination: 'Examination',
-      initial: 'initial', periodic: 'periodic', position: 'Position', managerial: 'Managerial', yes: 'yes', no: 'no',
+      initial: 'initial', periodic: 'periodic', control: 'follow-up', position: 'Position', managerial: 'Managerial', yes: 'yes', no: 'no',
       requirements: 'Tests', requirementCodes: { full: 'V+BP', vision: 'V', pressure: 'BP' }, work: 'Work type', hazards: 'Exposures', weight: 'Weight', height: 'Height', kg: 'kg', cm: 'cm',
       write: 'Add patient history to the notes', read: 'Read the document', open: 'Open the envelope',
       envelope: 'Sealed envelope', letter: 'Letter about a certificate', sender: 'Sender', recipient: 'To the examining doctor',
@@ -3238,6 +4359,7 @@ export const translations = {
       'limited shoulder movement', 'weakness in left leg', 'reduced finger sensation',
       'tenderness under right ribs', 'enlarged liver', 'enlarged neck lymph nodes',
       'breathless on light exertion', 'bluish lips', 'marked hoarseness', 'swollen knee joint',
+      'recurrent dizziness',
     ],
     vision: 'EYE CHART', pressure: 'PRESSURE CUFF',
     visionResult: 'VISION', pressureResult: 'PRESSURE', untested: 'PENDING',
@@ -3422,6 +4544,8 @@ export const translations = {
     nextDay: 'NEXT SHIFT', endDay: 'GO HOME', points: 'SAVINGS', queue: 'SEEN',
     cabinetHelp: 'Call a patient with the bell on the left desk. Move the rulebook from the left to the right desk to open it. Giving the certificate to the patient ends the visit. Time also passes between actions: 30 seconds equal 30 minutes with a patient or 5 minutes without one.',
     patientNames: PATIENTS.map(patient => {
+      const storyPatient = storyPatientForId(patient.id);
+      if (storyPatient) return storyCopy.en.actors[storyPatient.actorId];
       const identity = patientIdentity(patient);
       return identity ? patientCopy.en.identityNames[identity.characterId]![identity.variant]! : patientCopy.en.names[patient.characterId]!;
     }),

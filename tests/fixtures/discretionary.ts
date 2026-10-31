@@ -1,4 +1,5 @@
-import { applyAction, createInitialState, type GameAction, type GameState } from '../../src/core/game';
+import { createInitialState } from './routine';
+import { applyAction, type GameAction, type GameState } from '../../src/core/game';
 import { additionalTestForJob } from '../../src/core/additional-tests';
 import { PATIENTS } from '../../src/core/patients';
 

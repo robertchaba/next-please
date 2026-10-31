@@ -1,6 +1,7 @@
+import { createInitialState } from '../fixtures/routine';
 import { expect, test, type Page } from '@playwright/test';
 import { gzipSync, strToU8 } from 'fflate';
-import { applyAction, createInitialState, type GameState } from '../../src/core/game';
+import { applyAction, type GameState } from '../../src/core/game';
 import { encodeSave } from '../../src/core/save';
 import { translations } from '../../src/i18n';
 import { classifiedPhone } from '../../src/core/newspaper';
@@ -169,7 +170,7 @@ for (const locale of ['pl', 'en'] as const) {
     expect(await geometry()).toEqual(placedGeometry);
     // Invalid press metadata leaves both the live state and open page intact.
     await key(page, 'saves');
-    const invalid = gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 34, savedAt: '2026-10-31T12:00:00.000Z',
+    const invalid = gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 35, savedAt: '2026-10-31T12:00:00.000Z',
       state: { ...state, newspaper: { ...state.newspaper, articleIds: ['invented', 'bread', 'chess'] } } })));
     await page.locator('#save-input').setInputFiles({ name: 'broken.npsave', mimeType: 'application/gzip', buffer: Buffer.from(invalid) });
     await expect(page.locator('#announcement')).toContainText(t.errors['invalid-state']);
@@ -230,7 +231,7 @@ for (const locale of ['pl', 'en'] as const) {
     await pickup('newspaper-2'); await key(page, 'drawer');
     await expect(page.locator('#control-newspaper-2')).toHaveCount(0);
     await key(page, 'drawer-2');
-    await expect(page.locator('#control-drawer-newspaper-5')).toHaveAccessibleName(new RegExp(locale === 'pl' ? 'Kurier 07.11.1983' : 'Courier 07/11/1983'));
+    await expect(page.locator('#control-drawer-newspaper-5')).toHaveAccessibleName(new RegExp(locale === 'pl' ? 'Kurier Obywatelski 07.11.1983' : 'Civic Courier 07/11/1983'));
     await expect(page.locator('#control-drawer-newspaper-2')).toHaveCount(0);
     await page.keyboard.press('Escape');
     const saved = await exportNewspaperState(page);
@@ -358,7 +359,7 @@ for (const locale of ['pl', 'en'] as const) for (const firstIssue of [true, fals
     await expect(page.locator(`#control-${control}`)).toBeVisible();
     // Invalid ads cannot replace the current issue or reset the selected page.
     await key(page, 'saves');
-    const invalid = gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 34, savedAt: '2026-10-31T12:00:00.000Z',
+    const invalid = gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 35, savedAt: '2026-10-31T12:00:00.000Z',
       state: { ...called, newspaper: { ...called.newspaper, classifiedIds: ['invented', 'books', 'jars'] } } })));
     await page.locator('#save-input').setInputFiles({ name: 'broken.npsave', mimeType: 'application/gzip', buffer: Buffer.from(invalid) });
     await expect(page.locator('#announcement')).toContainText(t.errors['invalid-state']);

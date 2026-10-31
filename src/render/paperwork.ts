@@ -1,3 +1,5 @@
+import { storyPatientForId } from '../core/story-patients';
+import { storyPaperLayout } from './story-paper';
 import { PATIENTS, type GameState, type Paper } from '../core/game';
 import { ADDITIONAL_TESTS, additionalAssessment, additionalNoteResult, additionalTestForJob, type AdditionalTest } from '../core/additional-tests';
 import { referralDate, workDayNumber, effectivePatient } from '../core/progression';
@@ -11,6 +13,8 @@ import { referralCopy, correspondenceCopy, employerInstitution, specialistIssuer
 import { drawAdministrativeStamp, drawLetterhead, institutionInk } from './document-style';
 import { drawManualArt } from './clinic';
 import { paginateNoteEntries, notePageControls, notePageLabel, NOTE_LINE_HEIGHT } from './note-pages';
+import { drawStoryPaper, storyPaperDescription } from './story-paper';
+import { storyPhoneNoteKey, type NarrativeState, type StoryContactId } from '../core/story';
 
 export const DOCUMENT_INK = '#333b2b';
 export const HANDWRITING_INK = '#385b78';
@@ -73,6 +77,11 @@ export function noteEntries(paper: Extract<Paper, { kind: 'note' }>, locale: Loc
   const rows: { text: string; color: string }[] = [];
   const history = paper.bribe ? t.progression.bribeNotes[effectivePatient(paper.patientId, true).vision === 'refer' ? 'vision' : 'pressure'] : t.patientNotes[paper.patientId]!;
   for (const entry of paper.noteOrder) {
+    if (entry.startsWith('story-call:')) {
+      const encounter = storyPatientForId(paper.patientId)?.encounterId;
+      const conclusion = encounter && storyPhoneNoteKey(entry.slice('story-call:'.length) as StoryContactId, encounter);
+      if (conclusion) rows.push({ text: t.story.phoneNotes[conclusion], color: HANDWRITING_INK });
+    }
     const additional = additionalNoteResult(entry);
     if (additional) rows.push({ text: `${t.additionalTests.tests[additional.test]}: ${t.additionalTests.notes[additional.test][additionalAssessment(PATIENTS[paper.patientId]!, additional)]}`, color: HANDWRITING_INK });
     if (entry === 'general' && r.general !== null) rows.push({ text: `${t.generalResult}: ${r.general === 'pass' ? t.generalClear : generalReading(paper.patientId, locale)}`, color: HANDWRITING_INK });
@@ -123,6 +132,8 @@ export function additionalTestRect(bounds: Rect, test: AdditionalTest): Rect {
 }
 
 export function additionalResultText(paper: Extract<Paper, { kind: 'additional-result' }>, locale: Locale): string {
+  const scripted = storyPatientForId(paper.patientId);
+  if (scripted?.actorId === 'printer' && paper.test === 'audiometry') return translations[locale].story.documents[scripted.encounterId === 'C2' ? 'C-AUDIO-CONTROL' : 'C-AUDIO'].body;
   return translations[locale].additionalTests.report[paper.test][additionalAssessment(PATIENTS[paper.patientId]!, paper)];
 }
 
@@ -130,11 +141,13 @@ export function paperPhoneRect(bounds: Rect): Rect {
   return { x: bounds.x + 9, y: bounds.y + bounds.h - 16, w: 105, h: 13 };
 }
 
-export function paperDescription(paper: Paper, locale: Locale, clipped = false): string {
+export function paperDescription(paper: Paper, locale: Locale, clipped = false, story?: NarrativeState): string {
   const t = translations[locale], p = t.paperwork, q = t.progression;
   const name = paper.patientId === null ? '' : t.patientNames[paper.patientId];
   let text: string;
-  if (paper.kind === 'inspection-id') {
+  if (paper.kind === 'story-document') {
+    text = storyPaperDescription(paper, locale, story);
+  } else if (paper.kind === 'inspection-id') {
     text = `${t.inspection.identity}. ${t.inspection.names[paper.inspectorId]}. ${t.inspection.role}. ${t.inspection.number}: K/${41 + paper.inspectorId}. ${t.inspection.validity}`;
   } else if (paper.kind === 'inspection-fine') {
     const q = t.inspection;
@@ -228,6 +241,21 @@ export function wrapDocumentLines(lines: readonly string[], width: number): stri
   });
 }
 
+/** Longer authored jobs retain every duty and clue across normal-size clinical sheets. */
+export function paperPagination(paper: Paper, locale: Locale, page = 0, story?: NarrativeState) {
+  if (paper.kind === 'note') return paginateNoteEntries(noteEntries(paper, locale), CLINICAL_PAPER_SIZE.w - 22, page);
+  if (paper.kind === 'story-document' && paper.opened) return storyPaperLayout(paper, locale, page, 200, story);
+  if ((paper.kind !== 'referral' && paper.kind !== 'additional-result') || !storyPatientForId(paper.patientId)) return undefined;
+  const t = translations[locale], p = t.paperwork;
+  const entries = paper.kind === 'referral'
+    ? [p.referral, ...referralLines(paper.patientId, locale), `${p.issued}: ${referralIssueDate(paper, locale)}`, `${p.reference}: ${paper.id}`, p.signed]
+    : [t.additionalTests.resultTitle, t.patientNames[paper.patientId]!, t.patientJobs[paper.patientId]!, t.additionalTests.tests[paper.test], additionalResultText(paper, locale),
+      `${p.issued}: ${formatGameDate(paper.day, locale)}`, p.signed];
+  const lines = wrapDocumentLines(entries, CLINICAL_PAPER_SIZE.w - 22).map(text => ({ text, color: DOCUMENT_INK }));
+  const count = Math.max(1, Math.ceil(lines.length / 14)), current = Math.max(0, Math.min(count - 1, page));
+  return { lines: lines.slice(current * 14, (current + 1) * 14), count, page: current };
+}
+
 function fill(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string): void {
   ctx.fillStyle = color; ctx.fillRect(x, y, w, h);
 }
@@ -247,11 +275,34 @@ export function drawActionCorner(ctx: CanvasRenderingContext2D, bounds: Rect, pe
   }
 }
 
-export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bounds: Rect, locale: Locale, lifted: boolean, clipped = false, showActions = true, page = 0): void {
+export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bounds: Rect, locale: Locale, lifted: boolean, clipped = false, showActions = true, page = 0, story?: NarrativeState): void {
   const { x, y, w, h } = bounds, t = translations[locale], p = t.paperwork;
+  if (paper.kind === 'story-document') {
+    drawStoryPaper(ctx, paper, bounds, locale, page, showActions && !lifted, story);
+    if (clipped) { const clip = paperClipRect(bounds); drawPaperclip(ctx, clip.x, clip.y, lifted); }
+    return;
+  }
   if (paper.kind === 'inspection-id' || paper.kind === 'inspection-fine') {
     drawInspectionPaper(ctx, paper, bounds, locale);
     if (clipped) { const clip = paperClipRect(visiblePaperRect(paper, bounds)); drawPaperclip(ctx, clip.x, clip.y, lifted); }
+    return;
+  }
+  const clinicalPages = (paper.kind === 'referral' || paper.kind === 'additional-result') && storyPatientForId(paper.patientId)
+    ? paperPagination(paper, locale, page, story) : undefined;
+  if (clinicalPages && w >= CLINICAL_PAPER_SIZE.w) {
+    drawPaper(ctx, x, y, w, h);
+    clinicalPages.lines.forEach((line, index) => drawDocumentText(ctx, line.text, x + 11, y + 10 + index * 8, { color: line.color }));
+    const phone = paper.kind === 'referral' && workDayNumber(paper.day) >= 5 ? `${t.progression.phone} ${paper.details.phone}` : '';
+    if (phone) drawDocumentText(ctx, phone, x + 11, y + h - 26, { color: HANDWRITING_INK });
+    drawDocumentSignature(ctx, x + w - 60, y + h - 27, 40, 10);
+    drawAdministrativeStamp(ctx, paper.kind === 'referral' ? employerInstitution(paper.patientId!) : 'chamber', locale, x + w - 42, y + h - 46, true);
+    drawDocumentText(ctx, `${clinicalPages.page + 1}/${clinicalPages.count}`, x + Math.floor(w / 2), y + h - 12, { color: muted, align: 'center' });
+    if (!lifted && showActions) {
+      const corners = notePageControls(bounds);
+      if (clinicalPages.page > 0) drawManualArt(ctx, 'corner-left', corners.previous.x + 2, corners.previous.y + 2, 9, 9);
+      if (clinicalPages.page < clinicalPages.count - 1) drawManualArt(ctx, 'corner-right', corners.next.x + 2, corners.next.y + 2, 9, 9);
+    }
+    if (clipped) { const clip = paperClipRect(bounds); drawPaperclip(ctx, clip.x, clip.y, lifted); }
     return;
   }
   const full = w >= paperDesktopSize(paper.kind).w;
@@ -444,11 +495,13 @@ export function drawCertificate(ctx: CanvasRenderingContext2D, state: GameState,
     const jobLabel = `${p.position}:`;
     const jobX = 8 + measureReadingText(jobLabel) + 4;
     write(jobLabel, 8, 73, muted);
-    if (visit.certificateNamed) drawReadingText(ctx, t.patientJobs[visit.patientId]!, x + jobX, y + 73, { face: 'handwritten', color: HANDWRITING_INK });
+    const jobLines = wrapReadingText(`${jobLabel} ${t.patientJobs[visit.patientId]}`, w - 16);
+    if (visit.certificateNamed) { drawReadingText(ctx, jobLines.join('\n'), x + 8, y + 73, { face: 'handwritten', color: HANDWRITING_INK }); write(jobLabel, 8, 73, muted); }
     else for (let dx = jobX; dx < w - 8; dx += 4) fill(ctx, x + dx, y + 80, 2, 1, '#b3a984');
     const statement = wrapReadingText(d.certificateStatement, w - 16);
-    statement.forEach((line, index) => write(line, 8, 92 + index * READ_LINE_HEIGHT));
-    const impressionY = 92 + statement.length * READ_LINE_HEIGHT + 4;
+    const statementY = Math.max(92, 73 + jobLines.length * READ_LINE_HEIGHT + 5);
+    statement.forEach((line, index) => write(line, 8, statementY + index * READ_LINE_HEIGHT));
+    const impressionY = statementY + statement.length * READ_LINE_HEIGHT + 4;
     if (visit.decision) {
       drawDecisionImprint(ctx, visit.decision, locale, x + 8, y + impressionY, 98, 27);
       drawDocumentSignature(ctx, x + 116, y + h - 33, 30, 10);

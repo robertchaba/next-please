@@ -1,5 +1,6 @@
+import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
-import { advanceClinicTime, applyAction, createInitialState } from '../src/core/game';
+import { advanceClinicTime, applyAction } from '../src/core/game';
 import { CHARACTER_COUNT, PATIENTS } from '../src/core/patients';
 import { arrangeProgressionRoster, createDailyRoster } from '../src/core/progression';
 import { decodeSave, encodeSave } from '../src/core/save';

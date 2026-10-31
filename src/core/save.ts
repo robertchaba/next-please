@@ -7,17 +7,23 @@ import { EARLIEST_ARRIVAL_MINUTES, FIRST_PATIENT_MINUTES, ARRIVAL_MINUTES, CLINI
 import { CHARACTER_COUNT, JOBS, compatiblePressureReading, type ExaminationId, type PressureValues, type PatientCase } from './patients';
 import { defaultReferral, directiveForDay, emptyCalls, effectivePatient, employerPhone, specialistPhone, workDayNumber, type ReferralDetails, type SpecialistCertificate, type PhoneConclusions } from './progression';
 import { BASE_INSURANCE, BASE_PAY, MODEST_WEEKEND_LIVING, PATIENT_BONUS, type DaySettlement as CurrentSettlement, type DailyConsequences } from './economy';
+import { createStory, validateStoryState, STORY_ENCOUNTERS, calendarDayForWorkDay, storyDecision, storyPhoneNoteKey, type NarrativeState, type StoryContactId } from './story';
+import { STORY_CHARACTER_COUNT, STORY_PATIENT_FIRST_ID, storyPatientForId } from './story-patients';
+import { createStoryPaperData, isStoryArticleId, isStoryDocumentId, STORY_DOCUMENTS, STORY_ENCOUNTER_DOCUMENTS, STORY_ENDING_DOCUMENTS, STORY_WARNING_DOCUMENT_IDS, validateStoryPaperData } from './story-content';
+import { expectedStoryUnionArticleIds, storyDailyArticleIds, validateStoryPublicationState } from './story-publications';
 
 export { createInitialState } from './game';
 export type { GameState } from './game';
 
 /** Freeze the pre-progression schema so legacy validators keep exact bounds. */
 type LegacyLocation<T> = T extends { location: StorageLocation } ? Omit<T, 'location'> & { location: 'desk' | 'drawer' } : never;
-type CurrentPaper = LegacyLocation<LatestPaper>;
-type CurrentGameState = Omit<LatestGameState, 'newspaperCopies' | 'newspaper' | 'portraitHistory' | 'drawerItems' | 'papers' | 'banknotes'> & {
+type PreStoryPaper = Exclude<LatestPaper, { kind: 'story-document' }>;
+type StateV34 = Omit<LatestGameState, 'story' | 'phase' | 'papers'> & { phase: 'intro' | 'cabinet' | 'home'; papers: PreStoryPaper[] };
+type CurrentPaper = LegacyLocation<PreStoryPaper>;
+type CurrentGameState = Omit<StateV34, 'newspaperCopies' | 'newspaper' | 'portraitHistory' | 'drawerItems' | 'papers' | 'banknotes'> & {
   drawerItems: DrawerItems; papers: CurrentPaper[]; banknotes: LegacyLocation<Banknote>[];
 };
-type StateV33 = Omit<LatestGameState, 'newspaper' | 'newspaperCopies'> & {
+type StateV33 = Omit<StateV34, 'newspaper' | 'newspaperCopies'> & {
   newspaper: Omit<NewspaperState, 'classifiedIds'>; newspaperCopies: Omit<NewspaperCopy, 'classifiedIds'>[];
 };
 type StateV32 = Omit<StateV33, 'newspaperCopies'>;
@@ -82,9 +88,9 @@ type GameStateV5 = Omit<GameStateV8, 'visit' | 'paperClips' | 'papers' | 'drawer
 type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<VisitV10, 'certificateNamed'> | null };
 type GameStateV7 = Omit<GameStateV8, 'drawerItems'>;
 
-interface SaveV34 {
+interface SaveV35 {
   game: 'next-please';
-  version: 34;
+  version: 35;
   savedAt: string;
   state: LatestGameState;
 }
@@ -462,8 +468,8 @@ function validateStateV8(value: unknown): GameStateV8 {
 
 /** Frozen original queue: legacy appointments retain their original positions. */
 function legacyInitialState(): GameState {
-  const { newspaperCopies: _copies, newspaper: _newspaper, portraitHistory: _portraits, banknotes: _banknotes, recentVisits: _recent, inspection: _inspection, inspectionCheckedAt: _checked, inspectionFines: _fines, bribeIncome: _bribes, settlement: _settlement, budgetHistory: _history, pendingReferrals: _pending, referralsIssued: _issued, ...initial } = createInitialState(0x4e505301);
-  return { ...initial, drawerItems: { manual: false, clips: 0 }, settlement: null, visit: null, papers: [], rngState: 3477621340,
+  const { story: _story, newspaperCopies: _copies, newspaper: _newspaper, portraitHistory: _portraits, banknotes: _banknotes, recentVisits: _recent, inspection: _inspection, inspectionCheckedAt: _checked, inspectionFines: _fines, bribeIncome: _bribes, settlement: _settlement, budgetHistory: _history, pendingReferrals: _pending, referralsIssued: _issued, ...initial } = createInitialState(0x4e505301);
+  return { ...initial, phase: 'intro', drawerItems: { manual: false, clips: 0 }, settlement: null, visit: null, papers: [], rngState: 3477621340,
     roster: [0, 1, 2, 62, 49, 75, 81, 66, 98, 4, 67, 43, 34, 28, 42, 58, 15, 21, 89, 26, 93, 52, 100, 8, 72, 86, 14, 38] };
 }
 
@@ -1515,19 +1521,19 @@ function migratePortraitHistory(state: CurrentGameState): StateV30 {
   return { ...state, portraitHistory };
 }
 
-function validateStateV29(value: unknown): StateV30 {
+function validateStateV29(value: unknown, catalogCharacters = CHARACTER_COUNT): StateV30 {
   if (!isRecord(value) || !Array.isArray(value.portraitHistory)
-    || value.portraitHistory.length > CHARACTER_COUNT
-    || value.portraitHistory.some(id => !isIntegerInRange(id, 0, CHARACTER_COUNT - 1))
+    || value.portraitHistory.length > catalogCharacters
+    || value.portraitHistory.some(id => !isIntegerInRange(id, 0, catalogCharacters - 1))
     || new Set(value.portraitHistory).size !== value.portraitHistory.length
     || (value.phase === 'intro' && value.portraitHistory.length > 0)) throw new SaveError('invalid-state');
   const { portraitHistory, ...previous } = value;
-  const state = validateStateV27(previous, CHARACTER_COUNT);
+  const state = validateStateV27(previous, catalogCharacters);
   return { ...state, portraitHistory: [...portraitHistory] as number[] };
 }
 
 /** Preserve the existing validation rules after checking each physical compartment. */
-function validateStateV31(value: unknown): StateV31 {
+function validateStateV31(value: unknown, catalogCharacters = CHARACTER_COUNT): StateV31 {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !isRecord(value.drawerItems) || !hasOnlyKeys(value.drawerItems, ['drawer', 'drawer-2'])
     || !Array.isArray(value.papers) || !Array.isArray(value.banknotes) || !Array.isArray(value.paperClips)) return fail();
@@ -1554,7 +1560,7 @@ function validateStateV31(value: unknown): StateV31 {
   const previous = validateStateV29({ ...value, papers, banknotes, drawerItems: {
     manual: drawerItems.drawer.manual || drawerItems['drawer-2'].manual,
     clips: Math.max(drawerItems.drawer.clips, drawerItems['drawer-2'].clips),
-  } });
+  } }, catalogCharacters);
   return { ...previous, drawerItems,
     papers: previous.papers.map(paper => ({ ...paper, location: locations.get(paper.id)! })),
     banknotes: previous.banknotes.map((note, index) => ({ ...note, location: (value.banknotes as Banknote[])[index]!.location })),
@@ -1572,7 +1578,7 @@ function hasTwoDrawers(state: StateV31 | StateV23 | StateV24 | StateV25 | Curren
 /** Validate the new morning range, then reuse frozen clinical/cash validators.
  * The five-minute projection changes validation only, never the restored clock.
  */
-function validateStateV32(value: unknown): StateV32 {
+function validateStateV32(value: unknown, catalogCharacters = CHARACTER_COUNT): StateV32 {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !isRecord(value.newspaper)
     || !hasOnlyKeys(value.newspaper, ['articleIds', 'usedArticleIds', 'rngState'])) return fail();
@@ -1596,7 +1602,7 @@ function validateStateV32(value: unknown): StateV32 {
   const projectedClock = earlyShift
     ? Math.max(ARRIVAL_MINUTES, Math.min(CLINIC_CLOSE_MINUTES - 1, value.clockMinutes + 5)) : value.clockMinutes;
   if (value.phase === 'cabinet' && value.clockMinutes === CLINIC_CLOSE_MINUTES) return fail();
-  const previous = validateStateV31({ ...base, clockMinutes: projectedClock });
+  const previous = validateStateV31({ ...base, clockMinutes: projectedClock }, catalogCharacters);
   return { ...previous, clockMinutes: value.clockMinutes, newspaper };
 }
 
@@ -1613,11 +1619,11 @@ function migrateNewspaperCopies(state: StateV32): StateV33 {
   return { ...state, newspaperCopies: day === 1 ? [] : [{ day, articleIds: [...state.newspaper.articleIds], location: 'desk' }] };
 }
 
-function validateStateV33(value: unknown, allowUndeliveredIssue = false): StateV33 {
+function validateStateV33(value: unknown, allowUndeliveredIssue = false, catalogCharacters = CHARACTER_COUNT): StateV33 {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !Array.isArray(value.newspaperCopies) || value.newspaperCopies.length > GAME_LIMITS.papers) return fail();
   const { newspaperCopies: rawCopies, ...base } = value;
-  const state = validateStateV32(base);
+  const state = validateStateV32(base, catalogCharacters);
   const days = new Set<number>();
   const newspaperCopies = rawCopies.map((raw): Omit<NewspaperCopy, 'classifiedIds'> => {
     if (!isRecord(raw) || !hasOnlyKeys(raw, ['day', 'articleIds', 'location'])
@@ -1636,13 +1642,13 @@ function validateStateV33(value: unknown, allowUndeliveredIssue = false): StateV
   return { ...state, newspaperCopies };
 }
 
-function migrateClassifieds(state: StateV33): LatestGameState {
+function migrateClassifieds(state: StateV33): StateV34 {
   // Previously printed copies remain unchanged; only future issues draw ads.
   return { ...state, newspaper: { ...state.newspaper, classifiedIds: [] },
     newspaperCopies: state.newspaperCopies.map(copy => ({ ...copy, classifiedIds: [] })) };
 }
 
-function validateStateV34(value: unknown): LatestGameState {
+function validateStateV34(value: unknown, catalogCharacters = CHARACTER_COUNT): StateV34 {
   const fail = (): never => { throw new SaveError('invalid-state'); };
   if (!isRecord(value) || !isRecord(value.newspaper) || !Array.isArray(value.newspaperCopies)
     || value.newspaperCopies.length > GAME_LIMITS.papers
@@ -1661,7 +1667,7 @@ function validateStateV34(value: unknown): LatestGameState {
     const { classifiedIds: _ids, ...copy } = raw;
     return copy;
   });
-  const state = validateStateV33({ ...value, newspaper, newspaperCopies }, true);
+  const state = validateStateV33({ ...value, newspaper, newspaperCopies }, true, catalogCharacters);
   let publicationDay = state.day;
   while (isWeekend(publicationDay)) publicationDay--;
   const copies = state.newspaperCopies.map((copy, index) => {
@@ -1672,12 +1678,225 @@ function validateStateV34(value: unknown): LatestGameState {
   return { ...state, newspaper: { ...state.newspaper, classifiedIds }, newspaperCopies: copies };
 }
 
+/** Narrative papers are closed definitions with frozen identity and decision sources. */
+function storyDocumentWasAvailable(id: string, story: NarrativeState, day: number): boolean {
+  if (!isStoryDocumentId(id) || story.mode === 'legacy-disabled') return false;
+  if (Object.values(STORY_WARNING_DOCUMENT_IDS).includes(id as typeof STORY_WARNING_DOCUMENT_IDS[keyof typeof STORY_WARNING_DOCUMENT_IDS]))
+    return story.warnings.some(warning => STORY_WARNING_DOCUMENT_IDS[warning.warningId] === id && warning.deliveredDay <= day);
+  if (id.startsWith('END-') || id === 'A-EXPOSURE' || id === 'A-CLOSURE')
+    return !!story.resolution && day >= story.resolution.resolvedDay && STORY_ENDING_DOCUMENTS[story.resolution.endingId].includes(id);
+  for (const encounter of STORY_ENCOUNTERS) if (STORY_ENCOUNTER_DOCUMENTS[encounter.id].includes(id)
+    && calendarDayForWorkDay(encounter.scheduledWorkDay) <= day && ['active', 'completed', 'missed'].includes(story.encounterStatus[encounter.id])) return true;
+  const outcomes = [
+    ['C-PRINT-NOTE', 9, 'C1', 'fit'], ['C-PAUSE', 19, 'C2', 'unfit'], ['G-COMPLAINT', 18, 'G1', 'unfit'],
+    ['H-OUTCOME-FIT', 21, 'H1', 'fit'], ['H-OUTCOME-REFUSED', 21, 'H1', 'unfit'], ['I-THANKS', 26, 'I1', 'fit'],
+    ['J-COMPLAINT-1', 11, 'J1', 'unfit'], ['J-COMPLAINT-2', 20, 'J2', 'unfit'],
+  ] as const;
+  return outcomes.some(([documentId, workDay, encounterId, decision]) => id === documentId
+    && day >= calendarDayForWorkDay(workDay) && storyDecision(story, encounterId)?.decision === decision);
+}
+
+function validateStoryPaper(raw: Record<string, unknown>, story: NarrativeState, day: number): Extract<LatestPaper, { kind: 'story-document' }> {
+  const fail = (): never => { throw new SaveError('invalid-state'); };
+  if (!hasOnlyKeys(raw, ['id', 'kind', 'patientId', 'day', 'location', 'opened', 'data'])
+    || !isIntegerInRange(raw.id, 1, GAME_LIMITS.paperId) || !isIntegerInRange(raw.day, 1, day) || isWeekend(raw.day)
+    || !['desk', 'drawer', 'drawer-2'].includes(String(raw.location)) || typeof raw.opened !== 'boolean'
+    || !isRecord(raw.data) || !hasOnlyKeys(raw.data, ['definitionId', 'encounterId', 'issuedDay', 'variantId', 'subjectIdentityId', 'sourceDecisionEventIds'])) return fail();
+  const data = raw.data;
+  if (!validateStoryPaperData(data, story, day)) return fail();
+  if (typeof data.definitionId !== 'string' || !isStoryDocumentId(data.definitionId) || data.issuedDay !== raw.day
+    || !story.deliveredDocumentIds.includes(data.definitionId) || !Array.isArray(data.sourceDecisionEventIds)
+    || data.sourceDecisionEventIds.length > 18 || new Set(data.sourceDecisionEventIds).size !== data.sourceDecisionEventIds.length) return fail();
+  const id = data.definitionId, definition = STORY_DOCUMENTS[id];
+  if (!storyDocumentWasAvailable(id, story, raw.day)) return fail();
+  const encounter = data.encounterId === null ? null : STORY_ENCOUNTERS.find(item => item.id === data.encounterId);
+  if (data.encounterId !== null && (!encounter || !STORY_ENCOUNTER_DOCUMENTS[encounter.id].includes(id))) return fail();
+  const patient = encounter ? storyPatientForId(STORY_PATIENT_FIRST_ID + STORY_ENCOUNTERS.findIndex(item => item.id === encounter.id))!.patient : null;
+  if (raw.patientId !== (patient?.id ?? null) || data.subjectIdentityId !== definition.subjectIdentityId) return fail();
+  if (encounter && (raw.day !== calendarDayForWorkDay(encounter.scheduledWorkDay)
+    || !['active', 'completed', 'missed'].includes(story.encounterStatus[encounter.id]))) return fail();
+  const warning = story.warnings.find(item => STORY_WARNING_DOCUMENT_IDS[item.warningId] === id);
+  if (Object.values(STORY_WARNING_DOCUMENT_IDS).includes(id as typeof STORY_WARNING_DOCUMENT_IDS[keyof typeof STORY_WARNING_DOCUMENT_IDS])
+    && (!warning || warning.documentInstanceId !== raw.id || warning.deliveredDay !== raw.day)) return fail();
+  const endingId = story.resolution?.endingId;
+  if ((id.startsWith('END-') || id === 'A-EXPOSURE' || id === 'A-CLOSURE')
+    && (!endingId || !STORY_ENDING_DOCUMENTS[endingId].includes(id) || raw.day !== story.resolution!.resolvedDay)) return fail();
+  // Warning snapshots exclude this morning's later decisions, even after import.
+  const snapshot = warning ? { ...story, decisions: story.decisions.filter(record => record.sequence < warning.deliveredSequence) } : story;
+  const expected = createStoryPaperData(id, snapshot, raw.day, encounter?.id ?? null);
+  if (data.variantId !== expected.variantId || JSON.stringify(data.sourceDecisionEventIds) !== JSON.stringify(expected.sourceDecisionEventIds)) return fail();
+  return { id: raw.id, kind: 'story-document', patientId: patient?.id ?? null, day: raw.day,
+    location: raw.location as StorageLocation, opened: raw.opened, data: expected };
+}
+
+function validatePublicationCopies(value: unknown, story: NarrativeState, day: number, newspaper: NewspaperState, latestIssueDay = day): NewspaperCopy[] {
+  const fail = (): never => { throw new SaveError('invalid-state'); };
+  if (!Array.isArray(value) || value.length > GAME_LIMITS.papers) return fail();
+  while (isWeekend(latestIssueDay)) latestIssueDay--;
+  const seen = new Set<string>();
+  return value.map(raw => {
+    if (!isRecord(raw) || Object.keys(raw).some(key => !['id', 'publication', 'issueNumber', 'storyArticleIds', 'storyClassifiedIds', 'day', 'articleIds', 'classifiedIds', 'location'].includes(key))
+      || !isIntegerInRange(raw.day, 1, day) || isWeekend(raw.day) || !['desk', 'drawer', 'drawer-2'].includes(String(raw.location))
+      || !Array.isArray(raw.articleIds) || new Set(raw.articleIds).size !== raw.articleIds.length
+      || raw.articleIds.some(id => !newspaper.usedArticleIds.includes(id as PressArticleId))
+      || !Array.isArray(raw.classifiedIds) || new Set(raw.classifiedIds).size !== raw.classifiedIds.length
+      || raw.classifiedIds.some(id => !CLASSIFIEDS.some(ad => ad.id === id))
+      || (raw.publication !== undefined && raw.publication !== 'kurier' && raw.publication !== 'glos')) return fail();
+    const publication = raw.publication ?? 'kurier', id = `${publication}:${raw.day}`;
+    if (seen.has(id) || (raw.id !== undefined && raw.id !== id)) return fail();
+    seen.add(id);
+    const stories = raw.storyArticleIds ?? [], ads = raw.storyClassifiedIds ?? [];
+    if (!Array.isArray(stories) || stories.length > 4 || new Set(stories).size !== stories.length
+      || stories.some(article => typeof article !== 'string' || !isStoryArticleId(article)
+        || !article.startsWith(publication === 'kurier' ? 'K-' : 'W-')
+        || (!article.startsWith('W-BG-') && !story.publicationHistory.includes(`${article}@${raw.day}`)))
+      || !Array.isArray(ads) || ads.length > 1 || ads.some(ad => ad !== 'C-AD')
+      || (ads.length > 0 && (publication !== 'kurier' || raw.day !== 8))
+      || raw.articleIds.length + stories.length < 3 || raw.articleIds.length + stories.length > 4) return fail();
+    const classifiedCount = raw.classifiedIds.length + ads.length;
+    if (classifiedCount !== 0 && classifiedCount !== 3 && classifiedCount !== 4) return fail();
+    if (publication === 'glos') {
+      const issues = story.publicationHistory.filter(entry => entry.startsWith('issue:glos:'));
+      const issueIndex = issues.indexOf(`issue:glos:${raw.day}`);
+      if (issueIndex < 0 || raw.issueNumber !== issueIndex + 1 || raw.articleIds.length || classifiedCount || !raw.id
+        || JSON.stringify(stories) !== JSON.stringify(expectedStoryUnionArticleIds(story, raw.day))) return fail();
+    } else {
+      if (raw.issueNumber !== undefined && raw.issueNumber !== raw.day) return fail();
+      if (story.mode !== 'legacy-disabled' && JSON.stringify(stories) !== JSON.stringify(storyDailyArticleIds(story, raw.day))) return fail();
+      if (story.mode !== 'legacy-disabled' && raw.day === 8 && ads.length !== 1) return fail();
+      if (raw.day === latestIssueDay) {
+        const expectedBackground = newspaper.articleIds.slice(0, Math.max(0, newspaper.articleIds.length - stories.length));
+        const expectedAds = ads.length ? (newspaper.classifiedIds.length ? newspaper.classifiedIds.slice(0, 2) : ['books', 'jars']) : newspaper.classifiedIds;
+        if (JSON.stringify(raw.articleIds) !== JSON.stringify(expectedBackground) || JSON.stringify(raw.classifiedIds) !== JSON.stringify(expectedAds)) return fail();
+      }
+    }
+    return { ...(raw.id !== undefined ? { id } : {}), ...(raw.publication !== undefined ? { publication } : {}),
+      ...(raw.issueNumber !== undefined ? { issueNumber: raw.issueNumber as number } : {}),
+      ...(raw.storyArticleIds !== undefined ? { storyArticleIds: [...stories] } : {}),
+      ...(raw.storyClassifiedIds !== undefined ? { storyClassifiedIds: [...ads] } : {}),
+      day: raw.day, articleIds: [...raw.articleIds], classifiedIds: [...raw.classifiedIds], location: raw.location } as NewspaperCopy;
+  });
+}
+
+/** Reuse the frozen clinical validators after checking and removing only new fields. */
+function validateStateV35(value: unknown): LatestGameState {
+  const fail = (): never => { throw new SaveError('invalid-state'); };
+  if (!isRecord(value) || !isIntegerInRange(value.day, 1, GAME_LIMITS.day) || !validateStoryState(value.story, value.day)
+    || !Array.isArray(value.papers) || value.papers.length > GAME_LIMITS.papers || !Array.isArray(value.paperClips)
+    || !Array.isArray(value.pendingReferrals) || !Array.isArray(value.roster)
+    || !isIntegerInRange(value.nextPaperId, 1, GAME_LIMITS.paperId + 1)) return fail();
+  const story = value.story, day = value.day;
+  if (!validateStoryPublicationState(story, day)) return fail();
+  if (story.deliveredDocumentIds.some(id => !storyDocumentWasAvailable(id, story, day))) return fail();
+  const epilogue = value.phase === 'epilogue', resolution = story.resolution;
+  if (epilogue ? !resolution || resolution.presented || value.ending !== null || value.visit !== null || value.inspection !== null
+    : resolution !== null && (!resolution.presented || resolution.terminal)) return fail();
+  if (story.mode === 'legacy-disabled' && (epilogue || value.roster.some(id => typeof id === 'number' && id >= STORY_PATIENT_FIRST_ID))) return fail();
+  if (story.mode === 'legacy-disabled' && Array.isArray(value.portraitHistory) && value.portraitHistory.some(id => typeof id === 'number' && id >= CHARACTER_COUNT)) return fail();
+  if (story.decisions.length > Number(value.patientsProcessed)) return fail();
+  const morningExposure = epilogue && resolution?.endingId === 'exposed';
+  if (epilogue && day !== 36) return fail();
+  if (morningExposure && (!isRecord(value.settlement) || value.settlement.day !== 35)) return fail();
+  const projectedDay = morningExposure ? 35 : day;
+  const storyPapers = new Map<number, Extract<LatestPaper, { kind: 'story-document' }>>();
+  const rawPaperCount = value.papers.length;
+  const ids = new Set<number>(), locations = new Map<DocumentId, StorageLocation>();
+  for (const raw of value.papers) {
+    if (!isRecord(raw) || !isIntegerInRange(raw.id, 1, value.nextPaperId - 1) || ids.has(raw.id)
+      || !['desk', 'drawer', 'drawer-2'].includes(String(raw.location))) return fail();
+    ids.add(raw.id); locations.set(raw.id, raw.location as StorageLocation);
+    if (raw.kind === 'story-document') storyPapers.set(raw.id, validateStoryPaper(raw, story, day));
+    if (story.mode === 'legacy-disabled' && (raw.kind === 'story-document' || (typeof raw.patientId === 'number' && raw.patientId >= STORY_PATIENT_FIRST_ID))) return fail();
+  }
+  for (const warning of story.warnings) {
+    if (warning.documentInstanceId >= value.nextPaperId) return fail();
+    if (ids.has(warning.documentInstanceId) && storyPapers.get(warning.documentInstanceId)?.data.definitionId !== STORY_WARNING_DOCUMENT_IDS[warning.warningId]) return fail();
+  }
+  if (isRecord(value.visit) && value.visit.certificateTaken) locations.set('certificate', 'desk');
+  const clipped = new Set<DocumentId>();
+  const paperClips: DocumentId[][] = value.paperClips.map(group => {
+    if (!Array.isArray(group) || !group.length || group.length > rawPaperCount + 1) return fail();
+    return group.map((id): DocumentId => {
+      if ((id !== 'certificate' && !isIntegerInRange(id, 1, GAME_LIMITS.paperId)) || !locations.has(id)
+        || clipped.has(id) || locations.get(id) !== locations.get(group[0])) return fail();
+      clipped.add(id); return id;
+    });
+  });
+  const provided = new Set<number>();
+  const noteOrders = new Map<string, NoteEntryId[]>();
+  const projectNotes = (raw: Record<string, unknown>, key: string): Record<string, unknown> => {
+    if (!Array.isArray(raw.noteOrder) || raw.noteOrder.length > 17 || new Set(raw.noteOrder).size !== raw.noteOrder.length
+      || raw.noteOrder.some(entry => typeof entry !== 'string')) return fail();
+    const definition = typeof raw.patientId === 'number' ? storyPatientForId(raw.patientId) : undefined;
+    const phoneEntries = raw.noteOrder.filter(entry => entry.startsWith('story-call:'));
+    for (const entry of phoneEntries) {
+      const contact = entry.slice('story-call:'.length) as StoryContactId;
+      if (!definition || !storyPhoneNoteKey(contact, definition.encounterId)
+        || !story.contacts.includes(`${contact}:${definition.encounterId}`)) return fail();
+    }
+    noteOrders.set(key, [...raw.noteOrder] as NoteEntryId[]);
+    return { ...raw, noteOrder: raw.noteOrder.filter(entry => !entry.startsWith('story-call:')) };
+  };
+  const projectVisit = (raw: unknown): unknown => {
+    if (raw === null) return null;
+    if (!isRecord(raw)) return fail();
+    const definition = typeof raw.patientId === 'number' ? storyPatientForId(raw.patientId) : undefined;
+    if (definition) {
+      if (story.mode === 'legacy-disabled' || raw.bribe !== 'none' || raw.specialist !== null
+        || JSON.stringify(raw.referral) !== JSON.stringify(defaultReferral(Number(raw.startedDay), definition.patient.id))) return fail();
+      const status = story.encounterStatus[definition.encounterId];
+      if (!['active', 'missed'].includes(status) || raw.startedDay !== calendarDayForWorkDay(STORY_ENCOUNTERS.find(item => item.id === definition.encounterId)!.scheduledWorkDay)) return fail();
+    }
+    const projected = projectNotes(raw, `visit:${raw.patientId}`);
+    if (!isRecord(raw.additionalResult) || raw.additionalResult.source === undefined) return projected;
+    if (raw.additionalResult.source !== 'provided' || !definition?.providedResult
+      || JSON.stringify(raw.additionalResult) !== JSON.stringify(definition.providedResult)) return fail();
+    provided.add(raw.patientId as number);
+    const { source: _source, ...additionalResult } = raw.additionalResult;
+    return { ...projected, additionalResult };
+  };
+  const visit = projectVisit(value.visit);
+  const pendingReferrals = value.pendingReferrals.map(raw => {
+    if (!isRecord(raw)) return fail();
+    return { ...raw, visit: projectVisit(raw.visit) };
+  });
+  const { story: _story, ...base } = value;
+  const previous = validateStateV34({ ...base, day: projectedDay, phase: epilogue ? 'home' : value.phase, visit, pendingReferrals,
+    newspaperCopies: [], papers: value.papers.filter(raw => !storyPapers.has((raw as { id: number }).id))
+      .map(raw => isRecord(raw) && raw.kind === 'note' ? projectNotes(raw, `paper:${raw.id}`) : raw),
+    paperClips: paperClips.map(group => group.filter(id => id === 'certificate' || !storyPapers.has(id))).filter(group => group.length),
+  }, CHARACTER_COUNT + STORY_CHARACTER_COUNT);
+  const restoreVisit = (visit: CurrentVisit | null): CurrentVisit | null => visit ? { ...visit,
+    noteOrder: noteOrders.get(`visit:${visit.patientId}`)!,
+    additionalResult: provided.has(visit.patientId) ? { ...visit.additionalResult!, source: 'provided' } : visit.additionalResult } : null;
+  const newspaperCopies = validatePublicationCopies(value.newspaperCopies, story, day, previous.newspaper, projectedDay);
+  for (const definition of STORY_ENCOUNTERS) {
+    const status = story.encounterStatus[definition.id];
+    const active = value.visit !== null && isRecord(value.visit) && storyPatientForId(Number(value.visit.patientId))?.encounterId === definition.id;
+    const pending = value.pendingReferrals.some(item => isRecord(item) && isRecord(item.visit) && storyPatientForId(Number(item.visit.patientId))?.encounterId === definition.id);
+    if (status === 'active' && !active && !pending) return fail();
+  }
+  for (const id of previous.roster) {
+    const definition = storyPatientForId(id);
+    if (!definition) continue;
+    const status = story.encounterStatus[definition.encounterId];
+    if (status === 'cancelled') return fail();
+    if (calendarDayForWorkDay(STORY_ENCOUNTERS.find(item => item.id === definition.encounterId)!.scheduledWorkDay) !== projectedDay
+      && previous.visit?.patientId !== id && !previous.pendingReferrals.some(item => item.visit.patientId === id)
+      && previous.roster.indexOf(id) >= previous.shiftCompleted) return fail();
+  }
+  const ordinaryPapers = new Map(previous.papers.map(paper => [paper.id, paper.kind === 'note' ? { ...paper, noteOrder: noteOrders.get(`paper:${paper.id}`)! } : paper]));
+  return { ...previous, day, phase: value.phase as LatestGameState['phase'], story: structuredClone(story), newspaperCopies,
+    papers: value.papers.map(raw => storyPapers.get((raw as { id: number }).id) ?? ordinaryPapers.get((raw as { id: number }).id)!),
+    paperClips, visit: restoreVisit(previous.visit), pendingReferrals: previous.pendingReferrals.map(pending => ({ ...pending, visit: restoreVisit(pending.visit)! })) };
+}
+
 export function encodeSave(state: LatestGameState): Uint8Array {
-  const envelope: SaveV34 = {
+  const envelope: SaveV35 = {
     game: 'next-please',
-    version: 34,
+    version: 35,
     savedAt: new Date().toISOString(),
-    state: validateStateV34(state),
+    state: validateStateV35(state),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -1768,14 +1987,15 @@ function decompressSave(bytes: Uint8Array): Uint8Array {
 export function decodeSave(bytes: Uint8Array): LatestGameState {
   const migration = { additionalNotes: false };
   const decoded = decodeState(bytes, migration);
-  if ('newspaperCopies' in decoded) return 'classifiedIds' in decoded.newspaper ? decoded as LatestGameState : migrateClassifieds(decoded);
-  if ('newspaper' in decoded) return migrateClassifieds(migrateNewspaperCopies(decoded));
-  if (hasTwoDrawers(decoded)) return migrateClassifieds(migrateNewspaperCopies(migrateNewspaper(decoded)));
+  if ('story' in decoded) return decoded;
+  if ('newspaperCopies' in decoded) return { ...('classifiedIds' in decoded.newspaper ? decoded as StateV34 : migrateClassifieds(decoded)), story: createStory('legacy-disabled') };
+  if ('newspaper' in decoded) return { ...migrateClassifieds(migrateNewspaperCopies(decoded)), story: createStory('legacy-disabled') };
+  if (hasTwoDrawers(decoded)) return { ...migrateClassifieds(migrateNewspaperCopies(migrateNewspaper(decoded))), story: createStory('legacy-disabled') };
   const state = migrateBanknotes(migrateInspection(migrateBribeIncome(decoded)));
-  return migrateClassifieds(migrateNewspaperCopies(migrateNewspaper(migrateDrawers(migratePortraitHistory(migration.additionalNotes ? migrateAdditionalNotes(state) : state)))));
+  return { ...migrateClassifieds(migrateNewspaperCopies(migrateNewspaper(migrateDrawers(migratePortraitHistory(migration.additionalNotes ? migrateAdditionalNotes(state) : state))))), story: createStory('legacy-disabled') };
 }
 
-function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean }): LatestGameState | StateV33 | StateV32 | StateV31 | StateV23 | StateV24 | StateV25 | CurrentGameState {
+function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean }): LatestGameState | StateV34 | StateV33 | StateV32 | StateV31 | StateV23 | StateV24 | StateV25 | CurrentGameState {
   const expanded = decompressSave(bytes);
   let envelope: unknown;
   try {
@@ -1786,7 +2006,7 @@ function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean })
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (!isIntegerInRange(envelope.version, 1, 34)) throw new SaveError('unsupported-version');
+  if (!isIntegerInRange(envelope.version, 1, 35)) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -1796,6 +2016,8 @@ function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean })
     throw new SaveError('invalid-file');
   }
   migration.additionalNotes = (envelope.version as number) < 27;
+  if (envelope.version === 35) return validateStateV35(envelope.state);
+  if (envelope.version >= 30) validateHistoricalCatalog(envelope.state, STORY_PATIENT_FIRST_ID - 1, CHARACTER_COUNT);
   if (envelope.version === 34) return validateStateV34(envelope.state);
   if (envelope.version === 33) return validateStateV33(envelope.state);
   if (envelope.version === 32) return validateStateV32(envelope.state);

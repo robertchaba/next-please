@@ -1,5 +1,6 @@
+import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
-import { applyAction, createInitialState } from '../src/core/game';
+import { applyAction } from '../src/core/game';
 import { drawerButtons, drawerSheets, DRAWER_BATCH_SIZE, DRAWER_CLOSE } from '../src/render/drawer';
 import { translations } from '../src/i18n';
 import { measureDocumentText, measureText } from '../src/render/font';

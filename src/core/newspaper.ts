@@ -1,13 +1,24 @@
 import { randomStep } from './patients';
 import type { StorageLocation } from './game';
+import type { StoryArticleId } from './story-content';
+
+export type Publication = 'kurier' | 'glos';
 
 /** Physical copies retain their publication date and content independently of the editorial pool. */
 export interface NewspaperCopy {
+  id?: string;
+  publication?: Publication;
+  issueNumber?: number;
+  storyArticleIds?: StoryArticleId[];
+  storyClassifiedIds?: ('C-AD')[];
   day: number;
   articleIds: PressArticleId[];
   classifiedIds: ClassifiedId[];
   location: StorageLocation;
 }
+
+export const publicationId = (copy: Pick<NewspaperCopy, 'day' | 'publication'>): string => `${copy.publication ?? 'kurier'}:${copy.day}`;
+export const matchesPublication = (copy: NewspaperCopy, day: number, publication: Publication = 'kurier'): boolean => copy.day === day && (copy.publication ?? 'kurier') === publication;
 
 export const newspaperCopy = (state: Pick<NewspaperState, 'articleIds' | 'classifiedIds'>, day: number): NewspaperCopy =>
   ({ day, articleIds: [...state.articleIds], classifiedIds: [...state.classifiedIds], location: 'desk' });
