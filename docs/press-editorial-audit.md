@@ -24,9 +24,13 @@ W ogłoszeniach sprawdzono przedmiot, zamiar ogłoszeniodawcy i możliwość odn
 | `plant-identification` | Oferta rozpoznawania roślin brzmiała jak poradnik przepisany na ogłoszenie. | Oddanie nadwyżki sadzonek zielistki; wiadomość w kwiaciarni na Północy. |
 | `curtain-rods`, `pram` | Przedmiot opisany bez wyraźnego zamiaru ogłoszeniodawcy. | Dopisane „sprzedam” i odpowiednik w EN. |
 | `books`, `school-atlas`, `wall-map`, `language-practice` | Skrytka bez wskazania, czy chodzi o pocztę, czy redakcję. | Cztery skrytki odpowiedzi redakcyjnych, z zachowaniem numerów. |
-| `lost-keys` | Kino Świt w EN występowało jako Dawn, inaczej niż w pozostałych tekstach. | Jedna nazwa Świt w obu słownikach. |
+| `lost-keys` | Kino Świt w EN występowało jako Dawn, inaczej niż w pozostałych tekstach. | Spójna nazwa kina w każdej wersji; po adaptacji nazw: Świt w PL, Daybreak w EN. |
 
 Nowe tytuły odpowiadają treści: między innymi „Klucz bez wzoru”, „Obiad na dwie zmiany”, „Zakupy czekają przy ladzie” i „Szkolne koła w gazetce”. Teksty o szyciu, roślinach i wyposażeniu świetlicy sprawdzono także pod kątem sztucznych szczegółów, które nie wynikały z opisanej sytuacji.
+
+## Adaptacja nazw własnych
+
+Późniejszy przegląd z 31 października zastępuje pozostawione w EN polskie imiona, nazwiska i nazwy miejsc. Obowiązują [wspólne pary PL/EN](localization.md), np. Szkolna → Alder Street, Kolejowa → Station Road, Świt → Daybreak. Autorzy, mieszkańcy i adresy zachowują te same odpowiedniki w artykułach oraz ogłoszeniach. Poniższa tabela nadal podaje polskie formy.
 
 ## Spójność lokalnego tła
 

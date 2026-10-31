@@ -15,7 +15,7 @@ let creatorPhotograph: { image: HTMLCanvasElement; shadow: HTMLCanvasElement } |
 const introNames = ['scalpel', 'catheter', 'pen', 'stamp'] as const;
 const spriteNames = ['stamp-fit', 'stamp-unfit', 'manual', 'plant', 'certificate', 'clock',
   ...new Set(PATIENTS.map(patient => patient.portraitId)), 'workstation-phone', 'workstation-clips', 'workstation-clip', 'workstation-rack', 'workstation-rack-referrals', 'workstation-paper',
-  'workstation-calendar', 'imprint-fit-pl', 'imprint-unfit-pl', 'imprint-fit-en', 'imprint-unfit-en', 'document-seal', 'document-seal-zus', 'document-seal-employer', 'document-signature', 'document-seal-chamber', 'document-seal-employer-unclear', 'banknote-100',
+  'workstation-calendar', 'imprint-fit-pl', 'imprint-unfit-pl', 'imprint-fit-en', 'imprint-unfit-en', 'document-seal', 'document-seal-zus', 'document-seal-sio', 'document-seal-employer', 'document-signature', 'document-seal-chamber', 'document-seal-employer-unclear', 'banknote-100',
   'zus-inspector-1', 'zus-inspector-2', 'zus-inspector-3', 'inspector-id', 'inspection-fine', 'archive-folder',
   'manual-cover-v083', 'manual-spread-v083', 'manual-corner-left-v083', 'manual-corner-right-v083',
   'newspaper-folded', 'newspaper-spread', 'newspaper-masthead-pl', 'newspaper-masthead-en', 'paper-envelope-postage'] as const;
@@ -284,8 +284,9 @@ export function drawDecisionImprint(ctx: CanvasRenderingContext2D, decision: 'fi
   asset(ctx, `sprites/imprint-${decision}-${locale}`, x, y, w, h);
 }
 
-export function drawDocumentSeal(ctx: CanvasRenderingContext2D, x: number, y: number, size = 22, kind: 'clinic' | 'employer' | 'zus' | 'chamber' = 'clinic'): void {
-  const name = kind === 'clinic' ? 'document-seal' : `document-seal-${kind}`;
+export function drawDocumentSeal(ctx: CanvasRenderingContext2D, x: number, y: number, size = 22,
+  kind: 'clinic' | 'employer' | 'zus' | 'chamber' = 'clinic', locale: Locale = 'pl'): void {
+  const name = kind === 'clinic' ? 'document-seal' : `document-seal-${kind === 'zus' && locale === 'en' ? 'sio' : kind}`;
   asset(ctx, `sprites/${name}`, x, y, kind === 'zus' ? Math.round(size * 1.5) : size, size);
 }
 

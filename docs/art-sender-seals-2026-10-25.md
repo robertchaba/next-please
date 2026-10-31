@@ -7,7 +7,7 @@ Two original transparent ink assets were generated separately with the built-in 
 | ZUS | `public/assets/art/document-seal-zus-source.png` | `public/assets/art/sprites/document-seal-zus.png` | 36 × 24 |
 | Employer | `public/assets/art/document-seal-employer-source.png` | `public/assets/art/sprites/document-seal-employer.png` | 24 × 24 |
 
-The ZUS impression is a worn blue rectangle with readable ZUS initials; the employer seal is a faded violet double circle with an industrial cog. Shape and color distinguish them at native resolution. The existing round medical seal remains on clinic notes. Referrals use the employer asset; letters and envelopes select the asset from the persisted sender, including compact sheets and stored papers. ZUS stays ZUS in both interface languages; its accessible description is localized. This does not add authenticity-checking mechanics.
+The ZUS impression is a worn blue rectangle with readable ZUS initials; the employer seal is a faded violet double circle with an industrial cog. Shape and color distinguish them at native resolution. The existing round medical seal remains on clinic notes. Referrals use the employer asset; letters and envelopes select the asset from the persisted sender, including compact sheets and stored papers. The original ZUS lettering is retained in Polish. The [31 October localization](art-localization-2026-10-31.md) adds a generated SIO companion for English, with a matching accessible description. This does not add authenticity-checking mechanics.
 
 Use [the preparation script](../scripts/prepare-drawer-documents-art.mjs) with an offline Sharp installation:
 

@@ -31,7 +31,7 @@ export function drawAdministrativeStamp(ctx: CanvasRenderingContext2D, instituti
   if (compact) {
     if (institution === 'employer' || institution === 'militia' || institution === 'lot') {
       drawInkImpression(ctx, institution, x, y, 24, 11);
-    } else drawDocumentSeal(ctx, x + 7, y, 11, institution);
+    } else drawDocumentSeal(ctx, x + 7, y, 11, institution, locale);
     return;
   }
   if (institution === 'employer') {
@@ -46,9 +46,9 @@ export function drawAdministrativeStamp(ctx: CanvasRenderingContext2D, instituti
     drawDocumentHeading(ctx, labels[0], x + 40, y + 2, { face: 'sans', align: 'center', color });
     drawDocumentText(ctx, labels[1], x + 40, y + 14, { face: 'typewriter', align: 'center', color });
   } else if (institution === 'zus') {
-    drawDocumentSeal(ctx, x + 13, y, 24, 'zus');
+    drawDocumentSeal(ctx, x + 13, y, 24, 'zus', locale);
   } else {
-    drawDocumentSeal(ctx, x, y + 1, 22, institution);
+    drawDocumentSeal(ctx, x, y + 1, 22, institution, locale);
     drawDocumentText(ctx, labels.join('\n'), x + 42, y + 5, { face: 'print', align: 'center', color });
   }
 }

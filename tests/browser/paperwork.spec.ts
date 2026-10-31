@@ -164,16 +164,16 @@ test('a keyboard-applied clip attaches to the focused sheet even under another s
 
 test('telephone exchange tone is local, unlocked by a gesture and respects mute', async ({ page }) => {
   const requests: string[] = [];
-  page.on('request', request => { if (request.url().endsWith('/telephone.wav')) requests.push(request.url()); });
+  page.on('request', request => { if (request.url().endsWith('/phone-tone.wav')) requests.push(request.url()); });
   await enter(page);
   await activate(page, 'use-phone');
   expect(requests).toEqual([]);
   await page.getByRole('button', { name: 'Włącz dźwięk', exact: true }).click();
   await activate(page, 'use-phone');
-  await expect.poll(() => page.evaluate(() => window.Howler._howls.some(sound => String(sound._src).endsWith('/telephone.wav') && sound.state() === 'loaded'))).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.Howler._howls.some(sound => String(sound._src).endsWith('/phone-tone.wav') && sound.state() === 'loaded'))).toBe(true);
   expect(requests).toHaveLength(1);
   await page.getByRole('button', { name: 'Wycisz dźwięk', exact: true }).click();
-  expect(await page.evaluate(() => window.Howler._howls.filter(sound => String(sound._src).endsWith('/telephone.wav')).every(sound => sound.mute()))).toBe(true);
+  expect(await page.evaluate(() => window.Howler._howls.filter(sound => String(sound._src).endsWith('/phone-tone.wav')).every(sound => sound.mute()))).toBe(true);
 });
 
 async function clickNative(page: Page, x: number, y: number): Promise<void> {
@@ -357,10 +357,10 @@ test('findings and history append automatically without a pen, including filed n
   await activate(page, 'back');
   await movePaperRight(page, 2);
   await activate(page, 'language-en');
-  await expect(page.locator('#control-paper-2')).toHaveAccessibleName('Medical notes. Irena Wolska   Age: 41.');
+  await expect(page.locator('#control-paper-2')).toHaveAccessibleName('Medical notes. Irene Wells   Age: 41.');
   await page.locator('#stage').screenshot({ path: testInfo.outputPath('identity-only-en.png') });
   await activate(page, 'paper-2');
-  await expect(page.locator('#announcement')).toContainText('Medical notes. Irena Wolska');
+  await expect(page.locator('#announcement')).toContainText('Medical notes. Irene Wells');
   await expect(page.locator('#control-paper-action-2')).toHaveCount(0);
   await activate(page, 'language-pl');
   await activate(page, 'run-vision');

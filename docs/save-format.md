@@ -4,6 +4,8 @@ Saves are local `.npsave` files containing one gzip member with UTF-8 JSON. They
 
 ## Version 34
 
+Proper names are presentation text resolved from stable IDs, not serialized identity data. The English name adaptation described in [localization.md](localization.md) also applies to imported visits, archived paperwork, inspections and retained newspaper issues. It changes no fields or version: `zus` and `lot` remain internal institution keys even when displayed as SIO and NAL.
+
 The envelope contains exactly `game: "next-please"`, `version: 34`, a canonical ISO `savedAt` timestamp, and `state`:
 
 ```json

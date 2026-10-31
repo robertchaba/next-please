@@ -43,7 +43,8 @@ describe('signed administrative correspondence', () => {
         const before = structuredClone(paper);
         const pl = letterContent(paper, 'pl'), en = letterContent(paper, 'en');
         expect(letterContent(paper, 'pl')).toEqual(pl);
-        expect(pl.signature).toBe(en.signature);
+        const variant = translations.pl.paperwork.letters[sender].findIndex(letter => letter.signature === pl.signature);
+        expect(en).toEqual(translations.en.paperwork.letters[sender][variant]);
         seen.add(pl.body);
         expect(paperDescription(paper, 'pl')).toContain(`${pl.role}: ${pl.signature}`);
         expect(paperDescription(paper, 'en')).toContain(`${en.role}: ${en.signature}`);

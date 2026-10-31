@@ -209,198 +209,198 @@ const patientCopy = {
     },
   },
   en: {
-    names: ["Irena Wolska", "Leon Burek", "Marta Lis", "Anna Łuczak", "Roman Gajda", "Ewa Król", "Paweł Wrona", "Zofia Maj", "Stefan Dudek", "Lidia Żak", "Edward Kłos", "Halina Wójcik", "Adam Wilk", "David Mensah", "Jan Sokół", "Barbara Cicha", "Marek Łoś", "Olga Bąk", "Wiktor Sowa", "Alicja Mróz", "Piotr Górka", "Jadwiga Polna", "Henryk Las", "Danuta Wąs", "Jerzy Lisek", "Amina Diallo-Mazur", "Karim Haddad", "Maria Sęk", "Samuel Okoro", "Helena Kość", "Franciszek Jarząb", "Nadia Diop-Biela", "Bogdan Krawiec", "Łucja Leśna", "Emil Różycki", "Krystyna Wydra", "Joseph Kamara", "Iwona Głaz", "Zbigniew Turek", "Renata Witek", "Elias Hariri", "Grażyna Brzoza", "Daniel Dlamini", "Urszula Wichura", "Dariusz Kłosik", "Celina Jastrząb", "Andrzej Piątek", "Monika Sitko", "Kazimierz Rożek", "Leila Rahman-Wrona", "Leszek Kędra", "Bożena Szczygieł", "Ryszard Zając", "Wanda Czapla", "Sylwester Dąb", "Regina Kurek", "Artur Jeż", "Joanna Kalina", "Marian Głóg", "Alina Rosa", "Rafał Sitar", "Lucyna Wrzos", "Hubert Cichy", "Kinga Rój", "Tadeusz Kania", "Genowefa Biel", "Łukasz Bór", "Janina Cedro", "Michael Abebe", "Sabina Ruda", "Bartosz Kret", "Aniela Drozd", "Józef Czerwiak", "Dorota Gaj", "Ignacy Duda", "Agata Sikora", "Daniel Rzepka", "Gabriela Żyto", "Wiesław Żmuda", "Bogusław Cisek", "Czesław Pawlik", "Mieczysław Zięba", "Władysław Kocioł", "Grzegorz Jastrząb", "Sławomir Klimek", "Zdzisław Gąsior", "Mirosław Janik", "Bronisław Wójcik", "Michał Wysocki", "Robert Cieślik", "Wojciech Balicki", "Stanisław Żarski", "Kazimierz Bystroń", "Wacław Żelazny", "Natalia Błach", "Brunon Węglarz", "Elżbieta Wąsik", "Alojzy Szlaka", "Bogumiła Bednarz", "Maksymilian Rąb", "Stanisława Janik", "Bolesław Płomień", "Renata Łoza"],
+    names: ["Irene Wells", "Leon Brown", "Martha Fox", "Anna Lucas", "Raymond Gale", "Eve King", "Paul Rook", "Sophia May", "Stephen Drake", "Lydia Scholar", "Edward Carter", "Helen Cook", "Adam Wolfe", "David Mensah", "John Richards", "Barbara Still", "Mark Hart", "Olga Booth", "Victor Owlett", "Alice Frost", "Peter Hartley", "Edith Owen", "Henry Wood", "Diana Tempest", "George Fowler", "Amina Diallo-Mason", "Karim Haddad", "Mary Sherman", "Samuel Okoro", "Helena Kenney", "Francis Hirst", "Nadia Diop-Bell", "Bernard Taylor", "Lucy Linford", "Emile Prentice", "Christine Stroud", "Joseph Kamara", "Yvonne Heath", "Neville Sibley", "Renee Wicks", "Elias Hariri", "Grace Birch", "Daniel Dlamini", "Ursula Snow", "Derek Latham", "Celia Hollis", "Andrew Oliver", "Monica Randall", "Clarence Pepper", "Leila Rahman-Rook", "Leslie Knowles", "Brenda Russell", "Richard Hare", "Winifred Charlton", "Sylvester Dickens", "Regina Crowe", "Arthur Horner", "Joan Hunter", "Maurice Heller", "Aline Peel", "Ralph Raines", "Lucille Stocks", "Hubert Still", "Katie Poole", "Theodore Kite", "Genevieve White", "Luke Blain", "Jean Bradley", "Michael Abebe", "Sabine Pettit", "Bartholomew Kerr", "Angela Cross", "Joseph Clegg", "Dorothy Grove", "Ignatius Piper", "Agatha Finch", "Daniel Pitts", "Gabrielle York", "Wesley Woodley", "Basil Yew", "Cecil Newton", "Milton Turpin", "Wallace Jefferies", "Gregory Hollis", "Sidney James", "Edgar Hawes", "Miles Hine", "Bruce Cook", "Michael Swift", "Robert Carlisle", "Albert Abbott", "Stanley Wilcox", "Clarence Bird", "Wilfred Wise", "Natalie Bloomfield", "Bruno Tindall", "Elizabeth Terry", "Aloysius Sands", "Beatrix Allman", "Maximilian Price", "Stella Hine", "Bertram Patrick", "Renee Wake"],
     identityNames: [
-      ["Irena Górska", "Ewa Wierna", "Teresa Kępa", "Anna Wolska", "Maria Lipiec"],
-      ["Leon Wroński", "Roman Błasik", "Stefan Witek", "Jan Bukowski", "Henryk Cegła"],
-      ["Marta Jodła", "Zofia Dębska", "Halina Bielec", "Jadwiga Młyn", "Barbara Kłos"],
-      ["Anna Brzoza", "Ewa Malina", "Olga Zielna", "Lidia Kurek", "Iwona Łącka"],
-      ["Roman Łęcki", "Henryk Bork", "Stefan Cedro", "Witold Jurek", "Jan Struga"],
-      ["Ewa Mrozek", "Teresa Staw", "Irena Dąbek", "Maria Witek", "Alicja Grab"],
-      ["Paweł Borek", "Marek Gruda", "Piotr Gacek", "Adam Młyn", "Jerzy Orlik"],
-      ["Zofia Gaj", "Jadwiga Kurek", "Maria Wrona", "Halina Sikora", "Barbara Bór"],
-      ["Stefan Polak", "Henryk Szpak", "Roman Biela", "Jan Klon", "Witold Las"],
-      ["Lidia Łęcka", "Iwona Czapla", "Ewa Łan", "Anna Wrzos", "Alicja Cicha"],
-      ["Edward Jodła", "Wiktor Chmiel", "Jerzy Kurek", "Henryk Góral", "Stanisław Bór"],
-      ["Halina Mazur", "Teresa Wolska", "Irena Łącka", "Zofia Biela", "Barbara Rak"],
-      ["Adam Ruda", "Paweł Kania", "Marek Kret", "Piotr Żyto", "Tomasz Biela"],
+      ["Irene Hill", "Eve Sole", "Teresa Lancaster", "Anna Wells", "Mary Lockwood"],
+      ["Leon Stevens", "Raymond Bolton", "Stephen Wicks", "John Bellis", "Henry Brick"],
+      ["Martha Houghton", "Sophia Oakley", "Helen Beck", "Edith Melton", "Barbara Carter"],
+      ["Anna Birch", "Eve Lynch", "Olga Truelove", "Lydia Crowe", "Yvonne Watson"],
+      ["Raymond Webster", "Henry Bourne", "Stephen Bradley", "Walter Judd", "John Rodgers"],
+      ["Eve Mays", "Teresa Rivers", "Irene Digby", "Mary Wicks", "Alice Gold"],
+      ["Paul Burke", "Mark Griffin", "Peter Freer", "Adam Melton", "George Mott"],
+      ["Sophia Grove", "Edith Crowe", "Mary Rook", "Helen Finch", "Barbara Blain"],
+      ["Stephen Palmer", "Henry Sawyer", "Raymond Bell", "John Jarrett", "Walter Wood"],
+      ["Lydia Webster", "Yvonne Charlton", "Eve Vince", "Anna Stocks", "Alice Still"],
+      ["Edward Houghton", "Victor Bridger", "George Crowe", "Henry Harker", "Stanley Blain"],
+      ["Helen Mason", "Teresa Wells", "Irene Watson", "Sophia Bell", "Barbara Rake"],
+      ["Adam Pettit", "Paul Kite", "Mark Kerr", "Peter York", "Thomas Bell"],
       ["David Mensah", "Peter Owusu", "Joseph Asante", "Samuel Osei", "Daniel Boateng"],
-      ["Jan Łuczak", "Roman Jawor", "Henryk Wilk", "Stefan Brzeg", "Jerzy Głaz"],
-      ["Barbara Kania", "Halina Ruda", "Maria Cedro", "Jadwiga Wrona", "Irena Gaj"],
-      ["Marek Pióro", "Paweł Zimny", "Tomasz Kłos", "Adam Ptak", "Piotr Wilga"],
-      ["Olga Wilga", "Nina Wolska", "Ewa Rój", "Anna Kłos", "Kinga Dąb"],
-      ["Wiktor Wierny", "Jerzy Bielski", "Edward Sitar", "Henryk Duda", "Stefan Jaśko"],
-      ["Alicja Bork", "Irena Rosa", "Teresa Żur", "Ewa Chmiel", "Maria Kret"],
-      ["Piotr Jaskier", "Paweł Kłosik", "Marek Sowa", "Adam Migała", "Tomasz Bąk"],
-      ["Jadwiga Jodła", "Zofia Cicha", "Maria Kępa", "Halina Bór", "Barbara Wrona"],
-      ["Henryk Żuk", "Jerzy Łącki", "Roman Wrona", "Jan Wierny", "Stefan Jodła"],
-      ["Danuta Gaj", "Ewa Struga", "Anna Wierna", "Lidia Ruda", "Iwona Klon"],
-      ["Jerzy Staw", "Henryk Cichy", "Roman Kłosik", "Stefan Wrona", "Witold Rzepka"],
-      ["Amina Diallo-Mazur", "Mariam Diop-Kłos", "Fatou Keita-Rój", "Adama Sow-Brzeg", "Hawa Ba-Łan"],
+      ["John Lucas", "Raymond Holt", "Henry Wolfe", "Stephen Banks", "George Heath"],
+      ["Barbara Kite", "Helen Pettit", "Mary Bradley", "Edith Rook", "Irene Grove"],
+      ["Mark Odell", "Paul Tully", "Thomas Carter", "Adam Pack", "Peter Staley"],
+      ["Olga Staley", "Nina Wells", "Eve Poole", "Anna Carter", "Katie Dickens"],
+      ["Victor South", "George Blake", "Edward Raines", "Henry Piper", "Stephen Hooper"],
+      ["Alice Bourne", "Irene Peel", "Teresa Wyatt", "Eve Bridger", "Mary Kerr"],
+      ["Peter Hodgson", "Paul Latham", "Mark Owlett", "Adam Maitland", "Thomas Booth"],
+      ["Edith Houghton", "Sophia Still", "Mary Lancaster", "Helen Blain", "Barbara Rook"],
+      ["Henry Workman", "George Watson", "Raymond Rook", "John South", "Stephen Houghton"],
+      ["Diana Grove", "Eve Rodgers", "Anna Sole", "Lydia Pettit", "Yvonne Jarrett"],
+      ["George Rivers", "Henry Still", "Raymond Latham", "Stephen Rook", "Walter Pitts"],
+      ["Amina Diallo-Mason", "Mariam Diop-Carter", "Fatou Keita-Poole", "Adama Sow-Banks", "Hawa Ba-Vince"],
       ["Karim Haddad", "Samir Mansour", "Nabil Nasser", "Rami Khalil", "Adil Farah"],
-      ["Maria Jaśko", "Halina Śliwa", "Barbara Mrozek", "Irena Biela", "Zofia Pióro"],
+      ["Mary Hooper", "Helen Westley", "Barbara Mays", "Irene Bell", "Sophia Odell"],
       ["Samuel Okoro", "James Obi", "Peter Eze", "Daniel Okafor", "Michael Nwosu"],
-      ["Helena Sowa", "Maria Rybak", "Irena Żyto", "Ewa Róża", "Teresa Czapla"],
-      ["Franciszek Gaj", "Edward Leśny", "Wiktor Rybak", "Jerzy Górski", "Henryk Ptak"],
-      ["Nadia Diop-Biela", "Awa Sow-Śliwa", "Aminata Ba-Bork", "Mariama Diallo-Sitko", "Fatou Sarr-Wrona"],
-      ["Bogdan Rój", "Marek Wolski", "Paweł Staw", "Adam Mrozek", "Tomasz Ruda"],
-      ["Łucja Dąbek", "Halina Wicher", "Maria Sitar", "Barbara Żak", "Irena Wilga"],
-      ["Emil Ruda", "Paweł Czajka", "Marek Młyn", "Piotr Klon", "Adam Łęcki"],
-      ["Krystyna Las", "Zofia Kret", "Jadwiga Łan", "Halina Duda", "Maria Głaz"],
+      ["Helena Owlett", "Mary Fisher", "Irene York", "Eve Potter", "Teresa Charlton"],
+      ["Francis Grove", "Edward Lloyd", "Victor Fisher", "George Hill", "Henry Pack"],
+      ["Nadia Diop-Bell", "Awa Sow-Westley", "Aminata Ba-Bourne", "Mariama Diallo-Randall", "Fatou Sarr-Rook"],
+      ["Bernard Poole", "Mark Wells", "Paul Rivers", "Adam Mays", "Thomas Pettit"],
+      ["Lucy Digby", "Helen Smart", "Mary Raines", "Barbara Scholar", "Irene Staley"],
+      ["Emile Pettit", "Paul Chappell", "Mark Melton", "Peter Jarrett", "Adam Webster"],
+      ["Christine Wood", "Sophia Kerr", "Edith Vince", "Helen Piper", "Mary Heath"],
       ["Joseph Kamara", "David Sesay", "Peter Conteh", "Samuel Koroma", "Daniel Bangura"],
-      ["Iwona Żyto", "Anna Cicha", "Ewa Górka", "Lidia Rzepka", "Teresa Biela"],
-      ["Zbigniew Klon", "Wiktor Mazur", "Edward Wolski", "Jerzy Chmiel", "Henryk Lisek"],
-      ["Renata Kłos", "Anna Gacek", "Olga Jodła", "Ewa Kurek", "Lidia Szpak"],
+      ["Yvonne York", "Anna Still", "Eve Hartley", "Lydia Pitts", "Teresa Bell"],
+      ["Neville Jarrett", "Victor Mason", "Edward Wells", "George Bridger", "Henry Fowler"],
+      ["Renee Carter", "Anna Freer", "Olga Houghton", "Eve Crowe", "Lydia Sawyer"],
       ["Elias Hariri", "Nabil Saad", "Samir Salim", "Karim Barakat", "Rami Aziz"],
-      ["Grażyna Witek", "Maria Łan", "Irena Duda", "Halina Jaskier", "Barbara Śliwa"],
+      ["Grace Wicks", "Mary Vince", "Irene Piper", "Helen Hodgson", "Barbara Westley"],
       ["Daniel Dlamini", "Samuel Mokoena", "Joseph Molefe", "Peter Ndlovu", "David Khumalo"],
-      ["Urszula Kłos", "Teresa Jodła", "Maria Bork", "Ewa Sitar", "Irena Rzepka"],
-      ["Dariusz Biela", "Marek Wydra", "Paweł Gaj", "Adam Żur", "Tomasz Rosa"],
-      ["Celina Wilk", "Jadwiga Gaj", "Zofia Sitar", "Halina Kępa", "Maria Gacek"],
-      ["Andrzej Buk", "Roman Rzepka", "Henryk Sitko", "Jan Dąbek", "Stefan Głaz"],
-      ["Monika Gaj", "Anna Kret", "Ewa Czajka", "Iwona Struga", "Lidia Malina"],
-      ["Kazimierz Łan", "Edward Bork", "Wiktor Kłos", "Jerzy Wydra", "Henryk Brzeg"],
-      ["Leila Rahman-Wrona", "Nadia Karim-Łącka", "Salma Malik-Chmiel", "Amina Khan-Rosa", "Yasmin Ali-Kret"],
-      ["Leszek Ruda", "Marek Głaz", "Paweł Kurek", "Adam Żuk", "Piotr Sitko"],
-      ["Bożena Sowa", "Irena Staw", "Maria Polna", "Halina Klon", "Teresa Ptak"],
-      ["Ryszard Dąbek", "Edward Wrona", "Wiktor Kret", "Jerzy Rosa", "Henryk Kłos"],
-      ["Wanda Biela", "Anna Cedro", "Ewa Żur", "Lidia Wilga", "Iwona Kurek"],
-      ["Sylwester Buk", "Roman Struga", "Henryk Wicher", "Jan Gacek", "Stefan Bór"],
-      ["Regina Wrona", "Halina Ptak", "Maria Wilk", "Irena Kret", "Zofia Duda"],
-      ["Artur Jawor", "Paweł Rój", "Marek Żyto", "Adam Chmiel", "Piotr Ruda"],
-      ["Joanna Sitar", "Ewa Żyto", "Anna Rosa", "Iwona Kłos", "Lidia Biela"],
-      ["Marian Kępa", "Edward Ptak", "Wiktor Duda", "Jerzy Sitar", "Henryk Jodła"],
-      ["Alina Wolska", "Teresa Mrozek", "Maria Żur", "Irena Sowa", "Halina Wydra"],
-      ["Rafał Wrona", "Marek Duda", "Paweł Kret", "Adam Żyto", "Piotr Wolski"],
-      ["Lucyna Gaj", "Maria Struga", "Irena Kurek", "Halina Brzeg", "Barbara Staw"],
-      ["Hubert Bork", "Marek Łan", "Paweł Głaz", "Adam Sitar", "Tomasz Kępa"],
-      ["Kinga Wilk", "Olga Ruda", "Anna Dąbek", "Ewa Jodła", "Nina Gaj"],
-      ["Tadeusz Cichy", "Edward Ruda", "Wiktor Buk", "Jerzy Biela", "Henryk Gacek"],
-      ["Genowefa Staw", "Maria Wierna", "Irena Ptak", "Halina Wrona", "Zofia Żak"],
-      ["Łukasz Żur", "Marek Sitar", "Paweł Biela", "Adam Gaj", "Piotr Rzepka"],
-      ["Janina Głaz", "Jadwiga Rosa", "Zofia Kłos", "Maria Cicha", "Halina Leśna"],
+      ["Ursula Carter", "Teresa Houghton", "Mary Bourne", "Eve Raines", "Irene Pitts"],
+      ["Derek Bell", "Mark Stroud", "Paul Grove", "Adam Wyatt", "Thomas Peel"],
+      ["Celia Wolfe", "Edith Grove", "Sophia Raines", "Helen Lancaster", "Mary Freer"],
+      ["Andrew Beaumont", "Raymond Pitts", "Henry Randall", "John Digby", "Stephen Heath"],
+      ["Monica Grove", "Anna Kerr", "Eve Chappell", "Yvonne Rodgers", "Lydia Lynch"],
+      ["Clarence Vince", "Edward Bourne", "Victor Carter", "George Stroud", "Henry Banks"],
+      ["Leila Rahman-Rook", "Nadia Karim-Watson", "Salma Lowry-Bridger", "Amina Khan-Peel", "Yasmin Ali-Kerr"],
+      ["Leslie Pettit", "Mark Heath", "Paul Crowe", "Adam Workman", "Peter Randall"],
+      ["Brenda Owlett", "Irene Rivers", "Mary Owen", "Helen Jarrett", "Teresa Pack"],
+      ["Richard Digby", "Edward Rook", "Victor Kerr", "George Peel", "Henry Carter"],
+      ["Winifred Bell", "Anna Bradley", "Eve Wyatt", "Lydia Staley", "Yvonne Crowe"],
+      ["Sylvester Beaumont", "Raymond Rodgers", "Henry Smart", "John Freer", "Stephen Blain"],
+      ["Regina Rook", "Helen Pack", "Mary Wolfe", "Irene Kerr", "Sophia Piper"],
+      ["Arthur Holt", "Paul Poole", "Mark York", "Adam Bridger", "Peter Pettit"],
+      ["Joan Raines", "Eve York", "Anna Peel", "Yvonne Carter", "Lydia Bell"],
+      ["Maurice Lancaster", "Edward Pack", "Victor Piper", "George Raines", "Henry Houghton"],
+      ["Aline Wells", "Teresa Mays", "Mary Wyatt", "Irene Owlett", "Helen Stroud"],
+      ["Ralph Rook", "Mark Piper", "Paul Kerr", "Adam York", "Peter Wells"],
+      ["Lucille Grove", "Mary Rodgers", "Irene Crowe", "Helen Banks", "Barbara Rivers"],
+      ["Hubert Bourne", "Mark Vince", "Paul Heath", "Adam Raines", "Thomas Lancaster"],
+      ["Katie Wolfe", "Olga Pettit", "Anna Digby", "Eve Houghton", "Nina Grove"],
+      ["Theodore Still", "Edward Pettit", "Victor Beaumont", "George Bell", "Henry Freer"],
+      ["Genevieve Rivers", "Mary Sole", "Irene Pack", "Helen Rook", "Sophia Scholar"],
+      ["Luke Wyatt", "Mark Raines", "Paul Bell", "Adam Grove", "Peter Pitts"],
+      ["Jean Heath", "Edith Peel", "Sophia Carter", "Mary Still", "Helen Linford"],
       ["Michael Abebe", "Daniel Tesfaye", "Peter Bekele", "Joseph Girma", "Samuel Tadesse"],
-      ["Sabina Kępa", "Teresa Wrona", "Maria Szpak", "Irena Klon", "Halina Gacek"],
-      ["Bartosz Łan", "Marek Ptak", "Paweł Rosa", "Adam Wicher", "Tomasz Cedro"],
-      ["Aniela Witek", "Zofia Struga", "Jadwiga Żur", "Maria Duda", "Halina Rybak"],
-      ["Józef Gaj", "Roman Dąbek", "Henryk Cedro", "Jan Rzepka", "Stefan Wolski"],
-      ["Dorota Wrona", "Anna Pióro", "Ewa Brzeg", "Iwona Gacek", "Lidia Kłos"],
-      ["Ignacy Wolski", "Edward Gaj", "Wiktor Biela", "Jerzy Dąbek", "Henryk Śliwa"],
-      ["Agata Staw", "Teresa Klon", "Maria Malina", "Irena Cicha", "Halina Żyto"],
-      ["Daniel Buk", "Paweł Żyto", "Marek Gacek", "Adam Wrona", "Piotr Cegła"],
-      ["Gabriela Łan", "Teresa Wilga", "Maria Rzepka", "Irena Głaz", "Halina Czapla"],
-      ["Wiesław Żmuda", "Roman Świerk", "Stefan Kula", "Marek Bujak", "Jan Węgrzyn"],
-      ["Bogusław Cisek", "Piotr Stach", "Adam Błach", "Jerzy Kos", "Paweł Górecki"],
-      ["Czesław Pawlik", "Henryk Buda", "Witold Łoza", "Leon Bryła", "Tomasz Kłosowski"],
-      ["Mieczysław Zięba", "Stanisław Gołąb", "Edward Szela", "Wiktor Jurga", "Józef Kuc"],
-      ["Władysław Kocioł", "Tadeusz Wąsik", "Franciszek Wójcik", "Ignacy Cieśla", "Marian Żmij"],
-      ["Grzegorz Jastrząb", "Artur Wyrwa", "Rafał Witek", "Jacek Zając", "Bartosz Wąski"],
-      ["Sławomir Klimek", "Andrzej Szulc", "Dariusz Mazur", "Leszek Jagła", "Krzysztof Suchy"],
-      ["Zdzisław Gąsior", "Kazimierz Moskal", "Jerzy Troć", "Roman Węgiel", "Bogdan Łuk"],
-      ["Mirosław Janik", "Henryk Płatek", "Jan Ścigała", "Witold Rataj", "Edward Kozioł"],
-      ["Bronisław Wójcik", "Stanisław Rybka", "Tadeusz Krupa", "Władysław Serafin", "Franciszek Kłosik"],
-      ["Michał Wysocki", "Paweł Skrzydło", "Łukasz Chmura", "Tomasz Żagle", "Artur Słota"],
-      ["Robert Cieślik", "Piotr Wietrzny", "Marek Skowronek", "Adam Lotny", "Rafał Szydło"],
-      ["Wojciech Balicki", "Andrzej Woźniak", "Jacek Rudzki", "Grzegorz Szpak", "Sławomir Nurek"],
-      ["Stanisław Żarski", "Roman Mirski", "Jerzy Karski", "Henryk Dębiec", "Witold Kosma"],
-      ["Kazimierz Bystroń", "Edward Rudnik", "Władysław Wierzbicki", "Tadeusz Łukasz", "Marian Płonka"],
-      ["Wacław Żelazny", "Marek Płomień", "Paweł Kocioł", "Adam Grot", "Tomasz Kurek"],
-      ["Natalia Błach", "Anna Żelazna", "Ewa Płonka", "Iwona Mirska", "Lidia Karska"],
-      ["Brunon Węglarz", "Henryk Szyb", "Roman Bednarz", "Jan Pył", "Stefan Kopa"],
-      ["Elżbieta Wąsik", "Teresa Cisek", "Maria Woźniak", "Irena Pawlik", "Halina Żmuda"],
-      ["Alojzy Szlaka", "Wiktor Żelazny", "Edward Grot", "Jerzy Ogień", "Franciszek Płomień"],
-      ["Bogumiła Bednarz", "Halina Węglarz", "Zofia Szyb", "Maria Kopa", "Jadwiga Pył"],
-      ["Maksymilian Rąb", "Paweł Pokład", "Marek Filar", "Adam Sztolnia", "Piotr Węglik"],
-      ["Stanisława Janik", "Irena Kuc", "Maria Bujak", "Halina Kos", "Zofia Troć"],
-      ["Bolesław Płomień", "Tadeusz Żelazny", "Edward Kocioł", "Jerzy Szlaka", "Henryk Ogień"],
-      ["Renata Łoza", "Ewa Rataj", "Anna Bryła", "Iwona Wyrwa", "Lidia Gąsior"],
-      ["Katarzyna Kaleta", "Magdalena Nita", "Dorota Urban", "Joanna Baran", "Beata Krupa"],
-      ["Tomasz Płoski", "Andrzej Kłosiewicz", "Maciej Grzyb", "Krzysztof Wierzbik", "Jacek Błażej"],
-      ["Teresa Wrzesińska", "Halina Drobna", "Zofia Różycka", "Danuta Węgorek", "Barbara Kałuża"],
-      ["Feliks Szum", "Antoni Zawadzki", "Władysław Michalak", "Józef Twardy", "Edmund Pawlus"],
-      ["Małgorzata Świercz", "Renata Jasna", "Alicja Kędzierska", "Grażyna Urbaniak", "Iwona Wrona"],
-      ["Bogdan Dębicki", "Kazimierz Olsza", "Leszek Stryj", "Ryszard Konopka", "Dariusz Słomka"],
-      ["Helena Wierzbicka", "Janina Nowicka", "Genowefa Osiak", "Stanisława Piórkowska", "Jadwiga Kłosik"],
-      ["Marcin Kowalik", "Wojciech Lasek", "Rafał Marczyk", "Grzegorz Kłosowski", "Artur Dębski"],
-      ["Elżbieta Suchocka", "Bożena Kaczor", "Lucyna Węgrzyn", "Urszula Stolarz", "Celina Białek"],
-      ["Stanisław Żurawski", "Tadeusz Kurowski", "Marian Wątroba", "Wiktor Jasiek", "Zbigniew Owczarek"],
-      ["Agnieszka Lech", "Dorota Bielska", "Beata Mokrzycka", "Joanna Kłoska", "Ewa Szafran"],
-      ["Mariusz Rybicki", "Jacek Bęben", "Piotr Chrobot", "Marek Węzeł", "Andrzej Drab"],
-      ["Władysława Ćwik", "Zofia Narewska", "Irena Łata", "Halina Zięcina", "Maria Cebula"],
-      ["Janusz Głowacki", "Roman Chudzik", "Witold Pękala", "Henryk Groch", "Stefan Zadra"],
-      ["Ewelina Cholewa", "Anna Żelazek", "Alicja Kłosz", "Teresa Bryk", "Lidia Rumińska"],
-      ["Antoni Żebro", "Edmund Skiba", "Feliks Boruta", "Józef Mielec", "Tadeusz Wiór"],
-      ["Marta Wysocka", "Olga Klimczak", "Nina Górna", "Kinga Pająk", "Ewa Śliwka"],
-      ["Ryszard Dyl", "Wiesław Sędek", "Bogdan Rozmus", "Kazimierz Bruk", "Leszek Łyko"],
-      ["Grażyna Czaplińska", "Danuta Żmijka", "Elżbieta Łuk", "Bożena Stępień", "Urszula Jancz"],
-      ["Przemysław Kosik", "Maciej Dzięcioł", "Artur Grabek", "Paweł Stasz", "Marcin Wrona"],
-      ["Wanda Rudzka", "Jadwiga Bieda", "Janina Żołądź", "Stanisława Kosik", "Helena Wójcicka"],
-      ["Krzysztof Polek", "Dariusz Kołek", "Zbigniew Bocheń", "Marek Oset", "Jerzy Pakuła"],
-      ["Monika Włodarz", "Renata Głowacka", "Joanna Chruściel", "Dorota Ząbek", "Iwona Malec"],
-      ["Stanisław Darski", "Edward Wrzosik", "Marian Ujazd", "Wiktor Głuszek", "Leon Matusz"],
-      ["Krystyna Żegota", "Barbara Skrzyp", "Teresa Witek", "Halina Dębina", "Maria Bielik"],
-      ["Szymon Świerczek", "Tomasz Lisowski", "Rafał Rojek", "Adam Bilski", "Piotr Łopian"],
-      ["Sabina Skowron", "Lucyna Brzezińska", "Regina Pilch", "Zofia Puch", "Irena Kulesza"],
-      ["Waldemar Cieplik", "Marek Budzik", "Paweł Gron", "Jacek Łęg", "Grzegorz Rączka"],
-      ["Małgorzata Błaszcz", "Elżbieta Domańska", "Beata Królak", "Alicja Mirek", "Danuta Górka"],
-      ["Władysław Szeląg", "Franciszek Miłek", "Antoni Chrzan", "Edmund Różycki", "Ignacy Skalski"],
-      ["Katarzyna Cieślak", "Magdalena Żukowska", "Agata Wierzbna", "Joanna Korzeń", "Olga Strzelczyk"],
-      ["Wojciech Ręka", "Andrzej Wąchała", "Henryk Lato", "Janusz Grzelak", "Roman Kocur"],
-      ["Genowefa Zięba", "Stanisława Piwko", "Halina Skorek", "Jadwiga Ruczaj", "Maria Olszyna"],
-      ["Michał Szczepan", "Robert Młotek", "Tomasz Grusza", "Maciej Wójta", "Artur Kłosowicz"],
-      ["Dorota Brzeźna", "Renata Nóżka", "Alicja Kłosik", "Iwona Szczęsna", "Lidia Czeremcha"],
-      ["Klara Boruta", "Aneta Chaber", "Eliza Flis", "Nina Górecka", "Marta Hubka"],
-      ["Grzegorz Bałka", "Robert Chudek", "Wojciech Cygan", "Andrzej Filar", "Janusz Holka"],
-      ["Łucja Bławat", "Wanda Czernik", "Regina Furman", "Alina Gałąź", "Irena Jędra"],
+      ["Sabine Lancaster", "Teresa Rook", "Mary Sawyer", "Irene Jarrett", "Helen Freer"],
+      ["Bartholomew Vince", "Mark Pack", "Paul Peel", "Adam Smart", "Thomas Bradley"],
+      ["Angela Wicks", "Sophia Rodgers", "Edith Wyatt", "Mary Piper", "Helen Fisher"],
+      ["Joseph Grove", "Raymond Digby", "Henry Bradley", "John Pitts", "Stephen Wells"],
+      ["Dorothy Rook", "Anna Odell", "Eve Banks", "Yvonne Freer", "Lydia Carter"],
+      ["Ignatius Wells", "Edward Grove", "Victor Bell", "George Digby", "Henry Westley"],
+      ["Agatha Rivers", "Teresa Jarrett", "Mary Lynch", "Irene Still", "Helen York"],
+      ["Daniel Beaumont", "Paul York", "Mark Freer", "Adam Rook", "Peter Brick"],
+      ["Gabrielle Vince", "Teresa Staley", "Mary Pitts", "Irene Heath", "Helen Charlton"],
+      ["Wesley Woodley", "Raymond Whitney", "Stephen Ball", "Mark Bayley", "John Toole"],
+      ["Basil Yew", "Peter Ricketts", "Adam Bloomfield", "George Jukes", "Paul Harris"],
+      ["Cecil Newton", "Henry Barry", "Walter Wake", "Leon Briggs", "Thomas Leary"],
+      ["Milton Turpin", "Stanley Goddard", "Edward Salmon", "Victor Hoyle", "Joseph Kirk"],
+      ["Wallace Jefferies", "Theodore Terry", "Francis Cook", "Ignatius Cann", "Maurice Wolsey"],
+      ["Gregory Hollis", "Arthur Styles", "Ralph Wicks", "Jack Hare", "Bartholomew Thomas"],
+      ["Sidney James", "Andrew Scrivens", "Derek Mason", "Leslie Hickey", "Christopher Roy"],
+      ["Edgar Hawes", "Clarence Mayhew", "George Short", "Raymond Thurston", "Bernard Wale"],
+      ["Miles Hine", "Henry Bloom", "John Weller", "Walter Plowman", "Edward Kellett"],
+      ["Bruce Cook", "Stanley Pink", "Theodore Keys", "Wallace Radford", "Francis Latham"],
+      ["Michael Swift", "Paul Rennie", "Luke Brindley", "Thomas Wickham", "Arthur Shields"],
+      ["Robert Carlisle", "Peter Stacey", "Mark Reid", "Adam Lott", "Ralph Sexton"],
+      ["Albert Abbott", "Andrew Steer", "Jack Reed", "Gregory Sawyer", "Sidney Mills"],
+      ["Stanley Wilcox", "Raymond Marsh", "George Ireland", "Henry Dowling", "Walter Keegan"],
+      ["Clarence Bird", "Edward Phelps", "Wallace Willow", "Theodore Waller", "Maurice Paul"],
+      ["Wilfred Wise", "Mark Patrick", "Paul Jefferies", "Adam Greaves", "Thomas Crowe"],
+      ["Natalie Bloomfield", "Anna Wise", "Eve Paul", "Yvonne Marsh", "Lydia Ireland"],
+      ["Bruno Tindall", "Henry Sells", "Raymond Allman", "John Park", "Stephen Johnson"],
+      ["Elizabeth Terry", "Teresa Yew", "Mary Steer", "Irene Newton", "Helen Woodley"],
+      ["Aloysius Sands", "Victor Wise", "Edward Greaves", "George Moore", "Francis Patrick"],
+      ["Beatrix Allman", "Helen Tindall", "Sophia Sells", "Mary Johnson", "Edith Park"],
+      ["Maximilian Price", "Paul Orchard", "Mark Ellis", "Adam Scanlon", "Peter Tippett"],
+      ["Stella Hine", "Irene Kirk", "Mary Bayley", "Helen Jukes", "Sophia Short"],
+      ["Bertram Patrick", "Theodore Wise", "Edward Jefferies", "George Sands", "Henry Moore"],
+      ["Renee Wake", "Eve Plowman", "Anna Briggs", "Yvonne Styles", "Lydia Hawes"],
+      ["Catherine Collett", "Madeleine Miles", "Dorothy Singleton", "Joan Adley", "Beatrice Keys"],
+      ["Thomas Peacock", "Andrew Langford", "Martin Halsey", "Christopher Spear", "Jack Bowles"],
+      ["Teresa Stiles", "Helen Croft", "Sophia Prentice", "Diana Tolley", "Barbara Irving"],
+      ["Felix Seaton", "Anthony Shaw", "Wallace Maddox", "Joseph Simon", "Edmund Nixon"],
+      ["Margaret Whitaker", "Renee Holbrook", "Alice Lamb", "Grace Slade", "Yvonne Rook"],
+      ["Bernard Dorsey", "Clarence Moreton", "Leslie Rollins", "Richard Jewell", "Derek Sheridan"],
+      ["Helena Willow", "Jean Newell", "Genevieve Murray", "Stella Oak", "Edith Latham"],
+      ["Marcus Keene", "Albert Lemon", "Ralph Lyons", "Gregory Leary", "Arthur Oakley"],
+      ["Elizabeth Rowe", "Brenda Hume", "Lucille Toole", "Ursula Robinson", "Celia Anson"],
+      ["Stanley Wynn", "Theodore Kirkland", "Maurice Thorne", "Victor Hobbs", "Neville Neale"],
+      ["Agnes Light", "Dorothy Blake", "Beatrice Mathews", "Joan Lawrie", "Eve Rudman"],
+      ["Malcolm Brookfield", "Jack Bland", "Peter Bullock", "Mark Toy", "Andrew Crane"],
+      ["Wilhelmina Vane", "Sophia Merritt", "Irene Patch", "Helen Underwood", "Mary Bradbury"],
+      ["Julian Hawkins", "Raymond Byrd", "Walter Parry", "Henry Gough", "Stephen Tripp"],
+      ["Evelyn Brunt", "Anna Wilton", "Alice Lees", "Teresa Avery", "Lydia Pickett"],
+      ["Anthony Wilkins", "Edmund Rawlins", "Felix Barrett", "Joseph Magee", "Theodore Stark"],
+      ["Martha Swift", "Olga Jackman", "Nina Hatcher", "Katie Nelson", "Eve Wharton"],
+      ["Richard Delaney", "Wesley Shearer", "Bernard Penfold", "Clarence Audley", "Leslie Ware"],
+      ["Grace Chatham", "Diana Woodham", "Elizabeth Wale", "Brenda Rosser", "Ursula Higgins"],
+      ["Percival Keane", "Martin Dew", "Arthur Goodall", "Paul Riley", "Marcus Rook"],
+      ["Winifred Reed", "Edith Armitage", "Jean Woods", "Stella Keane", "Helena Symonds"],
+      ["Christopher Oswald", "Derek Kendall", "Neville Ashe", "Mark Mullins", "George Neville"],
+      ["Monica Travis", "Renee Hawkins", "Joan Burley", "Dorothy Usher", "Yvonne Small"],
+      ["Stanley Cole", "Edward Storey", "Maurice Sims", "Victor Heeley", "Leon Mackay"],
+      ["Christine Willis", "Barbara Rice", "Teresa Wicks", "Helen Draper", "Mary Beale"],
+      ["Simon Whiting", "Thomas Logan", "Ralph Peart", "Adam Arthur", "Peter Wade"],
+      ["Sabine Redmond", "Lucille Baldwin", "Regina Norrie", "Sophia Painter", "Irene Kelsey"],
+      ["Warren Caldwell", "Mark Bateman", "Paul Grainger", "Jack Weldon", "Gregory Proctor"],
+      ["Margaret Booker", "Elizabeth Cowley", "Beatrice Kilby", "Alice Mercer", "Diana Hartley"],
+      ["Wallace Salter", "Francis Martell", "Anthony Burr", "Edmund Prentice", "Ignatius Ransom"],
+      ["Catherine Cantrell", "Madeleine Wray", "Agatha Spencer", "Joan Jordan", "Olga Rose"],
+      ["Albert Purcell", "Andrew Tapper", "Henry Lever", "Julian Hagan", "Raymond Jennings"],
+      ["Genevieve Turpin", "Stella Norton", "Helen Reade", "Edith Perrin", "Mary Morris"],
+      ["Michael Rumble", "Robert Meadows", "Thomas Grist", "Martin Tallis", "Arthur Leach"],
+      ["Dorothy Barclay", "Renee Minter", "Alice Latham", "Yvonne Sage", "Lydia Clarkson"],
+      ["Clara Barrett", "Annette Branson", "Eliza Ewing", "Nina Harris", "Martha Heron"],
+      ["Gregory Aldridge", "Robert Butler", "Albert Chalmers", "Andrew Ellis", "Julian Henson"],
+      ["Lucy Bowen", "Winifred Cleary", "Regina Foster", "Aline Garside", "Irene Hughes"],
       ["Isaac Adu", "Daniel Kofi", "Samuel Annan", "Peter Appiah", "Joseph Ampofo"],
-      ["Karolina Dęba", "Sylwia Foryś", "Joanna Graba", "Beata Hada", "Dorota Jaśmin"],
-      ["Edmund Baran", "Feliks Czarnek", "Antoni Drab", "Władysław Gont", "Mieczysław Huta"],
-      ["Awa Diop-Buk", "Lea Sow-Róg", "Mina Ba-Żak", "Nora Keita-Lis", "Sara Sarr-Gaj"],
-      ["Maciej Balon", "Tomasz Cieśla", "Artur Dębak", "Michał Fita", "Marcin Garstka"],
-      ["Aniela Białek", "Janina Dąbrowa", "Helena Fedor", "Zofia Grom", "Genowefa Hara"],
-      ["Zygmunt Boruta", "Bogdan Cebula", "Kazimierz Dolec", "Ryszard Foks", "Leszek Gajek"],
-      ["Magda Borowik", "Katarzyna Czajda", "Agata Dyl", "Ewelina Figa", "Monika Gil"],
-      ["Mariusz Bożek", "Dariusz Cybulski", "Jacek Drzewo", "Rafał Fabia", "Paweł Gola"],
-      ["Bożena Burek", "Teresa Cierń", "Grażyna Deka", "Krystyna Fiołek", "Halina Glinka"],
-      ["Filip Bratek", "Kamil Cisek", "Marek Dudziak", "Szymon Fajt", "Piotr Gaweł"],
-      ["Ewa Bułka", "Anna Cebula", "Renata Drobna", "Iwona Firlej", "Danuta Grzelak"],
-      ["Stanisław Bryła", "Józef Czajka", "Edward Drwal", "Ignacy Felek", "Franciszek Grot"],
-      ["Paulina Brzeźna", "Lidia Cichoń", "Olga Dębak", "Alicja Fura", "Urszula Gajda"],
+      ["Caroline Donnelly", "Sylvia Fell", "Joan Goldsmith", "Beatrice Henley", "Dorothy Hopkins"],
+      ["Edmund Adley", "Felix Clancy", "Anthony Crane", "Wallace Gillis", "Milton Hewett"],
+      ["Awa Diop-Beaumont", "Lea Sow-Plum", "Mina Ba-Scholar", "Nora Keita-Fox", "Sara Sarr-Grove"],
+      ["Martin Abbot", "Thomas Cann", "Arthur Dore", "Michael Everett", "Marcus Gainsford"],
+      ["Angela Anson", "Jean Dodds", "Helena Eaton", "Sophia Grace", "Genevieve Hara"],
+      ["Sigmund Barrett", "Bernard Bradbury", "Clarence Cornish", "Richard Faulkner", "Leslie Fyfe"],
+      ["Madge Astley", "Catherine Channon", "Agatha Delaney", "Evelyn Edmonds", "Monica Gell"],
+      ["Malcolm Atkin", "Derek Catterall", "Jack Daley", "Ralph Duffy", "Paul Gibbs"],
+      ["Brenda Brown", "Teresa Cameron", "Grace Colton", "Christine Emmett", "Helen Gerrard"],
+      ["Philip Attwood", "Cameron Yew", "Mark Davey", "Simon Dunne", "Peter Gallant"],
+      ["Eve Berkeley", "Anna Bradbury", "Renee Croft", "Yvonne English", "Diana Hagan"],
+      ["Stanley Briggs", "Joseph Chappell", "Edward Culver", "Ignatius Eden", "Francis Greaves"],
+      ["Pauline Barclay", "Lydia Cade", "Olga Dore", "Alice Ford", "Ursula Gale"],
       ["Michael Banda", "James Chanda", "David Phiri", "Joseph Tembo", "Samuel Zulu"],
-      ["Maria Brzana", "Jadwiga Czubat", "Barbara Dudek", "Stanisława Flis", "Zdzisława Gawra"],
-      ["Bartosz Bujak", "Łukasz Cierń", "Tadeusz Dymek", "Witold Fugas", "Wiktor Gajda"],
-      ["Ada Brzęk", "Anita Cegła", "Julita Drozd", "Kinga Florek", "Laura Guzik"],
-      ["Henryk Brzeźny", "Leon Chaber", "Marian Dudek", "Roman Furtak", "Stefan Graboń"],
-      ["Izabela Bujak", "Sabina Chmura", "Celina Dubiel", "Joanna Fudała", "Lucyna Gierka"],
-      ["Konrad Bury", "Radosław Cichy", "Wojciech Dyl", "Damian Fiszer", "Mateusz Gucwa"],
-      ["Cecylia Burda", "Leokadia Cholewa", "Wiesława Dyl", "Melania Fuks", "Władysława Gruca"],
-      ["Marek Białas", "Andrzej Cudny", "Janusz Dudała", "Ryszard Faber", "Jerzy Gonet"],
-      ["Natalia Bruk", "Sylwia Czapnik", "Eliza Derda", "Klara Falisz", "Aneta Gajek"],
-      ["Witold Borecki", "Zbigniew Cegła", "Edmund Darłak", "Tadeusz Fijał", "Wiktor Górka"],
-      ["Elżbieta Brzeg", "Regina Chuda", "Wanda Dygas", "Halina Filas", "Grażyna Gęba"],
+      ["Mary Badger", "Edith Coates", "Barbara Drake", "Stella Ewing", "Mabel Gardner"],
+      ["Bartholomew Bayley", "Luke Cameron", "Theodore Denham", "Walter Flint", "Victor Gale"],
+      ["Ada Barnett", "Anita Brick", "Julia Cross", "Katie Fairley", "Laura Harding"],
+      ["Henry Barclay", "Leon Branson", "Maurice Drake", "Raymond Francis", "Stephen Goodman"],
+      ["Isabel Bayley", "Sabine Brindley", "Celia Daltry", "Joan Fleet", "Lucille Gates"],
+      ["Conrad Grey", "Roland Still", "Albert Delaney", "Damian Epps", "Matthew Hand"],
+      ["Cecilia Benson", "Leonora Brunt", "Wendy Delaney", "Melanie Flynn", "Wilhelmina Gregory"],
+      ["Mark Amos", "Andrew Cassidy", "Julian Dancer", "Richard Dryden", "George Gill"],
+      ["Natalie Audley", "Sylvia Chisholm", "Eliza Cooper", "Clara Dutton", "Annette Fyfe"],
+      ["Walter Ashton", "Neville Brick", "Edmund Collins", "Theodore Egan", "Victor Hartley"],
+      ["Elizabeth Banks", "Regina Burton", "Winifred Day", "Helen Elms", "Grace Hayes"],
       ["Kwame Antwi", "Kofi Asare", "Kojo Danso", "Yaw Opoku", "Kweku Sarpong"],
-      ["Alicja Borucka", "Ewa Ćwik", "Danuta Drabik", "Iwona Fota", "Renata Gajdos"],
-      ["Antoni Bystrek", "Franciszek Czop", "Ignacy Dęba", "Feliks Fara", "Władysław Gruszka"],
-      ["Iga Bzowa", "Maja Cichoń", "Lena Durna", "Nina Fajka", "Ada Głowacka"],
+      ["Alice Barratt", "Eve Vane", "Diana Crewe", "Yvonne Fenwick", "Renee Fuller"],
+      ["Anthony Betts", "Francis Clive", "Ignatius Donnelly", "Felix Earl", "Wallace Gunn"],
+      ["Ida Blackmore", "Maya Cade", "Lena Davis", "Nina Duncan", "Ada Hawkins"],
       ["Kenji Sato", "Hiroshi Mori", "Akio Kato", "Jun Seki", "Isao Hara"],
-      ["Ama Adu-Las", "Esi Osei-Buk", "Adwoa Ba-Rój", "Akua Sow-Gaj", "Abena Diop-Żak"],
-      ["Kazimierz Borek", "Leszek Cholewa", "Bogdan Dobrzań", "Zygmunt Frączek", "Czesław Gubała"],
-      ["Mina Ali-Róg", "Leila Noor-Buk", "Nadia Azad-Las", "Sara Amir-Żak", "Rima Khan-Gaj"],
-      ["Kamil Brzozowy", "Filip Chudek", "Szymon Dera", "Marcin Fojcik", "Maciej Gębala"],
-      ["Krystyna Brzeska", "Bożena Cuber", "Teresa Dorosz", "Maria Fudala", "Zofia Grabska"],
-      ["Jacek Barcz", "Mariusz Cebula", "Grzegorz Długosz", "Robert Fita", "Dariusz Gondek"],
-      ["Aya Mori-Buk", "Yuki Sato-Rój", "Emi Kato-Lis", "Aki Seki-Gaj", "Mari Hara-Żak"],
-      ["Bolesław Bruk", "Wacław Cieśla", "Mieczysław Dera", "Stanisław Furgol", "Józef Gruba"],
-      ["Dorota Błysk", "Urszula Chaberska", "Małgorzata Dera", "Lidia Fila", "Celina Gorczyca"],
-      ["Paweł Bednarek", "Tomasz Chojka", "Rafał Dudka", "Artur Fronczek", "Michał Gręda"],
-      ["Helena Bzowska", "Janina Ćwikła", "Łucja Dryga", "Aniela Fila", "Genowefa Gruda"],
+      ["Ama Adu-Wood", "Esi Osei-Beaumont", "Adwoa Ba-Poole", "Akua Sow-Grove", "Abena Diop-Scholar"],
+      ["Clarence Burke", "Leslie Brunt", "Bernard Corbett", "Sigmund Firth", "Cecil Hammond"],
+      ["Mina Ali-Plum", "Leila Noor-Beaumont", "Nadia Azad-Wood", "Sara Amir-Scholar", "Rima Khan-Grove"],
+      ["Cameron Barlow", "Philip Butler", "Simon Connell", "Marcus Farley", "Martin Hazel"],
+      ["Christine Baird", "Brenda Carson", "Teresa Craddock", "Mary Fitch", "Sophia Gore"],
+      ["Jack Alcott", "Malcolm Bradbury", "Gregory Drummond", "Robert Everett", "Derek Gifford"],
+      ["Aya Mori-Beaumont", "Yuki Sato-Poole", "Emi Kato-Fox", "Aki Seki-Grove", "Mari Hara-Scholar"],
+      ["Bertram Audley", "Wilfred Cann", "Milton Connell", "Stanley Forsyth", "Joseph Greenway"],
+      ["Dorothy Boyce", "Ursula Breen", "Margaret Connell", "Lydia Eliot", "Celia Gimson"],
+      ["Paul Allen", "Thomas Brookes", "Ralph Darley", "Arthur Fielding", "Michael Hamill"],
+      ["Helena Blackmore", "Jean Venn", "Lucy Curtis", "Angela Eliot", "Genevieve Griffin"],
       ["Emmanuel Dube", "Paul Sibanda", "Simon Ncube", "Thomas Moyo", "Patrick Zondo"],
-      ["Joanna Banasik", "Monika Chmurka", "Beata Dębiec", "Agata Folta", "Katarzyna Grys"],
-      ["Piotr Bęben", "Adam Chowaniec", "Bartosz Dziuba", "Łukasz Fojut", "Marek Grześ"],
-      ["Anna Bereza", "Irena Chrobak", "Renata Domagała", "Grażyna Fita", "Halina Gudej"],
-      ["Marcin Blicharz", "Mariusz Chrzan", "Jacek Dobosz", "Robert Filar", "Dariusz Gruszka"],
+      ["Joan Acton", "Monica Britton", "Beatrice Dowling", "Agatha Fay", "Catherine Guy"],
+      ["Peter Bland", "Adam Buck", "Bartholomew Denton", "Luke Farr", "Mark Hales"],
+      ["Anna Alton", "Irene Budd", "Renee Coughlan", "Grace Everett", "Helen Hanna"],
+      ["Marcus Ashby", "Malcolm Burr", "Jack Copley", "Robert Ellis", "Derek Gunn"],
     ],
-    employers: ['Brzask Works Archives', 'Ogniwo Engineering Works', 'Szlak Staff Transport', 'Osnowa Textile Mill', 'Nit Workshop', 'Vocational School', 'Goods Depot', 'Supply Office', "Margines Printworks", "Trybik Co-operative", "Ścieg Workshop", "Kłos Bakery", "Works Canteen", "Parks Service", "Post Office", "Technical Service", "Próba Laboratory", "Fala Laundry", "Railway Office", "Holiday Lodge", "University", "Reading Room Library", "Design Office", "Słój Joinery", "Militia station", "Flight unit", "Głębia Mine"],
+    employers: ['Dawn Works Archives', 'Link Engineering Works', 'Wayfarer Staff Transport', 'Weft Textile Mill', 'Rivet Workshop', 'Vocational School', 'Goods Depot', 'Supply Office', "Margin Printworks", "Cogwheel Co-operative", "Stitch Workshop", "Harvest Bakery", "Works Canteen", "Parks Service", "Post Office", "Technical Service", "Assay Laboratory", "Wave Laundry", "Railway Office", "Holiday Lodge", "University", "Reading Room Library", "Design Office", "Grain Joinery", "Militia station", "Flight unit", "Deepwell Mine"],
     jobs: ['Archivist', 'Crane operator', 'Driver', 'Weaver', 'Mechanic', 'Caretaker', 'Storekeeper', 'Manager', "Typesetter", "Watchmaker", "Tailor", "Baker", "Cook", "Cleaner", "Gardener", "Post carrier", "Electrician", "Welder", "Furnace operator", "Lathe operator", "Lab assistant", "Proofreader", "Bookbinder", "Laundry worker", "Boiler attendant", "Track worker", "Signal operator", "Forklift operator", "Porter", "Quality inspector", "Shift supervisor", "Survey assistant", "Teacher", "Professor", "Librarian", "Accountant", "Clerk", "Engineer", "Architect", "Editor", "Drafter", "Receptionist", "Chemist", "Technician", "Carpenter", "Militia officer", "Pilot", "Miner"],
     femaleJobs: ['Archivist', 'Crane operator', 'Driver', 'Weaver', 'Mechanic', 'Caretaker', 'Storekeeper', 'Manager', "Typesetter", "Watchmaker", "Tailor", "Baker", "Cook", "Cleaner", "Gardener", "Post carrier", "Electrician", "Welder", "Furnace operator", "Lathe operator", "Lab assistant", "Proofreader", "Bookbinder", "Laundry worker", "Boiler attendant", "Track worker", "Signal operator", "Forklift operator", "Porter", "Quality inspector", "Shift supervisor", "Survey assistant", "Teacher", "Professor", "Librarian", "Accountant", "Clerk", "Engineer", "Architect", "Editor", "Drafter", "Receptionist", "Chemist", "Technician", "Carpenter", "Militia officer", "Pilot", "Miner"],
     work: ['records filing', 'crane operation', 'passenger transport', 'weaving machines', 'machine repairs', 'building upkeep', 'loading goods', 'team supervision', "setting type", "watch repairs", "sewing clothes", "baking bread", "preparing food", "cleaning rooms", "tending grounds", "delivering mail", "wiring repairs", "joining metals", "tending furnace", "turning metal", "reading samples", "checking proofs", "binding books", "industrial washing", "tending boilers", "track repairs", "setting points", "moving pallets", "carrying luggage", "checking products", "leading a shift", "land measurements", "teaching classes", "teaching and research", "cataloguing books", "keeping accounts", "handling records", "technical oversight", "building design", "editing texts", "technical drawing", "receiving guests", "chemical analyses", "checks and repairs", "making furniture", "patrol duty", "flying aircraft", "coal extraction"],
@@ -2056,167 +2056,167 @@ export const translations = {
         "pram": "Pram for sale, used by one child. Wheels recently replaced.",
         "radio-repair": "Radio repairs undertaken. Please supply your own valves.",
         "piano-lessons": "Piano lessons offered. Beginners welcome.",
-        "garage": "Swap garage on Ogrodowa for one nearer Północ terminus. Dry, no electricity.",
+        "garage": "Swap garage on Orchard Street for one nearer Northgate terminus. Dry, no electricity.",
         "typewriter": "Typewriter wanted. Missing ribbon is no obstacle.",
         "bicycle-parts": "Bicycle parts for sale. Saddle, luggage rack, two bells.",
         "books": "Swap adventure novels for a mushroom atlas. Replies to newspaper Box 18.",
-        "jars": "Pickle jars free. No lids. Leave word with the caretaker at Ogrodowa 7.",
-        "lost-keys": "Keys with metal tag found. Ask the porter at the Świt cinema.",
-        "allotment": "Currant cuttings for gooseberries. Leave word at Zacisze allotments, Ogrodowa 42.",
-        "knitting-help": "Jumpers knitted with supplied wool. Ask at the haberdasher's on Ogrodowa.",
-        "room": "Quiet lodger seeks room on Północ. Leave word with the Szkolna cultural centre porter.",
-        "records": "Swap dance records for jazz. Leave word at the music club on Szkolna.",
-        "clock-repair": "Clocks repaired. Please bring the key. Stolarska 4, courtyard entrance.",
-        "coal-scuttle": "Tin coal scuttle free. Handle intact. Ask the caretaker at Stolarska 8.",
-        "curtain-rods": "Two wooden curtain poles for sale. Leave word at the haberdasher's on Ogrodowa.",
-        "children-skates": "Swap children's skates for larger pair. Leave word with the Szkolna cultural centre porter.",
-        "violin-case": "Violin case for sale. Leave word with the music school porter on Ogrodowa.",
+        "jars": "Pickle jars free. No lids. Leave word with the caretaker at 7 Orchard Street.",
+        "lost-keys": "Keys with metal tag found. Ask the porter at the Daybreak cinema.",
+        "allotment": "Currant cuttings for gooseberries. Leave word at Haven allotments, 42 Orchard Street.",
+        "knitting-help": "Jumpers knitted with supplied wool. Ask at the haberdasher's on Orchard Street.",
+        "room": "Quiet lodger seeks Northgate room. Replies: Alder Street cultural centre porter.",
+        "records": "Swap dance records for jazz. Leave word at the music club on Alder Street.",
+        "clock-repair": "Clocks repaired. Please bring the key. 4 Cooper Street, courtyard entrance.",
+        "coal-scuttle": "Tin coal scuttle free. Handle intact. Ask the caretaker at 8 Cooper Street.",
+        "curtain-rods": "Two wooden curtain poles for sale. Leave word at the haberdasher's on Orchard Street.",
+        "children-skates": "Swap children's skates for larger pair. Leave word with the Alder Street cultural centre porter.",
+        "violin-case": "Violin case for sale. Leave word with the music school porter on Orchard Street.",
         "sofa-bed": "Single divan for sale. Bedding storage beneath. Buyer arranges transport.",
-        "jam-pots": "Jam jars free. Ask the caretaker at Północ clubroom, Lipowa 6, to collect.",
-        "music-stand": "Music stand wanted, folding welcome. Leave word with the Ogrodowa music school porter.",
-        "wool-remnants": "Swap leftover wool for coat buttons. Ask at the haberdasher's on Ogrodowa.",
-        "pram-wheels": "Pram wheels free, two sizes. Ask the caretaker at Kolejowa 14.",
+        "jam-pots": "Jam jars free. Ask the caretaker at Northgate clubroom, 6 Linden Road, to collect.",
+        "music-stand": "Music stand wanted; folding welcome. Replies: Orchard Street music school porter.",
+        "wool-remnants": "Swap leftover wool for coat buttons. Ask at the haberdasher's on Orchard Street.",
+        "pram-wheels": "Pram wheels free, two sizes. Ask the caretaker at 14 Station Road.",
         "piano-tuning": "Piano tuning by arrangement. Please state the floor and condition of the instrument.",
-        "chess-set": "Wooden chess set for sale, one pawn missing. Leave word at the Szkolna chess club.",
-        "travel-trunk": "Travel trunk for sale, locks with a key. Leave word at the cobbler's, Kolejowa 22.",
-        "plant-pots": "Clay pots for a spider-plant cutting. Leave word at the Północ flower shop.",
+        "chess-set": "Wooden chess set for sale, one pawn missing. Leave word at the Alder Street chess club.",
+        "travel-trunk": "Travel trunk for sale, locks with a key. Leave word at the cobbler's, 22 Station Road.",
+        "plant-pots": "Clay pots for a spider-plant cutting. Leave word at the Northgate flower shop.",
         "school-atlas": "School atlas wanted, older edition welcome. Replies to newspaper Box 22.",
         "handcart": "Two-wheeled handcart for sale. Suitable for carrying crates.",
-        "spare-buttons": "Swap uniform buttons for horn buttons. Leave word at the Ogrodowa alterations shop.",
-        "found-mittens": "Child's mittens found on tram 4. Collect from the porter at the Świt cinema.",
-        "bookends": "Bookends wanted. Heavy pair preferred. Enquire at the Kolejowa reading room.",
-        "coat-alteration": "Coats shortened, linings replaced. Alterations shop, Ogrodowa 6, rear building.",
+        "spare-buttons": "Swap uniform buttons for horn buttons. Leave word at the Orchard Street alterations shop.",
+        "found-mittens": "Child's mittens found on tram 4. Collect from the porter at the Daybreak cinema.",
+        "bookends": "Bookends wanted. Heavy pair preferred. Enquire at the Station Road reading room.",
+        "coat-alteration": "Coats shortened, linings replaced. Alterations shop, 6 Orchard Street, rear building.",
         "mandolin": "Mandolin for sale with case. One string needs replacing.",
-        "photo-albums": "Swap photo albums for frames. Leave word with the photographer on Ogrodowa.",
-        "folding-stool": "Folding stool wanted for outdoor sketching. Ask the art studio on Szkolna.",
-        "wood-offcuts": "Wood offcuts free to model makers. Collect from the workshop at Stolarska 5.",
-        "travel-chess": "Pocket chess found at Kolejowa station. Collect from the left-luggage office.",
+        "photo-albums": "Swap photo albums for frames. Leave word with the photographer on Orchard Street.",
+        "folding-stool": "Folding stool wanted for outdoor sketching. Ask the art studio on Alder Street.",
+        "wood-offcuts": "Wood offcuts free to model makers. Collect from the workshop at 5 Cooper Street.",
+        "travel-chess": "Pocket chess found at Station Road station. Collect from the left-luggage office.",
         "electric-iron": "Working iron with temperature control wanted. Call after six in the evening.",
-        "baking-tins": "Swap two loaf tins for a springform tin. Leave word at the milk bar by Kolejowa station.",
-        "sewing-patterns": "Dress patterns available to trace. Ask after needlework class at the Szkolna club.",
-        "record-sleeves": "Record sleeves free, no records. Collect from the Szkolna cultural centre porter.",
-        "allotment-bench": "Allotment bench wanted. Leave word with the Zacisze caretaker at Ogrodowa 42.",
+        "baking-tins": "Swap two loaf tins for a springform tin. Leave word at the milk bar by Station Road station.",
+        "sewing-patterns": "Dress patterns available to trace. Ask after needlework class at the Alder Street club.",
+        "record-sleeves": "Record sleeves free, no records. Collect from the Alder Street cultural centre porter.",
+        "allotment-bench": "Allotment bench wanted. Leave word with the Haven caretaker at 42 Orchard Street.",
         "accordion-sale": "Accordion with straps and case for sale. View after working hours.",
-        "curtain-sewing": "Curtain hemming. Please bring exact measurements. Kolejowa 11, courtyard entrance.",
-        "bicycle-basket": "Cycle basket for sale. Leave word at the bicycle workshop, Kolejowa 20.",
-        "reading-lamp": "Reading lamp wanted, heavy base preferred. Ask at the Kolejowa reading room.",
+        "curtain-sewing": "Curtain hemming. Please bring exact measurements. 11 Station Road, courtyard entrance.",
+        "bicycle-basket": "Cycle basket for sale. Leave word at the bicycle workshop, 20 Station Road.",
+        "reading-lamp": "Reading lamp wanted, heavy base preferred. Ask at the Station Road reading room.",
         "schoolbag-sale": "Used leather schoolbag free. Buckles intact. Leave word with the caretaker at School 12.",
         "wardrobe-mirror": "Wardrobe with mirror for sale. Dismantles for transport. One knob missing.",
-        "knitting-needles": "Swap knitting needles for crochet hooks. Leave word at the Szkolna needlework club.",
-        "old-magazines": "Old technical journals free. Collect from the technical workshop on Szkolna.",
-        "garden-rake": "Swap rake for small spade. Leave word with the Zacisze caretaker, Ogrodowa 42.",
-        "found-scarf": "Checked scarf left after choir practice. Collect from the Szkolna cultural centre porter.",
+        "knitting-needles": "Swap knitting needles for crochet hooks. Leave word at the Alder Street needlework club.",
+        "old-magazines": "Old technical journals free. Collect from the technical workshop on Alder Street.",
+        "garden-rake": "Swap rake for small spade. Leave word with the Haven caretaker, 42 Orchard Street.",
+        "found-scarf": "Checked scarf left after choir practice. Collect from the Alder Street cultural centre porter.",
         "reel-recorder": "Reel-to-reel recorder for sale with lid and microphone. No tapes included.",
-        "copper-kettle": "Swap a whistling kettle for a large pot. Leave word with the caretaker at Ogrodowa 9.",
-        "embroidered-cloth": "Embroidered oval tablecloth for sale. Ask at the Ogrodowa alterations shop.",
-        "baby-clothes": "Washed baby clothes free. Leave word at Północ clubroom, Lipowa 6.",
-        "photo-enlarger": "Photo enlarger wanted. Leave word at the Szkolna cultural centre photography studio.",
+        "copper-kettle": "Swap a whistling kettle for a large pot. Leave word with the caretaker at 9 Orchard Street.",
+        "embroidered-cloth": "Embroidered oval tablecloth for sale. Ask at the Orchard Street alterations shop.",
+        "baby-clothes": "Washed baby clothes free. Leave word at Northgate clubroom, 6 Linden Road.",
+        "photo-enlarger": "Photo enlarger wanted. Leave word at the Alder Street cultural centre photography studio.",
         "furniture-moving": "Help carrying furniture downstairs. No vehicle. Times by arrangement.",
-        "wooden-sled": "Swap wooden sled for a larger one. Leave word with the caretaker at Kolejowa 7.",
-        "cookbooks": "Swap a cookery book for a sewing guide. Ask at the library on Kolejowa.",
-        "plant-stand": "Metal plant stand for sale, holds three pots. Leave word at the Północ flower shop.",
-        "chess-opponent": "Chess opponent wanted. Slow player. Leave word at the chess club on Szkolna.",
+        "wooden-sled": "Swap wooden sled for a larger one. Leave word with the caretaker at 7 Station Road.",
+        "cookbooks": "Swap a cookery book for a sewing guide. Ask at the library on Station Road.",
+        "plant-stand": "Metal plant stand for sale, holds three pots. Leave word at the Northgate flower shop.",
+        "chess-opponent": "Chess opponent wanted. Slow player. Leave word at the chess club on Alder Street.",
         "violin-lessons": "Violin lessons, beginners welcome. Own instrument required.",
-        "suitcase-straps": "Luggage straps made. Fittings supplied or provided by customer. Leatherworker, Kolejowa 26.",
-        "radio-cabinet": "Old radio cabinet free to a model maker. Ask at the Szkolna technical workshop.",
-        "children-books": "Swap storybooks for older children's books. Leave word at Library No. 6 on Kolejowa.",
+        "suitcase-straps": "Luggage straps made. Fittings supplied or provided by customer. Leatherworker, 26 Station Road.",
+        "radio-cabinet": "Old radio cabinet free to a model maker. Ask at the Alder Street technical workshop.",
+        "children-books": "Swap storybooks for older children's books. Leave word at Library No. 6 on Station Road.",
         "wall-map": "Wall map wanted. Small tears acceptable. Replies to newspaper Box 39.",
         "clock-sale": "Pendulum wall clock for sale with key. Collect in person.",
-        "wooden-hangers": "Wooden coat hangers free, assorted sizes. Leave word at the Świt cinema cloakroom.",
-        "garden-chair": "Wicker chair for sale. Leave word with the Zacisze caretaker at Ogrodowa 42.",
-        "ink-bottles": "Clean empty ink bottles free. Collect at the Szkolna cultural centre porter's desk.",
-        "knitting-books": "Knitting patterns available to copy. Leave word at the haberdasher's on Ogrodowa.",
+        "wooden-hangers": "Wooden coat hangers free, assorted sizes. Leave word at the Daybreak cinema cloakroom.",
+        "garden-chair": "Wicker chair for sale. Leave word with the Haven caretaker at 42 Orchard Street.",
+        "ink-bottles": "Clean empty ink bottles free. Collect at the Alder Street cultural centre porter's desk.",
+        "knitting-books": "Knitting patterns available to copy. Leave word at the haberdasher's on Orchard Street.",
         "car-seat-covers": "Universal front car seat covers for sale. Dimensions available by phone.",
-        "found-notebook": "Music found at the Ogrodowa stop. Collect from the music school porter on Ogrodowa.",
-        "chair-caning": "Chair seats woven after frame inspection. Workshop at Stolarska 3.",
-        "postcard-exchange": "Swap city postcards for earlier editions. Collectors' circle at the Szkolna centre.",
-        "coffee-grinder": "Hand coffee mill wanted. Leave word at the milk bar beside Kolejowa station.",
+        "found-notebook": "Music found at the Orchard Street stop. Collect from the music school porter on Orchard Street.",
+        "chair-caning": "Chair seats woven after frame inspection. Workshop at 3 Cooper Street.",
+        "postcard-exchange": "Swap city postcards for earlier editions. Collectors' circle at the Alder Street centre.",
+        "coffee-grinder": "Hand coffee mill wanted. Leave word at the milk bar beside Station Road station.",
         "portable-radio": "Portable radio for sale. Leather cover, repaired carrying strap.",
-        "table-leaf": "Spare table leaf free. Measurements available from the caretaker at Ogrodowa 4.",
-        "glass-vases": "Swap glass vases for pottery ones. Leave word at the Północ flower shop.",
+        "table-leaf": "Spare table leaf free. Measurements available from the caretaker at 4 Orchard Street.",
+        "glass-vases": "Swap glass vases for pottery ones. Leave word at the Northgate flower shop.",
         "children-costumes": "Costumes for school plays available to borrow. Ask the caretaker at School No. 12.",
-        "fishing-float": "Handmade fishing floats for sale. Leave word with the Zacisze caretaker, Ogrodowa 42.",
+        "fishing-float": "Handmade fishing floats for sale. Leave word with the Haven caretaker, 42 Orchard Street.",
         "sewing-table": "Sewing-machine table for sale, two drawers. Machine not included.",
-        "coat-lining": "Leftover coat lining free. Leave word at the alterations shop on Ogrodowa.",
-        "record-brush": "Record-cleaning brush wanted. Leave word at the music club on Szkolna.",
-        "seed-boxes": "Seedling boxes free. Collect from the Zacisze allotment caretaker, Ogrodowa 42.",
-        "found-pencilcase": "Initialled pencil case found outside Library No. 6 on Kolejowa. Collect at its desk.",
+        "coat-lining": "Leftover coat lining free. Leave word at the alterations shop on Orchard Street.",
+        "record-brush": "Record-cleaning brush wanted. Leave word at the music club on Alder Street.",
+        "seed-boxes": "Seedling boxes free. Collect from the Haven allotment caretaker, 42 Orchard Street.",
+        "found-pencilcase": "Initialled pencil case found outside Library No. 6 on Station Road. Collect at its desk.",
         "armchair-pair": "Two armchairs for sale together. Different upholstery, matching frames.",
         "theatre-programmes": "Theatre programmes to exchange. Leave word with the Municipal Theatre porter.",
-        "travelling-chest": "Wooden toolbox wanted. Leave word at the joiner's, Stolarska 5.",
-        "wicker-basket": "Swap large basket for smaller. Ask Kurek at the wicker stall, Kolejowa market.",
-        "needlework-frame": "Embroidery hoop free, screw missing. Collect from the Szkolna needlework club.",
+        "travelling-chest": "Wooden toolbox wanted. Leave word at the joiner's, 5 Cooper Street.",
+        "wicker-basket": "Swap large basket for smaller. Ask Crowe at the wicker stall, Station Road market.",
+        "needlework-frame": "Embroidery hoop free, screw missing. Collect from the Alder Street needlework club.",
         "room-painting": "Room painting with supplied materials. Date arranged after inspecting walls.",
-        "old-spectacle-case": "Empty spectacle case found in the Kolejowa reading room. Collect from the librarian.",
-        "book-binding": "Loose volumes bound. Please bring every page. Bookbinder at Stolarska 6.",
+        "old-spectacle-case": "Empty spectacle case found in the Station Road reading room. Collect from the librarian.",
+        "book-binding": "Loose volumes bound. Please bring every page. Bookbinder at 6 Cooper Street.",
         "school-uniform": "School smock free, collar separate. Leave word with the caretaker at School No. 12.",
-        "photo-trays": "Swap photographic trays for print tongs. Ask the photography circle on Szkolna.",
+        "photo-trays": "Swap photographic trays for print tongs. Ask the photography circle on Alder Street.",
         "folding-bike": "Folding bicycle for sale. Both mudguards, bell needs replacing.",
-        "watercolour-box": "Watercolour set wanted, incomplete accepted. Leave word at the Szkolna art studio.",
-        "chess-books": "Chess manuals for sale. Leave word at the chess club on Szkolna.",
-        "curtain-hooks": "Curtain clips free, several types. Ask at the haberdasher's on Ogrodowa.",
+        "watercolour-box": "Watercolour set wanted, incomplete accepted. Leave word at the Alder Street art studio.",
+        "chess-books": "Chess manuals for sale. Leave word at the chess club on Alder Street.",
+        "curtain-hooks": "Curtain clips free, several types. Ask at the haberdasher's on Orchard Street.",
         "school-compass": "Compasses found by School No. 12. Describe them to the caretaker to collect.",
         "typing-service": "Manuscripts typed; legible handwriting please. Copies by arrangement.",
-        "allotment-watercan": "Metal watering can for sale. Leave word with the Zacisze caretaker, Ogrodowa 42.",
-        "small-rug": "Narrow runner rug for sale, no fringe. Leave word with the caretaker at Kolejowa 9.",
-        "bottle-crates": "Wooden crates free. Collect behind the milk bar beside Kolejowa station.",
+        "allotment-watercan": "Metal watering can for sale. Leave word with the Haven caretaker, 42 Orchard Street.",
+        "small-rug": "Narrow runner rug for sale, no fringe. Leave word with the caretaker at 9 Station Road.",
+        "bottle-crates": "Wooden crates free. Collect behind the milk bar beside Station Road station.",
         "language-practice": "German practice partner wanted, beginner level. Replies to newspaper Box 51.",
         "car-roof-rack": "Car roof rack with rain-gutter clamps for sale. Dimensions available by phone.",
-        "portrait-drawing": "Pencil portraits from life or photographs. Enquire at the art studio on Szkolna.",
-        "children-gloves": "Children's gloves free. Leave word at Północ clubroom, Lipowa 6.",
-        "tapes-for-records": "Swap blank cassettes for records. Leave word at the music club on Szkolna.",
-        "wooden-toys": "Wooden toys free to a clubroom. Ask at the workshop at Stolarska 5.",
+        "portrait-drawing": "Pencil portraits from life or photographs. Enquire at the art studio on Alder Street.",
+        "children-gloves": "Children's gloves free. Leave word at Northgate clubroom, 6 Linden Road.",
+        "tapes-for-records": "Swap blank cassettes for records. Leave word at the music club on Alder Street.",
+        "wooden-toys": "Wooden toys free to a clubroom. Ask at the workshop at 5 Cooper Street.",
         "desk-sale": "Desk with three drawers for sale. Scratched top, locks have no keys.",
-        "reading-help": "Will read books aloud to an older person. Afternoons. Leave word at the Kolejowa library.",
-        "chess-clock-ad": "Working chess clock wanted. Leave word at the chess club on Szkolna.",
-        "kitchen-stool": "Two kitchen stools free. One needs gluing. Ask the caretaker at Ogrodowa 12.",
-        "found-sheet-music": "Accordion music left at Północ clubroom, Lipowa 6. Give title to caretaker to collect.",
+        "reading-help": "Will read books aloud to an older person. Afternoons. Leave word at the Station Road library.",
+        "chess-clock-ad": "Working chess clock wanted. Leave word at the chess club on Alder Street.",
+        "kitchen-stool": "Two kitchen stools free. One needs gluing. Ask the caretaker at 12 Orchard Street.",
+        "found-sheet-music": "Accordion music left at Northgate clubroom, 6 Linden Road. Give title to caretaker to collect.",
         "carpet-weaving": "Rag runners woven. Please show the material beforehand.",
-        "model-paint": "Swap modelling paints for fine brushes. Ask the modelling club on Szkolna.",
-        "old-city-photos": "Old city photographs wanted to buy. Leave word for Zofia Rataj at the Kolejowa reading room.",
-        "hat-box": "Round hatbox free, with lid. Ask the milliner on Ogrodowa.",
-        "mending-basket": "Lined sewing basket for sale. Leave word at the haberdasher's on Ogrodowa.",
+        "model-paint": "Swap modelling paints for fine brushes. Ask the modelling club on Alder Street.",
+        "old-city-photos": "Old city photos wanted to buy. Replies for Sophia Plowman: Station Road reading room.",
+        "hat-box": "Round hatbox free, with lid. Ask the milliner on Orchard Street.",
+        "mending-basket": "Lined sewing basket for sale. Leave word at the haberdasher's on Orchard Street.",
         "double-bed": "Double bed for sale without mattress. Wooden frame. Buyer collects.",
-        "curtain-remnants": "Curtain remnants free for school projects. Collect at the Ogrodowa alterations shop.",
-        "walking-companion": "Company for walks in Lipowa park wanted. Leave word at the clubroom, Lipowa 6.",
-        "plant-identification": "Spare spider-plant cuttings free. Leave word at the Północ flower shop.",
-        "folding-screen": "Folding screen wanted for a small room. Offers to the caretaker at Kolejowa 11.",
+        "curtain-remnants": "Curtain remnants free for school projects. Collect at the Orchard Street alterations shop.",
+        "walking-companion": "Company for walks in Linden Road park wanted. Leave word at the clubroom, 6 Linden Road.",
+        "plant-identification": "Spare spider-plant cuttings free. Leave word at the Northgate flower shop.",
+        "folding-screen": "Folding screen wanted for a small room. Offers to the caretaker at 11 Station Road.",
         "camera-sale": "Camera with case for sale. New strap. View in daylight.",
-        "book-jackets": "Book jackets free to collector. Leave word at Library No. 6 on Kolejowa.",
-        "found-shopping-bag": "Bag left at the milk bar by Kolejowa station. Describe contents to cashier to collect.",
-        "thread-spools": "Wooden spools free for crafts. Ask at the Ogrodowa alterations shop.",
-        "picture-glass": "Small pieces of picture-frame glass wanted. Leave word at the Stolarska frame shop.",
-        "room-to-let": "Room on Północ to let to quiet person. Shared entrance, kitchen access.",
-        "poetry-copying": "Certificates and invitations hand-lettered. Leave word at the art studio on Szkolna.",
-        "found-brooch": "Brooch left at Library No. 6 on Kolejowa. Describe it at the desk to collect.",
-        "school-desk-ad": "Swap small desk for shelves. Leave word at Północ clubroom, Lipowa 6.",
-        "empty-tins": "Empty tea tins free for odds and ends. Collect from the Szkolna cultural centre porter.",
-        "sheet-music-copy": "Waltz and polka scores available to copy. Leave word at the Szkolna centre rehearsal room.",
-        "picture-hook": "Picture hooks free. Leave word at the joinery shop at Stolarska 5.",
-        "borrowed-ladder": "Whoever borrowed the ladder from Ogrodowa 8, please return it. Leave word with the caretaker.",
-        "wooden-puzzle": "Complete wooden puzzle free. Leave word at Północ clubroom, Lipowa 6.",
-        "sewing-foot": "Presser foot for old sewing machine wanted. Sample at the Ogrodowa alterations shop.",
-        "family-album-help": "Family albums arranged and captioned. Leave word for Zofia Rataj at Kolejowa library.",
-        "chess-pieces": "Two white rooks and a black knight free. Leave word at the chess club on Szkolna.",
-        "found-keyring": "Keys found at Kolejowa market. Describe them to the market caretaker to collect.",
-        "carpentry-help": "Shelves fitted to alcoves. Bring a sketch. Workshop at Stolarska 5.",
-        "potted-geranium": "Swap a geranium for a shade plant. Leave word at the Północ flower shop.",
-        "choir-singers": "Amateur choir seeks low voices. Music supplied on loan. Apply at the Szkolna cultural centre.",
+        "book-jackets": "Book jackets free to collector. Leave word at Library No. 6 on Station Road.",
+        "found-shopping-bag": "Bag left at the milk bar by Station Road station. Describe contents to cashier to collect.",
+        "thread-spools": "Wooden spools free for crafts. Ask at the Orchard Street alterations shop.",
+        "picture-glass": "Small pieces of picture-frame glass wanted. Leave word at the Cooper Street frame shop.",
+        "room-to-let": "Room on the Northgate estate to let to quiet person. Shared entrance, kitchen access.",
+        "poetry-copying": "Certificates and invitations hand-lettered. Leave word at the art studio on Alder Street.",
+        "found-brooch": "Brooch left at Library No. 6 on Station Road. Describe it at the desk to collect.",
+        "school-desk-ad": "Swap small desk for shelves. Leave word at Northgate clubroom, 6 Linden Road.",
+        "empty-tins": "Empty tea tins free for odds and ends. Collect from the Alder Street cultural centre porter.",
+        "sheet-music-copy": "Waltz and polka scores available to copy. Leave word at the Alder Street centre rehearsal room.",
+        "picture-hook": "Picture hooks free. Leave word at the joinery shop at 5 Cooper Street.",
+        "borrowed-ladder": "Whoever borrowed the ladder from 8 Orchard Street, please return it. Leave word with the caretaker.",
+        "wooden-puzzle": "Complete wooden puzzle free. Leave word at Northgate clubroom, 6 Linden Road.",
+        "sewing-foot": "Presser foot for old sewing machine wanted. Sample at the Orchard Street alterations shop.",
+        "family-album-help": "Family albums arranged and captioned. Leave word for Sophia Plowman at Station Road library.",
+        "chess-pieces": "Two white rooks and a black knight free. Leave word at the chess club on Alder Street.",
+        "found-keyring": "Keys found at Station Road market. Describe them to the market caretaker to collect.",
+        "carpentry-help": "Shelves fitted to alcoves. Bring a sketch. Workshop at 5 Cooper Street.",
+        "potted-geranium": "Swap a geranium for a shade plant. Leave word at the Northgate flower shop.",
+        "choir-singers": "Amateur choir seeks low voices. Music supplied on loan. Apply at the Alder Street cultural centre.",
         "wooden-cradle": "Wooden cradle free for scenery. Leave word with the Municipal Theatre porter.",
-        "found-beret": "Navy beret left at the Świt cinema cloakroom. Initials beneath lining. Collect there.",
-        "recipe-swap": "Simple cake recipes to swap. Leave word at Północ clubroom, Lipowa 6.",
-        "old-calendar": "Collecting old wall calendars, loose pages welcome. Ask at the Kolejowa reading room.",
-        "portrait-frame": "Oval frame wanted for family photograph. Measurements at the frame shop on Stolarska.",
-        "fabric-samples": "Fabric samples free for collage. Collect from the alterations shop on Ogrodowa.",
-        "window-box": "Window box free. Leave word with the Zacisze caretaker, Ogrodowa 42.",
-        "borrowed-book": "Please return atlas borrowed from Zofia Rataj. It may be left at the Kolejowa library.",
-        "umbrella-handle": "Wooden umbrella handle wanted. Sample at the repair booth, Kolejowa market.",
-        "lesson-notes": "Drafting-course notes available to borrow. Leave word at the Szkolna cultural centre desk.",
-        "clothes-pegs": "Unused wooden clothes pegs free. Leave word with the building caretaker, Lipowa 12.",
-        "found-wristwatch": "Watch found at Zacisze gate, Ogrodowa 42. Describe it to the caretaker to collect.",
-        "model-cardboard": "Thick card free to model makers. Uneven sheets. Collect from the Stolarska bookbinder.",
-        "weaving-shuttle": "Weaving shuttle wanted. Leave word at the Szkolna cultural centre weaving workshop.",
-        "walking-maps": "Local maps available to borrow. Leave word with the Szkolna cultural centre walking club."
+        "found-beret": "Navy beret left at the Daybreak cinema cloakroom. Initials beneath lining. Collect there.",
+        "recipe-swap": "Simple cake recipes to swap. Leave word at Northgate clubroom, 6 Linden Road.",
+        "old-calendar": "Collecting old wall calendars, loose pages welcome. Ask at the Station Road reading room.",
+        "portrait-frame": "Oval frame wanted for family photograph. Measurements at the frame shop on Cooper Street.",
+        "fabric-samples": "Fabric samples free for collage. Collect from the alterations shop on Orchard Street.",
+        "window-box": "Window box free. Leave word with the Haven caretaker, 42 Orchard Street.",
+        "borrowed-book": "Please return atlas borrowed from Sophia Plowman. It may be left at the Station Road library.",
+        "umbrella-handle": "Wooden umbrella handle wanted. Sample at the repair booth, Station Road market.",
+        "lesson-notes": "Drafting-course notes available to borrow. Leave word at the Alder Street cultural centre desk.",
+        "clothes-pegs": "Unused wooden clothes pegs free. Leave word with the building caretaker, 12 Linden Road.",
+        "found-wristwatch": "Watch found at Haven gate, 42 Orchard Street. Describe it to the caretaker to collect.",
+        "model-cardboard": "Thick card free to model makers. Uneven sheets. Collect from the Cooper Street bookbinder.",
+        "weaving-shuttle": "Weaving shuttle wanted. Leave word at the Alder Street cultural centre weaving workshop.",
+        "walking-maps": "Local maps available to borrow. Leave word with the Alder Street cultural centre walking club."
       },
       "strapline": "CITY AND REGIONAL DAILY",
       "issue": "No.",
@@ -2248,68 +2248,68 @@ export const translations = {
       "articles": {
         "reading-circle": {
           "title": "One novel, 43 readers",
-          "body": "At municipal library branch No. 6 on Kolejowa Street, 43 readers are waiting for its most popular novel. There is one copy; a second came back with several pages missing. Librarian Janina Wolska shows us her reservations book. Those who can only visit after the late shift wait longest. The branch exchanges books with libraries on the outskirts, but the same titles are wanted there too. Each loan will count towards the annual circulation figure. Mrs Wolska’s notebook records the other side of that statistic.",
-          "byline": "Ewa Lis - City desk"
+          "body": "At municipal library branch No. 6 on Station Road, 43 readers are waiting for its most popular novel. There is one copy; a second came back with several pages missing. Librarian Jean Wells shows us her reservations book. Those who can only visit after the late shift wait longest. The branch exchanges books with libraries on the outskirts, but the same titles are wanted there too. Each loan will count towards the annual circulation figure. Mrs Wells’s notebook records the other side of that statistic.",
+          "byline": "Eve Fox - City desk"
         },
         "choir": {
           "title": "Rehearsal after the shift",
-          "body": "The choir of the railway workshops on Kolejowa rehearses above the staff canteen. Its forty singers work different rosters, so the conductor never hears the whole ensemble at a rehearsal. He practises the bass parts separately with men coming off night duty. A clerk copies the scores using carbon paper; two folders hold the shared songbook. Folk songs and pre-war pieces make up the repertoire. The choir performs throughout the province. Its leader says gathering everyone at the station takes more arranging than learning a new song.",
-          "byline": "Marek Boruta - Culture"
+          "body": "The choir of the railway workshops on Station Road rehearses above the staff canteen. Its forty singers work different rosters, so the conductor never hears the whole ensemble at a rehearsal. He practises the bass parts separately with men coming off night duty. A clerk copies the scores using carbon paper; two folders hold the shared songbook. Folk songs and pre-war pieces make up the repertoire. The choir performs throughout the province. Its leader says gathering everyone at the station takes more arranging than learning a new song.",
+          "byline": "Mark Barrett - Culture"
         },
         "film-club": {
           "title": "Beyond the cinema bill",
-          "body": "At the Świt cinema’s film society, discussions usually outlast the screening. Students, teachers and regulars known by name to the usher fill the seats. The society books older films absent from the ordinary programme. A single print travels between several cities, so bookings take months to arrange. The host invites written questions. Most concern the characters’ manners and everyday lives. By the time discussion reaches the director’s technique, the subject listed in the lecture notes, rather fewer viewers remain.",
-          "byline": "Marek Boruta - Culture"
+          "body": "At the Daybreak cinema’s film society, discussions usually outlast the screening. Students, teachers and regulars known by name to the usher fill the seats. The society books older films absent from the ordinary programme. A single print travels between several cities, so bookings take months to arrange. The host invites written questions. Most concern the characters’ manners and everyday lives. By the time discussion reaches the director’s technique, the subject listed in the lecture notes, rather fewer viewers remain.",
+          "byline": "Mark Barrett - Culture"
         },
         "theatre": {
           "title": "A costume’s second life",
-          "body": "In the municipal theatre’s workshop, dresses hang by historical period, not by production. A costume from ten seasons ago returns to the stage with new sleeves and collar. Seamstress Helena Mazur keeps labelled boxes of fabric scraps, matching patches that will disappear from the audience’s view. New cloth goes chiefly to the leading roles; the rest of the cast draws on the store. Before a premiere, the most work goes into ordinary frock coats rather than splendid gowns. Each must fit its next actor as convincingly as the last.",
-          "byline": "Ewa Lis - Backstage"
+          "body": "In the municipal theatre’s workshop, dresses hang by historical period, not by production. A costume from ten seasons ago returns to the stage with new sleeves and collar. Seamstress Helena Mason keeps labelled boxes of fabric scraps, matching patches that will disappear from the audience’s view. New cloth goes chiefly to the leading roles; the rest of the cast draws on the store. Before a premiere, the most work goes into ordinary frock coats rather than splendid gowns. Each must fit its next actor as convincingly as the last.",
+          "byline": "Eve Fox - Backstage"
         },
         "chess": {
           "title": "Railway juniors deliver",
           "body": "The railway chess team beat the builders 5:3 in the latest city league round. Junior players on the lower boards settled the match. The winning captain credits the section at School No. 12: younger players have regular lessons, while the adults fit practice around shift rosters. Matches take place in workplace recreation rooms, with free admission. Spectators follow the moves on a display board. The league has no hall of its own, but hosts in several districts keep the fixtures running regularly. Its youngest players are now earning places in the senior teams.",
-          "byline": "Jan Rudzki - Sport"
+          "byline": "John Reed - Sport"
         },
         "table-tennis": {
           "title": "Tables after lessons",
           "body": "The cooperative team beat the postal workers 6:4 in the city table tennis league. They played in the gym of School No. 12, lent to clubs after lessons. Players set out the tables and bench barriers themselves, then cleared the floor for morning exercises. The winning coach singled out his younger doubles pair. The section accepts school pupils but has only two practice evenings a week, shared between juniors and adults. For some players coming from the outskirts, the journey takes longer than the session. Keeping a regular team requires more than a good forehand.",
-          "byline": "Jan Rudzki - Sport"
+          "byline": "John Reed - Sport"
         },
         "stamps": {
           "title": "A city on an envelope",
-          "body": "At the Szkolna Street cultural centre’s stamp circle, collectors increasingly examine whole envelopes rather than loose stamps. Postmarks from former postal branches trace the growth of the suburbs. Antoni Witek collects letters addressed to streets that have changed names. Most came from family papers; others were exchanged with fellow members. He asks residents to look through old correspondence before sending paper for recycling. A stamp cut from its envelope loses part of the story preserved by the address, date and marks on the back.",
-          "byline": "Ewa Lis - Hobbies"
+          "body": "At the Alder Street cultural centre’s stamp circle, collectors increasingly examine whole envelopes rather than loose stamps. Postmarks from former postal branches trace the growth of the suburbs. Anthony Wicks collects letters addressed to streets that have changed names. Most came from family papers; others were exchanged with fellow members. He asks residents to look through old correspondence before sending paper for recycling. A stamp cut from its envelope loses part of the story preserved by the address, date and marks on the back.",
+          "byline": "Eve Fox - Hobbies"
         },
         "cassette": {
           "title": "A concert from the radio",
-          "body": "Letters to our technical desk keep asking how to record a broadcast without the family’s conversation. In many flats, a microphone beside the radio picks up both. An instructor at the Szkolna cultural centre demonstrates a connection through the sockets on the two machines. Not every receiver has them, and the right lead may take visits to several shops to find. Participants bring their own equipment and manuals. They also exchange broadcast lists: with only a few cassettes available, it pays to know what is already recorded on side two.",
+          "body": "Letters to our technical desk keep asking how to record a broadcast without the family’s conversation. In many flats, a microphone beside the radio picks up both. An instructor at the Alder Street cultural centre demonstrates a connection through the sockets on the two machines. Not every receiver has them, and the right lead may take visits to several shops to find. Participants bring their own equipment and manuals. They also exchange broadcast lists: with only a few cassettes available, it pays to know what is already recorded on side two.",
           "byline": "Technical desk"
         },
         "knitting": {
           "title": "Wool for another winter",
-          "body": "At a haberdashery on Ogrodowa Street, customers compare wool samples brought from home. Often they need just one ball, but in exactly the same shade. The assistant suggests replacing the whole collar or both cuffs instead. At Północ clubroom, Lipowa 6, women unravel old jumpers and combine the recovered wool in stripes. Patterns circulate in notebooks, copied from borrowed magazines. Not everything can be saved: the most worn sections are discarded. A sound adult jumper can nevertheless provide enough wool for a child’s waistcoat.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "At a haberdashery on Orchard Street, customers compare wool samples brought from home. Often they need just one ball, but in exactly the same shade. The assistant suggests replacing the whole collar or both cuffs instead. At Northgate clubroom, 6 Linden Road, women unravel old jumpers and combine the recovered wool in stripes. Patterns circulate in notebooks, copied from borrowed magazines. Not everything can be saved: the most worn sections are discarded. A sound adult jumper can nevertheless provide enough wool for a child’s waistcoat.",
+          "byline": "Anna Rook - Home and family"
         },
         "darning": {
           "title": "The everyday tailor",
-          "body": "The tailoring counter in the Ogrodowa shopping arcade has two machines and a book full of orders. It makes no bespoke suits: trousers are shortened, linings replaced and oversized coats fitted. Master tailor Stanisław Bury spends longest on clothes handed down within families. Each must be unpicked to see how much spare cloth remains. The price list reduces this work to a few entries, although two similar coats can require quite different alterations. Customers chiefly ask when the work will be ready. They often need the garment they have just left behind.",
-          "byline": "Ewa Lis - Local services"
+          "body": "The tailoring counter in the Orchard Street shopping arcade has two machines and a book full of orders. It makes no bespoke suits: trousers are shortened, linings replaced and oversized coats fitted. Master tailor Stanley Grey spends longest on clothes handed down within families. Each must be unpicked to see how much spare cloth remains. The price list reduces this work to a few entries, although two similar coats can require quite different alterations. Customers chiefly ask when the work will be ready. They often need the garment they have just left behind.",
+          "byline": "Eve Fox - Local services"
         },
         "plants": {
           "title": "A garden on the sill",
-          "body": "At a flower shop on the Północ housing estate, most questions concern flats rather than gardens. Customers describe narrow sills, dry rooms and windows facing the next block. Florist Zofia Kurek suggests first measuring how much space can really be spared for pots. A fine specimen from the window display may not fit. Spider plant and geranium cuttings circulate among neighbours; the shop supplies soil and saucers. The longest consultations concern plants received as gifts. Their owners can describe every leaf, but nobody remembers the name.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "At a flower shop on the Northgate housing estate, most questions concern flats rather than gardens. Customers describe narrow sills, dry rooms and windows facing the next block. Florist Sophia Crowe suggests first measuring how much space can really be spared for pots. A fine specimen from the window display may not fit. Spider plant and geranium cuttings circulate among neighbours; the shop supplies soil and saucers. The longest consultations concern plants received as gifts. Their owners can describe every leaf, but nobody remembers the name.",
+          "byline": "Anna Rook - Home and family"
         },
         "bread": {
           "title": "Lunch from the chalkboard",
-          "body": "The milk bar by Kolejowa station writes its menu in chalk. Before the first travellers arrive, the kitchen is serving breakfast to staff from nearby shops. The manager says regulars chiefly want a known price and a meal without a long wait. Alongside dumplings and noodles, there is a simple soup each day. Yesterday’s bread becomes croutons, and delivery orders follow the week’s takings. Market days are hardest to predict. Then the tables bring together shop workers, commuters and people arriving from the surrounding villages.",
-          "byline": "Anna Wrona - Trade"
+          "body": "The milk bar by Station Road station writes its menu in chalk. Before the first travellers arrive, the kitchen is serving breakfast to staff from nearby shops. The manager says regulars chiefly want a known price and a meal without a long wait. Alongside dumplings and noodles, there is a simple soup each day. Yesterday’s bread becomes croutons, and delivery orders follow the week’s takings. Market days are hardest to predict. Then the tables bring together shop workers, commuters and people arriving from the surrounding villages.",
+          "byline": "Anna Rook - Trade"
         },
         "station-clock": {
           "title": "A city on two tickets",
-          "body": "Before seven, the waiting room at Kolejowa station fills with commuters from across the province. Many still face a tram journey after leaving the train. Beside their packed breakfast they carry two monthly season tickets. Teresa, a bookkeeper, knows the timetable by heart, but plans her return around collecting her child from nursery. Moving an office meeting by half an hour can mean an hour waiting on the platform. The city’s statistics count her as an office worker. A considerable part of her working day is nevertheless governed by the railway clock.",
-          "byline": "Ewa Lis - City and region"
+          "body": "Before seven, the waiting room at Station Road station fills with commuters from across the province. Many still face a tram journey after leaving the train. Beside their packed breakfast they carry two monthly season tickets. Teresa, a bookkeeper, knows the timetable by heart, but plans her return around collecting her child from nursery. Moving an office meeting by half an hour can mean an hour waiting on the platform. The city’s statistics count her as an office worker. A considerable part of her working day is nevertheless governed by the railway clock.",
+          "byline": "Eve Fox - City and region"
         },
         "lost-scarf": {
           "title": "The unclaimed storeroom",
@@ -2319,726 +2319,726 @@ export const translations = {
         "handwriting": {
           "title": "Inside the exercise book",
           "body": "At School No. 12 in the city centre, teachers compared first-year pupils’ books from the start of term with work written several weeks later. They considered speed as well as letter shapes. The class teacher explains that a careful child can fall far behind a dictated sentence. Parents ask for extra practice sheets, which the school duplicates for several classes together. Some children use fountain pens passed down by older siblings. A suitable nib and a steady hand prove more useful than the decorated covers sold for exercise books.",
-          "byline": "Anna Wrona - Education"
+          "byline": "Anna Rook - Education"
         },
         "aquarium": {
           "title": "An aquarium for the club",
-          "body": "The aquarium circle met at Północ clubroom, Lipowa 6, with jars of plant cuttings and observation books. They compared small tanks suited to cramped flats. The recreation room’s display tank came from donations: a craftsman supplied the glass, one member the lamp, and others the plants. Pupils and pensioners share its care. The instructor says learning that regular duty comes first. Bringing home a striking fish from a collectors’ fair is easy; arranging someone to care for the tank during a holiday takes more thought.",
-          "byline": "Marek Boruta - Hobbies"
+          "body": "The aquarium circle met at Northgate clubroom, 6 Linden Road, with jars of plant cuttings and observation books. They compared small tanks suited to cramped flats. The recreation room’s display tank came from donations: a craftsman supplied the glass, one member the lamp, and others the plants. Pupils and pensioners share its care. The instructor says learning that regular duty comes first. Bringing home a striking fish from a collectors’ fair is easy; arranging someone to care for the tank during a holiday takes more thought.",
+          "byline": "Mark Barrett - Hobbies"
         },
         "bookbinding": {
           "title": "A year between boards",
-          "body": "A bookbinder on Stolarska Street binds annual volumes for reading rooms and private collectors. Technical magazines, newspapers and sewing journals cover his bench. Before making a cover, he checks issue numbers and supplements. Clipped advice columns cause most trouble: an owner remembers a complete year, but half a page is missing inside. The binder keeps the original covers and indexes. A good binding, he explains, should help its reader find a needed article, as well as make the volumes stand neatly on a shelf.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "A bookbinder on Cooper Street binds annual volumes for reading rooms and private collectors. Technical magazines, newspapers and sewing journals cover his bench. Before making a cover, he checks issue numbers and supplements. Clipped advice columns cause most trouble: an owner remembers a complete year, but half a page is missing inside. The binder keeps the original covers and indexes. A good binding, he explains, should help its reader find a needed article, as well as make the volumes stand neatly on a shelf.",
+          "byline": "Eve Fox - Crafts"
         },
         "starlight": {
           "title": "Stars above the rooftops",
-          "body": "At the Szkolna cultural centre’s astronomy circle, the first instrument is a sky chart rather than a telescope. The instructor teaches members to find a few bright stars before setting up the larger instrument. Lights and narrow courtyards restrict the view in the centre; for clearer skies, the group travels beyond the last buildings. Pupils attend alongside adults bringing binoculars long unused at home. Waiting together for a break in the clouds takes the most patience. The circle’s notebook records the weather beside its drawings of the sky.",
-          "byline": "Marek Boruta - Science"
+          "body": "At the Alder Street cultural centre’s astronomy circle, the first instrument is a sky chart rather than a telescope. The instructor teaches members to find a few bright stars before setting up the larger instrument. Lights and narrow courtyards restrict the view in the centre; for clearer skies, the group travels beyond the last buildings. Pupils attend alongside adults bringing binoculars long unused at home. Waiting together for a break in the clouds takes the most patience. The circle’s notebook records the weather beside its drawings of the sky.",
+          "byline": "Mark Barrett - Science"
         },
         "noticeboard": {
           "title": "Whose turn to dry?",
-          "body": "A resident of Lipowa 12 on the Północ estate writes about the communal drying room. Its rules are on the noticeboard, but nothing says who keeps the key or records bookings. The housing cooperative’s reply refers her to the caretaker. He has a reservations book that some new tenants never knew existed. The block committee says the details will be posted beside the rules. Our reader was not asking for new equipment, only access to a room included in her rent. A clear notice was enough to resolve a surprisingly lengthy correspondence.",
+          "body": "A resident of 12 Linden Road on the Northgate estate writes about the communal drying room. Its rules are on the noticeboard, but nothing says who keeps the key or records bookings. The housing cooperative’s reply refers her to the caretaker. He has a reservations book that some new tenants never knew existed. The block committee says the details will be posted beside the rules. Our reader was not asking for new equipment, only access to a room included in her rent. A clear notice was enough to resolve a surprisingly lengthy correspondence.",
           "byline": "Letters to the editor"
         },
         "bicycle": {
           "title": "Room for a bicycle",
-          "body": "In a sports shop, a bicycle can be admired from every side. At home, it still needs somewhere to stand. Readers on new estates describe narrow cellars and stairs without ramps. The caretaker at Lipowa 12 on Północ shows us a shared cycle room also holding prams, sledges and camping gear. Tenants have marked out spaces themselves so the back wall remains accessible. For many residents, a bicycle is transport to an allotment or a workplace on the outskirts. Its usefulness depends first on being able to get it out of the building each morning.",
+          "body": "In a sports shop, a bicycle can be admired from every side. At home, it still needs somewhere to stand. Readers on new estates describe narrow cellars and stairs without ramps. The caretaker at 12 Linden Road on the Northgate estate shows us a shared cycle room also holding prams, sledges and camping gear. Tenants have marked out spaces themselves so the back wall remains accessible. For many residents, a bicycle is transport to an allotment or a workplace on the outskirts. Its usefulness depends first on being able to get it out of the building each morning.",
           "byline": "City desk"
         },
         "prompter": {
           "title": "A voice below the stage",
-          "body": "Irena Domańska, prompter at the Municipal Theatre, knows several productions at once. Her script marks pauses and changes made in rehearsal. She supplies the start of a sentence before the silence reaches the audience. A replacement actor means an extra rehearsal even for an established production. Crowd scenes are hardest: she must tell who has forgotten a line and who is waiting to speak. Her script stays beside the stage until the curtain falls.",
-          "byline": "Marek Boruta - Culture"
+          "body": "Irene Cowley, prompter at the Municipal Theatre, knows several productions at once. Her script marks pauses and changes made in rehearsal. She supplies the start of a sentence before the silence reaches the audience. A replacement actor means an extra rehearsal even for an established production. Crowd scenes are hardest: she must tell who has forgotten a line and who is waiting to speak. Her script stays beside the stage until the curtain falls.",
+          "byline": "Mark Barrett - Culture"
         },
         "cinema-booth": {
           "title": "The window above",
-          "body": "Roman Gajda, projectionist at the Świt cinema, checks every print before its first screening, inspecting splices and reel markings. Notes from other cinemas remain on the tins, sometimes warning of a damaged ending. During projection he watches through a window above the back row. The machines dominate the sound in his booth. He knows the films discussed by departing viewers well, but rarely gets to sit down and watch one from beginning to end.",
-          "byline": "Marek Boruta - Culture"
+          "body": "Raymond Gale, projectionist at the Daybreak cinema, checks every print before its first screening, inspecting splices and reel markings. Notes from other cinemas remain on the tins, sometimes warning of a damaged ending. During projection he watches through a window above the back row. The machines dominate the sound in his booth. He knows the films discussed by departing viewers well, but rarely gets to sit down and watch one from beginning to end.",
+          "byline": "Mark Barrett - Culture"
         },
         "score-library": {
           "title": "Music on loan",
-          "body": "The brass band of the railway workshops on Kolejowa keeps its music in two cupboards above the canteen. Librarian Henryk Ruta distributes parts before rehearsals and collects them after performances. Marches played outdoors wear fastest, with rain marks and creases from clips. A missing part cannot be replaced by a neighbour's music for a different instrument. Henryk therefore makes a copy of new parts before handing out the originals.",
-          "byline": "Marek Boruta - Culture"
+          "body": "The brass band of the railway workshops on Station Road keeps its music in two cupboards above the canteen. Librarian Henry Routledge distributes parts before rehearsals and collects them after performances. Marches played outdoors wear fastest, with rain marks and creases from clips. A missing part cannot be replaced by a neighbour's music for a different instrument. Henry therefore makes a copy of new parts before handing out the originals.",
+          "byline": "Mark Barrett - Culture"
         },
         "poster-lettering": {
           "title": "Letters by brush",
-          "body": "Zygmunt Karaś paints posters for the cultural centre on Szkolna. He spreads paper across two tables beside the approved programme. Title and starting time get most space so they can be read across the street. Long performers' names need separate planning. A pasted strip does not always solve a changed date: the old lettering can show through in a window. Then he repaints the whole poster, even though the other copies are already on display.",
-          "byline": "Marek Boruta - Culture"
+          "body": "Sigmund Hutton paints posters for the cultural centre on Alder Street. He spreads paper across two tables beside the approved programme. Title and starting time get most space so they can be read across the street. Long performers' names need separate planning. A pasted strip does not always solve a changed date: the old lettering can show through in a window. Then he repaints the whole poster, even though the other copies are already on display.",
+          "byline": "Mark Barrett - Culture"
         },
         "puppet-tour": {
           "title": "A stage in two cases",
-          "body": "The Szkolna cultural centre's puppet company has returned from three village clubrooms. Four instructors performed a tale about a lost dog, carrying puppets and scenery in two cases. At Brzeziny they gave a second performance for children arriving on a later bus from the far end of the village. The company has no vehicle. Director Anna Król arranges routes with clubroom caretakers, who transport the screen and meet the actors at the bus stop.",
-          "byline": "Marek Boruta - Culture"
+          "body": "The Alder Street cultural centre's puppet company has returned from three village clubrooms. Four instructors performed a tale about a lost dog, carrying puppets and scenery in two cases. At Birchwood they gave a second performance for children arriving on a later bus from the far end of the village. The company has no vehicle. Director Anna King arranges routes with clubroom caretakers, who transport the screen and meet the actors at the bus stop.",
+          "byline": "Mark Barrett - Culture"
         },
         "accordion-duet": {
           "title": "Two accordions",
-          "body": "Marian Nowak and Leon Sowa of the railway workshops received a commendation at the Szkolna cultural centre's amateur music review. Their accordion duo played three dance tunes. Both learned by ear; a teacher from the music school on Ogrodowa wrote out the arrangements. They rehearsed at the Nowaks' flat between work and the children's bedtime. The judges praised their steady ensemble playing and recommended a broader repertoire for their next appearance.",
-          "byline": "Marek Boruta - Culture"
+          "body": "Maurice Newman and Leon Owlett of the railway workshops received a commendation at the Alder Street cultural centre's amateur music review. Their accordion duo played three dance tunes. Both learned by ear; a teacher from the music school on Orchard Street wrote out the arrangements. They rehearsed at the Newmans' flat between work and the children's bedtime. The judges praised their steady ensemble playing and recommended a broader repertoire for their next appearance.",
+          "byline": "Mark Barrett - Culture"
         },
         "matinee-survey": {
           "title": "Who comes to matinees",
-          "body": "The Świt cinema collected 58 replies from adults attending children's matinees. Suburban parents requested later starts to connect with buses; central residents preferred finishing before lunch. Manager Jerzy Łata is considering separate hours for school groups and families. No programme change has been announced. Ushers also raised the cloakroom problem: two groups arriving together block the entrance to the auditorium.",
-          "byline": "Marek Boruta - Culture"
+          "body": "The Daybreak cinema collected 58 replies from adults attending children's matinees. Suburban parents requested later starts to connect with buses; central residents preferred finishing before lunch. Manager George Patch is considering separate hours for school groups and families. No programme change has been announced. Ushers also raised the cloakroom problem: two groups arriving together block the entrance to the auditorium.",
+          "byline": "Mark Barrett - Culture"
         },
         "dance-shoes": {
           "title": "Room for a waltz",
-          "body": "The dance course at the cultural centre on Szkolna ended with a family demonstration. Twelve couples performed a waltz and polka. Instructor Halina Bąk mainly teaches adults preparing for weddings and workplace dances. Some had practised by moving their kitchen tables aside. At the demonstration they completed the sequence without stopping the music. Afterwards the participants' parents took the floor while the pupils watched from the wall.",
-          "byline": "Marek Boruta - Culture"
+          "body": "The dance course at the cultural centre on Alder Street ended with a family demonstration. Twelve couples performed a waltz and polka. Instructor Helen Booth mainly teaches adults preparing for weddings and workplace dances. Some had practised by moving their kitchen tables aside. At the demonstration they completed the sequence without stopping the music. Afterwards the participants' parents took the floor while the pupils watched from the wall.",
+          "byline": "Mark Barrett - Culture"
         },
         "recitation-finals": {
           "title": "A poem without a mike",
-          "body": "Ewa Sokołowska of School No. 12 won the city recitation contest at the Szkolna cultural centre. Eleven pupils reached the final. Judges praised her clear speech and restrained reading, without gestures overwhelming the verse. She prepared with language teacher Maria Bielecka and practised by reading to her grandmother. The prize included poetry and theatre workshops. Teachers will be able to borrow a recording made by the amateur radio club.",
-          "byline": "Marek Boruta - Culture"
+          "body": "Eve Hawke of School No. 12 won the city recitation contest at the Alder Street cultural centre. Eleven pupils reached the final. Judges praised her clear speech and restrained reading, without gestures overwhelming the verse. She prepared with language teacher Mary Beckett and practised by reading to her grandmother. The prize included poetry and theatre workshops. Teachers will be able to borrow a recording made by the amateur radio club.",
+          "byline": "Mark Barrett - Culture"
         },
         "folk-recording": {
           "title": "Voices from nearby",
-          "body": "The Municipal Museum on Rynek received wedding songs recorded in Brzeziny. Jan Cichy brought the tape of his grandmother and three other singers, recorded unaccompanied in her kitchen. They paused to settle forgotten words; one remembered a different ending. Ethnographer Teresa Maj will retain both versions. Before cataloguing the recording, she will visit Brzeziny to establish who taught the women each song.",
-          "byline": "Marek Boruta - Culture"
+          "body": "The Municipal Museum on Market Square received wedding songs recorded in Birchwood. John Still brought the tape of his grandmother and three other singers, recorded unaccompanied in her kitchen. They paused to settle forgotten words; one remembered a different ending. Ethnographer Teresa May will retain both versions. Before cataloguing the recording, she will visit Birchwood to establish who taught the women each song.",
+          "byline": "Mark Barrett - Culture"
         },
         "reading-room": {
           "title": "Papers on wooden rods",
-          "body": "Newspapers at library Branch No. 6 on Kolejowa are mounted on wooden rods. Pensioners and passengers waiting for trains share its long table. The daily carrying radio listings is most popular; librarian Janina Wolska reserves a second copy for people noting broadcast times. Older issues remain in the back room for a month. Readers return for advertisements and results, so she asks them to copy useful items rather than cut them out.",
-          "byline": "Marek Boruta - Culture"
+          "body": "Newspapers at library Branch No. 6 on Station Road are mounted on wooden rods. Pensioners and passengers waiting for trains share its long table. The daily carrying radio listings is most popular; librarian Jean Wells reserves a second copy for people noting broadcast times. Older issues remain in the back room for a month. Readers return for advertisements and results, so she asks them to copy useful items rather than cut them out.",
+          "byline": "Mark Barrett - Culture"
         },
         "portrait-studio": {
           "title": "Before the lens",
-          "body": "Photographer Witold Lenart on Ogrodowa takes most family portraits on Sundays, when relatives working different shifts can gather. Arranging a large family takes longer than the exposure. Children sit on a stool with adults behind them. Customers order prints for themselves and relatives outside the city. Lenart files negatives by order number so further copies can be made years later without assembling everyone again.",
-          "byline": "Marek Boruta - Culture"
+          "body": "Photographer Walter Lennox on Orchard Street takes most family portraits on Sundays, when relatives working different shifts can gather. Arranging a large family takes longer than the exposure. Children sit on a stool with adults behind them. Customers order prints for themselves and relatives outside the city. Lennox files negatives by order number so further copies can be made years later without assembling everyone again.",
+          "byline": "Mark Barrett - Culture"
         },
         "museum-labels": {
           "title": "The label in the case",
-          "body": "Teresa Maj at the Municipal Museum on Rynek describes objects donated by residents. For a wooden tool she needs more than its donor's name: who used it, and for what work? She compares family terms with old catalogues. When no single name can be established, both recorded terms appear in the display case. The full interview remains available to researchers studying local crafts.",
-          "byline": "Marek Boruta - Culture"
+          "body": "Teresa May at the Municipal Museum on Market Square describes objects donated by residents. For a wooden tool she needs more than its donor's name: who used it, and for what work? She compares family terms with old catalogues. When no single name can be established, both recorded terms appear in the display case. The full interview remains available to researchers studying local crafts.",
+          "byline": "Mark Barrett - Culture"
         },
         "book-cart": {
           "title": "A library on wheels",
-          "body": "Every Tuesday the railway technical school's librarian visits its boarding house on Kolejowa with a trolley of books. Supervisors collect requests beforehand. Set texts travel alongside adventure novels and textbooks needed for resits. Evening loans help pupils whose workshop sessions finish after the library closes. Demand peaks before home visits: pupils take books for the journey and receive return dates after they come back.",
-          "byline": "Marek Boruta - Culture"
+          "body": "Every Tuesday the railway technical school's librarian visits its boarding house on Station Road with a trolley of books. Supervisors collect requests beforehand. Set texts travel alongside adventure novels and textbooks needed for resits. Evening loans help pupils whose workshop sessions finish after the library closes. Demand peaks before home visits: pupils take books for the journey and receive return dates after they come back.",
+          "byline": "Mark Barrett - Culture"
         },
         "photo-exhibition": {
           "title": "Courtyards on display",
-          "body": "The Szkolna cultural centre's photography club exhibited thirty courtyards from Kolejowa and Stolarska, showing workshops, shared wells and staircases instead of grand streets. Residents of the buildings attended the opening and supplied craftsmen's names and former uses of the rear wings for the captions. After the exhibition, the prints will go to library Branch No. 6, which collects material about both streets.",
-          "byline": "Marek Boruta - Culture"
+          "body": "The Alder Street cultural centre's photography club exhibited thirty courtyards from Station Road and Cooper Street, showing workshops, shared wells and staircases instead of grand streets. Residents of the buildings attended the opening and supplied craftsmen's names and former uses of the rear wings for the captions. After the exhibition, the prints will go to library Branch No. 6, which collects material about both streets.",
+          "byline": "Mark Barrett - Culture"
         },
         "poetry-evening": {
           "title": "The poet's small table",
-          "body": "Poet Wiktor Leski met readers at Branch No. 6 on Kolejowa, reading work about commuting and courtyards remembered from his youth. Discussion turned to revision. He showed two versions of a poem, explaining why he replaced an entire street with one gateway. Readers also asked where to buy his collection. The library has two copies for loan; nearby bookshops have sold out.",
-          "byline": "Marek Boruta - Culture"
+          "body": "Poet Victor Lesley met readers at Branch No. 6 on Station Road, reading work about commuting and courtyards remembered from his youth. Discussion turned to revision. He showed two versions of a poem, explaining why he replaced an entire street with one gateway. Readers also asked where to buy his collection. The library has two copies for loan; nearby bookshops have sold out.",
+          "byline": "Mark Barrett - Culture"
         },
         "museum-donation": {
           "title": "An album without names",
-          "body": "The Municipal Museum on Rynek received an album by Antoni Rak, former photographer at the railway workshops. His daughter donated pictures of staff excursions, anniversaries and sports. Some are undated. Six retired railway workers identified colleagues at a museum meeting, though not every location. The curator invites other former employees to help. Visits to the city-history department can be arranged through the museum office.",
-          "byline": "Marek Boruta - Culture"
+          "body": "The Municipal Museum on Market Square received an album by Anthony Rake, former photographer at the railway workshops. His daughter donated pictures of staff excursions, anniversaries and sports. Some are undated. Six retired railway workers identified colleagues at a museum meeting, though not every location. The curator invites other former employees to help. Visits to the city-history department can be arranged through the museum office.",
+          "byline": "Mark Barrett - Culture"
         },
         "radio-play": {
           "title": "Footsteps from a box",
-          "body": "Children from School No. 12 recorded a short station scene at the Szkolna cultural centre. The radio-club instructor demonstrated footsteps in a gravel box and wheels rattling on a wooden board. Pupils divided dialogue and effects between them. Laughter from those waiting spoiled the first attempt; the second was complete. The tape will accompany a school play whose small stage cannot accommodate station scenery.",
-          "byline": "Marek Boruta - Culture"
+          "body": "Children from School No. 12 recorded a short station scene at the Alder Street cultural centre. The radio-club instructor demonstrated footsteps in a gravel box and wheels rattling on a wooden board. Pupils divided dialogue and effects between them. Laughter from those waiting spoiled the first attempt; the second was complete. The tape will accompany a school play whose small stage cannot accommodate station scenery.",
+          "byline": "Mark Barrett - Culture"
         },
         "poster-collection": {
           "title": "Old cinema programmes",
-          "body": "Leon Warda, a retired railway cashier, donated eighteen years of Świt cinema programmes to the Municipal Museum. Pencil marks identify films seen and actors who prompted a visit. The collection records programmes and prices for matinees and evening shows. One year's programmes remain missing after a loan to a neighbour. Warda is seeking them through this newspaper. The museum on Rynek also welcomes individual programmes to fill the gap.",
-          "byline": "Marek Boruta - Culture"
+          "body": "Leon Ward, a retired railway cashier, donated eighteen years of Daybreak cinema programmes to the Municipal Museum. Pencil marks identify films seen and actors who prompted a visit. The collection records programmes and prices for matinees and evening shows. One year's programmes remain missing after a loan to a neighbour. Ward is seeking them through this newspaper. The museum on Market Square also welcomes individual programmes to fill the gap.",
+          "byline": "Mark Barrett - Culture"
         },
         "book-display": {
           "title": "Books from the back shelf",
-          "body": "Librarians at Branch No. 6 on Kolejowa displayed novels unborrowed for a year, adding short plot descriptions without revealing endings. Nine of fifteen were taken within a week. Janina Wolska does not yet see this as a change in taste: a volume by the counter is easier to notice than a spine in a shelf's back row. The next display will feature reportage, another seldom-requested section.",
-          "byline": "Marek Boruta - Culture"
+          "body": "Librarians at Branch No. 6 on Station Road displayed novels unborrowed for a year, adding short plot descriptions without revealing endings. Nine of fifteen were taken within a week. Jean Wells does not yet see this as a change in taste: a volume by the counter is easier to notice than a spine in a shelf's back row. The next display will feature reportage, another seldom-requested section.",
+          "byline": "Mark Barrett - Culture"
         },
         "umbrella-ribs": {
           "title": "Under one canopy",
-          "body": "Władysław Lis repairs umbrellas in a booth beside the Kolejowa market. Spare ribs collected over years occupy more room than finished items. Parts for older models need hand fitting; broken tips and handle fittings are common jobs. Before accepting an umbrella, he checks its fabric. Repairing the frame offers little if seams are worn through. Customers hear the price before leaving their umbrella and decide whether the work is worthwhile.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "Wallace Fox repairs umbrellas in a booth beside the Station Road market. Spare ribs collected over years occupy more room than finished items. Parts for older models need hand fitting; broken tips and handle fittings are common jobs. Before accepting an umbrella, he checks its fabric. Repairing the frame offers little if seams are worn through. Customers hear the price before leaving their umbrella and decide whether the work is worthwhile.",
+          "byline": "Eve Fox - Crafts"
         },
         "shoe-lasts": {
           "title": "A shoe on its last",
-          "body": "Cobbler Józef Noga on Kolejowa begins by inspecting both shoes. Customers often bring only the one with a loose sole, though its partner may be equally worn. He mostly repairs heels and patches uppers where they bend. Leather scraps are sorted by thickness, saving new material on small jobs. Regular customers leave work boots after a shift and arrange collection before their next duty.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "Cobbler Joseph Legg on Station Road begins by inspecting both shoes. Customers often bring only the one with a loose sole, though its partner may be equally worn. He mostly repairs heels and patches uppers where they bend. Leather scraps are sorted by thickness, saving new material on small jobs. Regular customers leave work boots after a shift and arrange collection before their next duty.",
+          "byline": "Eve Fox - Crafts"
         },
         "brush-maker": {
           "title": "Bristles in a row",
-          "body": "The brush workshop at Stolarska 14 supplies bakeries, workshops and household customers. Master Edward Łoś selects bristle stiffness for each job. A neighbouring joiner makes wooden stocks, while old ones are inspected before refilling. Cracks around their holes can make reuse impractical. Bakers bring old brushes as patterns because handle length must suit their benches and working methods.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "The brush workshop at 14 Cooper Street supplies bakeries, workshops and household customers. Master Edward Hart selects bristle stiffness for each job. A neighbouring joiner makes wooden stocks, while old ones are inspected before refilling. Cracks around their holes can make reuse impractical. Bakers bring old brushes as patterns because handle length must suit their benches and working methods.",
+          "byline": "Eve Fox - Crafts"
         },
         "frame-shop": {
           "title": "A frame for a memory",
-          "body": "The frame shop at Stolarska 9 handles mostly certificates and family photographs. Customers choose moulding, but the photograph's condition often determines border width. A faded edge cannot always be hidden without covering a face. The framer shows the arrangement before cutting. Glass for small frames comes from larger jobs' offcuts, making a school certificate cheaper to frame than buying a ready-made display frame.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "The frame shop at 9 Cooper Street handles mostly certificates and family photographs. Customers choose moulding, but the photograph's condition often determines border width. A faded edge cannot always be hidden without covering a face. The framer shows the arrangement before cutting. Glass for small frames comes from larger jobs' offcuts, making a school certificate cheaper to frame than buying a ready-made display frame.",
+          "byline": "Eve Fox - Crafts"
         },
         "upholstery-course": {
           "title": "A chair on the bench",
-          "body": "Pupils at Vocational School No. 3 on Stolarska restored six chairs for the Północ clubroom. Frames were sound, but seats had sagged. Under upholsterer Roman Bryła they replaced webbing and padding. The housing cooperative supplied limited fabric, so the original covering remained on the backs. The chairs have returned to use. The school counted the work as practical training and charged no labour fee.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "Pupils at Vocational School No. 3 on Cooper Street restored six chairs for the Northgate clubroom. Frames were sound, but seats had sagged. Under upholsterer Raymond Briggs they replaced webbing and padding. The housing cooperative supplied limited fabric, so the original covering remained on the backs. The chairs have returned to use. The school counted the work as practical training and charged no labour fee.",
+          "byline": "Eve Fox - Crafts"
         },
         "engraver-cup": {
           "title": "Room for a surname",
-          "body": "The engraver at Ogrodowa 16 completed the city table-tennis league trophy for the postal team. Its base names six players. Shortly before collection, organisers added a reserve who had played in early rounds, requiring the inscription to be rearranged. The cup will stand in the main post office's clubroom. Individual certificates include one for the reserve, who could not attend the closing ceremony.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "The engraver at 16 Orchard Street completed the city table-tennis league trophy for the postal team. Its base names six players. Shortly before collection, organisers added a reserve who had played in early rounds, requiring the inscription to be rearranged. The cup will stand in the main post office's clubroom. Individual certificates include one for the reserve, who could not attend the closing ceremony.",
+          "byline": "Eve Fox - Crafts"
         },
         "ceramic-glaze": {
           "title": "Colour after firing",
-          "body": "The cultural centre on Szkolna displayed vessels from its pottery course's first firing. Three of twenty mugs cracked; several needed glaze cleaned from their bases. Instructor Barbara Mirek discussed these faults with their makers before the display. Pupils learn hand-building without a wheel. They can take finished work home; fees cover clay and shared firing. The next group will make bowls with thicker bases.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "The cultural centre on Alder Street displayed vessels from its pottery course's first firing. Three of twenty mugs cracked; several needed glaze cleaned from their bases. Instructor Barbara Mercer discussed these faults with their makers before the display. Pupils learn hand-building without a wheel. They can take finished work home; fees cover clay and shared firing. The next group will make bowls with thicker bases.",
+          "byline": "Eve Fox - Crafts"
         },
         "joinery-drawer": {
           "title": "A drawer made to fit",
-          "body": "The joinery shop at Stolarska 5 replaced a drawer in the Kolejowa library catalogue. The old one had cracked under its cards and stood in the back room for months. Apprentice Marek Wilk found neighbouring drawers slightly unequal: the old cabinet had been fitted by hand. The replacement was tried at the library before finishing. Readers can now consult the cards without asking the librarian to fetch a box.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "The joinery shop at 5 Cooper Street replaced a drawer in the Station Road library catalogue. The old one had cracked under its cards and stood in the back room for months. Apprentice Mark Wolfe found neighbouring drawers slightly unequal: the old cabinet had been fitted by hand. The replacement was tried at the library before finishing. Readers can now consult the cards without asking the librarian to fetch a box.",
+          "byline": "Eve Fox - Crafts"
         },
         "weaving-sample": {
           "title": "A pattern in thread",
-          "body": "Eight newcomers joined the weaving circle at the Szkolna cultural centre. Instructor Olga Kania prepared basic weave samples. Rather than begin with wall hangings, beginners make narrow strips from leftover yarn, adjusting tension without unpicking a large piece. Two looms are shared in shifts with an experienced group. Demand still exceeds the available places at the looms.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "Eight newcomers joined the weaving circle at the Alder Street cultural centre. Instructor Olga Kite prepared basic weave samples. Rather than begin with wall hangings, beginners make narrow strips from leftover yarn, adjusting tension without unpicking a large piece. Two looms are shared in shifts with an experienced group. Demand still exceeds the available places at the looms.",
+          "byline": "Eve Fox - Crafts"
         },
         "locksmith-apprentice": {
           "title": "A key without a pattern",
-          "body": "Piotr Zając of Vocational School No. 3 on Stolarska passed a practical locksmithing test. He made a key for an old workshop cabinet from its mechanism rather than an existing key. Master Antoni Kłos assessed fit and edge finishing. The key operated smoothly, though its bow still needed smoothing. It was Zając's first independent piece intended for use in the school workshop.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "Peter Hare of Vocational School No. 3 on Cooper Street passed a practical locksmithing test. He made a key for an old workshop cabinet from its mechanism rather than an existing key. Master Anthony Carter assessed fit and edge finishing. The key operated smoothly, though its bow still needed smoothing. It was Hare's first independent piece intended for use in the school workshop.",
+          "byline": "Eve Fox - Crafts"
         },
         "book-gilding": {
           "title": "Letters on the spine",
-          "body": "The bookbinder at Stolarska 6 stamps titles on bound annual volumes, selecting metal type for each inscription. A narrow spine holds less than a cover, so abbreviations are agreed with the owner. Libraries chiefly want journal and year; private collectors often add decorative rules. Incomplete years need particular care: the numbers present must be identified before the new binding disguises the gaps.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "The bookbinder at 6 Cooper Street stamps titles on bound annual volumes, selecting metal type for each inscription. A narrow spine holds less than a cover, so abbreviations are agreed with the owner. Libraries chiefly want journal and year; private collectors often add decorative rules. Incomplete years need particular care: the numbers present must be identified before the new binding disguises the gaps.",
+          "byline": "Eve Fox - Crafts"
         },
         "scissors-grinder": {
           "title": "Blade and hinge",
-          "body": "The grinder beside the Kolejowa market serves tailors and home dressmakers. Scissors that snag cloth may have a loose joint rather than blunt edges. He tests each pair on fabrics from thin lining to felt. Customers also bring scraps of delicate materials they use. Large workshop shears remain overnight; minor adjustments to the joint are usually done while the owner waits.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "The grinder beside the Station Road market serves tailors and home dressmakers. Scissors that snag cloth may have a loose joint rather than blunt edges. He tests each pair on fabrics from thin lining to felt. Customers also bring scraps of delicate materials they use. Large workshop shears remain overnight; minor adjustments to the joint are usually done while the owner waits.",
+          "byline": "Eve Fox - Crafts"
         },
         "basket-work": {
           "title": "Baskets for the market",
-          "body": "Stanisław Kurek of Brzeziny sells baskets at the Kolejowa market. Some are bakery orders; others go to shoppers and allotment holders. Potato baskets use thicker rods than bread baskets. Handles suffer most when wet baskets are lifted full. Kurek accepts repairs but checks the base first. If the weave is brittle throughout, replacing the handle alone will not make it usable.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "Stanley Crowe of Birchwood sells baskets at the Station Road market. Some are bakery orders; others go to shoppers and allotment holders. Potato baskets use thicker rods than bread baskets. Handles suffer most when wet baskets are lifted full. Crowe accepts repairs but checks the base first. If the weave is brittle throughout, replacing the handle alone will not make it usable.",
+          "byline": "Eve Fox - Crafts"
         },
         "watch-parts": {
           "title": "Parts under a job number",
-          "body": "The watchmaker at Stolarska 4 keeps each movement's parts in a box bearing its job number. Older watches may need salvaged components, so he quotes a date only after opening the case. Customers also bring heirlooms unworn for years. Restoring motion and regulating accuracy are separate tasks. He observes a repaired watch for several days before returning it and asks the owner to check it during everyday wear too.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "The watchmaker at 4 Cooper Street keeps each movement's parts in a box bearing its job number. Older watches may need salvaged components, so he quotes a date only after opening the case. Customers also bring heirlooms unworn for years. Restoring motion and regulating accuracy are separate tasks. He observes a repaired watch for several days before returning it and asks the owner to check it during everyday wear too.",
+          "byline": "Eve Fox - Crafts"
         },
         "leather-satchel": {
           "title": "A schoolbag handed down",
-          "body": "The leatherwork class at Vocational School No. 3 on Stolarska repaired twelve schoolbags supplied by parents. Most leather remained sound; stitching, buckles and straps needed replacement. Wanda Górska supervised the pupils. Parents paid for fittings, with labour counted as training. The bags will go to younger siblings. Two were declined because cracked leather would not support new stitching.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "The leatherwork class at Vocational School No. 3 on Cooper Street repaired twelve schoolbags supplied by parents. Most leather remained sound; stitching, buckles and straps needed replacement. Winifred Hill supervised the pupils. Parents paid for fittings, with labour counted as training. The bags will go to younger siblings. Two were declined because cracked leather would not support new stitching.",
+          "byline": "Eve Fox - Crafts"
         },
         "plaster-mould": {
           "title": "A copy of a small leaf",
-          "body": "Plaster workers from Stolarska reproduced a missing leaf in the staircase decoration at Ogrodowa 9, taking a pattern from the second floor. Paint concealed fine cuts invisible from below. The new cast had to fit the existing plaster as well as repeat its shape. The building administration commissioned the work during stair repairs. The remaining ornaments will be cleaned in place without removal.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "Plaster workers from Cooper Street reproduced a missing leaf in the staircase decoration at 9 Orchard Street, taking a pattern from the second floor. Paint concealed fine cuts invisible from below. The new cast had to fit the existing plaster as well as repeat its shape. The building administration commissioned the work during stair repairs. The remaining ornaments will be cleaned in place without removal.",
+          "byline": "Eve Fox - Crafts"
         },
         "hat-block": {
           "title": "Hats in shape again",
-          "body": "A milliner on Ogrodowa prepared three hats for the Szkolna cultural centre's theatre group. Old store costumes needed fitting to new performers. Two hats had lost their shape under heavy boxes. Fittings adjusted their size and ribbons while retaining the period style. The director also ordered transport boxes: carrying hats together with coats had been undoing much of the milliner's work.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "A milliner on Orchard Street prepared three hats for the Alder Street cultural centre's theatre group. Old store costumes needed fitting to new performers. Two hats had lost their shape under heavy boxes. Fittings adjusted their size and ribbons while retaining the period style. The director also ordered transport boxes: carrying hats together with coats had been undoing much of the milliner's work.",
+          "byline": "Eve Fox - Crafts"
         },
         "metal-signs": {
           "title": "A number from the gate",
-          "body": "Stolarska 8 now has entrance signs: A for the front building and B for the rear wing. Postmen and delivery staff had relied on door colours, changed during repainting. A locksmith's workshop on the same street made the metal signs. They are visible from the gate, with names added beside bells. The administration plans to inspect neighbouring houses too. Residents ask that courtyard workshop entrances also be included.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "8 Cooper Street now has entrance signs: A for the front building and B for the rear wing. Postmen and delivery staff had relied on door colours, changed during repainting. A locksmith's workshop on the same street made the metal signs. They are visible from the gate, with names added beside bells. The administration plans to inspect neighbouring houses too. Residents ask that courtyard workshop entrances also be included.",
+          "byline": "Eve Fox - Crafts"
         },
         "pottery-jug": {
           "title": "A jug from a drawing",
-          "body": "Maria Kula of Vocational School No. 3 made a jug for the student craft contest at the Szkolna cultural centre. Pottery instructor Barbara Mirek advised her. The first model had an awkwardly broad handle and dripped when pouring. A revised spout made the second usable. Judges commended its comfortable grip despite uneven glaze. Maria will make a further set during her pottery-workshop placement.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "Mary Ball of Vocational School No. 3 made a jug for the student craft contest at the Alder Street cultural centre. Pottery instructor Barbara Mercer advised her. The first model had an awkwardly broad handle and dripped when pouring. A revised spout made the second usable. Judges commended its comfortable grip despite uneven glaze. Mary will make a further set during her pottery-workshop placement.",
+          "byline": "Eve Fox - Crafts"
         },
         "carving-letters": {
           "title": "A cover for the chronicle",
-          "body": "The carving circle on Szkolna made a cover for its cultural centre's chronicle. A joiner supplied limewood boards and a nearby workshop the hinges. Members shared the ornament while retired joiner Wacław Duda carved the inscription. Gluing and levelling the boards extended the work to six meetings. The volume is available in the centre office, recording events and the people who have long taught classes and prepared rooms.",
-          "byline": "Ewa Lis - Crafts"
+          "body": "The carving circle on Alder Street made a cover for its cultural centre's chronicle. A joiner supplied limewood boards and a nearby workshop the hinges. Members shared the ornament while retired joiner Wilfred Piper carved the inscription. Gluing and levelling the boards extended the work to six meetings. The volume is available in the centre office, recording events and the people who have long taught classes and prepared rooms.",
+          "byline": "Eve Fox - Crafts"
         },
         "club-kit": {
           "title": "Shirts by number",
-          "body": "Franciszek Polak issues football kit at the railway club on Kolejowa. Seniors and juniors share two sets of shirts, making laundry depend on both fixture lists. A player's wife mends small tears. Missing sizes are hardest to replace: identical shirts do not fit every player. For away matches Franciszek packs a spare outfit, laces and dressings.",
-          "byline": "Jan Rudzki - Sport"
+          "body": "Francis Palmer issues football kit at the railway club on Station Road. Seniors and juniors share two sets of shirts, making laundry depend on both fixture lists. A player's wife mends small tears. Missing sizes are hardest to replace: identical shirts do not fit every player. For away matches Francis packs a spare outfit, laces and dressings.",
+          "byline": "John Reed - Sport"
         },
         "referee-notebook": {
           "title": "Whistle and notebook",
-          "body": "Kazimierz Bury referees football in the city's works league. He checks team lists and the pitch before play and completes a report afterwards. Players often know opponents from other teams, which does not make disputes easier. Late arrivals and absent reserves cause most administrative problems. He asks captains to report substitutions before players enter, especially when someone arrives directly from a work shift.",
-          "byline": "Jan Rudzki - Sport"
+          "body": "Clarence Grey referees football in the city's works league. He checks team lists and the pitch before play and completes a report afterwards. Players often know opponents from other teams, which does not make disputes easier. Late arrivals and absent reserves cause most administrative problems. He asks captains to report substitutions before players enter, especially when someone arrives directly from a work shift.",
+          "byline": "John Reed - Sport"
         },
         "pool-lanes": {
           "title": "A lane for everyone",
-          "body": "Teresa Ryś teaches adults at the Sportowa pool in the evenings. Learners have a separate lane instead of practising breathing among fast club swimmers. Some have not visited since school and feel embarrassed holding the edge. Lessons begin in shallow water. The pool desk handles enrolment; groups stay small enough for supervision. Sessions after the second work shift attract most requests.",
-          "byline": "Jan Rudzki - Sport"
+          "body": "Teresa Lynne teaches adults at the Recreation Road pool in the evenings. Learners have a separate lane instead of practising breathing among fast club swimmers. Some have not visited since school and feel embarrassed holding the edge. Lessons begin in shallow water. The pool desk handles enrolment; groups stay small enough for supervision. Sessions after the second work shift attract most requests.",
+          "byline": "John Reed - Sport"
         },
         "running-log": {
           "title": "Miles in a notebook",
-          "body": "Północ estate's recreational runners meet at the Lipowa park gate. Beginners take a short loop while others continue to the allotments. Leader Andrzej Malec stresses that the sessions are not race training. Many members are returning after years of desk work. They record distances and breaks so enthusiasm for keeping up with faster companions does not lead to abrupt increases.",
-          "byline": "Jan Rudzki - Sport"
+          "body": "Northgate estate's recreational runners meet at the Linden Road park gate. Beginners take a short loop while others continue to the allotments. Leader Andrew Small stresses that the sessions are not race training. Many members are returning after years of desk work. They record distances and breaks so enthusiasm for keeping up with faster companions does not lead to abrupt increases.",
+          "byline": "John Reed - Sport"
         },
         "volleyball-shift": {
           "title": "Volleyball after work",
-          "body": "The postal team beat the printers 3–2 in the city works volleyball league at School No. 12. Play began half an hour late because two visitors were finishing a shift. The printers took the first two sets, then increasingly lost points receiving serve. Postal captain Paweł Baran praised the reserve setter. Both teams asked organisers for later starting times on working days.",
-          "byline": "Jan Rudzki - Sport"
+          "body": "The postal team beat the printers 3–2 in the city works volleyball league at School No. 12. Play began half an hour late because two visitors were finishing a shift. The printers took the first two sets, then increasingly lost points receiving serve. Postal captain Paul Adley praised the reserve setter. Both teams asked organisers for later starting times on working days.",
+          "byline": "John Reed - Sport"
         },
         "cross-country": {
           "title": "The finish by the gate",
-          "body": "Tomasz Cisek of School No. 12 won the city pupils' two-kilometre cross-country race through Lipowa park. Forty-six runners from nine schools entered; the finish was by the main gate. Cisek took the lead on the final lap after following runners from the railway technical school. School No. 12 also won the team event. PE teacher Jan Król plans to enter its team in an inter-school meeting outside the city.",
-          "byline": "Jan Rudzki - Sport"
+          "body": "Thomas Yew of School No. 12 won the city pupils' two-kilometre cross-country race through Linden Road park. Forty-six runners from nine schools entered; the finish was by the main gate. Yew took the lead on the final lap after following runners from the railway technical school. School No. 12 also won the team event. PE teacher John King plans to enter its team in an inter-school meeting outside the city.",
+          "byline": "John Reed - Sport"
         },
         "boxing-score": {
           "title": "Points for the juniors",
-          "body": "The railway club's juniors drew 6–6 with the builders in a friendly boxing meeting on Sportowa. The hosts won the last two bouts to recover an early deficit. Coach Leon Wójcik praised debutant Marek Borek for maintaining his pace, but criticised the others' defence. Parents and workshop colleagues made up most of the audience. Ticket proceeds will replace worn training gloves.",
-          "byline": "Jan Rudzki - Sport"
+          "body": "The railway club's juniors drew 6–6 with the builders in a friendly boxing meeting on Recreation Road. The hosts won the last two bouts to recover an early deficit. Coach Leon Cook praised debutant Mark Burke for maintaining his pace, but criticised the others' defence. Parents and workshop colleagues made up most of the audience. Ticket proceeds will replace worn training gloves.",
+          "byline": "John Reed - Sport"
         },
         "handball-goalkeeper": {
           "title": "The reserve goalkeeper",
-          "body": "The cooperative team beat the postal team 20–18 in the city handball league at the Sportowa hall. Reserve goalkeeper Jerzy Lis came on after half-time and saved two penalties, having previously played mostly friendlies. Coach Henryk Nowicki also praised defenders for preventing close shots late in the game. The win brings the cooperative side level on points with the printers.",
-          "byline": "Jan Rudzki - Sport"
+          "body": "The cooperative team beat the postal team 20–18 in the city handball league at the Recreation Road hall. Reserve goalkeeper George Fox came on after half-time and saved two penalties, having previously played mostly friendlies. Coach Henry Newell also praised defenders for preventing close shots late in the game. The win brings the cooperative side level on points with the printers.",
+          "byline": "John Reed - Sport"
         },
         "relay-baton": {
           "title": "A steady baton change",
-          "body": "School No. 12's boys finished second in the city 4 x 100 metre relay on Sportowa, one second behind the railway technical school. Teacher Jan Król welcomed the improvement after a dropped baton at the previous meeting. All exchanges went smoothly this time. The school track is too short for full laps, so training chiefly concentrates on starts and changes.",
-          "byline": "Jan Rudzki - Sport"
+          "body": "School No. 12's boys finished second in the city 4 x 100 metre relay on Recreation Road, one second behind the railway technical school. Teacher John King welcomed the improvement after a dropped baton at the previous meeting. All exchanges went smoothly this time. The school track is too short for full laps, so training chiefly concentrates on starts and changes.",
+          "byline": "John Reed - Sport"
         },
         "chess-clock": {
           "title": "A game reconstructed",
-          "body": "Retired railway worker Antoni Witek won the chess tournament at the Szkolna cultural centre, defeating technical-school pupil Paweł Mróz in a long rook ending. Under time pressure, Mróz lost a pawn during an exchange. Twenty-four players entered, including six juniors. Referee Stefan Duda plans separate endgame sessions. The club has the final's score available for participants to analyse.",
-          "byline": "Jan Rudzki - Sport"
+          "body": "Retired railway worker Anthony Wicks won the chess tournament at the Alder Street cultural centre, defeating technical-school pupil Paul Frost in a long rook ending. Under time pressure, Frost lost a pawn during an exchange. Twenty-four players entered, including six juniors. Referee Stephen Piper plans separate endgame sessions. The club has the final's score available for participants to analyse.",
+          "byline": "John Reed - Sport"
         },
         "model-railway": {
           "title": "A timetable in miniature",
-          "body": "Two joined tables hold the model railway at the Szkolna cultural centre. Pupils build it under retired signalman Stanisław Rak. Track is complete, while station benches, signs and a luggage shed are still being added. Members supply materials, including thin card from a bookbinder. Trains follow an agreed sequence: on the single-track stretch, young drivers must decide who waits at the passing loop.",
-          "byline": "Ewa Lis - Hobbies"
+          "body": "Two joined tables hold the model railway at the Alder Street cultural centre. Pupils build it under retired signalman Stanley Rake. Track is complete, while station benches, signs and a luggage shed are still being added. Members supply materials, including thin card from a bookbinder. Trains follow an agreed sequence: on the single-track stretch, young drivers must decide who waits at the passing loop.",
+          "byline": "Eve Fox - Hobbies"
         },
         "coin-cabinet": {
           "title": "A coin with a history",
-          "body": "Coin collectors at the Szkolna cultural centre examine family collections with retired railway cashier Leon Warda, who helps identify dates and mint marks. He asks visitors not to polish coins beforehand: lost detail hinders identification, and surface condition matters to collectors. Beginners can consult the club catalogue. Owners arrange exchanges themselves; the club neither buys coins nor provides sale valuations.",
-          "byline": "Ewa Lis - Hobbies"
+          "body": "Coin collectors at the Alder Street cultural centre examine family collections with retired railway cashier Leon Ward, who helps identify dates and mint marks. He asks visitors not to polish coins beforehand: lost detail hinders identification, and surface condition matters to collectors. Beginners can consult the club catalogue. Owners arrange exchanges themselves; the club neither buys coins nor provides sale valuations.",
+          "byline": "Eve Fox - Hobbies"
         },
         "postcard-box": {
           "title": "Postcards in a box",
-          "body": "Zofia Rataj, a teacher on Kolejowa, collects city postcards by street to compare buildings across years. One shows a workshop sign older neighbours no longer remember. Its postmark and a message about moving house help date it. She lends cards for school displays, asking that they remain in protective sleeves: several prints already bear drawing-pin holes.",
-          "byline": "Ewa Lis - Hobbies"
+          "body": "Sophia Plowman, a teacher on Station Road, collects city postcards by street to compare buildings across years. One shows a workshop sign older neighbours no longer remember. Its postmark and a message about moving house help date it. She lends cards for school displays, asking that they remain in protective sleeves: several prints already bear drawing-pin holes.",
+          "byline": "Eve Fox - Hobbies"
         },
         "amateur-radio": {
           "title": "A voice in the logbook",
-          "body": "The amateur radio club at the Szkolna cultural centre shares one transmitter through agreed sessions. Operators log the other station's call sign, time and reception, later receiving confirmation cards by post. Instructor Jerzy Kaleta teaches newcomers to keep the log before they operate the set. Much training is listening: weak signals must be recognised in noise and call signs received without guessing.",
-          "byline": "Ewa Lis - Hobbies"
+          "body": "The amateur radio club at the Alder Street cultural centre shares one transmitter through agreed sessions. Operators log the other station's call sign, time and reception, later receiving confirmation cards by post. Instructor George Collett teaches newcomers to keep the log before they operate the set. Much training is listening: weak signals must be recognised in noise and call signs received without guessing.",
+          "byline": "Eve Fox - Hobbies"
         },
         "model-boat": {
           "title": "A trial on quiet water",
-          "body": "Six boats from the Szkolna cultural centre's modelling club were tested at the Sportowa pool before public sessions. Technical-school pupil Rafał Brzoza built the fastest. After a rudder adjustment it completed the course without touching the edge. Club leader Ryszard Żak checked hull sealing as well. Two boats returned to the workshop for leaks to be sealed before competition.",
-          "byline": "Ewa Lis - Hobbies"
+          "body": "Six boats from the Alder Street cultural centre's modelling club were tested at the Recreation Road pool before public sessions. Technical-school pupil Ralph Birch built the fastest. After a rudder adjustment it completed the course without touching the edge. Club leader Richard Scholar checked hull sealing as well. Two boats returned to the workshop for leaks to be sealed before competition.",
+          "byline": "Eve Fox - Hobbies"
         },
         "philately-swap": {
           "title": "A stamp for an envelope",
-          "body": "At the Szkolna stamp circle, Antoni Witek showed an envelope marked by the former Brzeziny post office. Members compared it with other letters to identify an unclear date digit. Witek exchanged it for two stamps completing part of his railway collection. Its new owner, teacher Stefan Duda, is collecting Brzeziny postal material for a display at the village clubroom.",
-          "byline": "Ewa Lis - Hobbies"
+          "body": "At the Alder Street stamp circle, Anthony Wicks showed an envelope marked by the former Birchwood post office. Members compared it with other letters to identify an unclear date digit. Wicks exchanged it for two stamps completing part of his railway collection. Its new owner, teacher Stephen Piper, is collecting Birchwood postal material for a display at the village clubroom.",
+          "byline": "Eve Fox - Hobbies"
         },
         "fish-show": {
           "title": "An aquarium with notes",
-          "body": "The city aquarium circle held a display at the Północ clubroom, Lipowa 6. Anna Mróz of School No. 12 received a commendation for a small planted guppy tank. Her father made the tank; she provides daily care. Assessors asked about feeding, water changes and care during absences. Older members' larger displays attracted visitors but needed equipment beginners often cannot yet afford.",
-          "byline": "Ewa Lis - Hobbies"
+          "body": "The city aquarium circle held a display at the Northgate clubroom, 6 Linden Road. Anna Frost of School No. 12 received a commendation for a small planted guppy tank. Her father made the tank; she provides daily care. Assessors asked about feeding, water changes and care during absences. Older members' larger displays attracted visitors but needed equipment beginners often cannot yet afford.",
+          "byline": "Eve Fox - Hobbies"
         },
         "photo-darkroom": {
           "title": "Prints from one negative",
-          "body": "Photography pupils at the Szkolna cultural centre made prints from Witold Lenart's negative of an Ogrodowa courtyard. A bench stands centrally while a woman carrying a bag passes the gate. Different crops chose different subjects. The instructor compared what each excluded. Work took place in the club darkroom, with enough paper for two attempts each, so crops were decided before processing.",
-          "byline": "Ewa Lis - Hobbies"
+          "body": "Photography pupils at the Alder Street cultural centre made prints from Walter Lennox's negative of an Orchard Street courtyard. A bench stands centrally while a woman carrying a bag passes the gate. Different crops chose different subjects. The instructor compared what each excluded. Work took place in the club darkroom, with enough paper for two attempts each, so crops were decided before processing.",
+          "byline": "Eve Fox - Hobbies"
         },
         "boardgame-evening": {
           "title": "Counting the counters",
-          "body": "The Północ clubroom at Lipowa 6 hosted a neighbourhood draughts tournament with eight pairs ranging from pupils to pensioners. Mechanic Stanisław Lis beat technical-school pupil Jerzy Mazur in the final. School No. 12 lent extra sets because the club owned only three complete ones. Entry was free. Future meetings will also welcome people who prefer games without league tables.",
-          "byline": "Ewa Lis - Hobbies"
+          "body": "The Northgate clubroom at 6 Linden Road hosted a neighbourhood draughts tournament with eight pairs ranging from pupils to pensioners. Mechanic Stanley Fox beat technical-school pupil George Mason in the final. School No. 12 lent extra sets because the club owned only three complete ones. Entry was free. Future meetings will also welcome people who prefer games without league tables.",
+          "byline": "Eve Fox - Hobbies"
         },
         "mineral-display": {
           "title": "Stones with labels",
-          "body": "The walking club of School No. 7 on Kolejowa displayed stones gathered near the Brzeziny gravel pit. Teacher Zofia Rataj helped identify granite and flint. Several specimens remain uncertain; the school will ask the Municipal Museum for help. A map marks where the stones were found. There are no rare minerals, but visitors can examine material commonly seen in road gravel and fields.",
-          "byline": "Ewa Lis - Hobbies"
+          "body": "The walking club of School No. 7 on Station Road displayed stones gathered near the Birchwood gravel pit. Teacher Sophia Plowman helped identify granite and flint. Several specimens remain uncertain; the school will ask the Municipal Museum for help. A map marks where the stones were found. There are no rare minerals, but visitors can examine material commonly seen in road gravel and fields.",
+          "byline": "Eve Fox - Hobbies"
         },
         "radio-aerial": {
           "title": "The aerial by the window",
-          "body": "Jerzy Kaleta helps residents with radios at the Szkolna cultural centre's technical workshop. Most complaints come from new Północ flats. Owners bring the set and describe its usual position. Reception may be good in the workshop, so he cannot diagnose a fault from the complaint alone. He checks sockets and aerials, then suggests comparing positions at home. Older sets often lack a lead lost during a move.",
+          "body": "George Collett helps residents with radios at the Alder Street cultural centre's technical workshop. Most complaints come from new Northgate flats. Owners bring the set and describe its usual position. Reception may be good in the workshop, so he cannot diagnose a fault from the complaint alone. He checks sockets and aerials, then suggests comparing positions at home. Older sets often lack a lead lost during a move.",
           "byline": "Technology desk"
         },
         "typewriter-ribbon": {
           "title": "An original and two copies",
-          "body": "Teresa Wrona types most schedules in triplicate at the design office on Ogrodowa. The ribbon prints the top sheet; carbon paper transfers keystrokes to the others. A faint last copy calls for checking carbon paper and typing pressure as well as the ribbon. Correcting figures takes longest because every sheet needs attention. Before typing a large table, she asks its author to check the draft totals.",
+          "body": "Teresa Rook types most schedules in triplicate at the design office on Orchard Street. The ribbon prints the top sheet; carbon paper transfers keystrokes to the others. A faint last copy calls for checking carbon paper and typing pressure as well as the ribbon. Correcting figures takes longest because every sheet needs attention. Before typing a large table, she asks its author to check the draft totals.",
           "byline": "Technology desk"
         },
         "tape-index": {
           "title": "What is on side B",
-          "body": "Listeners at the Szkolna cultural centre's music club exchange lists of recorded broadcasts. Scarce cassettes mean one concert can be replaced before it is heard. The instructor recommends labelling both sides and naming performers: a work's title alone cannot distinguish recordings. Member Leon Sowa stores family tapes separately so the children's voices are not erased while recording another evening programme.",
+          "body": "Listeners at the Alder Street cultural centre's music club exchange lists of recorded broadcasts. Scarce cassettes mean one concert can be replaced before it is heard. The instructor recommends labelling both sides and naming performers: a work's title alone cannot distinguish recordings. Member Leon Owlett stores family tapes separately so the children's voices are not erased while recording another evening programme.",
           "byline": "Technology desk"
         },
         "bicycle-dynamo": {
           "title": "Light from a wheel",
-          "body": "The bicycle mechanic at Kolejowa 20 checks lighting on bikes brought after work. Owners usually suspect the bulb, but a loose wire or misaligned dynamo may be responsible. A stand allows inspection while the wheel turns. Parts for old lamps are not always available. The mechanic keeps sound holders from dismantled sets and asks permission before reusing them. A similar housing alone does not guarantee a fit.",
+          "body": "The bicycle mechanic at 20 Station Road checks lighting on bikes brought after work. Owners usually suspect the bulb, but a loose wire or misaligned dynamo may be responsible. A stand allows inspection while the wheel turns. Parts for old lamps are not always available. The mechanic keeps sound holders from dismantled sets and asks permission before reusing them. A similar housing alone does not guarantee a fit.",
           "byline": "Technology desk"
         },
         "slide-projector": {
           "title": "Pictures on a pale wall",
-          "body": "The Szkolna cultural centre's walking club showed teacher Stefan Duda's slides from Brzeziny. The mill and old buildings by the post office prompted most questions. At rehearsal, details were unclear from the back rows; a smaller image and covered side windows improved the view. A Brzeziny resident added the names of former building owners to the commentary.",
+          "body": "The Alder Street cultural centre's walking club showed teacher Stephen Piper's slides from Birchwood. The mill and old buildings by the post office prompted most questions. At rehearsal, details were unclear from the back rows; a smaller image and covered side windows improved the view. A Birchwood resident added the names of former building owners to the commentary.",
           "byline": "Technology desk"
         },
         "workshop-meter": {
           "title": "Reading the pointer",
-          "body": "Second-year pupils at the railway technical school on Kolejowa compared workshop meters on the same circuit. Readings differed. Teacher Piotr Jurek asked them to change positions; some discrepancies vanished when everyone viewed the scale straight on. The workshop will inspect the remaining instruments. The exercise precedes placements where pupils will also encounter older workplace equipment.",
+          "body": "Second-year pupils at the railway technical school on Station Road compared workshop meters on the same circuit. Readings differed. Teacher Peter Judd asked them to change positions; some discrepancies vanished when everyone viewed the scale straight on. The workshop will inspect the remaining instruments. The exercise precedes placements where pupils will also encounter older workplace equipment.",
           "byline": "Technology desk"
         },
         "sewing-maintenance": {
           "title": "Machines after inspection",
-          "body": "A mechanic from the Ogrodowa service shop visited the sewing course at the Szkolna cultural centre. Participants brought eight household machines. Several needed rethreading and cleaning around the shuttle; two required workshop repairs. Instructor Celina Borek asked owners to keep sample seams with fault descriptions, making intermittent problems easier to explain when taking a machine in.",
+          "body": "A mechanic from the Orchard Street service shop visited the sewing course at the Alder Street cultural centre. Participants brought eight household machines. Several needed rethreading and cleaning around the shuttle; two required workshop repairs. Instructor Celia Burke asked owners to keep sample seams with fault descriptions, making intermittent problems easier to explain when taking a machine in.",
           "byline": "Technology desk"
         },
         "telephone-display": {
           "title": "Receivers through the years",
-          "body": "The railway technical school on Kolejowa displayed telephones lent by communications staff. Alongside dial sets stood an older crank telephone from a workplace network. Fitter Józef Król explained requesting a call through an operator. Pupils inspected open cases and bell mechanisms before choosing their specialisation. The exhibits remain disconnected, so demonstrations do not interfere with the exchange.",
+          "body": "The railway technical school on Station Road displayed telephones lent by communications staff. Alongside dial sets stood an older crank telephone from a workplace network. Fitter Joseph King explained requesting a call through an operator. Pupils inspected open cases and bell mechanisms before choosing their specialisation. The exhibits remain disconnected, so demonstrations do not interfere with the exchange.",
           "byline": "Technology desk"
         },
         "record-speed": {
           "title": "A record at its own pace",
-          "body": "Two music-club turntables were compared at the Szkolna cultural centre. The same waltz sounded noticeably slower on one. Instructor Jerzy Kaleta checked platter speed and recommended adjustment. Its owner had blamed a worn record for months. The club plans a similar recorder session. The porter collects registrations, including model details so the instructor can obtain suitable documentation beforehand.",
+          "body": "Two music-club turntables were compared at the Alder Street cultural centre. The same waltz sounded noticeably slower on one. Instructor George Collett checked platter speed and recommended adjustment. Its owner had blamed a worn record for months. The club plans a similar recorder session. The porter collects registrations, including model details so the instructor can obtain suitable documentation beforehand.",
           "byline": "Technology desk"
         },
         "drafting-tools": {
           "title": "A curve from a template",
-          "body": "Railway technical-school pupils visited the design office on Ogrodowa. Draughtswoman Irena Walczak demonstrated a part drawing on tracing paper, plotting pencil points before selecting sections of a French curve. Pupils knew the tool but had not seen a drawing prepared for reproduction, where corrections were harder than in a notebook. The visit also covered folding and labelling drawings for the archive.",
+          "body": "Railway technical-school pupils visited the design office on Orchard Street. Draughtswoman Irene Walker demonstrated a part drawing on tracing paper, plotting pencil points before selecting sections of a French curve. Pupils knew the tool but had not seen a drawing prepared for reproduction, where corrections were harder than in a notebook. The visit also covered folding and labelling drawings for the archive.",
           "byline": "Technology desk"
         },
         "button-tin": {
           "title": "The old tea tin",
-          "body": "Customers at the Ogrodowa haberdasher often seek one button for an old coat. Maria Górecka compares their sample with drawer stock. Exact shades can be impossible, especially when the remaining buttons have faded. She may suggest replacing a row or both cuffs. A tea tin of customers' donated buttons stands by the counter, allowing a missing button to be found without buying a full set.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "Customers at the Orchard Street haberdasher often seek one button for an old coat. Mary Harris compares their sample with drawer stock. Exact shades can be impossible, especially when the remaining buttons have faded. She may suggest replacing a row or both cuffs. A tea tin of customers' donated buttons stands by the counter, allowing a missing button to be found without buying a full set.",
+          "byline": "Anna Rook - Home and family"
         },
         "sheet-hems": {
           "title": "Bedding for a smaller bed",
-          "body": "The alterations shop at Ogrodowa 6 adapts bedding for children's beds and narrow divans. Stanisław Bury asks for mattress depth as well as width, allowing enough sheet to tuck under. Customers often bring large sheets inherited from relatives. Sound offcuts can become pillowcases. He identifies worn areas before cutting so new seams do not fall on weakened fabric.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "The alterations shop at 6 Orchard Street adapts bedding for children's beds and narrow divans. Stanley Grey asks for mattress depth as well as width, allowing enough sheet to tuck under. Customers often bring large sheets inherited from relatives. Sound offcuts can become pillowcases. He identifies worn areas before cutting so new seams do not fall on weakened fabric.",
+          "byline": "Anna Rook - Home and family"
         },
         "shopping-bag": {
           "title": "A bag from a pillowcase",
-          "body": "Jadwiga Mól of Ogrodowa visits the Kolejowa market with bags made from old pillowcases. Bread travels separately from vegetables, lighter purchases over her shoulder. She demonstrated the sewing at the Północ clubroom. Handles needed most adjustment because narrow ones cut into hands. Fabric cost nothing, though thread and time still counted. She has used the same bags for two years, washing them after market trips.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "Edith Page of Orchard Street visits the Station Road market with bags made from old pillowcases. Bread travels separately from vegetables, lighter purchases over her shoulder. She demonstrated the sewing at the Northgate clubroom. Handles needed most adjustment because narrow ones cut into hands. Fabric cost nothing, though thread and time still counted. She has used the same bags for two years, washing them after market trips.",
+          "byline": "Anna Rook - Home and family"
         },
         "leftover-yarn": {
           "title": "Remnants for beginners",
-          "body": "The needlework circle at the Szkolna cultural centre gathers leftover yarn for beginners. Members bring remnants with samples of the finished knitting. Instructor Olga Kania separates thicknesses: combining fine yarn with thick bands can distort a garment. Small supplies chiefly become hats and children's waistcoats. Larger projects require additional matching yarn.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "The needlework circle at the Alder Street cultural centre gathers leftover yarn for beginners. Members bring remnants with samples of the finished knitting. Instructor Olga Kite separates thicknesses: combining fine yarn with thick bands can distort a garment. Small supplies chiefly become hats and children's waistcoats. Larger projects require additional matching yarn.",
+          "byline": "Anna Rook - Home and family"
         },
         "repair-evening": {
           "title": "An evening with needles",
-          "body": "Helena Mazur and Wanda Górska helped seventeen residents mend clothes at the Północ clubroom, Lipowa 6. Most brought children's garments needing new zips or shorter sleeves. Everyone worked on their own item rather than leaving repair orders. Participants lent two machines. Organisers are seeking a third because the queue for zip fitting outlasted that for hand darning.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "Helena Mason and Winifred Hill helped seventeen residents mend clothes at the Northgate clubroom, 6 Linden Road. Most brought children's garments needing new zips or shorter sleeves. Everyone worked on their own item rather than leaving repair orders. Participants lent two machines. Organisers are seeking a third because the queue for zip fitting outlasted that for hand darning.",
+          "byline": "Anna Rook - Home and family"
         },
         "linen-swap": {
           "title": "A cloth for another table",
-          "body": "Tablecloths, curtains and pillowcases changed hands at the Północ clubroom, Lipowa 6. Organiser Jadwiga Mól requested washed items with measurements and declined badly worn material unsuitable for alteration. Mrs Rybicka exchanged a long cloth for two kitchen curtains; its new family has an extending table. Owners took unexchanged items home, leaving no storage problem for the clubroom.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "Tablecloths, curtains and pillowcases changed hands at the Northgate clubroom, 6 Linden Road. Organiser Edith Page requested washed items with measurements and declined badly worn material unsuitable for alteration. Mrs Brookfield exchanged a long cloth for two kitchen curtains; its new family has an extending table. Owners took unexchanged items home, leaving no storage problem for the clubroom.",
+          "byline": "Anna Rook - Home and family"
         },
         "recipe-index": {
           "title": "An index for the notebook",
-          "body": "The Szkolna household circle organised ten years of recipes. Leader Anna Sarna removed duplicates and asked contributors to supply missing quantities. Measures such as a glass or handful caused most difficulty, so cooking sessions compared the actual utensils. The result contains thirty tried dishes for four people. Members can copy recipes at meetings; paper has so far allowed only one shared volume.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "The Alder Street household circle organised ten years of recipes. Leader Anna Roe removed duplicates and asked contributors to supply missing quantities. Measures such as a glass or handful caused most difficulty, so cooking sessions compared the actual utensils. The result contains thirty tried dishes for four people. Members can copy recipes at meetings; paper has so far allowed only one shared volume.",
+          "byline": "Anna Rook - Home and family"
         },
         "curtain-measure": {
           "title": "A curtain for its window",
-          "body": "Sewing pupils at the Szkolna cultural centre made curtains for the choir room from fabric donated after a family's move. Too short for full windows, it became café curtains below the handles. The remainder covered the glazed upper door. Choir members helped hang them. Daylight still enters, while passers-by no longer look directly at singers rehearsing beside the windows.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "Sewing pupils at the Alder Street cultural centre made curtains for the choir room from fabric donated after a family's move. Too short for full windows, it became café curtains below the handles. The remainder covered the glazed upper door. Choir members helped hang them. Daylight still enters, while passers-by no longer look directly at singers rehearsing beside the windows.",
+          "byline": "Anna Rook - Home and family"
         },
         "patchwork-cover": {
           "title": "A cover made of scraps",
-          "body": "Six women at the Północ clubroom, Lipowa 6, spent three meetings making a cover for its worn sofa. Residents supplied heavy remnants from curtains and skirts; thin linings were rejected as unsuitable for the wear. The removable, washable cover cost only thread. The cooperative has no sofa replacement planned this year because its wooden frame remains sound.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "Six women at the Northgate clubroom, 6 Linden Road, spent three meetings making a cover for its worn sofa. Residents supplied heavy remnants from curtains and skirts; thin linings were rejected as unsuitable for the wear. The removable, washable cover cost only thread. The cooperative has no sofa replacement planned this year because its wooden frame remains sound.",
+          "byline": "Anna Rook - Home and family"
         },
         "shopping-notes": {
           "title": "Both sides of the list",
-          "body": "Participants brought a week's receipts to a household spending meeting at Północ clubroom, Lipowa 6. Anna Sarna separated daily purchases from month-long supplies, which had made similar-income households seem very different. Discussion centred on travelling for cheaper goods. Purchase prices excluded fares and time in queues. The next comparison will record both alongside the shopping.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "Participants brought a week's receipts to a household spending meeting at Northgate clubroom, 6 Linden Road. Anna Roe separated daily purchases from month-long supplies, which had made similar-income households seem very different. Discussion centred on travelling for cheaper goods. Purchase prices excluded fares and time in queues. The next comparison will record both alongside the shopping.",
+          "byline": "Anna Rook - Home and family"
         },
         "shared-landing": {
           "title": "A shelf on the landing",
-          "body": "Three families share the plant shelf on a half-landing at Stolarska 8. Wanda Lis's large ficus had outgrown her flat. The stair window offered space, but care needed agreement with neighbours. She waters it; an upstairs tenant turns the pots when cleaning the window. The caretaker covers holidays. Nothing stands on the floor because a child's pram is carried down those stairs daily.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "Three families share the plant shelf on a half-landing at 8 Cooper Street. Winifred Fox's large ficus had outgrown her flat. The stair window offered space, but care needed agreement with neighbours. She waters it; an upstairs tenant turns the pots when cleaning the window. The caretaker covers holidays. Nothing stands on the floor because a child's pram is carried down those stairs daily.",
+          "byline": "Anna Rook - Home and family"
         },
         "folding-table": {
           "title": "A table for more people",
-          "body": "The Rybickis of Północ own an extending table although normally only two eat there. Children and their families visit for name-day gatherings. A leaf waits behind the wardrobe and chairs come from next door. Some dishes are prepared a day early because the extended table restricts the kitchen passage. The furniture came from their larger former room; moving reduced space without reducing the guest list.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "The Brookfields of Northgate own an extending table although normally only two eat there. Children and their families visit for name-day gatherings. A leaf waits behind the wardrobe and chairs come from next door. Some dishes are prepared a day early because the extended table restricts the kitchen passage. The furniture came from their larger former room; moving reduced space without reducing the guest list.",
+          "byline": "Anna Rook - Home and family"
         },
         "window-sill": {
           "title": "Every sill has its aspect",
-          "body": "Zofia Kurek at the Północ flower shop asks which way customers' windows face. Plants chosen by appearance may struggle in dark rooms or dry positions above radiators. Small cuttings sell best for compact flats, but she explains their eventual size. Customers bring leaves for identification and ask about soil. Some plants have circulated among neighbours for years without labels or remembered names.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "Sophia Crowe at the Northgate flower shop asks which way customers' windows face. Plants chosen by appearance may struggle in dark rooms or dry positions above radiators. Small cuttings sell best for compact flats, but she explains their eventual size. Customers bring leaves for identification and ask about soil. Some plants have circulated among neighbours for years without labels or remembered names.",
+          "byline": "Anna Rook - Home and family"
         },
         "family-bookshelf": {
           "title": "Books in two rows",
-          "body": "The Bielskis of Kolejowa have collected books since their student days. Hallway shelves hold two rows, making rear volumes awkward to retrieve. Lists at the shelf edges identify them. Children's textbooks stand separately near the desk. The family is donating some books to the Kolejowa library, retaining volumes they reread rather than every title once bought in a series.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "The Blakes of Station Road have collected books since their student days. Hallway shelves hold two rows, making rear volumes awkward to retrieve. Lists at the shelf edges identify them. Children's textbooks stand separately near the desk. The family is donating some books to the Station Road library, retaining volumes they reread rather than every title once bought in a series.",
+          "byline": "Anna Rook - Home and family"
         },
         "room-divider": {
           "title": "A room divided by shelves",
-          "body": "The Bielskis of Kolejowa created a study corner for their daughter in their only large room. Shelving moved away from the wall with a desk behind it, allowing lamplit reading while others listen to the radio. Noise still travels, so the family agreed quiet hours before tests. A joiner secured the shelves against tipping when books are pulled out. Their younger son still does homework at the kitchen table.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "The Blakes of Station Road created a study corner for their daughter in their only large room. Shelving moved away from the wall with a desk behind it, allowing lamplit reading while others listen to the radio. Noise still travels, so the family agreed quiet hours before tests. A joiner secured the shelves against tipping when books are pulled out. Their younger son still does homework at the kitchen table.",
+          "byline": "Anna Rook - Home and family"
         },
         "stairwell-curtains": {
           "title": "The shared stair window",
-          "body": "Residents of Ogrodowa 9 removed pots from the stair bend at a tenant's request. He carries a shopping trolley upstairs for his ill wife. Plants went into flats, with two small ones remaining on a broad sill. Caretaker Jan Rybak reminded residents to keep access for window cleaning. The tenants settled it at a meeting without ordering new shelves. The floor has remained clear.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "Residents of 9 Orchard Street removed pots from the stair bend at a tenant's request. He carries a shopping trolley upstairs for his ill wife. Plants went into flats, with two small ones remaining on a broad sill. Caretaker John Fisher reminded residents to keep access for window cleaning. The tenants settled it at a meeting without ordering new shelves. The floor has remained clear.",
+          "byline": "Anna Rook - Home and family"
         },
         "furniture-plan": {
           "title": "Measuring before buying",
-          "body": "A joiner at Stolarska 5 helped the Mól family fit a wardrobe into their new Północ flat. The body fitted, but a door struck the wall and blocked the bottom drawer. Reversing one door avoided rebuilding the cabinet, while a skirting section also needed shortening. The family kept its wardrobe. Before moving other furniture, they checked opening clearance as well as width.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "A joiner at 5 Cooper Street helped the Page family fit a wardrobe into their new Northgate flat. The body fitted, but a door struck the wall and blocked the bottom drawer. Reversing one door avoided rebuilding the cabinet, while a skirting section also needed shortening. The family kept its wardrobe. Before moving other furniture, they checked opening clearance as well as width.",
+          "byline": "Anna Rook - Home and family"
         },
         "plant-cuttings": {
           "title": "A cutting with a name",
-          "body": "Over twenty people exchanged spider plants, geraniums and tradescantia cuttings at Północ clubroom, Lipowa 6. Zofia Kurek from the estate flower shop helped identify plants and choose pots. Most brought rooted cuttings. Pots carried their former owners' names so new owners could ask about watering later. Leftovers will furnish the clubroom, cared for by two regular participants.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "Over twenty people exchanged spider plants, geraniums and tradescantia cuttings at Northgate clubroom, 6 Linden Road. Sophia Crowe from the estate flower shop helped identify plants and choose pots. Most brought rooted cuttings. Pots carried their former owners' names so new owners could ask about watering later. Leftovers will furnish the clubroom, cared for by two regular participants.",
+          "byline": "Anna Rook - Home and family"
         },
         "child-desk": {
           "title": "Their sister's old desk",
-          "body": "Paweł Mazur of School No. 7 inherited his older sister's desk, but his feet did not reach the floor and he wrote with raised shoulders. The shop at Stolarska 5 shortened its legs, retaining drawers and top. His sister now uses a larger table at technical-school boarding accommodation. Adaptation cost less than replacement. Before finishing, the joiner asked Paweł to try the desk, checking knee room below the drawers too.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "Paul Mason of School No. 7 inherited his older sister's desk, but his feet did not reach the floor and he wrote with raised shoulders. The shop at 5 Cooper Street shortened its legs, retaining drawers and top. His sister now uses a larger table at technical-school boarding accommodation. Adaptation cost less than replacement. Before finishing, the joiner asked Paul to try the desk, checking knee room below the drawers too.",
+          "byline": "Anna Rook - Home and family"
         },
         "coat-hooks": {
           "title": "Hooks at the right height",
-          "body": "The Północ clubroom at Lipowa 6 now has children's coat hooks. Young participants had left coats on chairs because they could not reach the shared rack. Leftover shelf-repair wood and donated hooks supplied the lower one. A pocket holds lost gloves; caretaker Celina Lis asks parents to check it at collection time. The adult rack is now accessible without moving a heap of jackets.",
-          "byline": "Anna Wrona - Home and family"
+          "body": "The Northgate clubroom at 6 Linden Road now has children's coat hooks. Young participants had left coats on chairs because they could not reach the shared rack. Leftover shelf-repair wood and donated hooks supplied the lower one. A pocket holds lost gloves; caretaker Celia Fox asks parents to check it at collection time. The adult rack is now accessible without moving a heap of jackets.",
+          "byline": "Anna Rook - Home and family"
         },
         "soup-ladle": {
           "title": "Lunch for two shifts",
-          "body": "The railway workshops' canteen on Kolejowa serves lunch during two work breaks. Cook Helena Bury plans portions so the second shift receives the same menu as the first. Smaller serving vessels are replenished from the kitchen as queues advance. Shift swaps make attendance hardest to predict. The manager asks foremen for advance numbers because surplus cooked portions cannot simply be set aside for tomorrow.",
-          "byline": "Anna Wrona - Trade"
+          "body": "The railway workshops' canteen on Station Road serves lunch during two work breaks. Cook Helena Grey plans portions so the second shift receives the same menu as the first. Smaller serving vessels are replenished from the kitchen as queues advance. Shift swaps make attendance hardest to predict. The manager asks foremen for advance numbers because surplus cooked portions cannot simply be set aside for tomorrow.",
+          "byline": "Anna Rook - Trade"
         },
         "market-scales": {
           "title": "Apples from the family orchard",
-          "body": "Maria Kurek of Brzeziny sells apples from the family orchard at the Kolejowa market, separating dessert fruit from baking apples. Buyers usually ask price before variety. A cut apple lets them inspect the flesh. Smaller fruit costs less but produces more peeling waste. Regulars order larger quantities before market visits so crates are not transported unnecessarily.",
-          "byline": "Anna Wrona - Trade"
+          "body": "Mary Crowe of Birchwood sells apples from the family orchard at the Station Road market, separating dessert fruit from baking apples. Buyers usually ask price before variety. A cut apple lets them inspect the flesh. Smaller fruit costs less but produces more peeling waste. Regulars order larger quantities before market visits so crates are not transported unnecessarily.",
+          "byline": "Anna Rook - Trade"
         },
         "canteen-tray": {
           "title": "The tray returns",
-          "body": "At the milk bar by the Kolejowa station, trays return before customers leave. Travellers linger over tea between connections. Manager Anna Bąk lets them stay until seats become scarce. Suburban trains bring the heaviest rush, when an extra kitchen worker collects dishes. The bar owns few spare glasses, making prompt washing essential if new customers are to receive drinks immediately.",
-          "byline": "Anna Wrona - Trade"
+          "body": "At the milk bar by the Station Road station, trays return before customers leave. Travellers linger over tea between connections. Manager Anna Booth lets them stay until seats become scarce. Suburban trains bring the heaviest rush, when an extra kitchen worker collects dishes. The bar owns few spare glasses, making prompt washing essential if new customers are to receive drinks immediately.",
+          "byline": "Anna Rook - Trade"
         },
         "family-dumplings": {
           "title": "Dumplings made together",
-          "body": "Helena Bury of Kolejowa cooks in a canteen but makes dumplings for a large family at home. Her daughter adds exact quantities to Helena's old notebook. Three glasses of flour differed when measured in the daughter's newer glass, so they compared portions and corrected the recipe together. Potato-and-curd filling is prepared beforehand, leaving rolling, filling and sealing to several pairs of hands at the table.",
-          "byline": "Anna Wrona - Trade"
+          "body": "Helena Grey of Station Road cooks in a canteen but makes dumplings for a large family at home. Her daughter adds exact quantities to Helena's old notebook. Three glasses of flour differed when measured in the daughter's newer glass, so they compared portions and corrected the recipe together. Potato-and-curd filling is prepared beforehand, leaving rolling, filling and sealing to several pairs of hands at the table.",
+          "byline": "Anna Rook - Trade"
         },
         "bakery-visitors": {
           "title": "Bread before dawn",
-          "body": "School No. 7's final-year class visited the Ogrodowa bakery as part of careers education. Master Jan Wrona showed ovens, benches and the proving room. Pupils arrived after night production while bread was loaded for delivery. Questions covered hours and training. He also described cleaning and carrying sacks, tasks invisible to customers collecting finished loaves.",
-          "byline": "Anna Wrona - Trade"
+          "body": "School No. 7's final-year class visited the Orchard Street bakery as part of careers education. Master John Rook showed ovens, benches and the proving room. Pupils arrived after night production while bread was loaded for delivery. Questions covered hours and training. He also described cleaning and carrying sacks, tasks invisible to customers collecting finished loaves.",
+          "byline": "Anna Rook - Trade"
         },
         "recipe-contest": {
           "title": "A recipe with a note",
-          "body": "Helena Bury of Kolejowa won the potato-dish contest at Północ clubroom, Lipowa 6, with an onion-and-curd casserole. Eight participants judged each other's dishes for taste, cost and preparation time, served anonymously in matching vessels. The winner supplied quantities for four people. Her recipe can be copied from the caretaker; the others will follow after quantities are checked.",
-          "byline": "Anna Wrona - Trade"
+          "body": "Helena Grey of Station Road won the potato-dish contest at Northgate clubroom, 6 Linden Road, with an onion-and-curd casserole. Eight participants judged each other's dishes for taste, cost and preparation time, served anonymously in matching vessels. The winner supplied quantities for four people. Her recipe can be copied from the caretaker; the others will follow after quantities are checked.",
+          "byline": "Anna Rook - Trade"
         },
         "school-sandwiches": {
           "title": "Lunch in a bag of one's own",
-          "body": "Fourth-year pupils at School No. 12 sewed lunch bags from linen remnants supplied by parents. Teacher Celina Borek helped fit them to boxes and wrapped sandwiches. Bags replace loose parcels mixing with exercise books inside satchels. After a week's use, several needed stronger seams and wider openings for easier packing.",
-          "byline": "Anna Wrona - Trade"
+          "body": "Fourth-year pupils at School No. 12 sewed lunch bags from linen remnants supplied by parents. Teacher Celia Burke helped fit them to boxes and wrapped sandwiches. Bags replace loose parcels mixing with exercise books inside satchels. After a week's use, several needed stronger seams and wider openings for easier packing.",
+          "byline": "Anna Rook - Trade"
         },
         "market-baskets": {
           "title": "Purchases left at the stall",
-          "body": "Stallholders at the Kolejowa market increasingly keep paid purchases until customers leave, sparing older shoppers a heavy basket between stalls. Maria Kurek holds apples; her neighbour holds potatoes. Names and paid amounts mark the bags. Similar bags still cause collection mistakes. The market caretaker asks customers to check contents before leaving because there is no shared storage service.",
-          "byline": "Anna Wrona - Trade"
+          "body": "Stallholders at the Station Road market increasingly keep paid purchases until customers leave, sparing older shoppers a heavy basket between stalls. Mary Crowe holds apples; her neighbour holds potatoes. Names and paid amounts mark the bags. Similar bags still cause collection mistakes. The market caretaker asks customers to check contents before leaving because there is no shared storage service.",
+          "byline": "Anna Rook - Trade"
         },
         "tea-service": {
           "title": "Cups that do not match",
-          "body": "Residents donated seventeen cups and saucers to the Północ clubroom at Lipowa 6. Patterns do not match, but the set serves tea at senior meetings. Previously guests brought mugs or waited for shared ones to be washed. Caretaker Celina Lis accepted only uncracked, unchipped crockery. The cups stand in a locked cupboard beside the kettle. Guests wash their own, and the last pair on duty checks the set is back on its shelf.",
-          "byline": "Anna Wrona - Trade"
+          "body": "Residents donated seventeen cups and saucers to the Northgate clubroom at 6 Linden Road. Patterns do not match, but the set serves tea at senior meetings. Previously guests brought mugs or waited for shared ones to be washed. Caretaker Celia Fox accepted only uncracked, unchipped crockery. The cups stand in a locked cupboard beside the kettle. Guests wash their own, and the last pair on duty checks the set is back on its shelf.",
+          "byline": "Anna Rook - Trade"
         },
         "potato-varieties": {
           "title": "A potato has a name",
-          "body": "Zacisze allotment holders on Ogrodowa compared potatoes from three Brzeziny growers, cooked separately and served plain. Some broke apart easily; others held their shape when sliced. The meeting prepared a shared bulk order. Families chose different varieties for dumplings, soups and salads. The allotment caretaker is collecting orders and will arrange delivery with the growers.",
-          "byline": "Anna Wrona - Trade"
+          "body": "Haven allotment holders on Orchard Street compared potatoes from three Birchwood growers, cooked separately and served plain. Some broke apart easily; others held their shape when sliced. The meeting prepared a shared bulk order. Families chose different varieties for dumplings, soups and salads. The allotment caretaker is collecting orders and will arrange delivery with the growers.",
+          "byline": "Anna Rook - Trade"
         },
         "tram-terminus": {
           "title": "A few minutes at the loop",
-          "body": "Drivers on tram route 4 have a few minutes at the Północ terminus before returning to the centre. Passengers buy kiosk tickets and take seats. Kiosk seller Helena Lis keeps newspapers for bus drivers bringing people from the outskirts. Late arrivals may leave no time to collect them. The rush peaks before morning shifts; after nine, the benches mainly hold pensioners travelling to Kolejowa shops.",
-          "byline": "Ewa Lis - City and region"
+          "body": "Drivers on tram route 4 have a few minutes at the Northgate terminus before returning to the centre. Passengers buy kiosk tickets and take seats. Kiosk seller Helena Fox keeps newspapers for bus drivers bringing people from the outskirts. Late arrivals may leave no time to collect them. The rush peaks before morning shifts; after nine, the benches mainly hold pensioners travelling to Station Road shops.",
+          "byline": "Eve Fox - City and region"
         },
         "luggage-label": {
           "title": "A suitcase with a ticket",
-          "body": "The luggage office at the Kolejowa station mainly serves visitors attending to business in town. They leave cases, sacks and parcels rather than carry them between offices. Henryk Socha numbers each package and gives its owner a matching receipt. Evenings peak before suburban trains. Last-minute collections can mean several precious minutes waiting in the queue.",
-          "byline": "Ewa Lis - City and region"
+          "body": "The luggage office at the Station Road station mainly serves visitors attending to business in town. They leave cases, sacks and parcels rather than carry them between offices. Henry Plowright numbers each package and gives its owner a matching receipt. Evenings peak before suburban trains. Last-minute collections can mean several precious minutes waiting in the queue.",
+          "byline": "Eve Fox - City and region"
         },
         "railway-porter": {
           "title": "The trolley knows the steps",
-          "body": "Henryk Socha has moved luggage at the Kolejowa station for twenty years. He knows a step-free platform route, though it is longer than the ordinary passage. Heavy trunks go on the trolley before bags. He asks owners to count packages and identify their carriage before setting off. Families and people bringing market goods need most help. He cannot always return to the hall before the next train arrives.",
-          "byline": "Ewa Lis - City and region"
+          "body": "Henry Plowright has moved luggage at the Station Road station for twenty years. He knows a step-free platform route, though it is longer than the ordinary passage. Heavy trunks go on the trolley before bags. He asks owners to count packages and identify their carriage before setting off. Families and people bringing market goods need most help. He cannot always return to the hall before the next train arrives.",
+          "byline": "Eve Fox - City and region"
         },
         "bus-ticket-book": {
           "title": "A ticket through the hatch",
-          "body": "At the suburban bus ticket office beside Kolejowa station, Maria Lesiak asks about return times too. Brzeziny passengers may want the post office stop or farms beyond the mill. Older residents use names absent from printed timetables. She keeps a list behind the glass. The longest conversations involve visitors seeking relatives from old addresses.",
-          "byline": "Ewa Lis - City and region"
+          "body": "At the suburban bus ticket office beside Station Road station, Mary Lester asks about return times too. Birchwood passengers may want the post office stop or farms beyond the mill. Older residents use names absent from printed timetables. She keeps a list behind the glass. The longest conversations involve visitors seeking relatives from old addresses.",
+          "byline": "Eve Fox - City and region"
         },
         "route-map": {
           "title": "A map for visitors",
-          "body": "Pupils at School No. 7 on Kolejowa drew a route from the station before a meeting for families commuting from outside the city. It marks two crossings and the courtyard entrance hidden from the main street. The caretaker checked it with a first-time visitor, prompting the addition of the gate number. Copies accompanied invitations so guests would not search for the office in the neighbouring building.",
-          "byline": "Ewa Lis - City and region"
+          "body": "Pupils at School No. 7 on Station Road drew a route from the station before a meeting for families commuting from outside the city. It marks two crossings and the courtyard entrance hidden from the main street. The caretaker checked it with a first-time visitor, prompting the addition of the gate number. Copies accompanied invitations so guests would not search for the office in the neighbouring building.",
+          "byline": "Eve Fox - City and region"
         },
         "commuter-survey": {
           "title": "Connections in a notebook",
-          "body": "Brzeziny rail passengers wrote about connecting to route 4 at Kolejowa station. The timetable allows four minutes; walking from the far platform takes at least six, particularly with shopping or prams. We forwarded their letter to the transport company, which has promised to time the morning walk. Until schedules are coordinated, passengers must allow for waiting for the next tram.",
-          "byline": "Ewa Lis - City and region"
+          "body": "Birchwood rail passengers wrote about connecting to route 4 at Station Road station. The timetable allows four minutes; walking from the far platform takes at least six, particularly with shopping or prams. We forwarded their letter to the transport company, which has promised to time the morning walk. Until schedules are coordinated, passengers must allow for waiting for the next tram.",
+          "byline": "Eve Fox - City and region"
         },
         "bicycle-rack": {
           "title": "Space beside the gate",
-          "body": "The railway workshops on Kolejowa moved their cycle rack nearer the porter's lodge after employees reported bicycles blocking the store entrance. The new position has a canopy but no extra capacity. Morning arrivals still exceed spaces. The works council is counting cycle commuters before ordering another rack. Meanwhile management has allocated part of the courtyard fence.",
-          "byline": "Ewa Lis - City and region"
+          "body": "The railway workshops on Station Road moved their cycle rack nearer the porter's lodge after employees reported bicycles blocking the store entrance. The new position has a canopy but no extra capacity. Morning arrivals still exceed spaces. The works council is counting cycle commuters before ordering another rack. Meanwhile management has allocated part of the courtyard fence.",
+          "byline": "Eve Fox - City and region"
         },
         "station-signs": {
           "title": "The arrow's other side",
-          "body": "At Kolejowa station, the waiting-room sign has been moved so people leaving the tunnel can read it. Previously they saw its back and went to the ticket desks for directions. Reader Edward Mól confirmed the change after reporting the problem. The stationmaster will inspect other signs, including the route to left luggage partly hidden by a kiosk.",
-          "byline": "Ewa Lis - City and region"
+          "body": "At Station Road station, the waiting-room sign has been moved so people leaving the tunnel can read it. Previously they saw its back and went to the ticket desks for directions. Reader Edward Page confirmed the change after reporting the problem. The stationmaster will inspect other signs, including the route to left luggage partly hidden by a kiosk.",
+          "byline": "Eve Fox - City and region"
         },
         "walking-club": {
           "title": "A route measured in steps",
-          "body": "The Szkolna walking club checked its family route from the Północ terminus to the Brzeziny bus stop. Leader Stefan Duda found a missing fork near the mill where walkers could head towards fields. The revised account gives landmarks and approximate times at a gentle pace. Members also timed the return to the bus. Copies are available from the Szkolna cultural centre office.",
-          "byline": "Ewa Lis - City and region"
+          "body": "The Alder Street walking club checked its family route from the Northgate terminus to the Birchwood bus stop. Leader Stephen Piper found a missing fork near the mill where walkers could head towards fields. The revised account gives landmarks and approximate times at a gentle pace. Members also timed the return to the bus. Copies are available from the Alder Street cultural centre office.",
+          "byline": "Eve Fox - City and region"
         },
         "tram-model": {
           "title": "A tram on a school table",
-          "body": "Railway technical-school pupils on Kolejowa built a tram model for their classroom, measuring a vehicle at the Północ terminus with staff permission. Its removable roof shows seats, doors and cab. Without a motor, it serves construction lessons. Teacher Piotr Jurek also plans to use it at open days. The builders supplied drawings so a later class can add a trailer car.",
-          "byline": "Ewa Lis - City and region"
+          "body": "Railway technical-school pupils on Station Road built a tram model for their classroom, measuring a vehicle at the Northgate terminus with staff permission. Its removable roof shows seats, doors and cab. Without a motor, it serves construction lessons. Teacher Peter Judd also plans to use it at open days. The builders supplied drawings so a later class can add a trailer car.",
+          "byline": "Eve Fox - City and region"
         },
         "cloakroom-tokens": {
           "title": "A token in the pocket",
-          "body": "Maria Bury has run the Świt cinema cloakroom for years. Workers from several workplaces often arrive together for evening screenings. Coats hang by token number, hats above the matching hook. Lost tokens take longest: owners must describe their coat and wait for others to collect theirs. She asks viewers not to put tokens in the coat they are handing over, a mistake even regulars make.",
-          "byline": "Ewa Lis - City desk"
+          "body": "Mary Grey has run the Daybreak cinema cloakroom for years. Workers from several workplaces often arrive together for evening screenings. Coats hang by token number, hats above the matching hook. Lost tokens take longest: owners must describe their coat and wait for others to collect theirs. She asks viewers not to put tokens in the coat they are handing over, a mistake even regulars make.",
+          "byline": "Eve Fox - City desk"
         },
         "letter-carrier": {
           "title": "An address known for years",
-          "body": "Postman Roman Lis serves shared flats on Kolejowa where letterboxes may name only the principal tenant. Mail to others returns to the office if recipients cannot be identified. He asks residents to add names, including at rear entrances. Personal familiarity cannot help a substitute carrier, who has the same envelope address but lacks years of neighbourhood knowledge.",
-          "byline": "Ewa Lis - City desk"
+          "body": "Postman Raymond Fox serves shared flats on Station Road where letterboxes may name only the principal tenant. Mail to others returns to the office if recipients cannot be identified. He asks residents to add names, including at rear entrances. Personal familiarity cannot help a substitute carrier, who has the same envelope address but lacks years of neighbourhood knowledge.",
+          "byline": "Eve Fox - City desk"
         },
         "barber-mirror": {
           "title": "Conversation at the mirror",
-          "body": "Paweł Jura's barber shop at Kolejowa 24 is busiest before a free Sunday. Workshop employees arrive after shifts and read the paper while waiting. Working alone, he offers no exact appointment times. Children usually come during quieter mornings. Regulars are asked what to change from their previous haircut. Football conversation pauses during shaving, when the customer must sit still.",
-          "byline": "Ewa Lis - City desk"
+          "body": "Paul Howard's barber shop at 24 Station Road is busiest before a free Sunday. Workshop employees arrive after shifts and read the paper while waiting. Working alone, he offers no exact appointment times. Children usually come during quieter mornings. Regulars are asked what to change from their previous haircut. Football conversation pauses during shaving, when the customer must sit still.",
+          "byline": "Eve Fox - City desk"
         },
         "porter-ledger": {
           "title": "A message with the porter",
-          "body": "Józef Leśniak, porter at the Szkolna cultural centre, takes messages for instructors and participants. Few have home telephones, so changed rehearsal times mean notes or visits. He records surnames and groups: three music pupils are named Anna. Messages are not entrusted to passing visitors. Regulars check the notebook by the entrance before heading to their rooms.",
-          "byline": "Ewa Lis - City desk"
+          "body": "Joseph Forster, porter at the Alder Street cultural centre, takes messages for instructors and participants. Few have home telephones, so changed rehearsal times mean notes or visits. He records surnames and groups: three music pupils are named Anna. Messages are not entrusted to passing visitors. Regulars check the notebook by the entrance before heading to their rooms.",
+          "byline": "Eve Fox - City desk"
         },
         "lost-glasses": {
           "title": "The spectacles return",
-          "body": "Retired joiner Wacław Duda collected spectacles left at Branch No. 6 on Kolejowa after a neighbour recognised the case description. Librarian Janina Wolska requested another detail; he identified a patch sewn inside. Two pairs of gloves and an umbrella remain at the desk. Staff ask claimants for their visit date to help match belongings.",
-          "byline": "Ewa Lis - City desk"
+          "body": "Retired joiner Wilfred Piper collected spectacles left at Branch No. 6 on Station Road after a neighbour recognised the case description. Librarian Jean Wells requested another detail; he identified a patch sewn inside. Two pairs of gloves and an umbrella remain at the desk. Staff ask claimants for their visit date to help match belongings.",
+          "byline": "Eve Fox - City desk"
         },
         "queue-seats": {
           "title": "Chairs beside the counter",
-          "body": "After a reader's letter, the household repair shop at Ogrodowa 14 rearranged its waiting area. Chairs opposite the counter left too little room to collect large appliances. Some now stand along a side wall, with a low table for packages. The same number of seats remains, with clear access to the back room. Customers carrying sewing machines no longer squeeze between waiting people's knees.",
-          "byline": "Ewa Lis - City desk"
+          "body": "After a reader's letter, the household repair shop at 14 Orchard Street rearranged its waiting area. Chairs opposite the counter left too little room to collect large appliances. Some now stand along a side wall, with a low table for packages. The same number of seats remains, with clear access to the back room. Customers carrying sewing machines no longer squeeze between waiting people's knees.",
+          "byline": "Eve Fox - City desk"
         },
         "family-photo-names": {
           "title": "Who is beside the aunt",
-          "body": "Seniors at Północ clubroom, Lipowa 6, identified photographs from railway-workshop excursions. Celina Rak brought her father's photographs. Participants named several employees and recognised a former works coach, but not one riverside stop. A copy is displayed seeking help. The original went back to the family with names and comments on separate cards.",
-          "byline": "Ewa Lis - City desk"
+          "body": "Seniors at Northgate clubroom, 6 Linden Road, identified photographs from railway-workshop excursions. Celia Rake brought her father's photographs. Participants named several employees and recognised a former works coach, but not one riverside stop. A copy is displayed seeking help. The original went back to the family with names and comments on separate cards.",
+          "byline": "Eve Fox - City desk"
         },
         "returning-umbrella": {
           "title": "An umbrella returns",
-          "body": "An umbrella taken by mistake after an evening screening returned to the Świt cloakroom. Joiner Wacław Duda noticed at home that its handle lacked his repair. The attendant found his own umbrella among unclaimed items. Both viewers recovered theirs after descriptions were checked. The manager asks guests to check umbrellas with coats under one token rather than leave them unmarked by the auditorium door.",
-          "byline": "Ewa Lis - City desk"
+          "body": "An umbrella taken by mistake after an evening screening returned to the Daybreak cloakroom. Joiner Wilfred Piper noticed at home that its handle lacked his repair. The attendant found his own umbrella among unclaimed items. Both viewers recovered theirs after descriptions were checked. The manager asks guests to check umbrellas with coats under one token rather than leave them unmarked by the auditorium door.",
+          "byline": "Eve Fox - City desk"
         },
         "market-bench": {
           "title": "A bench moved one pace",
-          "body": "The bench at Kolejowa market's exit was moved against a pavilion wall after older shoppers reported passing barrows made resting and arranging bags difficult. The caretaker agreed the position with traders, keeping stalls accessible. The canopy now shelters users from rain. Reader Jadwiga Mól also requested a bench by the bus stop. Market management is seeking a position clear of deliveries.",
-          "byline": "Ewa Lis - City desk"
+          "body": "The bench at Station Road market's exit was moved against a pavilion wall after older shoppers reported passing barrows made resting and arranging bags difficult. The caretaker agreed the position with traders, keeping stalls accessible. The canopy now shelters users from rain. Reader Edith Page also requested a bench by the bus stop. Market management is seeking a position clear of deliveries.",
+          "byline": "Eve Fox - City desk"
         },
         "address-correction": {
           "title": "Two entrances, one letter",
-          "body": "Wanda Lis's letters at Stolarska 8 went to the front building rather than the rear: both had a Flat 4 and envelopes lacked an entrance designation. After her complaint, the administration marked the front A and rear B. She notified correspondents of her full address. The postman confirms that new door signs alone would not correct mail sent using the old details.",
-          "byline": "Ewa Lis - City desk"
+          "body": "Winifred Fox's letters at 8 Cooper Street went to the front building rather than the rear: both had a Flat 4 and envelopes lacked an entrance designation. After her complaint, the administration marked the front A and rear B. She notified correspondents of her full address. The postman confirms that new door signs alone would not correct mail sent using the old details.",
+          "byline": "Eve Fox - City desk"
         },
         "chalk-board": {
           "title": "The board before class",
-          "body": "At School No. 12 on Szkolna, Jadwiga Sikora leaves a model date and heading on the board for first-year pupils. Some copy slowly, so the next task is not immediately written over it. Desks differ in height and the smallest children sit nearer the board. Rushing the copying, she explains, makes it harder to tell later whether a child understood the instruction.",
-          "byline": "Marek Boruta - Education"
+          "body": "At School No. 12 on Alder Street, Edith Finch leaves a model date and heading on the board for first-year pupils. Some copy slowly, so the next task is not immediately written over it. Desks differ in height and the smallest children sit nearer the board. Rushing the copying, she explains, makes it harder to tell later whether a child understood the instruction.",
+          "byline": "Mark Barrett - Education"
         },
         "exercise-book": {
           "title": "A margin for revision",
-          "body": "Maria Bielecka of School No. 12 asks older pupils to submit rough drafts with essays. A finished sentence does not reveal how often it changed. Pupils explain cuts and changes in sequence. Some dislike showing crossings-out. She does not grade the draft's appearance: she wants evidence of independent work, which can disappear when a family member copies everything neatly.",
-          "byline": "Marek Boruta - Education"
+          "body": "Mary Beckett of School No. 12 asks older pupils to submit rough drafts with essays. A finished sentence does not reveal how often it changed. Pupils explain cuts and changes in sequence. Some dislike showing crossings-out. She does not grade the draft's appearance: she wants evidence of independent work, which can disappear when a family member copies everything neatly.",
+          "byline": "Mark Barrett - Education"
         },
         "school-map": {
           "title": "The map returns to its tube",
-          "body": "One regional map serves four classes at School No. 7 on Kolejowa. Zofia Rataj carries it between rooms because only the geography classroom has a permanent mount. Repeated rolling wears its edges and small symbols are hard to see from the back. Pupils use hand-copied sections for exercises. A replacement is ordered but still awaited; the old map remains in use for lessons on local transport and livelihoods.",
-          "byline": "Marek Boruta - Education"
+          "body": "One regional map serves four classes at School No. 7 on Station Road. Sophia Plowman carries it between rooms because only the geography classroom has a permanent mount. Repeated rolling wears its edges and small symbols are hard to see from the back. Pupils use hand-copied sections for exercises. A replacement is ordered but still awaited; the old map remains in use for lessons on local transport and livelihoods.",
+          "byline": "Mark Barrett - Education"
         },
         "evening-students": {
           "title": "A notebook after work",
-          "body": "The evening technical school on Kolejowa teaches workshop, warehouse and suburban factory employees. Some arrive directly from shifts. Mathematics teacher Adam Ruta holds weekly catch-up sessions, but one time cannot suit everyone. The last bus to Brzeziny leaves before consultations finish, so commuters compare solutions with classmates at the following lesson.",
-          "byline": "Marek Boruta - Education"
+          "body": "The evening technical school on Station Road teaches workshop, warehouse and suburban factory employees. Some arrive directly from shifts. Mathematics teacher Adam Routledge holds weekly catch-up sessions, but one time cannot suit everyone. The last bus to Birchwood leaves before consultations finish, so commuters compare solutions with classmates at the following lesson.",
+          "byline": "Mark Barrett - Education"
         },
         "spelling-contest": {
           "title": "A dictation explained",
-          "body": "Seventh-year pupil Joanna Mazur won School No. 12's spelling contest without an error among 28 entrants. The next two each made one mistake. Language teacher Maria Bielecka discussed difficult words in a follow-up session. The parents' committee donated a dictionary as the prize. A city contest entry is planned once a date can be coordinated for commuting pupils.",
-          "byline": "Marek Boruta - Education"
+          "body": "Seventh-year pupil Joan Mason won School No. 12's spelling contest without an error among 28 entrants. The next two each made one mistake. Language teacher Mary Beckett discussed difficult words in a follow-up session. The parents' committee donated a dictionary as the prize. A city contest entry is planned once a date can be coordinated for commuting pupils.",
+          "byline": "Mark Barrett - Education"
         },
         "school-garden-plan": {
           "title": "A garden on paper",
-          "body": "Sixth-year pupils at School No. 7 on Kolejowa measured the garden behind the gym for class plots. One group counted a path in both adjoining beds, leaving the combined plan short of space at the fence. Zofia Rataj remeasured that section with them. The corrected layout provides six equal beds and a shared tool strip. Younger classes will work there with older helpers.",
-          "byline": "Marek Boruta - Education"
+          "body": "Sixth-year pupils at School No. 7 on Station Road measured the garden behind the gym for class plots. One group counted a path in both adjoining beds, leaving the combined plan short of space at the fence. Sophia Plowman remeasured that section with them. The corrected layout provides six equal beds and a shared tool strip. Younger classes will work there with older helpers.",
+          "byline": "Mark Barrett - Education"
         },
         "reading-pairs": {
           "title": "Older pupils read aloud",
           "body": "School No. 12's library reviewed a month pairing first- and seventh-year readers. Twelve older children met younger pupils waiting after lessons for parents. The librarian selected books and pairs chose passages. Animal stories proved most popular. Older pupils are now preparing simpler texts for children keen to read alone but struggling with densely printed pages.",
-          "byline": "Marek Boruta - Education"
+          "byline": "Mark Barrett - Education"
         },
         "geometry-models": {
           "title": "A solid from a flat sheet",
-          "body": "Fifth-year pupils at School No. 7 on Kolejowa made cubes and pyramids from packaging card supplied by parents working in shops. Adam Ruta requested one opening face so interiors remain visible. Some models fitted badly because gluing tabs had been subtracted from face dimensions. Corrected patterns produced a set for the parallel classes as well.",
-          "byline": "Marek Boruta - Education"
+          "body": "Fifth-year pupils at School No. 7 on Station Road made cubes and pyramids from packaging card supplied by parents working in shops. Adam Routledge requested one opening face so interiors remain visible. Some models fitted badly because gluing tabs had been subtracted from face dimensions. Corrected patterns produced a set for the parallel classes as well.",
+          "byline": "Mark Barrett - Education"
         },
         "school-newspaper": {
           "title": "School clubs in print",
           "body": "School No. 12 produced a four-page paper on after-school activities. Seventh-year pupils interviewed the table-tennis coach, librarian and caretaker who oversees rooms after lessons. The office typed the text and duplicated thirty copies. A sports report was shortened to include every club's meeting times. Copies are in the school library. The next issue will cover parents' occupations.",
-          "byline": "Marek Boruta - Education"
+          "byline": "Mark Barrett - Education"
         },
         "workshop-aprons": {
           "title": "An apron with its own pocket",
-          "body": "School No. 12's sixth-year class sewed aprons for practical work. Celina Borek supplied three pattern sizes; pupils adjusted lengths and pockets. The parents' committee bought fabric with fair proceeds. Aprons will protect clothes during painting and gluing and remain on named classroom hooks. Sewing exceeded the planned lessons because two machines meant considerable waiting.",
-          "byline": "Marek Boruta - Education"
+          "body": "School No. 12's sixth-year class sewed aprons for practical work. Celia Burke supplied three pattern sizes; pupils adjusted lengths and pockets. The parents' committee bought fabric with fair proceeds. Aprons will protect clothes during painting and gluing and remain on named classroom hooks. Sewing exceeded the planned lessons because two machines meant considerable waiting.",
+          "byline": "Mark Barrett - Education"
         },
         "weather-notebook": {
           "title": "Weather from this courtyard",
-          "body": "Retired teacher Józef Maj of Ogrodowa has recorded weather for fifteen years. A courtyard-facing thermometer is read at fixed morning and evening times, alongside rain and cloud notes. Neighbours consult him when memories of past winters differ. He shows the notebooks but points out that a courtyard is no weather station. They record conditions at one consistent location.",
+          "body": "Retired teacher Joseph May of Orchard Street has recorded weather for fifteen years. A courtyard-facing thermometer is read at fixed morning and evening times, alongside rain and cloud notes. Neighbours consult him when memories of past winters differ. He shows the notebooks but points out that a courtyard is no weather station. They record conditions at one consistent location.",
           "byline": "Science desk"
         },
         "shadow-dial": {
           "title": "A shadow changes place",
-          "body": "School No. 7's nature club on Kolejowa measures a fixed garden post's shadow at noon, recording length and direction. Zofia Rataj compares results across months. The post remains between lessons so later classes can repeat measurements. Overcast days leave blank entries rather than reusing the last sunny reading.",
+          "body": "School No. 7's nature club on Station Road measures a fixed garden post's shadow at noon, recording length and direction. Sophia Plowman compares results across months. The post remains between lessons so later classes can repeat measurements. Overcast days leave blank entries rather than reusing the last sunny reading.",
           "byline": "Science desk"
         },
         "leaf-collection": {
           "title": "A leaf and its finding place",
-          "body": "School No. 7 on Kolejowa builds its leaf collection from Lipowa park and Brzeziny visits. Zofia Rataj asks pupils to record where each leaf was found and describe its tree. Similar leaves can mislead beginners, so pupils add fruit and bark drawings when available. Older cards are repaired rather than discarded, allowing classes to compare the same trees at different seasons.",
+          "body": "School No. 7 on Station Road builds its leaf collection from Linden Road park and Birchwood visits. Sophia Plowman asks pupils to record where each leaf was found and describe its tree. Similar leaves can mislead beginners, so pupils add fruit and bark drawings when available. Older cards are repaired rather than discarded, allowing classes to compare the same trees at different seasons.",
           "byline": "Science desk"
         },
         "magnifier-table": {
           "title": "An ordinary thread enlarged",
-          "body": "School No. 12's nature room has four magnifiers for a class. Children take turns inspecting threads, feathers and leaves while others prepare drawings. Irena Wolska asks them to describe visible details before consulting the textbook. Their observations include damage absent from ideal illustrations. Most samples come from homes and walks to school, needing no purchases.",
+          "body": "School No. 12's nature room has four magnifiers for a class. Children take turns inspecting threads, feathers and leaves while others prepare drawings. Irene Wells asks them to describe visible details before consulting the textbook. Their observations include damage absent from ideal illustrations. Most samples come from homes and walks to school, needing no purchases.",
           "byline": "Science desk"
         },
         "star-chart": {
           "title": "The sky on a school chart",
-          "body": "The Szkolna cultural centre's astronomy circle observed from School No. 12's courtyard. Kazimierz Orzeł began with the Plough and north. Some participants were comparing a chart with the real sky for the first time. Window lighting obscured faint stars, so the telescope remained indoors. The club plans a clear-night trip beyond Brzeziny for a less obstructed view.",
+          "body": "The Alder Street cultural centre's astronomy circle observed from School No. 12's courtyard. Clarence Eagle began with the Plough and north. Some participants were comparing a chart with the real sky for the first time. Window lighting obscured faint stars, so the telescope remained indoors. The club plans a clear-night trip beyond Birchwood for a less obstructed view.",
           "byline": "Science desk"
         },
         "water-level": {
           "title": "The same level",
-          "body": "Sixth-year pupils at School No. 12 filled connected vessels of different shapes and watched water settle at equal heights. Visiting joiner Wacław Duda demonstrated the same principle with a transparent hose used for levelling. Pupils checked two distant wall points. The demonstration precedes practical lessons planning new classroom shelves.",
+          "body": "Sixth-year pupils at School No. 12 filled connected vessels of different shapes and watched water settle at equal heights. Visiting joiner Wilfred Piper demonstrated the same principle with a transparent hose used for levelling. Pupils checked two distant wall points. The demonstration precedes practical lessons planning new classroom shelves.",
           "byline": "Science desk"
         },
         "seed-observation": {
           "title": "A sprout in two notebooks",
-          "body": "Classes 5A and 5B at School No. 12 compared beans grown in nature lessons. They used the same seed supply, but 5B began three days later. Comparing measurements revealed that plants recorded on the same date were different ages. Teacher Irena Wolska helped count days from sowing. The corrected comparison showed smaller growth differences. Both classes will now also record temperatures beside their windowsills.",
+          "body": "Classes 5A and 5B at School No. 12 compared beans grown in nature lessons. They used the same seed supply, but 5B began three days later. Comparing measurements revealed that plants recorded on the same date were different ages. Teacher Irene Wells helped count days from sowing. The corrected comparison showed smaller growth differences. Both classes will now also record temperatures beside their windowsills.",
           "byline": "Science desk"
         },
         "sound-string": {
           "title": "Pitch and length",
-          "body": "Sixth-year pupils at School No. 12 built a device with a taut string and movable support. Shortening its vibrating length raised the pitch. Railway musician Marian Nowak brought a guitar to compare the support with pressing a string at a fret. Not everyone heard the change immediately, so trials were repeated individually: several strings played together had made comparison difficult.",
+          "body": "Sixth-year pupils at School No. 12 built a device with a taut string and movable support. Shortening its vibrating length raised the pitch. Railway musician Maurice Newman brought a guitar to compare the support with pressing a string at a fret. Not everyone heard the change immediately, so trials were repeated individually: several strings played together had made comparison difficult.",
           "byline": "Science desk"
         },
         "soil-jars": {
           "title": "Soil from several places",
-          "body": "Pupils at School No. 7 on Kolejowa brought soil from the school garden and a field near Brzeziny. Mixed with water in jars, particles settled into layers of different thickness and colour. Zofia Rataj noted that collection depths differed, complicating comparison. The next samples will follow one method. Existing jars remain labelled to avoid confusion during later lessons.",
+          "body": "Pupils at School No. 7 on Station Road brought soil from the school garden and a field near Birchwood. Mixed with water in jars, particles settled into layers of different thickness and colour. Sophia Plowman noted that collection depths differed, complicating comparison. The next samples will follow one method. Existing jars remain labelled to avoid confusion during later lessons.",
           "byline": "Science desk"
         },
         "bridge-paper": {
@@ -3048,52 +3048,52 @@ export const translations = {
         },
         "common-key": {
           "title": "A key with a large tag",
-          "body": "Celina Lis keeps the Północ clubroom key at Lipowa 6. Leaders collect it before sessions and return it after locking up. After her departure it goes into a marked box at the administration's porter's desk. Previously it was left with neighbours, forcing the next group to find the right flat. A large wooden tag distinguishes it from home keys. Collection also includes checking the games-cupboard key has returned.",
+          "body": "Celia Fox keeps the Northgate clubroom key at 6 Linden Road. Leaders collect it before sessions and return it after locking up. After her departure it goes into a marked box at the administration's porter's desk. Previously it was left with neighbours, forcing the next group to find the right flat. A large wooden tag distinguishes it from home keys. Collection also includes checking the games-cupboard key has returned.",
           "byline": "City desk"
         },
         "allotment-path": {
           "title": "A path between fences",
-          "body": "Plot numbers at Zacisze allotments on Ogrodowa do not run in order from the main gate. Extensions retained older numbering. Caretaker Jan Ryś keeps a plan for visitors and suppliers, especially those bringing plants or hut materials. Plot holders still give directions by the large pear tree and well. Both landmarks appear on the map so newcomers can follow those instructions.",
+          "body": "Plot numbers at Haven allotments on Orchard Street do not run in order from the main gate. Extensions retained older numbering. Caretaker John Lynne keeps a plan for visitors and suppliers, especially those bringing plants or hut materials. Plot holders still give directions by the large pear tree and well. Both landmarks appear on the map so newcomers can follow those instructions.",
           "byline": "City desk"
         },
         "neighbour-tools": {
           "title": "A drill in the ledger",
-          "body": "Families at Lipowa 12 on Północ share a drill, saw and long ladder stored in different flats. The caretaker lists owners but does not lend on their behalf. Borrowers agree return dates directly with neighbours, making it clear whom to contact when equipment is needed. Drill bits and other small parts are counted whenever the box changes hands.",
+          "body": "Families at 12 Linden Road on the Northgate estate share a drill, saw and long ladder stored in different flats. The caretaker lists owners but does not lend on their behalf. Borrowers agree return dates directly with neighbours, making it clear whom to contact when equipment is needed. Drill bits and other small parts are counted whenever the box changes hands.",
           "byline": "City desk"
         },
         "noticeboard-space": {
           "title": "A notice has a date",
-          "body": "Celina Lis reviews the noticeboard at Północ clubroom, Lipowa 6, after weekly cleaning. Past invitations and withdrawn offers come down; undated notices need confirmation after a month. Residents chiefly seek services, children's clothing exchanges and lost belongings. Removed slips stay briefly in an envelope for anyone returning to copy an address.",
+          "body": "Celia Fox reviews the noticeboard at Northgate clubroom, 6 Linden Road, after weekly cleaning. Past invitations and withdrawn offers come down; undated notices need confirmation after a month. Residents chiefly seek services, children's clothing exchanges and lost belongings. Removed slips stay briefly in an envelope for anyone returning to copy an address.",
           "byline": "City desk"
         },
         "laundry-roster": {
           "title": "A free laundry slot",
-          "body": "Tenants at Lipowa 12 on Północ changed shared-laundry bookings to include start and finish times, reporting cancellations to the caretaker. Unrecorded key handovers had made vacant periods appear occupied. Wanda Mól used the first released slot after waiting several days. Opening hours are unchanged; clearer records make better use of hours tenants already fund.",
+          "body": "Tenants at 12 Linden Road on the Northgate estate changed shared-laundry bookings to include start and finish times, reporting cancellations to the caretaker. Unrecorded key handovers had made vacant periods appear occupied. Winifred Page used the first released slot after waiting several days. Opening hours are unchanged; clearer records make better use of hours tenants already fund.",
           "byline": "City desk"
         },
         "club-bookcase": {
           "title": "Shelves for the clubroom",
-          "body": "The Bielskis of Kolejowa donated shelves to Północ clubroom, Lipowa 6, after reducing their book collection. Two neighbours transported them after work. Adjustable shelves now fit games and art albums, with lower sections reserved for children. Previously boxes stood on the floor and had to be removed for every cleaning. The unit was fixed to the wall before use.",
+          "body": "The Blakes of Station Road donated shelves to Northgate clubroom, 6 Linden Road, after reducing their book collection. Two neighbours transported them after work. Adjustable shelves now fit games and art albums, with lower sections reserved for children. Previously boxes stood on the floor and had to be removed for every cleaning. The unit was fixed to the wall before use.",
           "byline": "City desk"
         },
         "bench-painting": {
           "title": "The bench's restored back",
-          "body": "Residents of Kolejowa 14 restored the bench between gate and rear building. Joiner Wacław Duda replaced two seat boards; neighbours cleaned and painted the rest using borrowed tools and paint bought from a collection. Older residents mainly use it while waiting for relatives or neighbours returning with shopping. The caretaker kept the rear workshop access clear. The bench returned to its former wall.",
+          "body": "Residents of 14 Station Road restored the bench between gate and rear building. Joiner Wilfred Piper replaced two seat boards; neighbours cleaned and painted the rest using borrowed tools and paint bought from a collection. Older residents mainly use it while waiting for relatives or neighbours returning with shopping. The caretaker kept the rear workshop access clear. The bench returned to its former wall.",
           "byline": "City desk"
         },
         "allotment-library": {
           "title": "Gardening books under one key",
-          "body": "Zacisze allotment holders on Ogrodowa pooled nineteen books on fruit growing, vegetables and huts in caretaker Jan Ryś's cupboard. The contributors' names remain inside the donated books. The most requested subject, pruning, lacks a manual; the committee is searching second-hand shops. Books can be borrowed during Saturday duties by the main gate.",
+          "body": "Haven allotment holders on Orchard Street pooled nineteen books on fruit growing, vegetables and huts in caretaker John Lynne's cupboard. The contributors' names remain inside the donated books. The most requested subject, pruning, lacks a manual; the committee is searching second-hand shops. Books can be borrowed during Saturday duties by the main gate.",
           "byline": "City desk"
         },
         "shared-room-hours": {
           "title": "Hours on a single sheet",
-          "body": "Groups using Północ clubroom, Lipowa 6, agreed a fifteen-minute interval between sessions. The art class needs to wash tables before chess players arrive. Back-to-back bookings had caused weekly disputes. Caretaker Celina Lis moved the chess start with members' agreement. Revised schedules appear at the entrance and estate office. Group leaders updated invitations too, since some members come straight from work.",
+          "body": "Groups using Northgate clubroom, 6 Linden Road, agreed a fifteen-minute interval between sessions. The art class needs to wash tables before chess players arrive. Back-to-back bookings had caused weekly disputes. Caretaker Celia Fox moved the chess start with members' agreement. Revised schedules appear at the entrance and estate office. Group leaders updated invitations too, since some members come straight from work.",
           "byline": "City desk"
         },
         "courtyard-chronicle": {
           "title": "A courtyard chronicle",
-          "body": "Residents of Stolarska 8 assembled an album of their workshop courtyard. The Lis and Duda families supplied photographs; a former cobbler identified businesses in the oldest print. Several dates remain uncertain. The caretaker keeps the album, with selected copies at the Kolejowa library. Recent arrivals added current tenants' names so future readers will not need to identify every face again.",
+          "body": "Residents of 8 Cooper Street assembled an album of their workshop courtyard. The Fox and Piper families supplied photographs; a former cobbler identified businesses in the oldest print. Several dates remain uncertain. The caretaker keeps the album, with selected copies at the Station Road library. Recent arrivals added current tenants' names so future readers will not need to identify every face again.",
           "byline": "City desk"
         }
       }
@@ -3136,15 +3136,15 @@ export const translations = {
       referral: 'REFERRAL', certificate: 'CERTIFICATE', report: 'EXAMINATION REPORT', specialist: 'SPECIALIST OPINION', certificateStatement: 'Fitness for the stated work is certified:', medicalOffice: 'CLINIC',
       letter: 'NOTICE', directive: 'CIRCULAR', subject: 'Concerning', reference: 'Case reference',
       recipient: 'To the examining doctor', personal: 'FOR THE ADDRESSEE',
-      institutions: { militia: 'MILITIA COMMAND', lot: 'LOT', zus: 'ZUS', chamber: 'MEDICAL CHAMBER', clinic: 'OCCUPATIONAL HEALTH' },
+      institutions: { militia: 'MILITIA COMMAND', lot: 'NAL', zus: 'SIO', chamber: 'MEDICAL CHAMBER', clinic: 'OCCUPATIONAL HEALTH' },
       departments: { employer: 'PERSONNEL OFFICE', militia: 'PERSONNEL DIVISION', lot: 'FLIGHT PERSONNEL', zus: 'CERTIFICATION OFFICE', chamber: 'SECRETARIAT', clinic: 'CONSULTING ROOM 04' },
       referralInstruction: { initial: 'Referred for initial examination:', periodic: 'Referred for periodic examination:' },
       fields: { identity: 'Referred person', position: 'Position', work: 'Work', hazards: 'Exposures' },
-      seal: { employer: ['PERSONNEL', 'RECORDS'], militia: ['MILITIA', 'STAFF'], lot: ['LOT', 'AIRCREW'], zus: ['ZUS', 'CERTIFICATION'], chamber: ['MEDICAL', 'CHAMBER'], clinic: ['CLINIC', 'DOCTOR'] },
+      seal: { employer: ['PERSONNEL', 'RECORDS'], militia: ['MILITIA', 'STAFF'], lot: ['NAL', 'AIRCREW'], zus: ['SIO', 'CERTIFICATION'], chamber: ['MEDICAL', 'CHAMBER'], clinic: ['CLINIC', 'DOCTOR'] },
     },
     paperwork: {
       date: 'Date', issued: 'Issued', employerSeal: 'Violet personnel-office stamp',
-      clinicSeal: 'Clinic seal', zusSeal: 'Rectangular blue ZUS seal', signed: 'Signed by hand',
+      clinicSeal: 'Clinic seal', zusSeal: 'Rectangular blue SIO seal', signed: 'Signed by hand',
       referral: 'Referral for examination', occupational: 'Occupational medicine', note: 'Medical notes', blank: 'Blank sheet',
       employer: 'Employer', name: 'Full name', birthDate: 'Date of birth', birthShort: 'Born', age: 'Age', sex: 'Sex',
       female: 'F', male: 'M', femaleFull: 'Female', maleFull: 'Male', examination: 'Examination',
@@ -3152,44 +3152,44 @@ export const translations = {
       requirements: 'Profile', requirementCodes: { full: 'WC', vision: 'W', pressure: 'C' }, work: 'Work type', hazards: 'Exposures', weight: 'Weight', height: 'Height', kg: 'kg', cm: 'cm',
       write: 'Add patient history to the notes', read: 'Read the document', open: 'Open the envelope',
       envelope: 'Sealed envelope', letter: 'Letter about a certificate', sender: 'Sender', recipient: 'To the examining doctor',
-      zus: 'ZUS', employerSender: 'Employer', paperclip: 'Paperclip', clipped: 'Paperclip attached', stored: 'In the drawer',
+      zus: 'SIO', employerSender: 'Employer', paperclip: 'Paperclip', clipped: 'Paperclip attached', stored: 'In the drawer',
       unclip: 'Remove the paperclip and separate the documents', writeCertificate: 'Write the patient’s name and job position on the certificate',
       nameMissing: 'Patient name has not been written', nameWritten: 'Patient name written by hand', positionMissing: 'Job position has not been written',
       resultsHeading: 'Examination results', additionalHeading: 'Supplementary information',
       certificatePurpose: 'Fitness for the stated position', decisionHeading: 'Doctor’s decision', reference: 'File no.',
-      missingResultSenders: { militia: 'Militia headquarters', lot: 'LOT office' },
-      stationery: { militia: 'Militia', lot: 'LOT' },
+      missingResultSenders: { militia: 'Militia headquarters', lot: 'NAL office' },
+      stationery: { militia: 'Militia', lot: 'NAL' },
       letters: {
         missingResult: [
-          { subject: 'Concerning enclosures', body: 'The required enclosure was absent on receipt of the certificate. The employee file shall be completed with the additional examination report.', role: 'Personnel manager', signature: 'Witold Krawiec' },
-          { subject: 'Delivery of records', body: 'The employee file is missing an additional examination report. Please supply the report together with the work clearance certificate.', role: 'Personnel officer', signature: 'Irena Brzozowska' },
-          { subject: 'Incomplete employee file', body: 'The cleared employee’s file remains incomplete. The relevant additional examination report must accompany the certificate.', role: 'Work organisation manager', signature: 'Jerzy Łukaszewski' },
-          { subject: 'Objections to the records', body: 'Review of the supplied documents identified a missing enclosure. Please check the complete file and forward the examination report.', role: 'Company representative', signature: 'Barbara Wierzbicka' },
-          { subject: 'Records supplement', body: 'The certificate arrived without the required additional examination report. Please complete the employee’s documentation.', role: 'Senior personnel officer', signature: 'Stefan Płatek' },
-          { subject: 'Record of omissions', body: 'The absent examination report has been entered in the receipt log. Work clearance certificates shall be delivered with the report.', role: 'Administration manager', signature: 'Halina Orłowska' },
+          { subject: 'Concerning enclosures', body: 'The required enclosure was absent on receipt of the certificate. The employee file shall be completed with the additional examination report.', role: 'Personnel manager', signature: 'Walter Taylor' },
+          { subject: 'Delivery of records', body: 'The employee file is missing an additional examination report. Please supply the report together with the work clearance certificate.', role: 'Personnel officer', signature: 'Irene Birchall' },
+          { subject: 'Incomplete employee file', body: 'The cleared employee’s file remains incomplete. The relevant additional examination report must accompany the certificate.', role: 'Work organisation manager', signature: 'George Langley' },
+          { subject: 'Objections to the records', body: 'Review of the supplied documents identified a missing enclosure. Please check the complete file and forward the examination report.', role: 'Company representative', signature: 'Barbara Willow' },
+          { subject: 'Records supplement', body: 'The certificate arrived without the required additional examination report. Please complete the employee’s documentation.', role: 'Senior personnel officer', signature: 'Stephen Bloom' },
+          { subject: 'Record of omissions', body: 'The absent examination report has been entered in the receipt log. Work clearance certificates shall be delivered with the report.', role: 'Administration manager', signature: 'Helen Eagles' },
         ],
         zus: [
-          { subject: 'Review of documentation', body: 'A further review of the certificate has been ordered. The examination records shall be retained in the clinic file until proceedings are complete.', role: 'Senior accounts clerk', signature: 'Maria Jarosz' },
-          { subject: 'Benefit file supplement', body: 'A copy of the clinic certificate was added during the benefit review. Please confirm that the examination records are complete.', role: 'Benefits inspector', signature: 'Roman Głowacki' },
-          { subject: 'Notice of file review', body: 'The proceedings require a fresh compilation of medical records. A certificate copy has joined the file. Please retain the originals.', role: 'Accounts clerk', signature: 'Teresa Biel' },
-          { subject: 'Note concerning the records', body: 'The committee has reviewed the attachments. Verification of the records continues. A separate acknowledgment is not required.', role: 'Committee secretary', signature: 'Henryk Kulesza' },
-          { subject: 'Document schedule', body: 'The file review produced a list of documents requiring clarification. Please quote this reference in any further correspondence.', role: 'Accounts inspector', signature: 'Zofia Rudzka' },
-          { subject: 'Matter referred onward', body: 'The file has been passed to the appropriate office for further review. Please retain a copy of this notice in the clinic records.', role: 'Section head', signature: 'Adam Wilczyński' },
+          { subject: 'Review of documentation', body: 'A further review of the certificate has been ordered. The examination records shall be retained in the clinic file until proceedings are complete.', role: 'Senior accounts clerk', signature: 'Mary Jarvis' },
+          { subject: 'Benefit file supplement', body: 'A copy of the clinic certificate was added during the benefit review. Please confirm that the examination records are complete.', role: 'Benefits inspector', signature: 'Raymond Hawkins' },
+          { subject: 'Notice of file review', body: 'The proceedings require a fresh compilation of medical records. A certificate copy has joined the file. Please retain the originals.', role: 'Accounts clerk', signature: 'Teresa White' },
+          { subject: 'Note concerning the records', body: 'The committee has reviewed the attachments. Verification of the records continues. A separate acknowledgment is not required.', role: 'Committee secretary', signature: 'Henry Kelsey' },
+          { subject: 'Document schedule', body: 'The file review produced a list of documents requiring clarification. Please quote this reference in any further correspondence.', role: 'Accounts inspector', signature: 'Sophia Reed' },
+          { subject: 'Matter referred onward', body: 'The file has been passed to the appropriate office for further review. Please retain a copy of this notice in the clinic records.', role: 'Section head', signature: 'Adam Woolley' },
         ],
         employer: [
-          { subject: 'Procedure initiated', body: 'Proceedings have been opened concerning the gap in staffing. A copy of the certificate and the employee’s examination records shall be retained.', role: 'Personnel manager', signature: 'Witold Krawiec' },
-          { subject: 'Personnel notification', body: 'The matter was referred to personnel after the worker left the rota. Please confirm the date and scope of the examination.', role: 'Personnel clerk', signature: 'Irena Brzozowska' },
-          { subject: 'Extract from the rota', body: 'Unstaffed hours for the referred position have been logged. A referral copy has joined the file. The matter awaits clarification.', role: 'Work planning manager', signature: 'Jerzy Łukaszewski' },
-          { subject: 'Documents referred onward', body: 'Following consultation with personnel, the papers were passed for further review. Please retain all records relating to the certificate.', role: 'Company representative', signature: 'Barbara Wierzbicka' },
-          { subject: 'Personnel findings', body: 'Internal findings on continuity of employment are complete. Please check the employee’s details against the issued certificate.', role: 'Senior personnel officer', signature: 'Stefan Płatek' },
-          { subject: 'Register update', body: 'The matter has been entered in the register. A replacement rota has joined the file. Please quote the case reference in future letters.', role: 'Administration manager', signature: 'Halina Orłowska' },
+          { subject: 'Procedure initiated', body: 'Proceedings have been opened concerning the gap in staffing. A copy of the certificate and the employee’s examination records shall be retained.', role: 'Personnel manager', signature: 'Walter Taylor' },
+          { subject: 'Personnel notification', body: 'The matter was referred to personnel after the worker left the rota. Please confirm the date and scope of the examination.', role: 'Personnel clerk', signature: 'Irene Birchall' },
+          { subject: 'Extract from the rota', body: 'Unstaffed hours for the referred position have been logged. A referral copy has joined the file. The matter awaits clarification.', role: 'Work planning manager', signature: 'George Langley' },
+          { subject: 'Documents referred onward', body: 'Following consultation with personnel, the papers were passed for further review. Please retain all records relating to the certificate.', role: 'Company representative', signature: 'Barbara Willow' },
+          { subject: 'Personnel findings', body: 'Internal findings on continuity of employment are complete. Please check the employee’s details against the issued certificate.', role: 'Senior personnel officer', signature: 'Stephen Bloom' },
+          { subject: 'Register update', body: 'The matter has been entered in the register. A replacement rota has joined the file. Please quote the case reference in future letters.', role: 'Administration manager', signature: 'Helen Eagles' },
         ],
       },
     },
     patientReferrals: [
-      { employer: 'Brzask Works Archives', work: 'office work, filing', hazards: 'paper dust, sitting' },
-      { employer: 'Ogniwo Engineering Works', work: 'overhead crane, shop floor', hazards: 'noise, working at height' },
-      { employer: 'Szlak Staff Transport', work: 'passenger transport, shifts', hazards: 'traffic, prolonged sitting' },
+      { employer: 'Dawn Works Archives', work: 'office work, filing', hazards: 'paper dust, sitting' },
+      { employer: 'Link Engineering Works', work: 'overhead crane, shop floor', hazards: 'noise, working at height' },
+      { employer: 'Wayfarer Staff Transport', work: 'passenger transport, shifts', hazards: 'traffic, prolonged sitting' },
       ...PATIENTS.slice(3).map(patient => ({ employer: patientCopy.en.employers[patient.employerId]!, work: patient.id < LEGACY_CASE_COUNT ? patientCopy.en.work[patient.jobId]! : `${patientCopy.en.work[patient.jobId]} / ${patientCopy.en.patterns[patient.workPatternId]}`, hazards: patientCopy.en.hazards[patient.jobId]! })),
     ],
     patientNotes: [['Work with records.', 'Seated work.'], ['Working at height.', 'Managerial position.'], ['Passenger transport.', 'Shift work.'], ...PATIENTS.slice(3).map(patient => patientCopy.en.conditions[patient.conditionId])],
@@ -3325,35 +3325,35 @@ export const translations = {
           "subject": "Additional examinations",
           "body": "Tests are instituted: furnace work — hearing; pilots — balance; militia — psychiatry; miners — X-ray. Forms shall be drawn from the third rack slot. One test is circled; records retained. Return: today or next workday. Indications: rulebook.",
           "role": "Medical Chamber secretary",
-          "signature": "dr Adam Pieczęć"
+          "signature": "Dr Adam Seale"
         },
         "dates": {
           "subject": "Validity of referrals",
           "body": "Referral dates shall be verified. Documents older than 3 days require refusal; those exactly 3 days old remain valid. This provision takes effect on the date of this notice.",
-          "role": "ZUS inspection office",
-          "signature": "Irena Stempel"
+          "role": "SIO inspection office",
+          "signature": "Irene Markham"
         },
         "specialist": {
           "subject": "Hypertension under supervision",
           "body": "Treated hypertension may be cleared upon a specialist certificate stating no contraindications for the specific job. A different occupation invalidates it. Any doubts shall be clarified by telephone.",
           "role": "Medical Chamber secretary",
-          "signature": "dr Adam Pieczęć"
+          "signature": "Dr Adam Seale"
         },
         "authenticity": {
           "subject": "On authentic referrals",
           "body": "From the date of this notice, referrals require the employer’s seal. Its absence requires refusal. An illegible impression shall be confirmed by personnel using the number on the form.",
-          "role": "ZUS inspection office",
-          "signature": "Irena Stempel"
+          "role": "SIO inspection office",
+          "signature": "Irene Markham"
         }
       }
     },
     inspection: {
-      title: 'ZUS INSPECTION', inspector: 'ZUS inspector', identity: 'OFFICIAL IDENTITY CARD',
-      names: ['Marian Zawadzki', 'Irena Borucka', 'Tadeusz Radecki'],
+      title: 'SIO INSPECTION', inspector: 'SIO inspector', identity: 'OFFICIAL IDENTITY CARD',
+      names: ['Maurice Shaw', 'Irene Barratt', 'Theodore Radley'],
       number: 'Service no.', role: 'Records inspection', validity: 'Return after inspection.',
       authority: 'Authorized to inspect records', takeId: 'Examine the inspector’s identity card', returnId: 'Return the inspector’s identity card',
       hand: 'Present records to the inspector', talk: 'Speak to the inspector', confirm: 'Confirm missing records and end the inspection',
-      greeting: 'ZUS inspection. Please check my identity card.', idReminder: 'Please return my identity card.',
+      greeting: 'SIO inspection. Please check my identity card.', idReminder: 'Please return my identity card.',
       farewell: 'Thank you for your cooperation. Goodbye.',
       request: 'Please present the referral and visit note:', visit: 'Visit', received: 'Presented',
       missing: 'Do you confirm both documents are missing? Fine: 200 zł.',
@@ -3377,21 +3377,21 @@ export const translations = {
       { title: '9. Use of stamps', lines: ['The decision shall be', 'stamped on the certificate.', 'After use, the stamp', 'remains in the doctor’s hand.', 'It shall be returned only', 'to its designated holder.', 'Amendments are permitted', 'until the form is delivered.'],
         facingTitle: '10. Delivery', facingLines: ['The pen on the form shall', 'enter the name and job.', 'The stamped certificate', 'shall be given to the patient.', 'This concludes the visit.', 'Placing the certificate', 'in the tray does not', 'constitute delivery.'] },
       { title: '11. Joining records', lines: ['A clip shall be attached', 'to the first sheet.', 'Add sheets against that clip.', 'Removing the clip', 'separates the records.', 'The referral and visit note', 'from every appointment', 'shall both be archived', 'in either desk drawer.'],
-        facingTitle: '12. Correspondence', facingLines: ['Letters from ZUS and', 'employers shall be opened', 'at the envelope corner', 'and read before filing', 'or disposal in the basket.', 'The absence of a letter', 'does not certify that', 'a ruling was correct.'] },
+        facingTitle: '12. Correspondence', facingLines: ['Letters from SIO and', 'employers shall be opened', 'at the envelope corner', 'and read before filing', 'or disposal in the basket.', 'The absence of a letter', 'does not certify that', 'a ruling was correct.'] },
       { title: '13. Admission hours', lines: ['Admissions shall run', 'from 07:55 to 14:00.', 'After that hour, only', 'the current visit continues.', 'Reading these regulations', 'and arranging the desk', 'count towards working time.', 'The clock requires no action.'],
         facingTitle: '14. Closing procedure', facingLines: ['At 17:00 the cleaning staff', 'shall request work to end.', 'At 17:15 the office closes,', 'including when occupied', 'by a patient. Interrupted', 'visits earn no bonus.', 'Records already prepared', 'shall remain on file.'] },
       { title: '15. Remuneration', lines: ['Each working day earns', '1000 zł, plus 50 zł for', 'each completed visit.', 'Settlement takes place', 'on returning home.', 'Living costs, insurance', 'and amounts due shall be', 'deducted from available funds.'],
-        facingTitle: '16. ZUS charges', facingLines: ['The first detected breach', 'of the day incurs a fine', 'of 100 zł. Each further', 'breach incurs 400 zł.', 'Approval requires regard', 'to health and the current', 'clinic regulations.'] },
+        facingTitle: '16. SIO charges', facingLines: ['The first detected breach', 'of the day incurs a fine', 'of 100 zł. Each further', 'breach incurs 400 zł.', 'Approval requires regard', 'to health and the current', 'clinic regulations.'] },
       { title: '17. Insurance', lines: ['A detected wrongful refusal', 'raises the premium by 50 zł', 'at 300 zł, or by 100 zł', 'at higher rates. This rate', 'applies on later days too.', 'Each day without a new rise', 'reduces it by 50 zł,', 'to a minimum of 300 zł.'],
         facingTitle: '18. Days off', facingLines: ['Friday, Saturday and Sunday', 'share a single settlement.', 'Insurance is charged once;', 'days off carry no wages.', 'Modest living costs 800 zł', 'for all three days.', 'Insurance and fines are extra.', 'Failure to cover these costs', 'results in bankruptcy.'] },
     ],
     manualSupplements: {
       inspection: { label: 'Records audit', pages: [
-        { title: '1. Identification', lines: ['A ZUS inspector presents', 'an official identity card.', 'The card shall be examined', 'and returned to its holder.', 'On request, present both', 'the referral and visit note', 'for the specified visit.', 'Earlier records remain', 'on file across working days.'],
+        { title: '1. Identification', lines: ['A SIO inspector presents', 'an official identity card.', 'The card shall be examined', 'and returned to its holder.', 'On request, present both', 'the referral and visit note', 'for the specified visit.', 'Earlier records remain', 'on file across working days.'],
           facingTitle: '2. Missing records', facingLines: ['Both documents are required.', 'They may be presented singly', 'or clipped together.', 'The doctor confirms loss', 'when asked by the inspector.', 'Both missing: 200 zł.', 'One missing: 50 zł.', 'The inspector issues a notice.', 'The fine enters the budget.'] },
       ] },
       dates: { label: "Annex 1", pages: [
-        { title: "1. Referral date", lines: ["Under the ZUS directive,", "the referral’s issue date", "shall be checked.", "Its age is calculated", "in calendar days relative", "to the date of the visit."],
+        { title: "1. Referral date", lines: ["Under the SIO directive,", "the referral’s issue date", "shall be checked.", "Its age is calculated", "in calendar days relative", "to the date of the visit."],
           facingTitle: "2. Period of validity", facingLines: ["A referral more than", "three days old requires", "refusal. Exactly three days", "remains within the limit.", "Good health does not", "extend this period."] },
       ] },
       specialist: { label: "Erratum 1 — provision 7", pages: [
@@ -3399,7 +3399,7 @@ export const translations = {
           facingTitle: "2. Scope of exception", facingLines: ["A certificate for another", "job is invalid.", "Clarification is available", "from its issuer at the", "number on the form.", "Record the call in the notes.", "Other contraindications", "and defects in paperwork", "still require refusal."] },
       ] },
       authenticity: { label: "Annex 2", pages: [
-        { title: "1. Employer seal", lines: ["Under the ZUS directive,", "the employer’s seal", "shall be required.", "Its absence requires refusal.", "A clear seal confirms", "the referral’s authenticity."],
+        { title: "1. Employer seal", lines: ["Under the SIO directive,", "the employer’s seal", "shall be required.", "Its absence requires refusal.", "A clear seal confirms", "the referral’s authenticity."],
           facingTitle: "2. Unclear impression", facingLines: ["An unclear seal shall be", "confirmed with HR using", "the number on the form.", "Conclusions shall be entered", "in the medical notes.", "An inauthentic document", "requires refusal."] },
       ] },
       payments: { label: "Supplement 1", pages: [
@@ -3408,11 +3408,11 @@ export const translations = {
       ] },
       additionalTests: { label: "Annex 3", pages: [
         { title: '1. Additional tests', lines: ['Under the Chamber directive:', 'furnace work — pure-tone', 'audiometry; pilots —', 'vestibular examination;', 'militia — psychiatry for', 'mental disturbance or doubts', 'about fitness for service;', 'miners — chest X-ray for', 'suspected pneumoconiosis.'],
-          facingTitle: '2. Referral procedure', facingLines: ['Forms shall be taken from', 'the third rack slot from', 'the top. One test shall be', 'circled and the form', 'handed to the patient.', 'Other records are retained.', 'A test for another occupation', 'always incurs a ZUS fine.'] },
+          facingTitle: '2. Referral procedure', facingLines: ['Forms shall be taken from', 'the third rack slot from', 'the top. One test shall be', 'circled and the form', 'handed to the patient.', 'Other records are retained.', 'A test for another occupation', 'always incurs a SIO fine.'] },
         { title: '3. Scope of opinion', lines: ['Assess the opinion within', 'the scope of its examination.', 'Where findings are equivocal,', 'the doctor shall rule using', 'the history, general health', 'and working conditions.', 'Other contraindications', 'and defects in paperwork', 'require separate assessment.'],
           facingTitle: '4. Return visits', facingLines: ['Patients return with results', 'after several hours and', 'intervening admissions,', 'or on the next working day.', 'Existing notes and completed', 'examinations remain in use.', 'Issuing a referral does not', 'constitute a completed visit.'] },
         { title: '5. Delivering results', lines: ['After an additional test,', 'an employee cleared for work', 'shall receive the certificate', 'paperclipped to the relevant', 'examination report.', 'With a refusal, the report', 'is optional; the employee', 'will accept the bundle.'],
-          facingTitle: '6. Missing enclosure', facingLines: ['Omitting the required report', 'always brings a reprimand', 'and an insurance increase.', 'The letter comes from', 'militia headquarters, the LOT', 'office or the workplace,', 'according to employment.', 'Detection applies in 100%', 'of these cases.'] },
+          facingTitle: '6. Missing enclosure', facingLines: ['Omitting the required report', 'always brings a reprimand', 'and an insurance increase.', 'The letter comes from', 'militia headquarters, the NAL', 'office or the workplace,', 'according to employment.', 'Detection applies in 100%', 'of these cases.'] },
       ] },
     },
     lamp: 'Toggle the ceiling lamp', decoration: 'Change decoration: plant or certificate',
@@ -3534,7 +3534,7 @@ export const translations = {
       'classified-wrong-number': 'Wrong number. Nobody placed an ad here.',
       'classified-call-later': 'Please call back this evening.',
       'classified-disconnected': '(call disconnected)',
-      'inspector-arrived': 'A ZUS inspector is waiting. Examine and return the identity card.',
+      'inspector-arrived': 'A SIO inspector is waiting. Examine and return the identity card.',
       'inspection-id-taken': 'Identity card in hand. Read it on the right desk, then return it to the inspector.',
       'inspection-id-returned': 'Identity card returned. The inspector requests the referral and note for the specified visit.',
       'inspection-id-needed': 'First examine and return the identity card.',
@@ -3551,7 +3551,7 @@ export const translations = {
       'test-needed': 'First circle one examination on the referral.',
       'patient-referred': 'The patient has left for a test. Records stay here. Call the next patient.',
       'patient-returned': 'The patient has returned with a result. Previous examinations and notes retained.',
-      'referral-penalty': 'The patient has left for a test. A referral unrelated to the occupation incurs a ZUS fine.',
+      'referral-penalty': 'The patient has left for a test. A referral unrelated to the occupation incurs a SIO fine.',
       "phone-ready": "Exchange tone. Click a number on a document or in an advertisement to call.",
       "specialist-taken": "Specialist certificate in hand.",
       "specialist-missing": "The patient has no specialist certificate.",

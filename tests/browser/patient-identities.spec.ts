@@ -32,6 +32,8 @@ test('five identities share a portrait while names, occupations and ages survive
         await page.locator(`#control-language-${locale}`).click();
         const t = translations[locale];
         await expect(page.locator('#screen-description')).toContainText(t.patientNames[patient.id]!);
+        for (const id of [1, 2]) await expect(page.locator(`#control-paper-${id}`)).toHaveAccessibleName(new RegExp(t.patientNames[patient.id]!));
+        await expect(page.locator('#control-paper-1')).toHaveAccessibleName(new RegExp(t.patientReferrals[patient.id]!.employer));
         await expect(page.locator('#control-paper-1')).toHaveAccessibleName(new RegExp(t.patientJobs[patient.id]!));
         await expect(page.locator('#control-paper-1')).toHaveAccessibleName(new RegExp(patient.birthDate));
         await expect(page.locator('#control-paper-2')).toHaveAccessibleName(new RegExp(`${t.paperwork.age}: ${patientAge(patient, gameDate(1))}`));

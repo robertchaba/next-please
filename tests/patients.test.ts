@@ -7,23 +7,19 @@ import { gameDate } from '../src/core/calendar';
 import { translations } from '../src/i18n';
 
 describe('patient and occupation catalog', () => {
-  it('preserves all 4003 shipped cases and names when appending portraits 136–185', () => {
+  it('preserves all 4003 shipped cases and Polish names when appending portraits 136–185', () => {
     expect(createHash('sha256').update(JSON.stringify(PATIENTS.slice(0, 4003))).digest('hex'))
       .toBe('5ef66400796722d0c0753c3bcbe362e1945d6c10588146202aa9d24dc244ae0c');
-    for (const locale of ['pl', 'en'] as const) {
-      expect(createHash('sha256').update(JSON.stringify(translations[locale].patientNames.slice(0, 4003))).digest('hex'))
-        .toBe('c2bfe1f42b9f7f7a7e8912baf32bd321d836a3a487e862cd422a3a88d52da0ca');
-    }
+    expect(createHash('sha256').update(JSON.stringify(translations.pl.patientNames.slice(0, 4003))).digest('hex'))
+      .toBe('c2bfe1f42b9f7f7a7e8912baf32bd321d836a3a487e862cd422a3a88d52da0ca');
   });
   it('preserves all 3378 shipped cases when appending portraits 111–135', () => {
     expect(createHash('sha256').update(JSON.stringify(PATIENTS.slice(0, 3378))).digest('hex'))
       .toBe('4d387c983c4966ed40104c5413bafa6b87038fa31eccd3806eb35276576ce854');
   });
-  it('retains every previously shipped name in both languages', () => {
-    for (const locale of ['pl', 'en'] as const) {
-      expect(createHash('sha256').update(JSON.stringify(translations[locale].patientNames.slice(0, 3378))).digest('hex'))
-        .toBe('d0f64396b2346a3333e032ddfb1d57492a03db0b85187e49101dc8af56ec870f');
-    }
+  it('retains every previously shipped Polish name', () => {
+    expect(createHash('sha256').update(JSON.stringify(translations.pl.patientNames.slice(0, 3378))).digest('hex'))
+      .toBe('d0f64396b2346a3333e032ddfb1d57492a03db0b85187e49101dc8af56ec870f');
   });
   it('preserves every previously shipped case when appending the ten civilian portraits', () => {
     expect(createHash('sha256').update(JSON.stringify(PATIENTS.slice(0, 3128))).digest('hex'))
@@ -65,7 +61,7 @@ describe('patient and occupation catalog', () => {
 
   it('offers five complete identities per portrait with plausible ages and independent medical variants', () => {
     expect(PATIENT_IDENTITIES).toHaveLength(940);
-    const names = new Set<string>();
+    const names = { pl: new Set<string>(), en: new Set<string>() };
     for (let characterId = 0; characterId < CHARACTER_COUNT; characterId++) {
       const identities = PATIENT_IDENTITIES.filter(identity => identity.characterId === characterId);
       const original = PATIENTS.find(patient => patient.characterId === characterId)!;
@@ -79,14 +75,16 @@ describe('patient and occupation catalog', () => {
         expect(new Set(cases.map(patient => patient.conditionId)).size).toBe(5);
         expect(cases.some(patient => patient.expectedDecision === 'fit')).toBe(true);
         expect(cases.some(patient => patient.general === 'refer')).toBe(true);
-        const name = translations.pl.patientNames[cases[0]!.id]!;
-        expect(names.has(name)).toBe(false);
-        names.add(name);
+        for (const locale of ['pl', 'en'] as const) {
+          const name = translations[locale].patientNames[cases[0]!.id]!;
+          expect(names[locale].has(name), `${locale}: ${name}`).toBe(false);
+          names[locale].add(name);
+        }
         for (const patient of cases) {
           expect(patient).toMatchObject({ characterId, portraitId: original.portraitId, birthDate: identity.birthDate,
             jobId: identity.jobId, employerId: identity.employerId, sex: original.sex });
           expect(JOBS[patient.jobId]!.employerIds).toContain(patient.employerId);
-          for (const t of Object.values(translations)) expect(t.patientNames[patient.id]).toBe(name);
+          for (const t of Object.values(translations)) expect(t.patientNames[patient.id]).toBe(t.patientNames[cases[0]!.id]);
         }
       }
     }

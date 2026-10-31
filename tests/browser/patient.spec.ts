@@ -65,7 +65,7 @@ test('the bell seats a patient within 720 ms and speech continues alongside elap
   await activate(page, 'back');
   await expect(page.locator('#patient-speech')).toHaveText('Irena Wolska: Dzień dobry.');
   await activate(page, 'language-en');
-  await expect(page.locator('#patient-speech')).toHaveText('Irena Wolska: Good morning.');
+  await expect(page.locator('#patient-speech')).toHaveText('Irene Wells: Good morning.');
   await page.clock.runFor(2400);
   await expect(page.locator('#patient-speech')).toBeEmpty();
   expect(Number(await page.locator('#controls').getAttribute('data-clock-minutes'))).toBe(Number(minutes) + 4);

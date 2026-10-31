@@ -1,0 +1,6 @@
+Use case: text-localization
+Asset type: transparent pixel-art bureaucratic rubber stamp ink impression for the original analog clinic game Next, Please!, displayed at 36 × 24 native pixels.
+Input image: edit target and style reference, the existing blue ZUS impression.
+Primary request: make the English-language companion of this stamp. Replace ONLY the central three initials ZUS with SIO, spelled S, I, O. Keep the worn double rectangular border, horizontal composition, muted navy blue ink, sparse unreadable administrative ticks below, and uneven dry ink distress. Large clear block capitals must remain readable at tiny native resolution.
+Text (verbatim): "SIO".
+Constraints: actual transparent background and interior negative spaces, no paper or backing. Preserve the reference's restrained, original pixel-art clinic atmosphere. Hard pixel edges, no glow, no added shadows, no smooth vector logo, no other readable letters, no national symbols, no official real-world seal. Keep the stamp centered with transparent margins; its cropped art will be resized with nearest-neighbor to 36 × 24 pixels.

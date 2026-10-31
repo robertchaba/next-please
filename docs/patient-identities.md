@@ -8,6 +8,8 @@ Korekta nazw z 26 października 2026 obejmuje portrety 11, 23, 24, 26, 29, 34, 3
 
 Dane: [profile](../src/core/patient-identities.ts), [katalog przypadków](../src/core/patients.ts), [nazwiska i zawody PL/EN](../src/i18n.ts). Wszystkie portrety są lokalnymi ilustracjami gry. Portrety 76–85 przedstawiają milicjantów, a 86–90 pilotów: każda z pięciu tożsamości zachowuje zawód zgodny z mundurem. Portrety 91, 95 i 99 to hutnicy, a 93 i 97 górnicy. Ich źródła i pochodzenie opisuje [kierunek artystyczny](art-direction.md).
 
+Tabela poniżej podaje polskie nazwy. Od 31 października 2026 wersja EN korzysta ze stałych odpowiedników opisanych w [zasadach lokalizacji i słowniku](localization.md), np. Irena Wolska → Irene Wells. W nazwiskach dwuczłonowych drugi człon także ma angielski odpowiednik. Dotyczy to również dawnych przypadków i dokumentów; język wybiera wyłącznie etykietę tej samej tożsamości.
+
 | Portret | Pięć tożsamości — imię i nazwisko, zawód, wiek |
 | --- | --- |
 | ![patient-0](../public/assets/art/sprites/patient-0.png)<br>patient-0 | Irena Górska — Archiwistka, 39 lat<br>Ewa Wierna — Księgowa, 41 lat<br>Teresa Kępa — Referentka, 42 lata<br>Anna Wolska — Bibliotekarka, 44 lata<br>Maria Lipiec — Korektorka, 40 lat |
