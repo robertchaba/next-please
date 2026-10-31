@@ -12,6 +12,8 @@ The title scene reserves its left 43–45% for the title and controls. The brigh
 
 The title illustration fills the entire viewport without tinted header/footer bands, divider rules or a menu-area tint. Retain the existing brick-red clinic cross beside the clinic name at (40,15). Share at (32,296), credits at (116,296), and Instructions at (206,296) form one bottom row, with their lettering aligned at y = 300 with the right-aligned version ending at (536,300). All sit directly on the artwork. Muted light lettering keeps the version readable over the dark floor. The original 570 × 320 asset is sufficient and remains unchanged. The Instructions dialog reuses the credits' generated paper at (56,20), 458 × 280; original title-font text scrolls inside (78,78), 414 × 170, leaving room for a native scrollbar. Keep the heading, scroll hint and Back button fixed, with dark ink and muted red section titles. Do not add illustrations for this text-only guide.
 
+Telephone conversation balloons sit directly above the desk telephone, with a short downward tail touching the top of its handset. Anchor the tail to the telephone's position; longer localized replies expand upward so the connection stays fixed in both languages. Reuse the existing comic balloon style.
+
 Proper names may be adapted freely between languages, with one consistent counterpart per person, family, place or institution. Follow the [localization glossary](localization.md) across documents, dialogue, press, captions and accessible names. Preserve the period, roles and unnamed setting; language does not relocate the clinic. The [generated SIO stamp](art-localization-2026-10-31.md) is the English companion of the original ZUS impression.
 
 ## Title background

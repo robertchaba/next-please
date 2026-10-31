@@ -12,7 +12,7 @@ import { translations, type Locale } from '../i18n';
 import type { Button } from '../ui';
 import { drawerSheets } from '../render/drawer';
 import { calendarText, formatGameDate } from '../core/calendar';
-import { isNewspaperItem, newspaperItemId, CABINET_HOTSPOTS, CLINICAL_PAPER_SIZE, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, dropTargetRect, type DeskState, type DeskItemId, type Rect } from '../core/desk';
+import { isNewspaperItem, newspaperItemId, CABINET_HOTSPOTS, CLINICAL_PAPER_SIZE, DOCUMENT_RACK_SLOTS, PATIENT_HANDOFF, RIGHT_DESK_X, itemRect, restRect, dropTargetRect, type DeskState, type DeskItemId, type Point, type Rect } from '../core/desk';
 export { manualPageCount, manualPageDescription } from '../render/manual';
 
 export type ShiftAction = GameAction | 'select-fit' | 'select-unfit' | 'apply-stamp' | 'manual'
@@ -265,7 +265,10 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
     if (!visit?.certificateTaken || !patient) continue;
     drawCertificate(ctx, state, bounds, locale, lifted, visibleDocumentClip(state, 'certificate', view));
   }
-  if (view.phoneSpeech) drawPatientSpeech(ctx, view.phoneSpeech, 216, 78, 'left');
+  if (view.phoneSpeech) {
+    const phone = CABINET_HOTSPOTS.phone;
+    drawPatientSpeech(ctx, view.phoneSpeech, phone.x, phone.y, { x: phone.x + Math.floor(phone.w / 2), y: phone.y + 2 });
+  }
   if (state.inspection) drawPatientSpeech(ctx, inspectionDescription(state, locale), 111, 34);
   else if (view.departingInspectorId !== undefined) drawPatientSpeech(ctx, t.inspection.farewell, 111, 34);
   // The doctor speaks from our side of the desk, opposite the seated patient.
@@ -274,9 +277,13 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
 }
 
 /** A little paper-colored comic balloon, sized to the actual short utterance. */
-function drawPatientSpeech(ctx: CanvasRenderingContext2D, value: string, x = 111, y = 49, tail: 'left' | 'down' = 'left'): void {
+function drawPatientSpeech(ctx: CanvasRenderingContext2D, value: string, x = 111, y = 49, tail: 'left' | 'down' | Point = 'left'): void {
   const lines = wrapDocumentLines([value], 170);
   const w = Math.max(...lines.map(measureDocumentText)) + 14, h = 14 + lines.length * 8;
+  const anchor = typeof tail === 'object' ? tail : undefined;
+  // Telephone speech grows upward, keeping the tail tip on the handset.
+  if (anchor) y = anchor.y - h - 6;
+  const tailCenter = anchor?.x ?? x + Math.floor(w / 2) - 1;
   box(ctx, x + 3, y, w - 6, h, '#30372a');
   box(ctx, x, y + 3, w, h - 6, '#30372a');
   box(ctx, x + 3, y + 1, w - 6, h - 2, '#e4dcbb');
@@ -284,7 +291,7 @@ function drawPatientSpeech(ctx: CanvasRenderingContext2D, value: string, x = 111
   // Patient speech points toward the face. The doctor's centered tail exits
   // the lower frame toward the player, without mirroring the localized text.
   for (let row = 0; row < 8; row++) {
-    const left = tail === 'down' ? x + Math.floor(w / 2) - 4 + Math.floor(row / 2) : x + 6 - row;
+    const left = tail === 'left' ? x + 6 - row : tailCenter - 3 + Math.floor(row / 2);
     box(ctx, left, y + h - 1 + row, 8 - row, 1, '#30372a');
     if (row < 5) box(ctx, left + 1, y + h - 1 + row, 5 - row, 1, '#e4dcbb');
   }
