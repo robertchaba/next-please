@@ -1,4 +1,5 @@
 import { newspaperDescription, newspaperPageCount, type NewspaperViews } from './render/newspaper';
+import { CLASSIFIED_CALL_RESULTS, type ClassifiedCallResult } from './core/newspaper';
 import './style.css';
 import { DRAWERS, isManualStored, type DrawerId, advanceClinicTime, applyAction, settleWeekend, CLEANER_WARNING_MINUTES, SHIFT_END_MINUTES, PATIENTS, canEndDay, canReturnBanknote, clippedDocuments, isDocumentClipped, type DocumentId, type GameAction, type ActionResult, type GameState } from './core/game';
 import { patientForVisit } from './core/progression';
@@ -78,7 +79,7 @@ let inspectorFarewell: { inspectorId: number; remaining: number } | undefined;
 let visionSpeechAttempt = 0;
 let previousNormalComment = -1;
 let clinicSpeech: { emptyRoom?: boolean; comment?: ExaminationComment; speaker: 'doctor' | 'cleaner'; remaining: number } | undefined;
-let phoneCall: { kind: 'specialist' | 'employer'; valid: boolean; elapsed: number } | undefined;
+let phoneCall: ({ kind: 'specialist' | 'employer'; valid: boolean } | { kind: 'classified'; result: ClassifiedCallResult }) & { elapsed: number } | undefined;
 let phoneToneTimer: ReturnType<typeof setTimeout> | undefined;
 let interruptedPatient: number | undefined;
 // Delivery is presentation only: consequences and correspondence are already saved.
@@ -168,6 +169,7 @@ function stopPhone(): void {
 function phoneCallText(): string | undefined {
   if (!phoneCall) return;
   const d = t().progression.dialogue;
+  if (phoneCall.kind === 'classified') return phoneCall.elapsed < 3900 ? d.dialing : t().feedback[phoneCall.result];
   if (phoneCall.elapsed < 1500) return d.dialing;
   if (phoneCall.elapsed < 3300) return d[phoneCall.kind === 'specialist' ? 'specialistQuestion' : 'employerQuestion'];
   return phoneCall.kind === 'specialist' ? d[phoneCall.valid ? 'specialistValid' : 'specialistInvalid']
@@ -454,6 +456,21 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
       return;
     }
     if (action.type === 'store-drawer-item' || action.type === 'retrieve-drawer-item') return;
+    if (action.type === 'call-classified') {
+      const id = newspaperItemId(action.day, gameState.day), reading = newspaperViews[id];
+      const copy = gameState.newspaperCopies.find(copy => copy.day === action.day);
+      if (heldItem !== null || !reading?.open || reading.page !== copy?.articleIds.length) return;
+      const result = performAction(action);
+      gameState = result.state;
+      if (gameState.phase !== 'cabinet') { syncControls(); return; }
+      updateClock();
+      if (CLASSIFIED_CALL_RESULTS.includes(result.feedback as ClassifiedCallResult)) {
+        stopPhone(); playEffect('phone-dial');
+        phoneCall = { kind: 'classified', result: result.feedback as ClassifiedCallResult, elapsed: 0 };
+        announceDesk(phoneCallText()!, `${id}-call-${action.classifiedId}`);
+      } else announceDesk(t().feedback[result.feedback], `${id}-call-${action.classifiedId}`);
+      return;
+    }
     const paper = 'paperId' in action ? gameState.papers.find(record => record.id === action.paperId) : undefined;
     if (action.type === 'note-page') {
       if (paper?.kind !== 'note' || paper.location !== 'desk' || heldItem !== null || deskRect(`paper-${paper.id}`).x < RIGHT_DESK_X) return;

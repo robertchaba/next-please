@@ -185,7 +185,8 @@ describe('specialist certificates and telephone conclusions', () => {
     }
     expect(certificates / 20000).toBeGreaterThan(0.23); expect(certificates / 20000).toBeLessThan(0.27);
     expect(mismatch / certificates).toBeGreaterThan(0.30); expect(mismatch / certificates).toBeLessThan(0.36);
-    expect(applyAction(cabinet(5), 'use-phone').feedback).toBe('phone-unavailable');
+    expect(applyAction(cabinet(1), 'use-phone').feedback).toBe('phone-ready');
+    expect(applyAction(cabinet(5), 'use-phone').feedback).toBe('phone-ready');
     expect(applyAction(cabinet(6), 'use-phone').feedback).toBe('phone-ready');
   });
 });

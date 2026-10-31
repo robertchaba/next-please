@@ -59,7 +59,7 @@ export function drawerButtons(state: GameState, locale: Locale, page: number, on
   const t = translations[locale], sheets = drawerSheets(state, page, drawer), cash = storedCash(state, drawer);
   return [
     ...drawerNewspapers(state, sheets.current, drawer).map(({ copy, bounds }): Button => ({ id: `drawer-newspaper-${copy.day}`, kind: 'hotspot', ...bounds,
-      label: `${t.drawerRetrieve}: ${t.newspaper.title}. ${formatGameDate(copy.day, locale)}`, action: () => onAction({ type: 'newspaper', day: copy.day }),
+      label: `${t.drawerRetrieve}: ${t.newspaper.shortTitle} ${formatGameDate(copy.day, locale)}`, action: () => onAction({ type: 'newspaper', day: copy.day }),
     })),
     ...(cash.length ? [{ id: 'drawer-banknote', kind: 'hotspot' as const, ...cashBounds, label: `${t.drawerRetrieve}: ${t.progression.banknote}. ${t.drawerCash}: ${cash.length * 100} zł`, action: () => onAction({ type: 'banknote', id: cash.at(-1)!.id }) }] : []),
     ...sheets.visible.map(({ paper, bounds }): Button => ({ id: `drawer-paper-${paper.id}`, kind: 'hotspot', ...bounds,
@@ -79,6 +79,7 @@ export function drawerButtons(state: GameState, locale: Locale, page: number, on
 }
 
 export function renderDrawer(ctx: CanvasRenderingContext2D, state: GameState, locale: Locale, page: number, activeId = '', drawer: DrawerId = 'drawer'): void {
+  const t = translations[locale];
   drawDrawerInterior(ctx);
   const cash = storedCash(state, drawer);
   for (let index = 0; index < Math.min(8, cash.length); index++) drawBanknote(ctx, 267, 241 - index * 2);
@@ -93,7 +94,7 @@ export function renderDrawer(ctx: CanvasRenderingContext2D, state: GameState, lo
   ctx.restore();
   for (const { copy, bounds } of drawerNewspapers(state, sheets.current, drawer)) {
     drawNewspaperArt(ctx, false, bounds.x, bounds.y, bounds.w, bounds.h);
-    if (activeId === `drawer-newspaper-${copy.day}`) drawDocumentText(ctx, formatGameDate(copy.day, locale), bounds.x + 44, bounds.y + 56, { align: 'center', color: '#d9cfaa' });
+    if (activeId === `drawer-newspaper-${copy.day}`) drawDocumentText(ctx, `${t.newspaper.shortTitle} ${formatGameDate(copy.day, locale)}`, bounds.x + 44, bounds.y + 56, { align: 'center', color: '#d9cfaa' });
   }
   if (state.drawerItems[drawer].manual) drawManualCover(ctx, manualBounds, false);
   for (let index = 0; index < Math.min(8, state.drawerItems[drawer].clips); index++) {

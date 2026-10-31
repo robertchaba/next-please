@@ -5,6 +5,7 @@ import { newspaperCopy } from '../src/core/newspaper';
 import { decodeSave, encodeSave } from '../src/core/save';
 import { drawerButtons, drawerNewspapers, drawerSheets } from '../src/render/drawer';
 import { dropTargetRect, DROP_ZONES } from '../src/core/desk';
+import { historicalState } from './fixtures/legacy-budget';
 
 const start = () => applyAction({ ...createInitialState(120), money: 100000 }, 'skip-intro').state;
 function next(state: GameState): GameState {
@@ -12,7 +13,7 @@ function next(state: GameState): GameState {
   do { result = applyAction(result, 'next-day').state; } while (result.phase === 'home');
   return result;
 }
-const file = (state: unknown, version = 33) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-31T12:00:00.000Z', state })));
+const file = (state: unknown, version = 34) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-31T12:00:00.000Z', state })));
 
 describe('physical newspaper copies', () => {
   it('keeps dated editions across weekdays, weekends, both drawers and save imports', () => {
@@ -56,13 +57,14 @@ describe('physical newspaper copies', () => {
   it('migrates v32 with its exact issue and RNG, creating only the recoverable latest copy', () => {
     const current = next(start());
     const { newspaperCopies: _copies, ...old } = current;
-    const migrated = decodeSave(file(old, 32));
-    expect(migrated).toEqual({ ...old, newspaperCopies: [newspaperCopy(old.newspaper, old.day)] });
+    const migrated = decodeSave(file(historicalState(old, 32), 32));
+    const newspaper = { ...old.newspaper, classifiedIds: [] };
+    expect(migrated).toEqual({ ...old, newspaper, newspaperCopies: [newspaperCopy(newspaper, old.day)] });
     expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
     expect(() => decodeSave(file(current, 32))).toThrow();
     // Historical intro saves can retain a later civil day and still re-export.
     const { newspaperCopies: _introCopies, ...intro } = { ...createInitialState(12), day: 8 };
-    const loadedIntro = decodeSave(file(intro, 32));
+    const loadedIntro = decodeSave(file(historicalState(intro, 32), 32));
     expect(decodeSave(encodeSave(loadedIntro))).toEqual(loadedIntro);
   });
 

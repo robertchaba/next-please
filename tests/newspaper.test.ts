@@ -9,7 +9,7 @@ import { translations } from '../src/i18n';
 import { createDeskState, itemRect, moveDeskItem, pickUpDeskItem, NEWSPAPER_OPEN_POSITION, NEWSPAPER_OPEN_SIZE } from '../src/core/desk';
 
 const nextDay = (state: GameState) => applyAction(applyAction({ ...state, clockMinutes: 840 }, 'end-day').state, 'next-day').state;
-const file = (state: unknown, version = 33) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-31T12:00:00.000Z', state })));
+const file = (state: unknown, version = 34) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version, savedAt: '2026-10-31T12:00:00.000Z', state })));
 
 describe('morning newspaper', () => {
   it('arrives 14–21 minutes before eight from day two, including Monday; first day stays at 7:57', () => {
@@ -44,8 +44,9 @@ describe('morning newspaper', () => {
   });
 
   it('publishes 3–4 unique articles, uses every fresh text before recycling, and continues for 150 issues', () => {
-    expect(PRESS_ARTICLES).toHaveLength(20);
-    expect(PRESS_ARTICLES.filter(article => article.reusable)).toHaveLength(10);
+    expect(PRESS_ARTICLES).toHaveLength(170);
+    expect(PRESS_ARTICLES.filter(article => article.reusable)).toHaveLength(70);
+    expect(PRESS_ARTICLES.slice(20).filter(article => article.reusable).length / 150).toBeGreaterThanOrEqual(1 / 3);
     let issue = createNewspaper(120);
     const seen = new Set<string>();
     for (let day = 0; day < 150; day++) {
@@ -54,17 +55,17 @@ describe('morning newspaper', () => {
       expect(new Set(issue.articleIds).size).toBe(issue.articleIds.length);
       for (const id of issue.articleIds) {
         if (seen.has(id)) {
-          expect(seen.size).toBe(20);
+          expect(seen.size).toBe(PRESS_ARTICLES.length);
           expect(PRESS_ARTICLES.find(article => article.id === id)?.reusable).toBe(true);
         }
         seen.add(id);
       }
       const next = nextNewspaper(issue.rngState, issue);
       expect(next).toEqual(nextNewspaper(issue.rngState, structuredClone(issue)));
-      if (seen.size === 20) expect(next.articleIds.every(id => !issue.articleIds.includes(id))).toBe(true);
+      if (seen.size === PRESS_ARTICLES.length) expect(next.articleIds.every(id => !issue.articleIds.includes(id))).toBe(true);
       issue = next;
     }
-    expect(seen.size).toBe(20);
+    expect(seen.size).toBe(PRESS_ARTICLES.length);
   });
 
   it('reserves part or all of an edition for editorial/story choices without duplicates', () => {
@@ -109,6 +110,8 @@ describe('morning newspaper', () => {
     for (const locale of ['pl', 'en'] as const) {
       const t = translations[locale].newspaper;
       expect(Object.keys(t.articles)).toEqual(PRESS_ARTICLES.map(article => article.id));
+      expect(new Set(Object.values(t.articles).map(article => article.title)).size).toBe(PRESS_ARTICLES.length);
+      expect(new Set(Object.values(t.articles).map(article => article.body)).size).toBe(PRESS_ARTICLES.length);
       expect(measureDocumentText(t.strapline)).toBeLessThanOrEqual(156);
       for (const article of PRESS_ARTICLES) {
         const layout = newspaperArticleLayout(article.id, locale);

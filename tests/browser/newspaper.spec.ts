@@ -3,6 +3,7 @@ import { gzipSync, strToU8 } from 'fflate';
 import { applyAction, createInitialState, type GameState } from '../../src/core/game';
 import { encodeSave } from '../../src/core/save';
 import { translations } from '../../src/i18n';
+import { classifiedPhone } from '../../src/core/newspaper';
 
 const key = async (page: Page, id: string) => { await page.locator(`#control-${id}`).focus(); await page.keyboard.press('Enter'); };
 function morning(): GameState {
@@ -70,7 +71,7 @@ for (const locale of ['pl', 'en'] as const) {
     expect(await geometry()).toEqual(placedGeometry);
     // Invalid press metadata leaves both the live state and open page intact.
     await key(page, 'saves');
-    const invalid = gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 33, savedAt: '2026-10-31T12:00:00.000Z',
+    const invalid = gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 34, savedAt: '2026-10-31T12:00:00.000Z',
       state: { ...state, newspaper: { ...state.newspaper, articleIds: ['invented', 'bread', 'chess'] } } })));
     await page.locator('#save-input').setInputFiles({ name: 'broken.npsave', mimeType: 'application/gzip', buffer: Buffer.from(invalid) });
     await expect(page.locator('#announcement')).toContainText(t.errors['invalid-state']);
@@ -81,6 +82,11 @@ for (const locale of ['pl', 'en'] as const) {
     for (let index = 2; index < state.newspaper.articleIds.length; index++) {
       await key(page, 'newspaper-next');
       await expect(page.locator('#screen-description')).toContainText(t.newspaper.articles[state.newspaper.articleIds[index]!].body);
+      expect(await geometry()).toEqual(placedGeometry);
+    }
+    if (state.newspaper.classifiedIds.length) {
+      await key(page, 'newspaper-next');
+      await expect(page.locator('#screen-description')).toContainText(t.newspaper.classifiedTitle);
       expect(await geometry()).toEqual(placedGeometry);
     }
     await expect(page.locator('#control-newspaper-next')).toHaveCount(0);
@@ -124,7 +130,7 @@ for (const locale of ['pl', 'en'] as const) {
     await pickup('newspaper-1'); await key(page, 'drawer');
     await expect(page.locator('#control-newspaper-1')).toHaveCount(0);
     await key(page, 'drawer-2');
-    await expect(page.locator('#control-drawer-newspaper-2')).toHaveAccessibleName(new RegExp(locale === 'pl' ? '04.11.1983' : '04/11/1983'));
+    await expect(page.locator('#control-drawer-newspaper-2')).toHaveAccessibleName(new RegExp(locale === 'pl' ? 'Kurier 04.11.1983' : 'Courier 04/11/1983'));
     await expect(page.locator('#control-drawer-newspaper-1')).toHaveCount(0);
     await page.keyboard.press('Escape');
     const saved = await exportNewspaperState(page);
@@ -174,4 +180,94 @@ async function exportNewspaperState(page: Page): Promise<GameState> {
   const state = decodeSave(await readFile((await download.path())!));
   await key(page, 'back');
   return state;
+}
+
+for (const locale of ['pl', 'en'] as const) for (const firstDay of [true, false]) {
+  test(`classifieds have stable pages, clickable numbers and random answers on the ${firstDay ? 'first' : 'later'} morning in ${locale}`, async ({ page }, info) => {
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.clock.install();
+    await page.goto('/');
+    await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
+    await key(page, 'start');
+    for (let i = 0; i < 4; i++) await key(page, 'intro-next');
+    await page.clock.pauseAt(new Date(Date.now() + 1000));
+    await key(page, `language-${locale}`);
+    let state = morning();
+    if (firstDay) {
+      for (let seed = 0; seed < 256; seed++) {
+        state = applyAction(createInitialState(seed), 'skip-intro').state;
+        if (state.newspaper.classifiedIds.some(id => classifiedPhone(id))) break;
+      }
+      expect(state.day).toBe(1);
+      expect(state.visit).toBeNull();
+    } else {
+      do {
+        state = applyAction({ ...state, clockMinutes: 840 }, 'end-day').state;
+        do { state = applyAction(state, 'next-day').state; } while (state.phase === 'home');
+      } while (state.day < 6 || !state.newspaper.classifiedIds.some(id => classifiedPhone(id)));
+    }
+    expect(state.newspaper.classifiedIds.some(id => classifiedPhone(id))).toBe(true);
+    await load(page, state);
+    const audible = firstDay && locale === 'pl';
+    if (audible) await key(page, 'sound');
+    await key(page, 'use-phone');
+    await expect(page.locator('#announcement')).toContainText(translations[locale].feedback['phone-ready']);
+    const phoneSounds = () => page.evaluate(() => window.Howler._howls
+      .filter(sound => /phone-(tone|dial)\.wav$/.test(String(sound._src)) && sound.playing())
+      .map(sound => ({ src: String(sound._src).split('/').at(-1), muted: sound.mute(), state: sound.state() })));
+    if (audible) await expect.poll(phoneSounds).toEqual([{ src: 'phone-tone.wav', muted: false, state: 'loaded' }]);
+    await key(page, 'newspaper');
+    for (let i = 0; i < state.newspaper.articleIds.length; i++) await key(page, 'newspaper-next');
+    const t = translations[locale], ids = state.newspaper.classifiedIds;
+    await expect(page.locator('#screen-description')).toContainText(t.newspaper.classifiedTitle);
+    for (const id of ids) await expect(page.locator('#screen-description')).toContainText(t.newspaper.classifieds[id]);
+    await expect(page.locator('#control-newspaper-next')).toHaveCount(0);
+    await expect(page.locator('[id^="control-newspaper-call-"]')).toHaveCount(ids.filter(id => classifiedPhone(id)).length);
+    const id = ids.find(id => classifiedPhone(id))!, control = `newspaper-call-${id}`;
+    await expect(page.locator(`#control-${control}`)).toHaveAccessibleName(new RegExp(classifiedPhone(id)!));
+    await page.locator('#stage').screenshot({ path: info.outputPath(`classifieds-${locale}.png`) });
+    const action = { type: 'call-classified', day: state.day, classifiedId: id } as const;
+    const expected = applyAction(state, action);
+    await page.locator(`#control-${control}`).click();
+    await expect(page.locator('#clinic-speech')).toHaveText(t.progression.dialogue.dialing);
+    if (audible) await expect.poll(phoneSounds).toEqual([{ src: 'phone-dial.wav', muted: false, state: 'loaded' }]);
+    await expect(page.locator('#control-newspaper')).not.toHaveAttribute('data-held', 'true');
+    await page.clock.runFor(4100);
+    await expect(page.locator('#clinic-speech')).toHaveText(t.feedback[expected.feedback]);
+    await page.locator('#stage').screenshot({ path: info.outputPath(`classified-call-${locale}.png`) });
+    const other = locale === 'pl' ? 'en' : 'pl';
+    await key(page, `language-${other}`);
+    await expect(page.locator('#clinic-speech')).toHaveText(translations[other].feedback[expected.feedback]);
+    await key(page, `language-${locale}`);
+    const called = await exportNewspaperState(page);
+    expect(called.newspaper).toEqual(state.newspaper);
+    expect(called.newspaperCopies).toEqual(state.newspaperCopies);
+    expect(called.rngState).toBe(expected.state.rngState);
+    expect(called.papers).toEqual(state.papers);
+    expect(called.money).toBe(state.money);
+    // A second keyboard attempt draws another result from the saved stream.
+    await key(page, control);
+    await page.clock.runFor(4100);
+    await expect(page.locator('#clinic-speech')).toHaveText(t.feedback[applyAction(called, action).feedback]);
+    await page.locator('#control-newspaper').focus(); await page.keyboard.press('Space');
+    await expect(page.locator('[id^="control-newspaper-call-"]')).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await expect(page.locator(`#control-${control}`)).toBeVisible();
+    // Invalid ads cannot replace the current issue or reset the selected page.
+    await key(page, 'saves');
+    const invalid = gzipSync(strToU8(JSON.stringify({ game: 'next-please', version: 34, savedAt: '2026-10-31T12:00:00.000Z',
+      state: { ...called, newspaper: { ...called.newspaper, classifiedIds: ['invented', 'books', 'jars'] } } })));
+    await page.locator('#save-input').setInputFiles({ name: 'broken.npsave', mimeType: 'application/gzip', buffer: Buffer.from(invalid) });
+    await expect(page.locator('#announcement')).toContainText(t.errors['invalid-state']);
+    await key(page, 'back');
+    await expect(page.locator('#controls')).toHaveAttribute('data-newspaper-page', String(state.newspaper.articleIds.length));
+    await expect(page.locator('#screen-description')).toContainText(t.newspaper.classifieds[id]);
+    await load(page, called);
+    await key(page, 'newspaper');
+    for (let i = 0; i < state.newspaper.articleIds.length; i++) await key(page, 'newspaper-next');
+    await expect(page.locator('#screen-description')).toContainText(t.newspaper.classifieds[id]);
+    expect(errors).toEqual([]);
+  });
 }

@@ -1,4 +1,4 @@
-import { createNewspaper, nextNewspaper, newspaperCopy, type NewspaperState, type NewspaperCopy } from './newspaper';
+import { createNewspaper, nextNewspaper, newspaperCopy, classifiedPhone, CLASSIFIED_CALL_RESULTS, type ClassifiedId, type ClassifiedCallResult, type NewspaperState, type NewspaperCopy } from './newspaper';
 import { gameDate, isWeekend } from './calendar';
 import { additionalNoteEntry, additionalResultFor, additionalTestForJob, additionalTestForPatient, nextWorkingDay, type AdditionalNoteEntry, type AdditionalTest, type AdditionalResult, type PendingReferral } from './additional-tests';
 import { PATIENTS, CHARACTER_COUNT, randomStep, hasRequiredExaminations, compatiblePressureReading, type ExaminationId, type VisionValues, type PressureValues } from './patients';
@@ -161,12 +161,13 @@ export type GameAction =
   | { type: 'store-banknote' | 'retrieve-banknote' | 'return-banknote'; banknoteId: number; drawer?: DrawerId }
   | { type: 'store-drawer-item' | 'retrieve-drawer-item'; item: 'manual' | 'clip'; drawer?: DrawerId }
   | { type: 'store-newspaper' | 'retrieve-newspaper' | 'trash-newspaper'; day: number; drawer?: DrawerId }
+  | { type: 'call-classified'; day: number; classifiedId: ClassifiedId }
   | { type: 'write-note' | 'store-paper' | 'retrieve-paper' | 'trash-paper' | 'open-letter' | 'clip-paper'; paperId: number; drawer?: DrawerId }
   | { type: 'clip-document'; documentId: DocumentId }
   | { type: 'unclip-document'; documentId: DocumentId }
   | { type: 'join-documents'; documentId: DocumentId; targetId: DocumentId };
 
-export type GameFeedback =
+export type GameFeedback = ClassifiedCallResult
   | 'inspector-arrived' | 'inspection-id-taken' | 'inspection-id-returned' | 'inspection-id-needed'
   | 'inspection-document-accepted' | 'inspection-wrong-document' | 'inspection-confirm-missing'
   | 'inspection-complete' | 'inspection-fined' | 'inspection-waiting'
@@ -434,7 +435,13 @@ function transition(state: GameState, action: GameAction): ActionResult {
     return changed({ newspaperCopies, clockMinutes: spend(ACTION_MINUTES.handling) },
       action.type === 'trash-newspaper' ? 'newspaper-trashed' : retrieving ? 'item-retrieved' : 'item-stored');
   }
-  if (action === 'use-phone') return changed({ clockMinutes: spend(ACTION_MINUTES.handling) }, workDayNumber(state.day) >= 4 ? 'phone-ready' : 'phone-unavailable');
+  if (action === 'use-phone') return changed({ clockMinutes: spend(ACTION_MINUTES.handling) }, 'phone-ready');
+  if (typeof action === 'object' && action.type === 'call-classified') {
+    const copy = state.newspaperCopies.find(copy => copy.day === action.day && copy.location === 'desk');
+    if (!copy?.classifiedIds.includes(action.classifiedId) || !classifiedPhone(action.classifiedId)) return unchanged('item-missing');
+    const draw = randomStep(state.rngState);
+    return changed({ rngState: draw.seed, clockMinutes: spend(3) }, CLASSIFIED_CALL_RESULTS[Math.floor(draw.value * CLASSIFIED_CALL_RESULTS.length)]!);
+  }
   if (action === 'take-paper') {
     if (!canAddPaper()) return unchanged('limit-reached');
     return addPaper({ id: state.nextPaperId, kind: 'note', day: state.day, patientId: null, location: 'desk', additionalWritten: false,

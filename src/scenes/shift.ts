@@ -1,4 +1,4 @@
-import { drawNewspaper, newspaperControls, newspaperPageCount, newspaperDescription, type NewspaperViews } from '../render/newspaper';
+import { drawNewspaper, newspaperControls, newspaperPageCount, newspaperDescription, newspaperClassifiedLayout, type NewspaperViews } from '../render/newspaper';
 import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, drawDeskCalendar, drawBanknote, drawInspectionForm, type CabinetArtOptions } from '../render/clinic';
 import { drawPaperwork, paperDescription, paperActionRect, paperClipTargetRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries } from '../render/paperwork';
 import { paginateNoteEntries, notePageControls, notePageLabel } from '../render/note-pages';
@@ -185,9 +185,15 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     ...state.newspaperCopies.filter(copy => copy.location === 'desk' && view.desk.positions[newspaperItemId(copy.day, state.day)]).flatMap(copy => {
       const id = newspaperItemId(copy.day, state.day), reading = view.newspaperViews?.[id];
       const page = reading?.page ?? 0;
-      const corners = newspaperControls(itemRect(view.desk, id, false, false, false, reading?.open));
+      const bounds = itemRect(view.desk, id, false, false, false, reading?.open);
+      const corners = newspaperControls(bounds);
       return [item(id, `${t.newspaper.title}. ${formatGameDate(copy.day, locale)}. ${reading?.open ? newspaperDescription(copy, copy.day, locale, page) : t.newspaper.open}`, id, { type: 'read-newspaper', day: copy.day, turn: 'toggle' }),
         ...(view.held !== id && reading?.open ? [
+          ...(page === copy.articleIds.length ? newspaperClassifiedLayout(copy.classifiedIds, locale).flatMap(ad => ad.phoneRect ? [{
+            ...hotspot(`${id}-call-${ad.id}`, `${t.newspaper.callClassified}: ${t.newspaper.classifieds[ad.id]} ${ad.phoneText}`,
+              { ...ad.phoneRect, x: bounds.x + ad.phoneRect.x, y: bounds.y + ad.phoneRect.y },
+              { type: 'call-classified', day: copy.day, classifiedId: ad.id }), owner: id,
+          }] : []) : []),
           ...(page > 0 ? [{ ...hotspot(`${id}-prev`, t.newspaper.previous, corners.previous, { type: 'read-newspaper', day: copy.day, turn: 'prev' }), owner: id }] : []),
           ...(page < newspaperPageCount(copy) - 1 ? [{ ...hotspot(`${id}-next`, t.newspaper.next, corners.next, { type: 'read-newspaper', day: copy.day, turn: 'next' }), owner: id }] : []),
         ] : []),

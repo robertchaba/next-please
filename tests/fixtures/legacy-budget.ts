@@ -29,6 +29,10 @@ export function legacyBudget(state: unknown): unknown {
 export function historicalState(state: unknown, version: number): unknown {
   if (!state || typeof state !== 'object') return state;
   const old = structuredClone(state) as Record<string, unknown>;
+  if (version < 34) {
+    if (old.newspaper && typeof old.newspaper === 'object') delete (old.newspaper as Record<string, unknown>).classifiedIds;
+    if (Array.isArray(old.newspaperCopies)) for (const copy of old.newspaperCopies) delete copy.classifiedIds;
+  }
   if (version < 33) delete old.newspaperCopies;
   if (version < 32) delete old.newspaper;
   if (version < 29) delete old.portraitHistory;
@@ -42,7 +46,7 @@ export function historicalState(state: unknown, version: number): unknown {
 export function withMigratedNewspaper(state: unknown): unknown {
   if (!state || typeof state !== 'object' || !('rngState' in state) || typeof state.rngState !== 'number'
     || !('day' in state) || typeof state.day !== 'number') throw new Error('Expected complete migrated fixture');
-  const newspaper = createNewspaper((state.rngState ^ state.day) >>> 0);
+  const newspaper = { ...createNewspaper((state.rngState ^ state.day) >>> 0), classifiedIds: [] };
   let day = state.day;
   while (isWeekend(day)) day--;
   return { ...state, newspaper, newspaperCopies: [newspaperCopy(newspaper, day)] };

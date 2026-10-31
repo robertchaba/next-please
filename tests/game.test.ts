@@ -349,7 +349,7 @@ describe('paperwork and the new instruments', () => {
     state = act(state, 'end-day', 'next-day');
     expect(state.papers).toBe(papers);
     const called = applyAction(state, 'use-phone');
-    expect(called.feedback).toBe('phone-unavailable');
+    expect(called.feedback).toBe('phone-ready');
     expect(called.state).toEqual({ ...state, clockMinutes: state.clockMinutes + 1 });
   });
 });
