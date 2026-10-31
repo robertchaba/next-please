@@ -68,3 +68,20 @@ Identyfikatory przypadków, portretów, pracodawców, instytucji, artykułów i 
 `tests/localization.test.ts` porównuje wszystkie przypadki pacjentów i podpisy ze słownikiem, sprawdza wspólne miejsca oraz szuka pozostawionych polskich fragmentów we wszystkich tekstach EN. Testy pacjentów nadal chronią historyczne dane kliniczne i polskie nazwy, a w obu językach sprawdzają unikalność 940 tożsamości. Testy układu mierzą pełne formularze, listy, 170 artykułów i 166 ogłoszeń w rozdzielczości natywnej. Trzy ogłoszenia EN (`room`, `music-stand`, `old-city-photos`) skrócono po adaptacji adresów, zachowując sens i dane kontaktowe.
 
 Testy przeglądarkowe sprawdzają przełączanie języka po imporcie, opisy pacjenta i jego dokumentów, korespondencję, inspekcję, prasę i obsługę klawiaturą. [Angielska pieczęć SIO](art-localization-2026-10-31.md) jest osobnym wygenerowanym zasobem. Podglądy z gry: [pismo SIO](localization-sio-en-screen.png), [ogłoszenia z nowymi adresami](localization-classifieds-en-screen.png).
+
+## Lekarze wystawiający zaświadczenia o nadciśnieniu
+
+Wystawca jest przypisany do zapisanego kontaktu telefonicznego. Kolejność poniższej puli jest stała; zmiana języka, przełożenie dokumentu do szuflady lub import wcześniejszego zapisu nie wybiera nowej osoby. Nazwisko widnieje w nagłówku zaświadczenia i jego opisie dostępności.
+
+| PL | EN |
+| --- | --- |
+| dr Roman Żuławski | Dr Raymond Fenwick |
+| dr Jerzy Łoziński | Dr George Elwood |
+| dr Stefan Brzeziński | Dr Stephen Birchall |
+| dr Tadeusz Gajewski | Dr Theodore Grove |
+| dr Władysław Domański | Dr Wallace Homerton |
+| dr Kazimierz Różycki | Dr Clarence Prentice |
+| dr Henryk Sadowski | Dr Henry Orchard |
+| dr Zbigniew Zieliński | Dr Neville Greenfield |
+
+[Zaświadczenie z nazwiskiem wystawcy — podgląd PL](specialist-issuer-pl-screen.png).

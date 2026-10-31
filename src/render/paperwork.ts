@@ -7,7 +7,7 @@ import { formatGameDate, gameDate } from '../core/calendar';
 import { translations, type Locale } from '../i18n';
 import { drawPaper, drawPaperclip, drawDecisionImprint, drawDocumentSignature, drawUnclearSeal, drawInspectionForm, drawInspector, drawStationery } from './clinic';
 import { drawDocumentText, drawDocumentHeading, measureDocumentText, drawReadingText, measureReadingText, READ_LINE_HEIGHT } from './font';
-import { referralCopy, correspondenceCopy, employerInstitution, wrapReadingText, fieldLabelWidth, REFERRAL_BODY_Y, REFERRAL_LINE_HEIGHT } from './document-copy';
+import { referralCopy, correspondenceCopy, employerInstitution, specialistIssuer, wrapReadingText, fieldLabelWidth, REFERRAL_BODY_Y, REFERRAL_LINE_HEIGHT } from './document-copy';
 import { drawAdministrativeStamp, drawLetterhead, institutionInk } from './document-style';
 import { drawManualArt } from './clinic';
 import { paginateNoteEntries, notePageControls, notePageLabel, NOTE_LINE_HEIGHT } from './note-pages';
@@ -154,7 +154,7 @@ export function paperDescription(paper: Paper, locale: Locale, clipped = false):
     const a = t.additionalTests;
     text = `${a.resultTitle}. ${name}. ${p.position}: ${t.patientJobs[paper.patientId]}. ${a.tests[paper.test]}. ${additionalResultText(paper, locale)} ${a.otherChecks} ${p.signed}.`;
   } else if (paper.kind === 'specialist') {
-    text = `${q.specialistTitle}. ${name}. ${q.treatment} ${q.clearance} ${p.position}: ${specialistJob(paper, locale)}. ${q.phone} ${paper.certificate.phone}. ${q.chamber}. ${p.signed}.`;
+    text = `${q.specialistTitle}. ${q.specialist}: ${specialistIssuer(paper.certificate, locale)}. ${name}. ${q.treatment} ${q.clearance} ${p.position}: ${specialistJob(paper, locale)}. ${q.phone} ${paper.certificate.phone}. ${q.chamber}. ${p.signed}.`;
   } else if (paper.kind === 'letter' || paper.kind === 'directive') {
     const sender = correspondenceSender(paper, locale);
     const copy = correspondenceCopy(paper, locale);
@@ -279,8 +279,9 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
   };
   const clinicalHeader = (title: string, specialist = false): void => {
     const d = t.documentDesign;
+    const issuer = paper.kind === 'specialist' ? specialistIssuer(paper.certificate, locale) : t.progression.chamber;
     drawLetterhead(ctx, specialist ? 'chamber' : 'clinic', specialist ? t.progression.specialist : d.medicalOffice,
-      specialist ? t.progression.chamber : d.departments.clinic, x + 11, y + 6);
+      specialist ? issuer : d.departments.clinic, x + 11, y + 6);
     dateAndReference();
     drawDocumentHeading(ctx, title, x + Math.floor(w / 2), y + 29, { color: ink, face: 'serif', align: 'center' });
   };

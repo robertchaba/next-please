@@ -3,7 +3,7 @@ import { gzipSync, strToU8 } from 'fflate';
 import { applyAction, createInitialState, type GameState } from '../src/core/game';
 import { newspaperCopy } from '../src/core/newspaper';
 import { decodeSave, encodeSave } from '../src/core/save';
-import { drawerButtons, drawerNewspapers, drawerSheets } from '../src/render/drawer';
+import { DRAWER_NEWSPAPER_BATCH_SIZE, drawerButtons, drawerNewspapers, drawerSheets } from '../src/render/drawer';
 import { dropTargetRect, DROP_ZONES } from '../src/core/desk';
 import { historicalState } from './fixtures/legacy-budget';
 
@@ -83,16 +83,50 @@ describe('physical newspaper copies', () => {
 
   it('paginates stored newspapers independently of clinical files, with dated retrieval controls', () => {
     let state = start();
-    for (let i = 0; i < 8; i++) {
+    const count = DRAWER_NEWSPAPER_BATCH_SIZE * 2 + 3;
+    for (let i = 0; i < count; i++) {
       state = applyAction(state, { type: 'store-newspaper', day: state.day, drawer: 'drawer-2' }).state;
-      if (i < 7) state = next(state);
+      if (i < count - 1) state = next(state);
     }
     expect(drawerSheets(state, 0, 'drawer').pages).toBe(1);
-    expect(drawerSheets(state, 0, 'drawer-2').pages).toBe(2);
-    expect(drawerNewspapers(state, 0, 'drawer-2')).toHaveLength(5);
-    expect(drawerNewspapers(state, 1, 'drawer-2')).toHaveLength(3);
+    expect(drawerSheets(state, 0, 'drawer-2').pages).toBe(3);
+    expect(drawerNewspapers(state, 0, 'drawer-2')).toHaveLength(DRAWER_NEWSPAPER_BATCH_SIZE);
+    expect(drawerNewspapers(state, 2, 'drawer-2')).toHaveLength(3);
+    const days = state.newspaperCopies.map(copy => copy.day);
+    state = { ...state, newspaperCopies: [...state.newspaperCopies].reverse() };
+    expect([0, 1, 2].flatMap(page => drawerNewspapers(state, page, 'drawer-2').map(({ copy }) => copy.day))).toEqual(days);
+    expect(state.newspaperCopies.map(copy => copy.day)).toEqual([...days].reverse());
+    expect(drawerSheets(state, 99, 'drawer-2').current).toBe(2);
     expect(drawerButtons(state, 'pl', 0, () => {}, 'drawer-2').find(button => button.id === 'drawer-newspaper-1')?.label).toContain('03.11.1983');
     for (const target of ['drawer', 'drawer-2', 'trash'] as const) expect(dropTargetRect(target, 'newspaper-1')).toEqual(DROP_ZONES[target]);
+  });
+
+  it('overlaps generated newspapers while keeping each exposed edge selectable and clear of other objects', () => {
+    let state = start();
+    for (let i = 0; i < DRAWER_NEWSPAPER_BATCH_SIZE; i++) {
+      state = applyAction(state, { type: 'store-newspaper', day: state.day }).state;
+      if (i < DRAWER_NEWSPAPER_BATCH_SIZE - 1) state = next(state);
+    }
+    state = applyAction(state, { type: 'store-drawer-item', item: 'manual' }).state;
+    state = applyAction(state, { type: 'store-drawer-item', item: 'clip' }).state;
+    const stack = drawerNewspapers(state, 0, 'drawer');
+    const controls = drawerButtons(state, 'pl', 0, () => {});
+    for (const [index, { bounds, artwork, copy }] of stack.entries()) {
+      expect(controls.find(control => control.id === `drawer-newspaper-${copy.day}`)).toMatchObject(bounds);
+      expect(bounds.x).toBeGreaterThan(425); // Keep the whole stack beyond the wooden divider.
+      expect(artwork.y + artwork.h).toBeLessThan(216); // The rulebook begins here.
+      for (const other of controls.filter(control => control.id !== `drawer-newspaper-${copy.day}`)) {
+        const overlap = bounds.x < other.x + other.w && bounds.x + bounds.w > other.x
+          && bounds.y < other.y + other.h && bounds.y + bounds.h > other.y;
+        expect(overlap, `${copy.day}/${other.id}`).toBe(false);
+      }
+      if (index + 1 < stack.length) {
+        const next = stack[index + 1]!;
+        expect(bounds.y + bounds.h).toBe(next.artwork.y);
+        expect(artwork.y + artwork.h).toBeGreaterThan(next.artwork.y);
+      } else expect(bounds).toEqual(artwork);
+    }
+    expect(decodeSave(encodeSave(state))).toEqual(state);
   });
 
   it('observes clinic closing before storing, retrieving or discarding a copy', () => {

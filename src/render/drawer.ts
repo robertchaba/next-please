@@ -10,15 +10,21 @@ import { drawDocumentText, measureDocumentText } from './font';
 
 /** Two columns of exposed file-cover labels preserve the original filing order. */
 export const DRAWER_BATCH_SIZE = 24;
+export const DRAWER_NEWSPAPER_BATCH_SIZE = 8;
 export const DRAWER_CLOSE: Rect = { x: 0, y: 288, w: 570, h: 32 };
 const manualBounds: Rect = { x: 444, y: 216, w: 88, h: 48 };
 const clipBounds: Rect = { x: 363, y: 239, w: 62, h: 44 };
 export type DrawerAction = { type: 'newspaper'; day: number } | { type: 'paper'; id: number } | { type: 'item'; item: 'manual' | 'clip' } | { type: 'page'; page: number } | { type: 'close' } | { type: 'banknote'; id: number };
 
 export function drawerNewspapers(state: GameState, page: number, drawer: DrawerId) {
-  return state.newspaperCopies.filter(copy => copy.location === drawer).slice(page * 5, (page + 1) * 5).map((copy, index) => ({
-    copy, bounds: { x: 294 + index % 2 * 150, y: 35 + Math.floor(index / 2) * 64, w: 88, h: 56 } satisfies Rect,
-  }));
+  const copies = state.newspaperCopies.filter(copy => copy.location === drawer).sort((a, b) => a.day - b.day)
+    .slice(page * DRAWER_NEWSPAPER_BATCH_SIZE, (page + 1) * DRAWER_NEWSPAPER_BATCH_SIZE);
+  return copies.map((copy, index) => {
+    const artwork: Rect = { x: 444, y: 35 + index * 17, w: 88, h: 56 };
+    // Each exposed edge owns its hit area; only the topmost copy is fully visible.
+    const bounds = { ...artwork, h: index === copies.length - 1 ? artwork.h : 17 };
+    return { copy, bounds, artwork };
+  });
 }
 
 export function drawerSheets(state: GameState, page: number, drawer: DrawerId = 'drawer') {
@@ -29,7 +35,7 @@ export function drawerSheets(state: GameState, page: number, drawer: DrawerId = 
     for (const id of groups.get(paper.id) ?? [paper.id]) if (typeof id === 'number') seen.add(id);
     return true;
   });
-  const pages = Math.max(1, Math.ceil(papers.length / DRAWER_BATCH_SIZE), Math.ceil(state.newspaperCopies.filter(copy => copy.location === drawer).length / 5));
+  const pages = Math.max(1, Math.ceil(papers.length / DRAWER_BATCH_SIZE), Math.ceil(state.newspaperCopies.filter(copy => copy.location === drawer).length / DRAWER_NEWSPAPER_BATCH_SIZE));
   const current = Math.max(0, Math.min(pages - 1, page));
   return { papers, pages, current, visible: papers.slice(current * DRAWER_BATCH_SIZE, (current + 1) * DRAWER_BATCH_SIZE).map((paper, index) => ({
     paper, bounds: { x: 30 + Math.floor(index / 12) * 121, y: 35 + index % 12 * 17, w: 116, h: 17 } satisfies Rect,
@@ -92,9 +98,9 @@ export function renderDrawer(ctx: CanvasRenderingContext2D, state: GameState, lo
     if (activeId === `drawer-paper-${paper.id}`) drawDocumentText(ctx, fitLabel(coverName(paper, locale), 96), bounds.x + 9, bounds.y + 10, { color: '#385b78' });
   }
   ctx.restore();
-  for (const { copy, bounds } of drawerNewspapers(state, sheets.current, drawer)) {
-    drawNewspaperArt(ctx, false, bounds.x, bounds.y, bounds.w, bounds.h);
-    if (activeId === `drawer-newspaper-${copy.day}`) drawDocumentText(ctx, `${t.newspaper.shortTitle} ${formatGameDate(copy.day, locale)}`, bounds.x + 44, bounds.y + 56, { align: 'center', color: '#d9cfaa' });
+  for (const { copy, artwork } of drawerNewspapers(state, sheets.current, drawer)) {
+    drawNewspaperArt(ctx, false, artwork.x, artwork.y, artwork.w, artwork.h);
+    if (activeId === `drawer-newspaper-${copy.day}`) drawDocumentText(ctx, `${t.newspaper.shortTitle} ${formatGameDate(copy.day, locale)}`, artwork.x + 44, 23, { align: 'center', color: '#d9cfaa' });
   }
   if (state.drawerItems[drawer].manual) drawManualCover(ctx, manualBounds, false);
   for (let index = 0; index < Math.min(8, state.drawerItems[drawer].clips); index++) {

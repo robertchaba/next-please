@@ -4,6 +4,7 @@ import { applyAction, createInitialState, type GameState } from '../../src/core/
 import { encodeSave } from '../../src/core/save';
 import { translations } from '../../src/i18n';
 import { classifiedPhone } from '../../src/core/newspaper';
+import { DRAWER_NEWSPAPER_BATCH_SIZE } from '../../src/render/drawer';
 
 const key = async (page: Page, id: string) => { await page.locator(`#control-${id}`).focus(); await page.keyboard.press('Enter'); };
 function morning(): GameState {
@@ -15,6 +16,68 @@ async function load(page: Page, state: GameState) {
   await page.locator('#save-input').setInputFiles({ name: 'morning.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(state)) });
   await expect(page.locator('#announcement')).toContainText(/Zapis wczytany|Save loaded/);
   await key(page, 'back');
+}
+
+for (const locale of ['pl', 'en'] as const) {
+  test(`newspaper stack exposes dated edges, paginates and retrieves the chosen issue in ${locale}`, async ({ page }, info) => {
+    let state = applyAction({ ...createInitialState(120), money: 100000 }, 'skip-intro').state;
+    for (let index = 0; index < DRAWER_NEWSPAPER_BATCH_SIZE + 4; index++) {
+      if (index) {
+        state = applyAction({ ...state, clockMinutes: 840 }, 'end-day').state;
+        do { state = applyAction(state, 'next-day').state; } while (state.phase === 'home');
+      }
+      state = applyAction(state, { type: 'store-newspaper', day: state.day, drawer: index === 0 ? 'drawer' : 'drawer-2' }).state;
+    }
+    state = applyAction(state, { type: 'store-drawer-item', item: 'manual', drawer: 'drawer-2' }).state;
+    state = applyAction(state, { type: 'store-drawer-item', item: 'clip', drawer: 'drawer-2' }).state;
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.clock.install();
+    await page.goto('/');
+    await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
+    await key(page, 'start');
+    for (let i = 0; i < 4; i++) await key(page, 'intro-next');
+    await page.clock.pauseAt(new Date(Date.now() + 1000));
+    await key(page, `language-${locale}`);
+    await load(page, state);
+    await key(page, 'drawer-2');
+    const copies = state.newspaperCopies.filter(copy => copy.location === 'drawer-2');
+    const edges = page.locator('[id^="control-drawer-newspaper-"]');
+    await expect(edges).toHaveCount(DRAWER_NEWSPAPER_BATCH_SIZE);
+    await expect(page.locator('#control-drawer-newspaper-1')).toHaveCount(0);
+    const selected = copies[3]!;
+    const edge = page.locator(`#control-drawer-newspaper-${selected.day}`);
+    await edge.hover();
+    expect(await edge.evaluate(el => (el as HTMLElement).style.height)).toBe('17px');
+    await page.locator('#stage').screenshot({ path: info.outputPath(`newspaper-stack-${locale}.png`) });
+    // Pointer selects the exposed strip, without picking up the overlaid newer copy.
+    await edge.click();
+    await expect(page.locator(`#control-newspaper-${selected.day}`)).toHaveAttribute('data-held', 'true');
+    await key(page, 'drawer-2');
+    await key(page, 'drawer-2');
+    expect(await edges.evaluateAll(elements => elements.map(el => el.id))).toEqual(copies.slice(0, DRAWER_NEWSPAPER_BATCH_SIZE).map(copy => `control-drawer-newspaper-${copy.day}`));
+    await key(page, 'drawer-next');
+    await expect(edges).toHaveCount(3);
+    await page.locator('#stage').screenshot({ path: info.outputPath(`newspaper-stack-three-${locale}.png`) });
+    const last = copies.at(-1)!;
+    await page.locator(`#control-drawer-newspaper-${last.day}`).focus();
+    await page.locator('#stage').screenshot({ path: info.outputPath(`newspaper-stack-focus-${locale}.png`) });
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#control-newspaper')).toHaveAttribute('data-held', 'true');
+    const stage = (await page.locator('#stage').boundingBox())!;
+    await page.mouse.click(stage.x + 366 * stage.width / 570, stage.y + 212 * stage.height / 320);
+    await expect(page.locator('#screen-description')).toContainText(translations[locale].newspaper.articles[last.articleIds[0]!].body);
+    const saved = await exportNewspaperState(page);
+    expect(saved.newspaperCopies).toEqual(state.newspaperCopies.map(copy => copy.day === last.day ? { ...copy, location: 'desk' } : copy));
+    await load(page, saved);
+    await key(page, 'drawer-2');
+    await key(page, 'drawer-next');
+    await expect(edges).toHaveCount(2);
+    await expect(page.locator(`#control-drawer-newspaper-${last.day}`)).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await key(page, 'drawer');
+    await expect(edges).toHaveCount(1);
+    expect(await edges.first().evaluate(el => (el as HTMLElement).style.height)).toBe('56px');
+  });
 }
 for (const locale of ['pl', 'en'] as const) {
   test(`daily newspaper reads, moves, retains its issue and respects the early bell in ${locale}`, async ({ page }, info) => {

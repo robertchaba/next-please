@@ -4,6 +4,7 @@ import { applyAction, createInitialState, type GameAction, type GameState, type 
 import { PATIENTS } from '../../src/core/patients';
 import { expectedVisitDecision } from '../../src/core/progression';
 import { decodeSave, encodeSave } from '../../src/core/save';
+import { specialistIssuer } from '../../src/render/document-copy';
 
 const actions = (state: GameState, ...items: GameAction[]): GameState => items.reduce((next, action) => applyAction(next, action).state, state);
 
@@ -113,6 +114,8 @@ for (const valid of [true, false]) {
     await load(page, state);
     await key(page, 'take-specialist');
     await place(page);
+    const issuer = specialistIssuer(state.visit!.specialist!, 'pl');
+    await expect(page.locator(`#control-paper-${specialistId}`)).toHaveAccessibleName(new RegExp(issuer));
     await expect(page.locator(`#control-call-specialist-${specialistId}`)).toHaveAccessibleName('Zadzwoń do specjalisty');
     if (valid) await key(page, 'sound');
     await key(page, 'use-phone');
@@ -151,6 +154,11 @@ for (const valid of [true, false]) {
     await page.locator('#stage').screenshot({ path: info.outputPath(`specialist-${valid ? 'valid' : 'invalid'}-pl.png`) });
     await key(page, 'language-en');
     await expect(page.locator(`#control-call-specialist-${specialistId}`)).toHaveAccessibleName(/specialist/i);
+    await expect(page.locator(`#control-paper-${specialistId}`)).toHaveAccessibleName(new RegExp(specialistIssuer(state.visit!.specialist!, 'en')));
+    await page.locator('#stage').screenshot({ path: info.outputPath(`specialist-${valid ? 'valid' : 'invalid'}-en.png`) });
+    await key(page, 'language-pl');
+    await load(page, saved);
+    await expect(page.locator(`#control-paper-${specialistId}`)).toHaveAccessibleName(new RegExp(issuer));
   });
 }
 

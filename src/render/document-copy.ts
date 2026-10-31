@@ -1,5 +1,6 @@
 import { PATIENTS } from '../core/patients';
 import type { Paper } from '../core/game';
+import type { SpecialistCertificate } from '../core/progression';
 import { translations, type Locale } from '../i18n';
 import { measureDocumentText, measureReadingText, type ReadingFace } from './font';
 import { PAPER_SIZE, CLINICAL_PAPER_SIZE } from '../core/desk';
@@ -8,6 +9,12 @@ export const DOCUMENT_BODY_WIDTH = PAPER_SIZE.w - 22;
 export const REFERRAL_BODY_WIDTH = CLINICAL_PAPER_SIZE.w - 22;
 export const REFERRAL_BODY_Y = 50;
 export const REFERRAL_LINE_HEIGHT = 10;
+
+/** A saved phone contact always identifies the same issuer, including older saves. */
+export function specialistIssuer(certificate: SpecialistCertificate, locale: Locale): string {
+  const names = translations[locale].progression.specialistNames;
+  return names[Number(certificate.phone.slice(-4)) % names.length]!;
+}
 
 /** Labels and values share one native size and baseline, including their gap. */
 export const fieldLabelWidth = (label: string): number => measureReadingText(label + 'x') - measureReadingText('x');

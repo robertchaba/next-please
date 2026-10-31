@@ -4,8 +4,34 @@ import { PATIENTS, type Paper } from '../src/core/game';
 import { defaultReferral, effectivePatient } from '../src/core/progression';
 import { measureDocumentText } from '../src/render/font';
 import { noteEntries, paperDescription, referralIssueDate, specialistJob, wrapDocumentLines } from '../src/render/paperwork';
+import { specialistIssuer } from '../src/render/document-copy';
+import glossary from '../docs/localization-glossary.json';
 
 describe('progressive paperwork presentation', () => {
+  it('keeps named specialist contacts stable, localized and clear of the header reference', () => {
+    const pl = translations.pl.progression.specialistNames, en = translations.en.progression.specialistNames;
+    expect(pl).toHaveLength(en.length);
+    expect(new Set(pl).size).toBe(pl.length);
+    for (const [index, name] of pl.entries()) {
+      const [, first, last] = name.split(' ');
+      expect(en[index]).toBe(`Dr ${glossary.firstNames[first as keyof typeof glossary.firstNames]} ${glossary.surnames[last as keyof typeof glossary.surnames]}`);
+    }
+    for (const locale of ['pl', 'en'] as const) {
+      const seen = new Set<string>();
+      for (let number = 1000; number < 1016; number++) {
+        const paper: Extract<Paper, { kind: 'specialist' }> = { kind: 'specialist', id: 1, day: 6, patientId: 0,
+          location: 'desk', certificate: { jobId: 0, phone: `43-${number}` } };
+        const issuer = specialistIssuer(paper.certificate, locale);
+        seen.add(issuer);
+        expect(measureDocumentText(issuer)).toBeLessThanOrEqual(112);
+        expect(paperDescription(paper, locale)).toContain(issuer);
+        expect(paperDescription({ ...paper, id: 99, location: 'drawer-2' }, locale)).toContain(issuer);
+        expect(specialistIssuer(JSON.parse(JSON.stringify(paper.certificate)), locale)).toBe(issuer);
+      }
+      expect(seen.size).toBe(pl.length);
+    }
+  });
+
   it('fits the complete directives and specialist certificate in both languages', () => {
     for (const locale of ['pl', 'en'] as const) {
       const t = translations[locale], p = t.progression;
