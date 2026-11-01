@@ -1,5 +1,6 @@
 node_modules/
 dist/
+# Generated root index.html, assets/, favicon.svg and .nojekyll are committed.
 test-results/
 playwright-report/
 .DS_Store

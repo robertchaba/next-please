@@ -501,6 +501,7 @@ describe('general examination and chronological findings', () => {
     expect(state.visit!.examinationOrder).toEqual(['pressure']);
   });
 
+  // Exhaustively checks eight readings for every ordinary case in the expanded catalog.
   it('keeps repeated readings close to every case baseline without changing its fitness category', () => {
     for (const patient of PATIENTS.slice(0, STORY_PATIENT_FIRST_ID)) {
       let state = act({ ...cabinet(), roster: [patient.id] }, 'call-patient', 'take-document');
@@ -515,7 +516,7 @@ describe('general examination and chronological findings', () => {
         else expect(pressureAssessment(reading)).toBe(pressureAssessment(patient.pressureValues));
       }
     }
-  });
+  }, 30_000);
 
   it.each(['run-pressure', 'return-document', 'handle-item'] as const)('interrupts at 17:15 during %s without counting or penalizing the unfinished visit', action => {
     const prepared = act(readyToStamp(), 'take-paper', 'stamp-unfit', { type: 'clip-document', documentId: 2 },

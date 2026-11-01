@@ -1,0 +1,7 @@
+{
+  "created": "2026-10-26",
+  "tool": "built-in image_gen",
+  "reference": "public/assets/art/workstation-rack-source.png",
+  "transparent_background": true,
+  "prompt": "Use case: precise-object-edit. Edit target: supplied original document rack sprite. Change ONLY the third tray from the top: fill it with a neat thick stack of blank aged cream paper forms, matching the paper stacks already in the first and second trays. Preserve the top two stacks, fourth bottom tray EMPTY, all four tray heights and silhouettes, wooden front lips, brass blank label holders, side rails, existing view angle and lighting, crisp pixel art style and muted analog 1983 clinic palette. The entire unchanged rack must remain visible, isolated on genuine transparent alpha with no shadow or background. No words, no text, no numbers, no logos. This is a drop-in variant for the exact same 60 by 65 pixel runtime footprint. Do not add or remove trays or change framing."
+}

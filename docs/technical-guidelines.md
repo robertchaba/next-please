@@ -11,10 +11,11 @@ Use Node 22.12+ on the Node 22 release line, Node 24, or Node 26+ to satisfy the
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Start the local development server. |
-| `npm run build` | Type-check, then create the static `dist/` build. |
+| `npm run build` | Type-check, build `dist/`, then refresh the committed Pages files in the repository root. |
 | `npm run preview` | Serve that build locally. |
 | `npm test` | Run Vitest unit checks. |
 | `npm run test:browser` | Run Playwright interface checks. |
+| `npm run test:pages` | Check the published root desktop/mobile build under `/next-please/`. |
 
 ## Display and input
 
@@ -102,6 +103,8 @@ Music controls use original muted-olive SVG icons and semantic DOM buttons outsi
 Use Vitest for save round-trips, invalid imports, size limits, scaling behavior, and desktop movement bounds. Use Playwright for language switching, accessible controls, credits, save import/export, viewport changes, the illustrated intro, complete cabinet shifts, clock progression, decoration persistence, patient entry/exit, mouse/touch/keyboard item movement, and audio decode/mute. Check reduced motion, aligned moved hotspots, click-to-carry behavior, dedicated tool rests, early stamps, unstamped return rejection, and preservation of the live desktop after failed imports. Use Vitest for pure gameplay guards, deferred patient bonuses, detection thresholds, daily fine escalation, insurance decay, deterministic settlement, admission at closing, action costs and elapsed time, and nested save validation/migration as well. Add checks for meaningful behavior, not copies of the implementation. Run `npm run build` with the relevant tests before considering a change complete.
 
 Deploy the contents of `dist/` to an HTTP(S) static host. Vite uses `base: './'` to support hosting under a subpath; resolve asset URLs accordingly. No server-side application or secrets belong in this project. Development and built output require a static server; double-clicking the source `index.html` is not a supported launch method. An offline cache or service worker is not part of the current foundation.
+
+GitHub Pages publishes directly from **master / (root)** using **Deploy from a branch**, with the same build/publication layout as `do-nauki`. The source entry point is `src/index.html`; Vite uses `src/` as its root and `public/` for local assets. `npm run build` type-checks and builds the ignored `dist/`, then `scripts/prepare-pages.mjs` refreshes only root `index.html`, `favicon.svg`, `assets/` and `.nojekyll`. Commit these generated files and stale-bundle deletions together with the source changes; Pages does not run npm. Never hand-edit compiled files. The script validates expected outputs before replacing them and leaves sources and documentation intact. Original artwork files/directories named `*-source*` remain in `public/` and are excluded from the copied root assets to avoid doubling their publication size. The empty `.nojekyll` is copied from `public/` and disables Jekyll processing. `npm run test:pages` uses a plain static server for the actual repository root at `/next-please/`, covering both lazy entry points, artwork and gesture-unlocked audio, and rejecting requests outside the repository path.
 
 ## Cabinet input and effects
 
