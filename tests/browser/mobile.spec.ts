@@ -128,9 +128,10 @@ test.describe('phone reception', () => {
     await expect(page.locator('#mobile-next')).toBeHidden();
     await expect(page.locator('#mobile-note')).toBeVisible();
     await expect(page.locator('#mobile-note')).toContainText('Next, Please!');
-    await expect(page.locator('#mobile-note')).toContainText('Do gry potrzebny jest komputer lub laptop.');
+    await expect(page.locator('#mobile-note')).toContainText('Do gry potrzebny jest komputer, taki prawdziwy,');
     await expect(page.locator('#mobile-note')).toContainText(/klawiatur/i);
     await expect(page.locator('#mobile-note')).toContainText(/mysz/i);
+    await expect(page.locator('#mobile-note')).toContainText(/lub gładzikiem/i);
     await expectOverlaysFit(page);
     await page.setViewportSize({ width: 390, height: 664 });
     await expect(reception).toHaveAttribute('data-step', 'note');
@@ -221,7 +222,7 @@ test.describe('phone reception', () => {
     await page.screenshot({ path: testInfo.outputPath('mobile-short-landscape.png'), scale: 'css' });
     await page.keyboard.press('Enter');
     await expect(page.locator('#mobile-reception')).toHaveAttribute('data-step', 'note');
-    await expect(page.locator('#mobile-note')).toContainText(/computer or laptop/i);
+    await expect(page.locator('#mobile-note')).toContainText(/computer, a proper one/i);
     await expectControlsFit(page);
     await expectOverlaysFit(page);
   });
@@ -250,9 +251,10 @@ test.describe('tablet reception', () => {
       }
     }
     await expect(page.locator('#mobile-note')).toContainText('Next, Please!');
-    await expect(page.locator('#mobile-note')).toContainText(/computer or laptop/i);
+    await expect(page.locator('#mobile-note')).toContainText(/computer, a proper one/i);
     await expect(page.locator('#mobile-note')).toContainText(/keyboard/i);
     await expect(page.locator('#mobile-note')).toContainText(/mouse/i);
+    await expect(page.locator('#mobile-note')).toContainText(/or trackpad/i);
     await expectControlsFit(page);
     await expectOverlaysFit(page);
     await page.screenshot({ path: testInfo.outputPath('mobile-note-en-tablet.png') });

@@ -7,7 +7,8 @@ import { measureText } from '../src/render/font';
 describe('release identity', () => {
   it('uses the package version and preserves published names in both languages', () => {
     expect(GAME_VERSION).toBe(version);
-    expect(releaseLabel('pl')).toBe('WERSJA 1.0.6 / DZIURKACZ');
+    expect(releaseLabel('pl')).toBe('WERSJA 1.0.7 / POCZEKALNIA');
+    expect(releaseLabel('pl', '1.0.6')).toBe('WERSJA 1.0.6 / DZIURKACZ');
     expect(releaseLabel('pl', '1.0.5')).toBe('WERSJA 1.0.5 / NUMEREK');
     expect(releaseLabel('pl', '1.0.3')).toBe('WERSJA 1.0.3 / KARTOTEKA');
     expect(releaseLabel('pl', '1.0.2')).toBe('WERSJA 1.0.2 / SPINACZ');
@@ -17,7 +18,8 @@ describe('release identity', () => {
     expect(releaseLabel('pl', '0.8.8')).toBe('WERSJA 0.8.8 / ARCHIWUM');
     expect(releaseLabel('pl', '0.8.7')).toBe('WERSJA 0.8.7 / REJESTRACJA');
     expect(releaseLabel('pl', '0.8.6')).toBe('WERSJA 0.8.6 / PARAFKA');
-    expect(releaseLabel('en')).toBe('VERSION 1.0.6 / HOLE PUNCH');
+    expect(releaseLabel('en')).toBe('VERSION 1.0.7 / WAITING ROOM');
+    expect(releaseLabel('en', '1.0.6')).toBe('VERSION 1.0.6 / HOLE PUNCH');
     expect(releaseLabel('en', '1.0.5')).toBe('VERSION 1.0.5 / QUEUE TICKET');
     expect(releaseLabel('en', '1.0.3')).toBe('VERSION 1.0.3 / CARD INDEX');
     expect(releaseLabel('en', '1.0.2')).toBe('VERSION 1.0.2 / PAPERCLIP');
