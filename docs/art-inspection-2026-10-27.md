@@ -4,6 +4,8 @@ All artwork in this batch was created specifically for Next, Please! using the b
 
 These are original generated game assets. There is no separate third-party asset attribution or redistribution requirement; use and redistribution follow the applicable OpenAI terms for generated outputs. The identity card and fine are invented game props, with no replica government insignia. All words, names, dates and amounts remain separately localized by the game. Robert Chaba's existing creator credit is unchanged.
 
+The penalty-notice design below is historical. Version 1.0.2 replaces its ornamental border with [generated perforated carbon-copy paper](art-endings-and-fine-2026-11-01.md); the original source remains archived.
+
 ## Files
 
 Paths below are relative to `public/assets/art/`.

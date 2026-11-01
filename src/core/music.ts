@@ -27,20 +27,25 @@ export const endDayPlaylist: readonly string[] = [endDayMusic];
 /** Terminal failures have their own cue, outside work and ordinary settlement. */
 export const gameOverMusic = 'game-over';
 export const gameOverPlaylist: readonly string[] = [gameOverMusic];
-/** The success cue stays reserved until success scenes exist. */
-export const reservedMusicFiles = ['Victory Fanfare - All Clear.mp3'] as const;
+/** Completed chapters that allow continued work have their own success cue. */
+export const victoryMusic = 'victory';
+export const victoryPlaylist: readonly string[] = [victoryMusic];
 
 export const musicPlaylist = tracks.map(([id]) => id);
 export const musicManifest: AudioManifest = Object.fromEntries([
   ...tracks,
   [endDayMusic, 'Wissenschaftlicher Optimismus - Feierabend.mp3'],
   [gameOverMusic, 'Game Over - The Final Stamp.mp3'],
+  [victoryMusic, 'Victory Fanfare - All Clear.mp3'],
 ].map(([id, filename]) => [id, {
   kind: 'music',
   src: [`${import.meta.env.BASE_URL}assets/audio/music/${encodeURIComponent(filename)}`],
 }]));
 
-export function playlistForState(state: Pick<GameState, 'phase' | 'ending'>): readonly string[] {
+export function playlistForState(state: Pick<GameState, 'phase' | 'ending' | 'story'>): readonly string[] {
   if (state.ending === 'bankruptcy' || state.ending === 'hospital') return gameOverPlaylist;
+  if (state.phase === 'epilogue' && state.story.resolution) {
+    return state.story.resolution.terminal ? gameOverPlaylist : victoryPlaylist;
+  }
   return state.phase === 'home' ? endDayPlaylist : musicPlaylist;
 }

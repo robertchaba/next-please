@@ -1,3 +1,4 @@
+import { expectEndingArt } from '../fixtures/ending-art';
 import { createInitialState } from '../fixtures/routine';
 import { readFile } from 'node:fs/promises';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
@@ -242,12 +243,15 @@ test('keeping the banknote in the drawer and refusing ends the game in hospital 
   for (const id of ['stamp-unfit', 'apply-stamp', 'return-document']) await key(page, id);
   await expect(page.locator('#controls')).toHaveAttribute('data-home-kind', 'hospital');
   await expect(page.locator('#screen-description')).toContainText('Po leczeniu czekają cię badania medycyny pracy');
+  await expectEndingArt(page, 'hospital-ending');
   await page.locator('#stage').screenshot({ path: info.outputPath('hospital-pl.png') });
   const finished = await exportState(page, info);
   expect(finished.ending).toBe('hospital');
   expect(finished.settlement?.patientBonus).toBe(100);
   await key(page, 'language-en');
   await expect(page.locator('#screen-description')).toContainText('occupational health exam');
+  await expectEndingArt(page, 'hospital-ending');
+  await page.locator('#stage').screenshot({ path: info.outputPath('hospital-en.png') });
   await key(page, 'home-next');
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'break-room');
   expect(applyAction(finished, 'next-day').state).toEqual(finished);

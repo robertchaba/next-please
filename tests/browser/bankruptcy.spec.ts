@@ -1,3 +1,4 @@
+import { expectEndingArt } from '../fixtures/ending-art';
 import { createInitialState } from '../fixtures/routine';
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
@@ -27,6 +28,7 @@ for (const locale of ['pl', 'en'] as const) test(`bankruptcy settles, survives i
   await expect(page.locator('#screen-description')).toContainText(q.bankruptcyDescription);
   await expect(page.locator('#screen-description')).toContainText(q.gameOver);
   await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
+  await expectEndingArt(page, 'bankruptcy-cloakroom');
   await page.locator('#stage').screenshot({ path: info.outputPath(`bankruptcy-${locale}.png`) });
   await page.locator('#control-saves').click();
   const pending = page.waitForEvent('download');

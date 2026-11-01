@@ -2,6 +2,7 @@ import { createInitialState } from '../fixtures/routine';
 import { test, expect, type Page } from '@playwright/test';
 import { readdirSync } from 'node:fs';
 import type { Howl } from 'howler';
+import { playStoryRoute } from '../fixtures/story-route';
 import { applyAction } from '../../src/core/game';
 import { encodeSave } from '../../src/core/save';
 
@@ -86,6 +87,68 @@ for (const ending of ['bankruptcy', 'hospital'] as const) for (const muted of [t
     expect(requests.some(src => src.includes('Wissenschaftlicher Optimismus') || src.includes('Victory'))).toBe(false);
   });
 }
+
+for (const route of ['exposed', 'audit', 'chaos', 'detained', 'party', 'union', 'independent']) for (const muted of [true, false]) {
+  test(`chapter ${route} selects its cue on import, preserves mute and exits correctly (muted=${muted})`, async ({ page }) => {
+    const requests: string[] = [];
+    page.on('request', request => { if (request.url().endsWith('.mp3')) requests.push(decodeURIComponent(request.url())); });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+    if (!muted) await page.locator('#control-sound').click();
+    const state = playStoryRoute(route);
+    const success = ['party', 'union', 'independent'].includes(route);
+    const filename = success ? 'Victory Fanfare - All Clear.mp3' : 'Game Over - The Final Stamp.mp3';
+    await page.locator('#control-saves').click();
+    await page.locator('#save-input').setInputFiles({ name: 'chapter.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(state)) });
+    await expect(page.getByRole('status')).toContainText('Zapis wczytany');
+    await page.locator('#control-back').click();
+    await page.locator('#control-start').click();
+    await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'epilogue');
+    if (muted) {
+      await page.locator('#control-next-track').click();
+      expect(requests).toEqual([]);
+      await page.locator('#control-sound').click();
+    }
+    const cue = async () => (await playing(page)).map(sound => ({ src: sound.src.split('/').at(-1), muted: sound.muted }));
+    await expect.poll(cue).toEqual([{ src: filename, muted: false }]);
+    for (const control of ['next-track', 'previous-track', 'epilogue-document', 'epilogue-close-document']) {
+      await page.locator(`#control-${control}`).click();
+      await expect.poll(cue).toEqual([{ src: filename, muted: false }]);
+    }
+    await page.locator('#control-sound').click();
+    await page.locator('#control-next-track').click();
+    await expect.poll(cue).toEqual([{ src: filename, muted: true }]);
+    await page.locator('#control-epilogue-continue').focus();
+    await page.keyboard.press('Enter');
+    if (success) await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
+    else {
+      await page.locator('#control-restart').click();
+      await page.locator('#control-restart-confirm').click();
+    }
+    expect(await playing(page)).toEqual([]);
+    await page.locator('#control-sound').click();
+    await expect.poll(cue).toEqual([{ src: 'Bureaucratic March - Opening the Office.mp3', muted: false }]);
+    expect(requests.some(src => src.includes('Wissenschaftlicher Optimismus') || src.endsWith(success ? 'Game Over - The Final Stamp.mp3' : 'Victory Fanfare - All Clear.mp3'))).toBe(false);
+  });
+}
+
+for (const route of ['party', 'audit']) test(`resolving ${route} during play changes music immediately`, async ({ page }) => {
+  let last = createInitialState(17);
+  playStoryRoute(route, state => { if (state.phase === 'cabinet') last = state; return state; });
+  last = { ...last, clockMinutes: 840 };
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await page.locator('#control-sound').click();
+  await page.locator('#control-saves').click();
+  await page.locator('#save-input').setInputFiles({ name: 'before-ending.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(last)) });
+  await expect(page.getByRole('status')).toContainText('Zapis wczytany');
+  await page.locator('#control-back').click();
+  await page.locator('#control-start').click();
+  await page.locator('#control-end-day-home').click();
+  await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'epilogue');
+  await expect.poll(async () => (await playing(page)).map(sound => sound.src.split('/').at(-1)))
+    .toEqual([route === 'party' ? 'Victory Fanfare - All Clear.mp3' : 'Game Over - The Final Stamp.mp3']);
+});
 
 test('music decodes, plays continuously across screens, repeats, and respects persisted mute', async ({ page }) => {
   const errors: string[] = [];

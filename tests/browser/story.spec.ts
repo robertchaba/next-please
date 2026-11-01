@@ -4,7 +4,8 @@ import { encodeSave, decodeSave } from '../../src/core/save';
 import type { GameState } from '../../src/core/game';
 import { storyPatientForId } from '../../src/core/story-patients';
 import { storyPaperLayout } from '../../src/render/story-paper';
-import { epilogueDocumentPages } from '../../src/scenes/epilogue';
+import { expectEndingArt } from '../fixtures/ending-art';
+import { epilogueDocumentPages, epilogueContent } from '../../src/scenes/epilogue';
 import { newspaperPageCount } from '../../src/render/newspaper';
 import { paperPagination } from '../../src/render/paperwork';
 import { translations, type Locale } from '../../src/i18n';
@@ -81,6 +82,7 @@ for (const locale of ['pl','en'] as const) {
       await expect(page.locator('#controls')).toHaveAttribute('data-screen','epilogue');
       await expect(page.locator('#screen-description')).toContainText(t.story.endings[resolution.endingId].body);
       await expect(page.locator('#control-epilogue-continue')).toHaveAccessibleName(resolution.terminal?t.story.ui.backToMenu:t.story.ui.continueWork);
+      await expectEndingArt(page, `story/${epilogueContent(state, locale).picture}`);
       await page.locator('#stage').screenshot({path:info.outputPath(`${route}-${locale}.png`)});
       await key(page,'epilogue-document');
       const count=epilogueDocumentPages(state,locale).length;

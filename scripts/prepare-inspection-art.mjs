@@ -9,7 +9,7 @@ const art = new URL('../public/assets/art/', import.meta.url).pathname;
 const assets = [
   ...[1, 2, 3].map(id => [`zus-inspector-${id}`, `zus-inspector-${id}-source.png`, 94, 96]),
   ['inspector-id', 'inspector-id-v2-source.png', 188, 112],
-  ['inspection-fine', 'inspection-fine-source.png', 188, 144],
+  ['inspection-fine', 'inspection-fine-v2-source.png', 200, 168],
   ['archive-folder', 'archive-folder-source.png', 116, 72],
   ...Array.from({ length: 10 }, (_, i) => [`patient-${101+i}`, `patients-source/patient-${101+i}.png`, 94, 96]),
 ];

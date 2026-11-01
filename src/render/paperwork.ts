@@ -7,7 +7,7 @@ import { generalFindingIndex, patientAge, veryHighPressure, type PressureValues,
 import { CLINICAL_PAPER_SIZE, paperDesktopSize, type DeskItemId, type Rect } from '../core/desk';
 import { formatGameDate, gameDate } from '../core/calendar';
 import { translations, type Locale } from '../i18n';
-import { drawPaper, drawPaperclip, drawDecisionImprint, drawDocumentSignature, drawUnclearSeal, drawInspectionForm, drawInspector, drawStationery } from './clinic';
+import { drawPaper, drawPaperclip, drawDecisionImprint, drawDocumentSignature, drawDocumentSeal, drawUnclearSeal, drawInspectionForm, drawInspector, drawStationery } from './clinic';
 import { drawDocumentText, drawDocumentHeading, measureDocumentText, drawReadingText, measureReadingText, READ_LINE_HEIGHT } from './font';
 import { referralCopy, referralLayout, correspondenceCopy, employerInstitution, specialistIssuer, wrapReadingText, fieldLabelWidth, REFERRAL_LINE_HEIGHT } from './document-copy';
 import { drawAdministrativeStamp, drawLetterhead, institutionInk } from './document-style';
@@ -458,20 +458,24 @@ function drawInspectionPaper(ctx: CanvasRenderingContext2D, paper: Extract<Paper
     return;
   }
   drawInspectionForm(ctx, 'fine', x, y, w, h);
-  if (!full) return;
+  if (w < paperDesktopSize(paper.kind).w) return;
   const write = (value: string, dx: number, dy: number, color = DOCUMENT_INK): void => drawDocumentText(ctx, value, x + dx, y + dy, { color });
-  write(q.fineTitle, 12, 15, ALERT_INK);
-  drawDocumentText(ctx, `${t.paperwork.zus} / ${paper.id}`, x + w - 12, y + 15, { color: '#79664b', align: 'right' });
-  write(q.fineSubtitle, 12, 25);
-  write(`${t.paperwork.date}: ${formatGameDate(paper.day, locale)}`, 12, 34);
-  write(`${q.visit}: ${formatGameDate(paper.targetDay, locale)}`, 12, 44);
-  write(t.patientNames[paper.patientId]!, 12, 55, HANDWRITING_INK);
+  drawDocumentHeading(ctx, t.paperwork.zus, x + 14, y + 12, { color: institutionInk('zus'), scale: 2 });
+  drawDocumentHeading(ctx, q.fineTitle, x + w - 14, y + 12, { color: ALERT_INK, scale: 2, align: 'right' });
+  write(q.fineSubtitle, 14, 32);
+  write(`${t.paperwork.date}: ${formatGameDate(paper.day, locale)}`, 14, 46);
+  drawDocumentText(ctx, `${t.paperwork.reference} ${paper.id}`, x + w - 14, y + 46, { color: '#79664b', align: 'right' });
+  write(q.addressee, 14, 58);
+  write(`${q.visit}: ${formatGameDate(paper.targetDay, locale)}`, 14, 69);
+  write(t.patientNames[paper.patientId]!, 14, 80, HANDWRITING_INK);
   const reason = paper.amount === 200 ? q.absentReason : q.partialReason;
-  write(wrapDocumentLines([reason], w - 24).join('\n'), 12, 67);
-  write(`${q.amount}: ${paper.amount} ${t.home.currency}`, 12, 91, ALERT_INK);
-  write(q.names[paper.inspectorId]!, 12, 108, HANDWRITING_INK);
-  drawDocumentSignature(ctx, x + w - 66, y + 104, 49, 10);
-  write(q.settlement, 12, 117, '#79664b');
+  write(wrapDocumentLines([reason], w - 28).join('\n'), 14, 92);
+  write(`${q.amount}:`, 14, 109, ALERT_INK);
+  drawDocumentHeading(ctx, `${paper.amount} ${t.home.currency}`, x + 78, y + 106, { color: ALERT_INK, scale: 2 });
+  drawDocumentSignature(ctx, x + 14, y + 125, 59, 10);
+  write(q.names[paper.inspectorId]!, 14, 138, HANDWRITING_INK);
+  drawDocumentSeal(ctx, x + w - 49, y + 122, 30, 'zus', locale);
+  write(q.settlement, 14, 152, '#79664b');
 }
 
 /** Certificate art depends only on the supplied appointment, day and language. */

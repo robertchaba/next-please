@@ -27,7 +27,7 @@ const storyArtNames = ['ending-e1', 'ending-e2', 'ending-e3', 'ending-e4', 'endi
 export type StoryArt = typeof storyArtNames[number];
 
 export async function loadClinicArt(): Promise<void> {
-  const files = ['bankruptcy-cloakroom', 'home-evening', 'homecoming', 'going-to-work', 'weekend-budget', 'weekend-modest', 'weekend-mountain-resort', 'weekend-seaside-resort', ...NEW_WEEKEND_ILLUSTRATIONS, 'cabinet-workstation', 'archives-clinic', 'break-room', 'drawer-interior', 'creator-robert', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`), ...['employer', 'militia', 'lot'].map(name => `stamps-revision/${name}`)];
+  const files = ['hospital-ending', 'bankruptcy-cloakroom', 'home-evening', 'homecoming', 'going-to-work', 'weekend-budget', 'weekend-modest', 'weekend-mountain-resort', 'weekend-seaside-resort', ...NEW_WEEKEND_ILLUSTRATIONS, 'cabinet-workstation', 'archives-clinic', 'break-room', 'drawer-interior', 'creator-robert', ...introNames.map(name => `intro-${name}`), ...spriteNames.map(name => `sprites/${name}`), ...['employer', 'militia', 'lot'].map(name => `stamps-revision/${name}`)];
   files.push(...storyArtNames.map(name => `story/${name}`));
   await Promise.all(files.map(name => new Promise<void>((resolve, reject) => {
     const image = new Image();
@@ -330,7 +330,7 @@ export function drawPanelIllustration(ctx: CanvasRenderingContext2D, panel: 'sav
   asset(ctx, panel === 'saves' ? 'archives-clinic' : 'break-room', 0, 0, 570, 320);
 }
 
-export type HomeIllustration = 'bankruptcy-cloakroom' | 'home-evening' | 'homecoming' | 'going-to-work' | 'weekend-budget' | 'weekend-modest' | 'weekend-mountain-resort' | 'weekend-seaside-resort' | NewWeekendIllustration;
+export type HomeIllustration = 'hospital-ending' | 'bankruptcy-cloakroom' | 'home-evening' | 'homecoming' | 'going-to-work' | 'weekend-budget' | 'weekend-modest' | 'weekend-mountain-resort' | 'weekend-seaside-resort' | NewWeekendIllustration;
 
 export function drawHomeIllustration(ctx: CanvasRenderingContext2D, scene: HomeIllustration): void {
   rect(ctx, 0, 0, 570, 320, '#171e18');

@@ -33,9 +33,9 @@ export function homePages(state: GameState): HomePageKind[] {
 export function homePage(state: GameState, locale: Locale, page: number) {
   const h = translations[locale].home, s = state.settlement;
   if (state.ending === 'hospital') {
-    const q = translations[locale].progression, body = homeLines(q.hospitalBody, 1).join('\n');
+    const q = translations[locale].progression, body = homeLines(q.hospitalBody, 1, 286).join('\n');
     return { kind: 'hospital' as const, title: q.hospitalTitle, body, bodyScale: 1, rows: [], action: q.backToMenu,
-      text: [q.hospitalTitle, body, q.gameOver, q.backToMenu].join('\n'), illustration: 'homecoming' as const, description: q.gameOver };
+      text: [q.hospitalTitle, body, q.gameOver, q.backToMenu].join('\n'), illustration: 'hospital-ending' as const, description: q.hospitalDescription };
   }
   const pages = homePages(state), kind = pages[Math.max(0, Math.min(page, pages.length - 1))]!;
   if (kind === 'bankruptcy') {

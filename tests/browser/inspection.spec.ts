@@ -28,6 +28,7 @@ async function load(page: Page, state: GameState): Promise<void> {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.clock.install();
   await page.goto('/');
+  await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
   await key(page, 'saves');
   await page.locator('#save-input').setInputFiles({ name: 'inspection.npsave', mimeType: 'application/gzip', buffer: Buffer.from(encodeSave(state)) });
   await expect(page.locator('#announcement')).toContainText('Zapis wczytany');
