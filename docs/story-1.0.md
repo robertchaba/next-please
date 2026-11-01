@@ -51,6 +51,8 @@ Each weekly has at most four articles. Its opening note occupies one slot in the
 
 Only **K-J-CHIEF**, the W24 Malec promotion report, includes a photograph. The W29 **K-J-DIRECTOR** consequence can appear after continuation, without a photograph. Both publications preserve their own title, day, issue number and content in drawers and saves; discarding a copy does not erase its publication.
 
+The 1.0.4 editorial pass expands all 44 authored pieces in both dictionaries, including corrections, pending-outcome reports and the weekly's three recurring notices. Polish bodies average 485 characters against 470 in the ordinary catalog; English bodies average 487 against 414. Each article fits one two-column spread at native scale, with room reserved for the existing photograph where applicable. Official copy elaborates on administrative concerns; union copy develops the consequences for everyday life. Clues, titles, bylines, identities and event chronology retain their established meaning. Stable article IDs let retained issues show the revised wording without a save migration.
+
 | Contact | Printed number | Source |
 | --- | --- | --- |
 | Printing-house porter | 46-0101 | W6 classified |

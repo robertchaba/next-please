@@ -423,222 +423,222 @@ export const storyCopy = {
     "articles": {
       "K-B-STRIKE": {
         "title": "Dyscyplina pracy w Mierniku",
-        "body": "W Zakładach Aparatury »Miernik« trwa protest części załogi. Dyrekcja rozwiązała umowę ze Stefanem Wolszakiem, organizatorem strajku. W komunikacie wskazano na naruszenie dyscypliny i utrudnianie pracy przedsiębiorstwa.",
+        "body": "W Zakładach Aparatury »Miernik« trwa protest części załogi. Dyrekcja rozwiązała umowę ze Stefanem Wolszakiem, organizatorem strajku. W komunikacie wskazano na naruszenie dyscypliny i utrudnianie pracy przedsiębiorstwa. W obszernym uzasadnieniu przypomniano obowiązki wynikające z regulaminu zakładowego. Szczególne miejsce zajmuje odpowiedzialność za terminowe wykonywanie zamówień. Dyrekcja podkreśla, że spokojna praca poszczególnych wydziałów służy interesom całej załogi.",
         "byline": "Redakcja"
       },
       "K-J-STADIUM": {
         "title": "Spartakiada odwołana",
-        "body": "Drużyny przybyłe na wojewódzką spartakiadę młodzieżową nie mogły rozpocząć zawodów. Stadion był w tym terminie niedostępny. Organizator, klub »Płomień« kierowany przez Henryka Malca, powołuje się na nieprzewidziane trudności organizacyjne.",
+        "body": "Drużyny przybyłe na wojewódzką spartakiadę młodzieżową nie mogły rozpocząć zawodów. Stadion był w tym terminie niedostępny. Organizator, klub »Płomień« kierowany przez Henryka Malca, powołuje się na nieprzewidziane trudności organizacyjne. W omówieniu przygotowań wiele miejsca poświęcono wychowawczemu znaczeniu sportu i współpracy między klubami. Kwestia dostępności obiektu znalazła się wśród spraw technicznych. Uczestnikom pozostaje oczekiwać na dalsze ustalenia dotyczące wspólnego kalendarza.",
         "byline": "Redakcja"
       },
       "K-E-HERO": {
         "title": "Bohater milicji powraca do służby",
-        "body": "Sierżant Marek Czarnecki, ranny podczas niedawnych zamieszek, zakończył rekonwalescencję. Od jutra ponownie będzie pełnił służbę patrolową. Komenda podkreśla jego determinację oraz opiekę, jaką otoczono zasłużonego funkcjonariusza.",
+        "body": "Sierżant Marek Czarnecki, ranny podczas niedawnych zamieszek, zakończył rekonwalescencję. Od jutra ponownie będzie pełnił służbę patrolową. Komenda podkreśla jego determinację oraz opiekę, jaką otoczono zasłużonego funkcjonariusza. W informacji dla prasy przypomniano znaczenie doświadczenia zdobywanego w codziennym kontakcie z mieszkańcami. Podkreślono również koleżeńską pomoc w okresie powrotu do zdrowia. Zapowiedziany patrol ma być kolejnym przykładem właściwej postawy całej jednostki.",
         "byline": "Redakcja"
       },
       "K-E-RETURN": {
         "title": "Znów na patrolu",
-        "body": "Sierżant Marek Czarnecki rozpoczął pierwszy patrol po rekonwalescencji. Dowództwo jednostki przedstawia jego powrót jako dowód skutecznej rehabilitacji i troski o funkcjonariuszy, którzy ucierpieli podczas pełnienia służby.",
+        "body": "Sierżant Marek Czarnecki rozpoczął pierwszy patrol po rekonwalescencji. Dowództwo jednostki przedstawia jego powrót jako dowód skutecznej rehabilitacji i troski o funkcjonariuszy, którzy ucierpieli podczas pełnienia służby. W omówieniu służby szczególne miejsce zajęła ciągłość wykonywania zadań. Codzienny obchód wymaga znajomości terenu oraz cierpliwości wobec drobnych spraw mieszkańców. Komenda podkreśla, że właśnie w zwykłych obowiązkach najpełniej ujawnia się wartość doświadczenia.",
         "byline": "Redakcja"
       },
       "K-E-BLOCKED": {
         "title": "Kto opóźnia powrót funkcjonariusza?",
-        "body": "Zapowiedziany powrót sierżanta Marka Czarneckiego został wstrzymany po decyzji lekarza medycyny pracy. Komenda oczekuje wyjaśnienia, dlaczego zasłużony funkcjonariusz nadal nie może podjąć obowiązków.",
+        "body": "Zapowiedziany powrót sierżanta Marka Czarneckiego został wstrzymany po decyzji lekarza medycyny pracy. Komenda oczekuje wyjaśnienia, dlaczego zasłużony funkcjonariusz nadal nie może podjąć obowiązków. W stanowisku jednostki przypomniano wcześniejsze przygotowania do uzupełnienia obsady patroli. Podkreśla się potrzebę sprawnego współdziałania wszystkich zainteresowanych placówek. Zdaniem komendy sprawa wymaga uwagi proporcjonalnej do znaczenia codziennej służby.",
         "byline": "Redakcja"
       },
       "K-E-CORRECTION": {
         "title": "Sprostowanie",
-        "body": "W informacji o sierżancie Marku Czarneckim podano nieścisły termin planowanego powrotu do służby. Data miała charakter przewidywany. Redakcja przeprasza za nieścisłość.",
+        "body": "W informacji o sierżancie Marku Czarneckim podano nieścisły termin planowanego powrotu do służby. Data miała charakter przewidywany. Redakcja przeprasza za nieścisłość. Informację zamieszczono w materiale poświęconym opiece nad funkcjonariuszami wracającymi do zdrowia. Użyte sformułowanie mogło sugerować większą dokładność ustaleń, niż wynikała z ich roboczego charakteru. Prosimy czytelników o uwzględnienie tego wyjaśnienia przy lekturze poprzedniego numeru.",
         "byline": "Redakcja"
       },
       "K-D-STRIKE": {
         "title": "Ciepło dla mieszkańców",
-        "body": "W Miejskiej Elektrociepłowni trwa strajk Wzajemności. Władze przygotowują uruchomienie instalacji z pomocą pracowników zastępczych. Komitet Wojewódzki zapewnia, że ciągłość ogrzewania pozostaje sprawą najpilniejszą.",
+        "body": "W Miejskiej Elektrociepłowni trwa strajk Wzajemności. Władze przygotowują uruchomienie instalacji z pomocą pracowników zastępczych. Komitet Wojewódzki zapewnia, że ciągłość ogrzewania pozostaje sprawą najpilniejszą. W komunikacie wiele miejsca poświęcono potrzebom osiedli, szkół i placówek opieki. Podkreślono znaczenie znajomości urządzeń oraz odpowiedzialności przy obejmowaniu dyżuru. Przygotowania przedstawiono jako wspólne zadanie służb technicznych i administracji.",
         "byline": "Redakcja"
       },
       "K-D-HEAT": {
         "title": "Elektrociepłownia wznawia pracę",
-        "body": "Dzięki udziałowi doświadczonych pracowników, w tym emerytowanego dyspozytora Antoniego Rybaka, wznowiono pracę instalacji. Władze ogłaszają przywrócenie ogrzewania i dziękują osobom, które odpowiedziały na apel.",
+        "body": "Dzięki udziałowi doświadczonych pracowników, w tym emerytowanego dyspozytora Antoniego Rybaka, wznowiono pracę instalacji. Władze ogłaszają przywrócenie ogrzewania i dziękują osobom, które odpowiedziały na apel. W podziękowaniach szczególnie mocno zaakcentowano doświadczenie gromadzone przez wiele lat pracy. Według komunikatu znajomość instalacji ma znaczenie równie duże jak gotowość do objęcia dyżuru. Przywrócenie dostaw przedstawiono jako przykład współdziałania pokoleń.",
         "byline": "Redakcja"
       },
       "K-D-COLD": {
         "title": "Ograniczenia w ogrzewaniu",
-        "body": "Strajk w elektrociepłowni przedłuża się. Nie udało się zebrać pełnej obsady specjalistów do ponownego uruchomienia instalacji. Administracje bloków i szkół informują o niższej temperaturze w pomieszczeniach.",
+        "body": "Strajk w elektrociepłowni przedłuża się. Nie udało się zebrać pełnej obsady specjalistów do ponownego uruchomienia instalacji. Administracje bloków i szkół informują o niższej temperaturze w pomieszczeniach. W komunikatach administracyjnych powraca sprawa oszczędnego gospodarowania dostępnym ciepłem. Samo przygotowanie urządzeń nie rozwiązuje kwestii obsady dyżurów. Władze ponawiają apel o odpowiedzialność, wskazując na potrzeby mieszkańców oczekujących poprawy warunków.",
         "byline": "Redakcja"
       },
       "K-J-POOL": {
         "title": "Ambitne plany miejskiego sportu",
-        "body": "Zawodnicy zaproszeni przez Miejski Ośrodek Sportu zastali basen zamknięty z powodu remontu. Dyrektor Henryk Malec zapowiada nowy termin zawodów. Ośrodek mówi o przejściowych trudnościach związanych z ambitnym programem rozwoju.",
+        "body": "Zawodnicy zaproszeni przez Miejski Ośrodek Sportu zastali basen zamknięty z powodu remontu. Dyrektor Henryk Malec zapowiada nowy termin zawodów. Ośrodek mówi o przejściowych trudnościach związanych z ambitnym programem rozwoju. W omówieniu programu wymieniono lepsze wykorzystanie obiektów i potrzebę uzgadniania kalendarza imprez. Sprawy remontowe potraktowano jako część szerszych przygotowań. Dla przybyłych drużyn najważniejszą informacją pozostaje jednak dzień, w którym będzie można wejść do wody.",
         "byline": "Redakcja"
       },
       "K-G-BRIGADES": {
         "title": "Robotnicy na ochotnika ratują produkcję",
-        "body": "Do Zakładów Metalurgicznych kierowane są brygady pracowników z innych przedsiębiorstw. Mają zastąpić strajkującą załogę. Organizatorzy podkreślają dobrowolność zgłoszeń oraz gotowość robotników do obrony wspólnego dorobku.",
+        "body": "Do Zakładów Metalurgicznych kierowane są brygady pracowników z innych przedsiębiorstw. Mają zastąpić strajkującą załogę. Organizatorzy podkreślają dobrowolność zgłoszeń oraz gotowość robotników do obrony wspólnego dorobku. W materiałach o organizacji wyjazdów dużo miejsca zajmuje współpraca między zakładami. Podkreśla się znaczenie fachowego przygotowania i właściwego rozdziału obowiązków. Pomoc przedstawiana jest jako sprawdzian odpowiedzialności za produkcję wykraczającej poza własny wydział.",
         "byline": "Redakcja"
       },
       "K-G-NAMES": {
         "title": "Zasłużeni ochotnicy",
-        "body": "Wśród pracowników skierowanych do brygady w Zakładach Metalurgicznych wyróżniono operatora suwnicy Tadeusza Karskiego. Dyrekcja dziękuje za gotowość do podjęcia obowiązków w szczególnie wymagającym momencie.",
+        "body": "Wśród pracowników skierowanych do brygady w Zakładach Metalurgicznych wyróżniono operatora suwnicy Tadeusza Karskiego. Dyrekcja dziękuje za gotowość do podjęcia obowiązków w szczególnie wymagającym momencie. W uzasadnieniu wyróżnienia podkreślono przydatność doświadczenia zdobytego przy codziennej pracy. Obsługa urządzeń wymaga zarówno uwagi, jak i znajomości rytmu całego wydziału. Postawę oddelegowanych przedstawiono jako przykład dla pozostałych zespołów pracowniczych.",
         "byline": "Redakcja"
       },
       "K-F-QUESTION": {
         "title": "ROBOTNICY JEDNOMYŚLNIE POPIERAJĄ PARTIĘ?",
-        "body": "Podczas zebrań w zakładach pracy podkreślano potrzebę spokoju i realizacji planów produkcyjnych. Według przedstawicieli władz stanowisko załóg świadczy o zaufaniu do przyjętego kierunku polityki oraz odpowiedzialności robotników za przyszłość.",
+        "body": "Podczas zebrań w zakładach pracy podkreślano potrzebę spokoju i realizacji planów produkcyjnych. Według przedstawicieli władz stanowisko załóg świadczy o zaufaniu do przyjętego kierunku polityki oraz odpowiedzialności robotników za przyszłość. W omówieniach wiele miejsca zajęły obowiązki poszczególnych zespołów i znaczenie terminowości. Podkreślano, że codzienny wysiłek najlepiej wyraża przywiązanie do wspólnych celów. Wnioski z zebrań mają służyć dalszemu umacnianiu współpracy na wszystkich szczeblach.",
         "byline": "Redakcja"
       },
       "K-F-ERRATUM": {
         "title": "Od redakcji",
-        "body": "W nagłówku wczorajszego materiału o poparciu robotników błędnie umieszczono znak zapytania. Redakcja przeprasza za niedopuszczalny błąd korektorski. Właściwy tytuł miał formę zdania oznajmującego.",
+        "body": "W nagłówku wczorajszego materiału o poparciu robotników błędnie umieszczono znak zapytania. Redakcja przeprasza za niedopuszczalny błąd korektorski. Właściwy tytuł miał formę zdania oznajmującego. Treść materiału omawiała stanowiska przedstawione podczas zebrań zakładowych. Omyłka w składzie nagłówka mogła nadać im sens niezgodny z intencją publikacji. Zwracamy się do czytelników o przyjęcie niniejszego wyjaśnienia jako uzupełnienia poprzedniego wydania.",
         "byline": "Redakcja"
       },
       "K-F-SECOND": {
         "title": "List z osiedla",
-        "body": "Mieszkańcy osiedla przesłali do redakcji list dotyczący zaopatrzenia sklepów. Przytaczamy jego końcowe zdanie: »Dziękujemy za braki w zaopatrzeniu«. Autorzy listu wskazali również kilka spraw wymagających dalszej poprawy.",
+        "body": "Mieszkańcy osiedla przesłali do redakcji list dotyczący zaopatrzenia sklepów. Przytaczamy jego końcowe zdanie: »Dziękujemy za braki w zaopatrzeniu«. Autorzy listu wskazali również kilka spraw wymagających dalszej poprawy. Korespondencja tego rodzaju stanowi cenne źródło wiadomości o codziennych potrzebach osiedla. Obok ogólnych ocen ważne są uwagi wynikające ze zwykłych zakupów. Redakcja podkreśla znaczenie rzeczowej wymiany opinii między klientami a osobami odpowiedzialnymi za handel.",
         "byline": "Redakcja"
       },
       "K-F-QUALITY": {
         "title": "Nowe zasady kontroli tekstów",
-        "body": "W redakcji »Kuriera Obywatelskiego« wprowadzono dodatkową kontrolę materiałów przed drukiem. Zmiany kadrowe i organizacyjne mają zapobiec powtórzeniu niedawnego błędu w nagłówku oraz zapewnić właściwy poziom publikacji.",
+        "body": "W redakcji »Kuriera Obywatelskiego« wprowadzono dodatkową kontrolę materiałów przed drukiem. Zmiany kadrowe i organizacyjne mają zapobiec powtórzeniu niedawnego błędu w nagłówku oraz zapewnić właściwy poziom publikacji. Szczególną uwagę poświęcono nagłówkom, podpisom i zgodności tekstu ze składem. W pracy gazety każdy etap przygotowania numeru wymaga staranności, także gdy termin oddania materiałów jest bliski. Redakcja podkreśla odpowiedzialność całego zespołu za słowo drukowane.",
         "byline": "Redakcja"
       },
       "K-J-CHIEF": {
         "title": "Nowy naczelnik zapowiada porządki",
-        "body": "Henryk Malec obejmuje wojewódzki wydział sportu. Powołana przez niego komisja zbada organizację zawodów w klubie »Płomień« i Miejskim Ośrodku Sportu. Naczelnik osobiście poprowadzi kontrolę placówek, którymi wcześniej kierował.",
+        "body": "Henryk Malec obejmuje wojewódzki wydział sportu. Powołana przez niego komisja zbada organizację zawodów w klubie »Płomień« i Miejskim Ośrodku Sportu. Naczelnik osobiście poprowadzi kontrolę placówek, którymi wcześniej kierował. W zapowiedzi podkreślono potrzebę lepszego obiegu informacji i jasnego podziału zadań. Znajomość obu placówek przedstawiono jako atut przy ocenie dokumentacji. Wnioski mają posłużyć usprawnieniu kolejnych imprez.",
         "byline": "Redakcja"
       },
       "K-J-DIRECTOR": {
         "title": "Zmiana kierownictwa zakładu",
-        "body": "Po kontroli organizacji imprez sportowych odwołano dyrektora zakładu, przy którym działa klub »Płomień«. Komisji przewodniczył Henryk Malec. Odchodzący dyrektor wcześniej rekomendował go do zadań o szerszym zakresie odpowiedzialności.",
+        "body": "Po kontroli organizacji imprez sportowych odwołano dyrektora zakładu, przy którym działa klub »Płomień«. Komisji przewodniczył Henryk Malec. Odchodzący dyrektor wcześniej rekomendował go do zadań o szerszym zakresie odpowiedzialności. W omówieniu wyników kontroli zaakcentowano odpowiedzialność kierownictwa za nadzór nad przygotowaniami. Wiele miejsca zajęła potrzeba sprawniejszego obiegu informacji. Zmianę przedstawiono jako krok służący uporządkowaniu współpracy zakładu z organizatorami imprez.",
         "byline": "Redakcja"
       },
       "W-C-EARLY": {
         "title": "Mamy własny głos",
-        "body": "Oddajemy w ręce czytelników pierwszy numer »Głosu Wzajemności«. Możliwość regularnego druku zawdzięczamy ludziom, którzy znaleźli czas i miejsce także po zakończeniu zwykłej zmiany. Kolejny numer za tydzień.",
+        "body": "Oddajemy w ręce czytelników pierwszy numer »Głosu Wzajemności«. Możliwość regularnego druku zawdzięczamy ludziom, którzy znaleźli czas i miejsce także po zakończeniu zwykłej zmiany. Kolejny numer za tydzień. Między informacjami z zakładów znajdzie się miejsce na sprawy pomocy i zwykłe wiadomości od czytelników. Nie każda z nich doczeka się osobnego nagłówka w codziennej prasie. Chcemy, żeby kartka przekazywana z rąk do rąk była także zapisem tego, czym żyjemy po wyjściu z pracy.",
         "byline": "Zespół redakcyjny"
       },
       "W-C-LATE": {
         "title": "Pierwszy numer",
-        "body": "Po trudnościach z organizacją druku ukazuje się »Głos Wzajemności«. Udało się znaleźć zastępstwo i uruchomić skład. Pismo będzie wychodziło co tydzień, dopóki pozwolą na to warunki.",
+        "body": "Po trudnościach z organizacją druku ukazuje się »Głos Wzajemności«. Udało się znaleźć zastępstwo i uruchomić skład. Pismo będzie wychodziło co tydzień, dopóki pozwolą na to warunki. Samo zebranie wiadomości nie wystarcza, gdy trzeba jeszcze przygotować tekst i doprowadzić go do maszyny. Ten numer jest wynikiem takiej wspólnej pracy. Obok spraw zakładowych chcemy zamieszczać wiadomości o pomocy, bo czytelnicy potrzebują również rzeczy użytecznych na co dzień.",
         "byline": "Zespół redakcyjny"
       },
       "W-A-STOP": {
         "title": "Nie wszędzie udało się rozbić związek",
-        "body": "W jednym z zakładów nie doszło do planowanego przyjęcia nowego pracownika. Działacze, porównujący wydarzenia w innych przedsiębiorstwach, uznają to za istotne dla bezpieczeństwa swojej komórki. Nazwisk nie podajemy.",
+        "body": "W jednym z zakładów nie doszło do planowanego przyjęcia nowego pracownika. Działacze, porównujący wydarzenia w innych przedsiębiorstwach, uznają to za istotne dla bezpieczeństwa swojej komórki. Nazwisk nie podajemy. Sama zbieżność dat nie wyjaśnia wszystkiego, ale nie należy jej pomijać przy czytaniu kolejnych komunikatów. W zakładowej kronice przyjęcie do pracy zajmuje jedną rubrykę. Dla ludzi próbujących utrzymać kontakt między sobą znaczenie takiego wpisu może być znacznie większe.",
         "byline": "Zespół redakcyjny"
       },
       "W-B-FIT": {
         "title": "Zwolniony, ale nie wykluczony",
-        "body": "Stefan Wolszak, zwolniony po strajku w »Mierniku«, znalazł nowe zatrudnienie. Pozostaje w kontakcie z dawną załogą. Organizatorzy pomocy podkreślają, że utrata jednego miejsca pracy nie powinna oznaczać odebrania wszystkich następnych.",
+        "body": "Stefan Wolszak, zwolniony po strajku w »Mierniku«, znalazł nowe zatrudnienie. Pozostaje w kontakcie z dawną załogą. Organizatorzy pomocy podkreślają, że utrata jednego miejsca pracy nie powinna oznaczać odebrania wszystkich następnych. Nowa praca oznacza możliwość układania codziennych wydatków bez ciągłego pytania o doraźną pomoc. Nie unieważnia jednak przyczyn wcześniejszego zwolnienia. Związek przypomina, że solidarność potrzebna jest również wtedy, gdy nazwisko przestaje pojawiać się w komunikatach.",
         "byline": "Zespół redakcyjny"
       },
       "W-B-REFUSED": {
         "title": "Pomoc dla zwolnionych",
-        "body": "Stefan Wolszak nadal pozostaje bez zatrudnienia. Po zwolnieniu z »Miernika« nie uzyskał orzeczenia potrzebnego do podjęcia nowej pracy. Związek organizuje pomoc dla niego oraz innych rodzin pozbawionych dochodu.",
+        "body": "Stefan Wolszak nadal pozostaje bez zatrudnienia. Po zwolnieniu z »Miernika« nie uzyskał orzeczenia potrzebnego do podjęcia nowej pracy. Związek organizuje pomoc dla niego oraz innych rodzin pozbawionych dochodu. W domowym rachunku przedłużające się poszukiwanie pracy szybko staje się sprawą czynszu, opału i zakupów. Doraźne wsparcie pozwala przejść przez najbliższe dni, lecz nie zastąpi stałego zarobku. O tych zwykłych potrzebach łatwo zapomnieć, czytając urzędowe uzasadnienia.",
         "byline": "Zespół redakcyjny"
       },
       "W-D-HEAT": {
         "title": "Zastępstwo zamiast rozmów",
-        "body": "Elektrociepłownię uruchomiono z pomocą zastępczej obsady i emerytowanych fachowców. Ogrzewanie wraca, lecz postulaty strajkujących pozostają bez odpowiedzi. Władze przedstawiają wznowienie pracy jako zakończenie sprawy.",
+        "body": "Elektrociepłownię uruchomiono z pomocą zastępczej obsady i emerytowanych fachowców. Ogrzewanie wraca, lecz postulaty strajkujących pozostają bez odpowiedzi. Władze przedstawiają wznowienie pracy jako zakończenie sprawy. Mieszkańcy potrzebują ciepłych kaloryferów, a załoga potrzebuje odpowiedzi na swoje żądania. Jedna potrzeba nie usuwa drugiej. W komunikatach łatwo połączyć uruchomienie urządzeń z rozwiązaniem konfliktu; znacznie trudniej wskazać w nich miejsce pozostawione dla rozmowy.",
         "byline": "Zespół redakcyjny"
       },
       "W-D-STRIKE": {
         "title": "Strajk trwa",
-        "body": "Nie udało się uruchomić elektrociepłowni zastępczą obsadą. Strajkujący utrzymują nacisk na rozpoczęcie rozmów. Jednocześnie spadek temperatury w mieszkaniach przypomina, że koszt przedłużającego się konfliktu ponoszą także mieszkańcy.",
+        "body": "Nie udało się uruchomić elektrociepłowni zastępczą obsadą. Strajkujący utrzymują nacisk na rozpoczęcie rozmów. Jednocześnie spadek temperatury w mieszkaniach przypomina, że koszt przedłużającego się konfliktu ponoszą także mieszkańcy. Spór nie kończy się na bramie zakładu, kiedy w domu trzeba siedzieć w płaszczu. Nie znaczy to jednak, że rozmowę z załogą można zastąpić kolejnym apelem. Im dłużej trwa oczekiwanie, tym mniej użyteczne stają się zapewnienia, że sprawa znajduje się pod należytą kontrolą.",
         "byline": "Zespół redakcyjny"
       },
       "W-E-PREDICTED": {
         "title": "Wyniki znane przed badaniem",
-        "body": "»Kurier« zapowiedział powrót sierżanta Marka Czarneckiego, zanim lekarz wydał orzeczenie. Badanie nie potwierdziło prasowej zapowiedzi. Najwyraźniej władza zna wyniki badań, zanim zbada pacjenta.",
+        "body": "»Kurier« zapowiedział powrót sierżanta Marka Czarneckiego, zanim lekarz wydał orzeczenie. Badanie nie potwierdziło prasowej zapowiedzi. Najwyraźniej władza zna wyniki badań, zanim zbada pacjenta. W zwykłej kolejności najpierw odbywa się wizyta, a dopiero później można mówić o powrocie na stanowisko. W gazecie porządek ten okazał się mniej wiążący. Czytelnikowi pozostaje porównać daty i zastanowić się, komu właściwie potrzebne było wcześniejsze zapewnienie.",
         "byline": "Zespół redakcyjny"
       },
       "W-F-QUESTION": {
         "title": "Jedno słuszne pytanie",
-        "body": "»ROBOTNICY JEDNOMYŚLNIE POPIERAJĄ PARTIĘ?« - zapytał »Kurier Obywatelski«. Redakcja już przeprosiła za pytanie. Pozostaje ustalić, czy podobny zakaz dotyczy także odpowiedzi.",
+        "body": "»ROBOTNICY JEDNOMYŚLNIE POPIERAJĄ PARTIĘ?« - zapytał »Kurier Obywatelski«. Redakcja już przeprosiła za pytanie. Pozostaje ustalić, czy podobny zakaz dotyczy także odpowiedzi. Przez jeden mały znak dobrze znany nagłówek zaczął wymagać zastanowienia. Te same wyrazy, ten sam uroczysty ton, a czytelnik otrzymał niespodziewanie miejsce dla własnego zdania. Sprostowanie starannie je zamknęło, choć trudno oczekiwać, że wszyscy równie szybko odłożą wątpliwości.",
         "byline": "Zespół redakcyjny"
       },
       "W-F-STAYS": {
         "title": "Czytamy uważnie",
-        "body": "W kolejnym numerze »Kuriera« mieszkańcy dziękują za braki w zaopatrzeniu. Być może znów zabrakło słowa. Czytelnikom pozostawiamy ocenę, czy krótsza wersja jest mniej prawdziwa.",
+        "body": "W kolejnym numerze »Kuriera« mieszkańcy dziękują za braki w zaopatrzeniu. Być może znów zabrakło słowa. Czytelnikom pozostawiamy ocenę, czy krótsza wersja jest mniej prawdziwa. Listy o zakupach zwykle kończą się zapewnieniem, że zgłoszone uwagi przyczynią się do poprawy. Tym razem codzienne doświadczenie klientów mieści się w zdaniu znacznie krótszym. Dla człowieka wracającego z pustą torbą różnica między intencją a drukiem może być trudna do zauważenia.",
         "byline": "Zespół redakcyjny"
       },
       "W-F-FIRED": {
         "title": "Zwolniona za znak zapytania",
-        "body": "Po głośnym błędzie w nagłówku Zofia Witek została odsunięta od korekty. Oficjalnie chodzi o stan wzroku. Jej nazwisko zniknęło z redakcyjnej listy, choć przez ponad dwadzieścia lat poprawiała cudze teksty.",
+        "body": "Po głośnym błędzie w nagłówku Zofia Witek została odsunięta od korekty. Oficjalnie chodzi o stan wzroku. Jej nazwisko zniknęło z redakcyjnej listy, choć przez ponad dwadzieścia lat poprawiała cudze teksty. Praca korektorki jest najmniej widoczna wtedy, gdy zostaje wykonana dobrze. Czytelnik nie liczy usuniętych literówek ani przywróconych przecinków. W tej sprawie całą uwagę skupiono na jednym znaku, a wieloletnią pracę sprowadzono do krótkiego wyjaśnienia kadrowego.",
         "byline": "Zespół redakcyjny"
       },
       "W-G-REFUSED": {
         "title": "Ochotnik, który nie wyjechał",
-        "body": "Nie każdy pracownik wskazany do brygady zastępczej trafił do Zakładów Metalurgicznych. Jeden z operatorów nie uzyskał orzeczenia. Jego polecenie wyjazdu nazywało odmowę naruszeniem dyscypliny, mimo pieczęci o dobrowolnym zgłoszeniu.",
+        "body": "Nie każdy pracownik wskazany do brygady zastępczej trafił do Zakładów Metalurgicznych. Jeden z operatorów nie uzyskał orzeczenia. Jego polecenie wyjazdu nazywało odmowę naruszeniem dyscypliny, mimo pieczęci o dobrowolnym zgłoszeniu. Na papierze wszystko wygląda jak zgodna współpraca przedsiębiorstw. Dopiero zestawienie obu pism pokazuje, ile miejsca pozostawiono na własną decyzję pracownika. Warto czytać także drobny druk pod uroczystym nagłówkiem, zwłaszcza gdy mówi o obowiązkach osoby nazwanej ochotnikiem.",
         "byline": "Zespół redakcyjny"
       },
       "W-G-SENT": {
         "title": "Dobrowolność na polecenie",
-        "body": "Robotnicy kierowani do Zakładów Metalurgicznych otrzymują karty »dobrowolnego« zgłoszenia. Towarzyszą im polecenia przewidujące konsekwencje za odmowę. Wśród oddelegowanych znalazł się operator Tadeusz Karski.",
+        "body": "Robotnicy kierowani do Zakładów Metalurgicznych otrzymują karty »dobrowolnego« zgłoszenia. Towarzyszą im polecenia przewidujące konsekwencje za odmowę. Wśród oddelegowanych znalazł się operator Tadeusz Karski. W urzędowym opisie wyjazd jest świadectwem gotowości do pomocy. W zakładowym poleceniu staje się obowiązkiem, z którego trzeba się rozliczyć. Oba pisma dotyczą tej samej podróży i tej samej osoby, lecz tylko jedno nadaje się do przytoczenia podczas uroczystych podziękowań.",
         "byline": "Zespół redakcyjny"
       },
       "W-H-STAYS": {
         "title": "Dopisek nie wystarczył",
-        "body": "Edward Król z Zakładów Maszynowych zachował pracę mimo próby wykorzystania zmienionego skierowania. Do jego obowiązków nadal formalnie należy obsługa wózka. Związek zwraca uwagę, że problem wymaga dalszej interwencji.",
+        "body": "Edward Król z Zakładów Maszynowych zachował pracę mimo próby wykorzystania zmienionego skierowania. Do jego obowiązków nadal formalnie należy obsługa wózka. Związek zwraca uwagę, że problem wymaga dalszej interwencji. Samo pozostawienie człowieka na liście płac nie usuwa różnicy między dawną a obecną pracą. Skierowanie nadal opisuje szerszy zakres zadań niż stare orzeczenie. Potrzebne jest uporządkowanie obowiązków, a nie tylko zapewnienie, że po zakończeniu badania sprawę można odłożyć.",
         "byline": "Zespół redakcyjny"
       },
       "W-H-FIRED": {
         "title": "BHP jako narzędzie zwolnienia",
-        "body": "Magazynier Edward Król został odsunięty od pracy po badaniu na stanowisko rozszerzone o obsługę wózka. Przez lata przyjmował i wydawał towar. Nowy obowiązek pozwolił dyrekcji wykorzystać jego dolegliwości przeciw niemu.",
+        "body": "Magazynier Edward Król został odsunięty od pracy po badaniu na stanowisko rozszerzone o obsługę wózka. Przez lata przyjmował i wydawał towar. Nowy obowiązek pozwolił dyrekcji wykorzystać jego dolegliwości przeciw niemu. Przy porównywaniu dokumentów trzeba patrzeć nie tylko na nazwę stanowiska, lecz także na opis czynności. Za tym samym słowem »magazynier« mogą kryć się różne wymagania. Stare orzeczenie nie obejmowało wózka, a dopisanie go do zadań nie poprawiło przecież zdrowia pracownika.",
         "byline": "Zespół redakcyjny"
       },
       "W-BG-HELP": {
         "title": "Pomoc przy pisaniu podań",
-        "body": "W świetlicy przy ulicy Szkolnej można uzyskać pomoc przy przygotowaniu podań i odwołań. Dyżur odbywa się we wtorkowe popołudnia. Należy przynieść kopie dokumentów dotyczących sprawy.",
+        "body": "W świetlicy przy ulicy Szkolnej można uzyskać pomoc przy przygotowaniu podań i odwołań. Dyżur odbywa się we wtorkowe popołudnia. Należy przynieść kopie dokumentów dotyczących sprawy. Przed pisaniem warto ułożyć pisma według dat i zaznaczyć, na które nie przyszła odpowiedź. Łatwiej wtedy oddzielić opis zdarzeń od samej prośby. Czytelny odpis przydaje się także później, gdy po kilku tygodniach trzeba przypomnieć sobie dokładne brzmienie złożonego podania.",
         "byline": "Zespół redakcyjny"
       },
       "W-BG-BOOKS": {
         "title": "Biblioteczka związkowa",
-        "body": "Do biblioteczki w świetlicy przy Szkolnej trafiły podręczniki zawodowe i słowniki. Książki wypożyczane są po wpisaniu nazwiska do zeszytu. Osoby oddające egzemplarze proszone są o pozostawienie ich u prowadzącego dyżur.",
+        "body": "Do biblioteczki w świetlicy przy Szkolnej trafiły podręczniki zawodowe i słowniki. Książki wypożyczane są po wpisaniu nazwiska do zeszytu. Osoby oddające egzemplarze proszone są o pozostawienie ich u prowadzącego dyżur. Wiele takich tomów przez lata zajmuje miejsce na domowej półce, choć komuś innemu mogłoby pomóc w nauce zawodu. Przy przekazywaniu książki warto sprawdzić, czy ma wszystkie strony. Słownik z luźną okładką wciąż może być użyteczny, jeśli czytelnik znajdzie w nim potrzebne hasło.",
         "byline": "Zespół redakcyjny"
       },
       "W-BG-CLOTHES": {
         "title": "Zbiórka ciepłej odzieży",
-        "body": "W świetlicy przy Szkolnej trwa zbiórka ciepłych ubrań dla rodzin, które utraciły dochód. Przyjmowana jest odzież czysta i nadająca się do użytku. Najbardziej potrzebne są dziecięce kurtki i zimowe obuwie.",
+        "body": "W świetlicy przy Szkolnej trwa zbiórka ciepłych ubrań dla rodzin, które utraciły dochód. Przyjmowana jest odzież czysta i nadająca się do użytku. Najbardziej potrzebne są dziecięce kurtki i zimowe obuwie. Przed przyniesieniem rzeczy warto sprawdzić zapięcia i dobrać buty w pary. Rozmiar podany na kartce ułatwia znalezienie ubrania dla właściwej osoby. Drobna naprawa wykonana jeszcze w domu oszczędza pracy przy zbiórce i pozwala szybciej przekazać potrzebującym gotową rzecz.",
         "byline": "Zespół redakcyjny"
       },
       "K-A1": {
         "title": "Przywrócono porządek w zakładzie",
-        "body": "W Zakładach Remontowych „Tor” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu.",
+        "body": "W Zakładach Remontowych „Tor” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu. W omówieniu sytuacji przypomniano znaczenie terminowego przekazywania taboru do ruchu. Rytm napraw zależy od współpracy kolejnych brygad i właściwego wykorzystania stanowisk. Według dyrekcji spokojne wykonywanie obowiązków pozwoli skupić uwagę na zadaniach warsztatów.",
         "byline": "Redakcja"
       },
       "K-A2": {
         "title": "Przywrócono porządek w zakładzie",
-        "body": "W Zakładach Meblarskich „Brzoza” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu.",
+        "body": "W Zakładach Meblarskich „Brzoza” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu. W komunikacie dużo miejsca poświęcono sprawnemu przekazywaniu pracy między wydziałami. Od przygotowania elementów po wykończenie mebli każdy etap wymaga staranności. Zdaniem dyrekcji troska o wspólny dorobek powinna znajdować wyraz przede wszystkim przy stanowisku pracy.",
         "byline": "Redakcja"
       },
       "K-A3": {
         "title": "Przywrócono porządek w zakładzie",
-        "body": "W Zakładach Tekstylnych „Osnowa” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu.",
+        "body": "W Zakładach Tekstylnych „Osnowa” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu. Dyrekcja przypomina o wzajemnej zależności przędzalni, tkalni i wykończalni. Regularność pracy jednego wydziału wpływa na zadania pozostałych. W komunikacie podkreślono, że odpowiedzialność za jakość tkanin zaczyna się od sumiennego wykonywania zwykłych obowiązków.",
         "byline": "Redakcja"
       },
       "K-A4": {
         "title": "Przywrócono porządek w zakładzie",
-        "body": "W Wytwórni Kabli „Przewód” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu.",
+        "body": "W Wytwórni Kabli „Przewód” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu. Osobne miejsce w komunikacie zajęła odpowiedzialność za jakość wyrobów przekazywanych odbiorcom. Poszczególne etapy produkcji wymagają zgodnego działania wielu stanowisk. Dyrekcja wskazuje, że właściwa atmosfera pracy sprzyja zarówno terminowości, jak i dokładności.",
         "byline": "Redakcja"
       },
       "K-A5": {
         "title": "Przywrócono porządek w zakładzie",
-        "body": "W Zakładach Ceramicznych „Klinkier” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu.",
+        "body": "W Zakładach Ceramicznych „Klinkier” zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu. W omówieniu podkreślono konieczność zachowania rytmu kolejnych etapów produkcji. Przygotowanie surowca, wypał i ocena wyrobów tworzą wspólny proces. Zdaniem dyrekcji nie można oddzielać troski o wynik przedsiębiorstwa od odpowiedzialności za własny odcinek pracy.",
         "byline": "Redakcja"
       },
       "K-A6": {
         "title": "Przywrócono porządek w zakładzie",
-        "body": "W Przedsiębiorstwie Transportu Miejskiego zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu.",
+        "body": "W Przedsiębiorstwie Transportu Miejskiego zakończono działania przeciw grupie zakłócającej pracę przedsiębiorstwa. Kilku organizatorów nielegalnych zebrań zatrzymano. Dyrekcja zapewnia, że rozbita struktura nie będzie już utrudniać realizacji planu. W komunikacie przypomniano, że codzienny wyjazd pojazdów wymaga współpracy obsługi, warsztatów i dyspozytorni. Pasażer ocenia tę pracę przede wszystkim po regularności kursów. Dyrekcja wskazuje punktualność jako wspólny obowiązek wszystkich komórek przedsiębiorstwa.",
         "byline": "Redakcja"
       },
       "K-D-PENDING": {
         "title": "Przygotowania w elektrociepłowni trwają",
-        "body": "W Miejskiej Elektrociepłowni nadal kompletowana jest obsada potrzebna do uruchomienia instalacji. Rozmowy z załogą nie przyniosły dotąd porozumienia. Nie podano nowego terminu wznowienia pracy.",
+        "body": "W Miejskiej Elektrociepłowni nadal kompletowana jest obsada potrzebna do uruchomienia instalacji. Rozmowy z załogą nie przyniosły dotąd porozumienia. Nie podano nowego terminu wznowienia pracy. Przygotowanie grafiku wymaga uwzględnienia kwalifikacji poszczególnych osób i ciągłości dyżurów. W komunikacie podkreśla się, że samo zgłoszenie gotowości nie zamyka spraw organizacyjnych. Władze zapewniają o znaczeniu, jakie przywiązują do potrzeb odbiorców ciepła.",
         "byline": "Redakcja"
       },
       "K-E-PENDING": {
         "title": "Powrót po zakończeniu formalności",
-        "body": "Komenda informuje, że termin powrotu sierżanta Marka Czarneckiego zostanie podany po zakończeniu wymaganych formalności. Wcześniejsza zapowiedź miała charakter planowany.",
+        "body": "Komenda informuje, że termin powrotu sierżanta Marka Czarneckiego zostanie podany po zakończeniu wymaganych formalności. Wcześniejsza zapowiedź miała charakter planowany. W informacji przekazanej prasie podkreślono znaczenie prawidłowego obiegu dokumentów między placówkami. Gotowość funkcjonariusza i ustalenie dnia objęcia patrolu opisano jako odrębne kwestie organizacyjne. Komenda ponownie przypomniała o doświadczeniu zdobytym przez sierżanta podczas wcześniejszej służby.",
         "byline": "Redakcja"
       }
     },
@@ -979,222 +979,222 @@ export const storyCopy = {
     "articles": {
       "K-A1": {
         "title": "Order restored at the works",
-        "body": "Action against a group disrupting operations at Track Repair Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan.",
+        "body": "Action against a group disrupting operations at Track Repair Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan. The report recalls the importance of returning rolling stock to service on time. The pace of repairs depends on successive teams working together and making proper use of workshop space. Management says the calm performance of duties will allow attention to return to the workshops’ tasks.",
         "byline": "The editors"
       },
       "K-A2": {
         "title": "Order restored at the works",
-        "body": "Action against a group disrupting operations at Birch Furniture Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan.",
+        "body": "Action against a group disrupting operations at Birch Furniture Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan. The statement gives much space to the smooth transfer of work between departments. From preparing parts to finishing furniture, each stage requires care. Management believes concern for shared achievements should be expressed above all through attention at each employee’s workstation.",
         "byline": "The editors"
       },
       "K-A3": {
         "title": "Order restored at the works",
-        "body": "Action against a group disrupting operations at Weft Textile Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan.",
+        "body": "Action against a group disrupting operations at Weft Textile Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan. Management recalls the dependence of spinning, weaving and finishing departments on one another. Regular work in one department affects the tasks of the others. The statement stresses that responsibility for the quality of cloth begins with the conscientious performance of ordinary duties.",
         "byline": "The editors"
       },
       "K-A4": {
         "title": "Order restored at the works",
-        "body": "Action against a group disrupting operations at Conduit Cable Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan.",
+        "body": "Action against a group disrupting operations at Conduit Cable Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan. The statement gives particular attention to responsibility for the quality of goods delivered to customers. The stages of production require co-ordinated work across many stations. Management says a proper working atmosphere encourages both punctual delivery and precision in manufacture.",
         "byline": "The editors"
       },
       "K-A5": {
         "title": "Order restored at the works",
-        "body": "Action against a group disrupting operations at Clinker Ceramics Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan.",
+        "body": "Action against a group disrupting operations at Clinker Ceramics Works has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan. The report stresses the need to maintain the rhythm of successive production stages. Preparing material, firing and checking finished goods form a shared process. Management says concern for the enterprise’s results cannot be separated from responsibility for one’s own part of the work.",
         "byline": "The editors"
       },
       "K-A6": {
         "title": "Order restored at the works",
-        "body": "Action against a group disrupting operations at Municipal Transport Company has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan.",
+        "body": "Action against a group disrupting operations at Municipal Transport Company has concluded. Several organisers of illegal meetings were detained. Management says the dismantled group will no longer obstruct fulfilment of the plan. The statement recalls that getting vehicles out each morning requires co-operation between crews, workshops and dispatchers. Passengers judge this work chiefly by the regularity of services. Management identifies punctuality as a shared duty of every department in the enterprise.",
         "byline": "The editors"
       },
       "K-B-STRIKE": {
         "title": "Discipline at Gauge Works",
-        "body": "Part of the workforce at Gauge Instrument Works remains on strike. Management has dismissed Stephen Welsby, the protest organiser. Its statement cites a breach of discipline and disruption of the enterprise’s work.",
+        "body": "Part of the workforce at Gauge Instrument Works remains on strike. Management has dismissed Stephen Welsby, the protest organiser. Its statement cites a breach of discipline and disruption of the enterprise’s work. The detailed statement recalls the duties set out in workplace regulations. It gives particular attention to responsibility for completing orders on time. Management stresses that calm, orderly work in each department serves the interests of the entire workforce.",
         "byline": "The editors"
       },
       "K-J-STADIUM": {
         "title": "Youth games cancelled",
-        "body": "Teams arriving for the regional youth games could not begin competing. The stadium was unavailable on the booked date. The organiser, Flame Sports Club under Henry Small, cites unforeseen organisational difficulties.",
+        "body": "Teams arriving for the regional youth games could not begin competing. The stadium was unavailable on the booked date. The organiser, Flame Sports Club under Henry Small, cites unforeseen organisational difficulties. The account of preparations devotes much space to the educational value of sport and co-operation between clubs. Availability of the venue is treated as a technical matter. Participants must await further arrangements concerning the shared calendar of events.",
         "byline": "The editors"
       },
       "K-E-HERO": {
         "title": "Militia hero returns to duty",
-        "body": "Sergeant Mark Blackwell, injured during recent disturbances, has completed his convalescence. He will resume patrol duty tomorrow. Headquarters praises his determination and the care provided to the distinguished officer.",
+        "body": "Sergeant Mark Blackwell, injured during recent disturbances, has completed his convalescence. He will resume patrol duty tomorrow. Headquarters praises his determination and the care provided to the distinguished officer. The press statement recalls the importance of experience gained through daily contact with residents. It also praises the support of colleagues during recovery. The announced patrol is presented as a further example of the spirit of service maintained throughout the unit.",
         "byline": "The editors"
       },
       "K-E-RETURN": {
         "title": "Back on patrol",
-        "body": "Sergeant Mark Blackwell has completed his first patrol since convalescence. His commanders present the return as proof of effective rehabilitation and care for officers injured in the line of duty.",
+        "body": "Sergeant Mark Blackwell has completed his first patrol since convalescence. His commanders present the return as proof of effective rehabilitation and care for officers injured in the line of duty. The account of his service gives particular attention to continuity of duties. Daily rounds require knowledge of the area and patience with residents’ smaller concerns. Headquarters stresses that the value of experience is best demonstrated through these ordinary tasks.",
         "byline": "The editors"
       },
       "K-E-BLOCKED": {
         "title": "Who is delaying the officer’s return?",
-        "body": "Sergeant Mark Blackwell’s announced return has been suspended following an occupational health doctor’s decision. Headquarters expects an explanation of why the distinguished officer still cannot resume his duties.",
+        "body": "Sergeant Mark Blackwell’s announced return has been suspended following an occupational health doctor’s decision. Headquarters expects an explanation of why the distinguished officer still cannot resume his duties. The unit’s statement recalls earlier preparations to restore the patrol roster. It stresses the need for efficient co-operation between all institutions concerned. Headquarters believes the matter deserves attention proportionate to the importance of everyday service to residents.",
         "byline": "The editors"
       },
       "K-E-CORRECTION": {
         "title": "Correction",
-        "body": "Our report on Sergeant Mark Blackwell gave an inaccurate date for his planned return to duty. The date was provisional. The editors apologise for the inaccuracy.",
+        "body": "Our report on Sergeant Mark Blackwell gave an inaccurate date for his planned return to duty. The date was provisional. The editors apologise for the inaccuracy. The information appeared in an article about care for officers recovering from injury. Its wording may have suggested greater certainty than the provisional arrangements justified. Readers are asked to bear this clarification in mind when consulting the earlier issue of the paper.",
         "byline": "The editors"
       },
       "K-D-STRIKE": {
         "title": "Heating for residents",
-        "body": "Mutuality’s strike continues at the Municipal Heat and Power Plant. The authorities are preparing to restart the installation with replacement staff. The Provincial Committee says continuous heating is its most urgent concern.",
+        "body": "Mutuality’s strike continues at the Municipal Heat and Power Plant. The authorities are preparing to restart the installation with replacement staff. The Provincial Committee says continuous heating is its most urgent concern. The statement devotes considerable attention to housing estates, schools and care facilities. It stresses familiarity with the equipment and the responsibility involved in taking a shift. Preparations are described as a shared task for technical staff and the administration.",
         "byline": "The editors"
       },
       "K-D-HEAT": {
         "title": "Heat and power plant restarts",
-        "body": "Experienced staff, including retired dispatcher Anthony Fisher, have helped restart the installation. The authorities announce the restoration of heating and thank those who answered the appeal.",
+        "body": "Experienced staff, including retired dispatcher Anthony Fisher, have helped restart the installation. The authorities announce the restoration of heating and thank those who answered the appeal. The official thanks place particular emphasis on experience acquired over many years. According to the statement, knowledge of the installation matters as much as readiness to take a shift. Restoring supplies is presented as an example of co-operation between generations.",
         "byline": "The editors"
       },
       "K-D-COLD": {
         "title": "Heating restrictions",
-        "body": "The strike at the heat and power plant continues. A complete team of specialists could not be assembled to restart it. Housing blocks and schools report lower indoor temperatures.",
+        "body": "The strike at the heat and power plant continues. A complete team of specialists could not be assembled to restart it. Housing blocks and schools report lower indoor temperatures. Administrative notices return to the need to conserve the heat available. Preparing equipment alone does not settle the question of staffing the shifts. The authorities renew their appeal for responsibility, citing residents who are waiting for conditions in their homes to improve.",
         "byline": "The editors"
       },
       "K-J-POOL": {
         "title": "Ambitious plans for city sport",
-        "body": "Competitors invited by the Municipal Sports Centre found the swimming pool closed for repairs. Director Henry Small promises a new competition date. The centre cites temporary difficulties linked to its ambitious development programme.",
+        "body": "Competitors invited by the Municipal Sports Centre found the swimming pool closed for repairs. Director Henry Small promises a new competition date. The centre cites temporary difficulties linked to its ambitious development programme. The programme calls for better use of facilities and closer co-ordination of the sporting calendar. Repairs are described as part of these wider preparations. For the visiting teams, however, the most useful detail remains the day on which they will actually be able to enter the water.",
         "byline": "The editors"
       },
       "K-G-BRIGADES": {
         "title": "Volunteers rescue production",
-        "body": "Brigades from other enterprises are being sent to the Metallurgical Works to replace the striking workforce. The organisers emphasise voluntary applications and workers’ readiness to defend their shared achievements.",
+        "body": "Brigades from other enterprises are being sent to the Metallurgical Works to replace the striking workforce. The organisers emphasise voluntary applications and workers’ readiness to defend their shared achievements. Accounts of the arrangements devote much space to co-operation between enterprises. They stress professional preparation and the proper allocation of duties. The assistance is presented as a test of responsibility for production extending beyond each worker’s own department.",
         "byline": "The editors"
       },
       "K-G-NAMES": {
         "title": "Distinguished volunteers",
-        "body": "Crane operator Theodore Ireland has been singled out among staff assigned to the brigade at the Metallurgical Works. Management thanks him for his readiness to take up duties at a particularly demanding time.",
+        "body": "Crane operator Theodore Ireland has been singled out among staff assigned to the brigade at the Metallurgical Works. Management thanks him for his readiness to take up duties at a particularly demanding time. The commendation stresses the usefulness of experience gained in everyday work. Operating machinery requires both attention and an understanding of the department’s working rhythm. The conduct of those assigned is presented as an example to other teams across the enterprises.",
         "byline": "The editors"
       },
       "K-F-QUESTION": {
         "title": "WORKERS UNANIMOUSLY SUPPORT THE PARTY?",
-        "body": "Meetings at workplaces stressed the need for calm and fulfilment of production plans. Officials say workers’ views demonstrate confidence in the adopted political course and responsibility for the future.",
+        "body": "Meetings at workplaces stressed the need for calm and fulfilment of production plans. Officials say workers’ views demonstrate confidence in the adopted political course and responsibility for the future. The accounts devote much space to the duties of individual teams and the importance of meeting deadlines. Daily effort is described as the clearest expression of commitment to shared goals. The meetings’ conclusions are intended to strengthen co-operation at every level of working life.",
         "byline": "The editors"
       },
       "K-F-ERRATUM": {
         "title": "From the editors",
-        "body": "A question mark was mistakenly placed in yesterday’s headline about workers’ support. The editors apologise for this unacceptable proofreading error. The correct headline was a statement.",
+        "body": "A question mark was mistakenly placed in yesterday’s headline about workers’ support. The editors apologise for this unacceptable proofreading error. The correct headline was a statement. The article discussed views presented at workplace meetings. The error in setting the headline could have given those views a meaning contrary to the publication’s intention. Readers are asked to accept this explanation as a clarification of the material carried in the previous edition.",
         "byline": "The editors"
       },
       "K-F-SECOND": {
         "title": "A letter from the estate",
-        "body": "Residents sent the editors a letter about shop supplies. We quote its closing sentence: “Thank you for the shortages.” The authors also listed several matters requiring further improvement.",
+        "body": "Residents sent the editors a letter about shop supplies. We quote its closing sentence: “Thank you for the shortages.” The authors also listed several matters requiring further improvement. Letters of this kind provide a valuable account of an estate’s daily needs. Alongside general assessments, observations drawn from ordinary shopping deserve attention. The editors stress the value of a practical exchange of views between customers and those responsible for retail supplies.",
         "byline": "The editors"
       },
       "K-F-QUALITY": {
         "title": "New rules for checking copy",
-        "body": "The Civic Courier has introduced an additional check of material before printing. Staff and organisational changes will prevent a repeat of the recent headline error and ensure proper publishing standards.",
+        "body": "The Civic Courier has introduced an additional check of material before printing. Staff and organisational changes will prevent a repeat of the recent headline error and ensure proper publishing standards. Particular attention is being given to headlines, captions and agreement between copy and typeset proofs. Every stage of preparing an issue requires care, even when the printing deadline is close. The editors stress the whole team’s responsibility for the words that reach the reader.",
         "byline": "The editors"
       },
       "K-J-CHIEF": {
         "title": "New chief promises a sporting clean-up",
-        "body": "Henry Small takes charge of regional sport. His commission will investigate competition planning at Flame Sports Club and the Municipal Sports Centre. The chief will personally inspect the institutions he previously managed.",
+        "body": "Henry Small takes charge of regional sport. His commission will investigate competition planning at Flame Sports Club and the Municipal Sports Centre. The chief will personally inspect the institutions he previously managed. The announcement calls for better information sharing and a clear allocation of tasks. Familiarity with both institutions is presented as an advantage when assessing their records. The findings are intended to improve future events.",
         "byline": "The editors"
       },
       "K-J-DIRECTOR": {
         "title": "Works director replaced",
-        "body": "The director of the works attached to Flame Sports Club has been dismissed after an inquiry into sporting events. Henry Small chaired the commission. The outgoing director had recommended him for wider responsibilities.",
+        "body": "The director of the works attached to Flame Sports Club has been dismissed after an inquiry into sporting events. Henry Small chaired the commission. The outgoing director had recommended him for wider responsibilities. The account of the inquiry stresses management’s responsibility for supervising preparations. Much space is given to the need for information to circulate more efficiently. The change is presented as a step towards improving co-operation between the works and event organisers.",
         "byline": "The editors"
       },
       "K-D-PENDING": {
         "title": "Preparations at the plant continue",
-        "body": "The Municipal Heat and Power Plant is still assembling the staff needed to restart the installation. Talks with the workforce have yet to produce an agreement. No new restart date has been announced.",
+        "body": "The Municipal Heat and Power Plant is still assembling the staff needed to restart the installation. Talks with the workforce have yet to produce an agreement. No new restart date has been announced. Drawing up a roster requires attention to individual qualifications and continuity between shifts. The statement stresses that an expression of readiness does not settle every organisational matter. The authorities emphasise the importance they attach to the needs of heating customers.",
         "byline": "The editors"
       },
       "K-E-PENDING": {
         "title": "Return after formalities",
-        "body": "Headquarters says Sergeant Mark Blackwell’s return date will be announced once the required formalities are complete. The earlier announcement described a planned return.",
+        "body": "Headquarters says Sergeant Mark Blackwell’s return date will be announced once the required formalities are complete. The earlier announcement described a planned return. The press statement stresses the importance of documents passing correctly between institutions. The officer’s readiness and the date of his next patrol are described as separate organisational matters. Headquarters again recalls the experience the sergeant acquired during his earlier service.",
         "byline": "The editors"
       },
       "W-C-EARLY": {
         "title": "We have our own voice",
-        "body": "We present the first issue of Voice of Mutuality. Regular printing is possible thanks to people who found time and space after their ordinary shift had ended. The next issue will appear in a week.",
+        "body": "We present the first issue of Voice of Mutuality. Regular printing is possible thanks to people who found time and space after their ordinary shift had ended. The next issue will appear in a week. Alongside reports from the works, there will be room for mutual aid and ordinary news from readers. Not every such matter earns a headline in the daily press. We want the paper passed from hand to hand to record something of our lives after we leave the factory gates.",
         "byline": "Editorial collective"
       },
       "W-C-LATE": {
         "title": "Our first issue",
-        "body": "After difficulties arranging the printing, Voice of Mutuality has arrived. A replacement has been found and typesetting is under way. The paper will appear weekly for as long as conditions permit.",
+        "body": "After difficulties arranging the printing, Voice of Mutuality has arrived. A replacement has been found and typesetting is under way. The paper will appear weekly for as long as conditions permit. Collecting reports is only a beginning when copy must still be prepared and brought to the press. This issue is the result of that shared effort. Alongside workplace matters, we intend to carry news of mutual aid, since readers also need information useful in everyday life.",
         "byline": "Editorial collective"
       },
       "W-A-STOP": {
         "title": "Not every union cell was broken",
-        "body": "A planned new employee did not join one of the works. Activists comparing events in other enterprises believe this matters for the safety of their cell. We are withholding names.",
+        "body": "A planned new employee did not join one of the works. Activists comparing events in other enterprises believe this matters for the safety of their cell. We are withholding names. Dates alone do not explain everything, but they should not be overlooked when reading successive official reports. In a workplace record, a new appointment occupies a single entry. For people trying to keep in touch with one another, the significance of that entry may be much greater.",
         "byline": "Editorial collective"
       },
       "W-B-FIT": {
         "title": "Dismissed, but not excluded",
-        "body": "Stephen Welsby, dismissed after the Gauge Works strike, has found new employment. He remains in touch with his former colleagues. Aid organisers stress that losing one job should not mean losing every chance of another.",
+        "body": "Stephen Welsby, dismissed after the Gauge Works strike, has found new employment. He remains in touch with his former colleagues. Aid organisers stress that losing one job should not mean losing every chance of another. A new job makes it possible to plan ordinary expenses without continually asking for emergency help. It does not erase the reasons for the earlier dismissal. The union reminds readers that solidarity is still needed after a person’s name stops appearing in official statements.",
         "byline": "Editorial collective"
       },
       "W-B-REFUSED": {
         "title": "Help for dismissed workers",
-        "body": "Stephen Welsby remains unemployed. After his dismissal from Gauge Works, he did not receive the certificate required for a new job. The union is organising help for him and other families left without an income.",
+        "body": "Stephen Welsby remains unemployed. After his dismissal from Gauge Works, he did not receive the certificate required for a new job. The union is organising help for him and other families left without an income. In a household budget, a prolonged search for work soon becomes a question of rent, fuel and shopping. Emergency assistance can help a family through the next few days, but it cannot replace a regular wage. These ordinary needs are easily forgotten when reading official explanations.",
         "byline": "Editorial collective"
       },
       "W-D-HEAT": {
         "title": "Replacement instead of talks",
-        "body": "The heat and power plant has restarted with replacement staff and retired specialists. Heating is returning, but the strikers’ demands remain unanswered. The authorities present the restart as the end of the matter.",
+        "body": "The heat and power plant has restarted with replacement staff and retired specialists. Heating is returning, but the strikers’ demands remain unanswered. The authorities present the restart as the end of the matter. Residents need warm radiators, and the workforce needs an answer to its demands. One need does not remove the other. Official statements can easily join the restart of machinery to the resolution of a dispute; finding the space they leave for discussion is considerably harder.",
         "byline": "Editorial collective"
       },
       "W-D-STRIKE": {
         "title": "The strike continues",
-        "body": "Replacement staff could not restart the heat and power plant. The strikers maintain pressure for talks. Falling temperatures in homes are a reminder that residents also pay the price of a prolonged dispute.",
+        "body": "Replacement staff could not restart the heat and power plant. The strikers maintain pressure for talks. Falling temperatures in homes are a reminder that residents also pay the price of a prolonged dispute. A dispute does not stop at the factory gate when people must sit at home in their coats. That does not mean another appeal can replace talks with the workforce. The longer the wait continues, the less useful assurances become that the situation remains under proper control.",
         "byline": "Editorial collective"
       },
       "W-E-PREDICTED": {
         "title": "Results known before examination",
-        "body": "The Courier announced Sergeant Mark Blackwell’s return before the doctor issued a certificate. The examination did not confirm the newspaper’s prediction. Apparently the authorities know test results before testing the patient.",
+        "body": "The Courier announced Sergeant Mark Blackwell’s return before the doctor issued a certificate. The examination did not confirm the newspaper’s prediction. Apparently the authorities know test results before testing the patient. In the ordinary course of events, an appointment comes first and a return to work can be discussed afterwards. The newspaper found that sequence less binding. Readers are left to compare the dates and consider who needed the earlier assurance to appear before the examination.",
         "byline": "Editorial collective"
       },
       "W-F-QUESTION": {
         "title": "The one correct question",
-        "body": "“WORKERS UNANIMOUSLY SUPPORT THE PARTY?” asked the Civic Courier. The editors have already apologised for asking. It remains to be established whether the same ban applies to answers.",
+        "body": "“WORKERS UNANIMOUSLY SUPPORT THE PARTY?” asked the Civic Courier. The editors have already apologised for asking. It remains to be established whether the same ban applies to answers. One small mark made a familiar headline require a moment’s thought. The words and solemn tone were unchanged, yet readers unexpectedly had room for an opinion of their own. The correction carefully closed that space, though doubts may not be put aside quite as promptly as a newspaper.",
         "byline": "Editorial collective"
       },
       "W-F-STAYS": {
         "title": "We read carefully",
-        "body": "In another issue of the Courier, residents thank the authorities for shortages. Perhaps “ending” was left out again. We leave readers to judge whether the shorter version is any less true.",
+        "body": "In another issue of the Courier, residents thank the authorities for shortages. Perhaps “ending” was left out again. We leave readers to judge whether the shorter version is any less true. Letters about shopping usually end with assurances that the observations will help bring improvements. This time the customers’ daily experience fits into a much shorter sentence. For someone returning with an empty bag, the difference between intention and printed wording may be difficult to notice.",
         "byline": "Editorial collective"
       },
       "W-F-FIRED": {
         "title": "Dismissed for a question mark",
-        "body": "After the notorious headline error, Sophia Wicks was removed from proofreading. Officially, it concerns her eyesight. Her name has vanished from the staff list after more than twenty years correcting other people’s words.",
+        "body": "After the notorious headline error, Sophia Wicks was removed from proofreading. Officially, it concerns her eyesight. Her name has vanished from the staff list after more than twenty years correcting other people’s words. A proofreader’s work is least visible when it has been done well. Readers do not count the misprints removed or the commas restored before a paper reaches them. Here, attention has settled on one mark, while years of work have been reduced to a brief explanation from the personnel office.",
         "byline": "Editorial collective"
       },
       "W-G-REFUSED": {
         "title": "The volunteer who stayed",
-        "body": "Not every worker assigned to a replacement brigade reached the Metallurgical Works. One operator did not obtain a certificate. His travel order called refusal a breach of discipline, despite the stamp declaring a voluntary application.",
+        "body": "Not every worker assigned to a replacement brigade reached the Metallurgical Works. One operator did not obtain a certificate. His travel order called refusal a breach of discipline, despite the stamp declaring a voluntary application. On paper, the arrangement looks like willing co-operation between enterprises. Only reading the two documents together shows how much room was left for the worker’s own decision. Small print beneath a ceremonial heading deserves attention when it sets out the duties of a supposed volunteer.",
         "byline": "Editorial collective"
       },
       "W-G-SENT": {
         "title": "Volunteering by order",
-        "body": "Workers sent to the Metallurgical Works receive “voluntary” application cards. These come with orders specifying consequences for refusal. Operator Theodore Ireland is among those assigned.",
+        "body": "Workers sent to the Metallurgical Works receive “voluntary” application cards. These come with orders specifying consequences for refusal. Operator Theodore Ireland is among those assigned. In the public account, the journey demonstrates a willingness to help. In the workplace order, it becomes a duty for which the employee must answer. Both documents concern the same journey and the same person, but only one lends itself to quotation during ceremonial expressions of thanks.",
         "byline": "Editorial collective"
       },
       "W-H-STAYS": {
         "title": "An added duty was not enough",
-        "body": "Edward King of the Machine Works has kept his job despite an attempt to use a changed referral against him. Forklift operation remains formally part of his duties. The union says further intervention is needed.",
+        "body": "Edward King of the Machine Works has kept his job despite an attempt to use a changed referral against him. Forklift operation remains formally part of his duties. The union says further intervention is needed. Keeping someone on the payroll does not remove the difference between the old job and the present one. The referral still describes wider duties than the earlier certificate. The duties need to be settled, beyond an assurance that the matter can be filed away now the examination is over.",
         "byline": "Editorial collective"
       },
       "W-H-FIRED": {
         "title": "Safety as a tool for dismissal",
-        "body": "Storekeeper Edward King was removed after an examination for a job expanded to include forklift operation. For years he received and issued goods. The added duty allowed management to use his symptoms against him.",
+        "body": "Storekeeper Edward King was removed after an examination for a job expanded to include forklift operation. For years he received and issued goods. The added duty allowed management to use his symptoms against him. Comparing the papers means looking beyond the job title to the tasks described. The same word, “storekeeper”, can conceal different requirements. The old certificate did not cover a forklift, and adding one to the duties has plainly done nothing to improve the worker’s health.",
         "byline": "Editorial collective"
       },
       "W-BG-HELP": {
         "title": "Help with applications",
-        "body": "The Alder Street clubroom offers help preparing applications and appeals on Tuesday afternoons. Please bring copies of documents relevant to your case.",
+        "body": "The Alder Street clubroom offers help preparing applications and appeals on Tuesday afternoons. Please bring copies of documents relevant to your case. Before writing, it helps to arrange papers by date and mark those still awaiting a reply. This makes it easier to separate an account of events from the request itself. A legible copy is useful weeks later, when the exact wording of an application must be recalled and the original is elsewhere.",
         "byline": "Editorial collective"
       },
       "W-BG-BOOKS": {
         "title": "Union lending library",
-        "body": "Vocational textbooks and dictionaries have arrived at the Alder Street clubroom library. Borrowers sign their names in the notebook. Please leave returned books with the duty volunteer.",
+        "body": "Vocational textbooks and dictionaries have arrived at the Alder Street clubroom library. Borrowers sign their names in the notebook. Please leave returned books with the duty volunteer. Many such volumes spend years on a shelf at home when someone else could use them to learn a trade. Anyone donating a book should check that all its pages are present. A dictionary with a loose cover can still be useful, provided the reader can find the entry they need inside it.",
         "byline": "Editorial collective"
       },
       "W-BG-CLOTHES": {
         "title": "Warm clothing collection",
-        "body": "The Alder Street clubroom is collecting warm clothes for families that have lost their income. Clean, usable clothing is welcome. Children’s coats and winter shoes are most needed.",
+        "body": "The Alder Street clubroom is collecting warm clothes for families that have lost their income. Clean, usable clothing is welcome. Children’s coats and winter shoes are most needed. Before bringing items, please check fastenings and pair shoes together. A note of the size makes it easier to match clothing to the right person. A small repair done at home saves work at the collection point and means an item can reach a family ready to be worn without further attention.",
         "byline": "Editorial collective"
       }
     },

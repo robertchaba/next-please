@@ -7,7 +7,8 @@ import { measureText } from '../src/render/font';
 describe('release identity', () => {
   it('uses the package version and preserves published names in both languages', () => {
     expect(GAME_VERSION).toBe(version);
-    expect(releaseLabel('pl')).toBe('WERSJA 1.0.3 / KARTOTEKA');
+    expect(releaseLabel('pl')).toBe('WERSJA 1.0.4 / BRUDNOPIS');
+    expect(releaseLabel('pl', '1.0.3')).toBe('WERSJA 1.0.3 / KARTOTEKA');
     expect(releaseLabel('pl', '1.0.2')).toBe('WERSJA 1.0.2 / SPINACZ');
     expect(releaseLabel('pl', '1.0.1')).toBe('WERSJA 1.0.1 / FORMALNOŚĆ');
     expect(releaseLabel('pl', '1.0.0')).toBe('WERSJA 1.0.0 / BIBUŁA');
@@ -15,7 +16,8 @@ describe('release identity', () => {
     expect(releaseLabel('pl', '0.8.8')).toBe('WERSJA 0.8.8 / ARCHIWUM');
     expect(releaseLabel('pl', '0.8.7')).toBe('WERSJA 0.8.7 / REJESTRACJA');
     expect(releaseLabel('pl', '0.8.6')).toBe('WERSJA 0.8.6 / PARAFKA');
-    expect(releaseLabel('en')).toBe('VERSION 1.0.3 / CARD INDEX');
+    expect(releaseLabel('en')).toBe('VERSION 1.0.4 / ROUGH DRAFT');
+    expect(releaseLabel('en', '1.0.3')).toBe('VERSION 1.0.3 / CARD INDEX');
     expect(releaseLabel('en', '1.0.2')).toBe('VERSION 1.0.2 / PAPERCLIP');
     expect(releaseLabel('en', '1.0.1')).toBe('VERSION 1.0.1 / FORMALITY');
     expect(releaseLabel('en', '1.0.0')).toBe('VERSION 1.0.0 / BLOTTER');
