@@ -44,6 +44,26 @@ async function place(page: Page, id: string, x=350, y=210) {
 }
 
 for (const locale of ['pl','en'] as const) {
+  test(`sergeant psychiatric referral leaves without a ZUS fine in ${locale}`, async ({ page }, info) => {
+    const state = act(storyMoment(state => storyPatientForId(state.visit?.patientId ?? -1)?.encounterId === 'E1-VISIT'),
+      'take-document', 'run-general', 'take-additional-referral');
+    const patientId = state.visit!.patientId;
+    const paperId = state.papers.at(-1)!.id;
+    await boot(page, locale);
+    await load(page, state);
+    await place(page, `paper-${paperId}`);
+    await page.locator(`#control-select-additional-test-${paperId}-psychiatry`).click();
+    await expect(page.locator(`#control-paper-${paperId}`)).toHaveAccessibleName(new RegExp(translations[locale].additionalTests.tests.psychiatry));
+    await key(page, `paper-${paperId}`, 'Space');
+    await key(page, 'hand-additional-referral');
+    await page.clock.runFor(2100);
+    const sent = await exported(page, info);
+    expect(sent.visit).toBeNull();
+    expect(sent.daily).toEqual(state.daily);
+    expect(sent.pendingReferrals).toContainEqual(expect.objectContaining({ test: 'psychiatry', visit: expect.objectContaining({ patientId }) }));
+    expect(sent.papers.some(paper => paper.kind === 'letter' && paper.patientId === patientId && paper.sender === 'zus')).toBe(false);
+  });
+
   test(`ordinary and story referrals share the form and only long duties paginate in ${locale}`, async ({page},info) => {
     await boot(page,locale);
     for (const encounter of ['ordinary','A1','H1','E1-VISIT'] as const) {

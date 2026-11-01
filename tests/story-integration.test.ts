@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyAction, GAME_LIMITS } from '../src/core/game';
+import { ADDITIONAL_TESTS } from '../src/core/additional-tests';
+import { expectedVisitDecision } from '../src/core/progression';
 import { decodeSave, encodeSave } from '../src/core/save';
 import { storyScore } from '../src/core/story';
 import { storyPatientForEncounter, storyPatientForId } from '../src/core/story-patients';
@@ -45,6 +47,48 @@ import { measureText } from '../src/render/font';
 import { newspaperItemId } from '../src/core/desk';
 
 describe('story transaction and document boundaries', () => {
+  it.each(ADDITIONAL_TESTS)('applies militia referral rules to the sergeant sent for %s', test => {
+    let state = act(storyMoment(state => storyPatientForId(state.visit?.patientId ?? -1)?.encounterId === 'E1-VISIT'),
+      'take-document', 'run-general', 'run-vision', 'take-additional-referral');
+    const patientId = state.visit!.patientId;
+    const paperId = state.papers.at(-1)!.id;
+    expect(expectedVisitDecision(state)).toBe('discretionary');
+    state = act(state, { type: 'select-additional-test', paperId, test });
+    const result = applyAction(state, { type: 'hand-additional-referral', paperId });
+    const appropriate = test === 'psychiatry';
+    expect(result.feedback).toBe(appropriate ? 'patient-referred' : 'referral-penalty');
+    expect(result.state.daily.zusCases).toBe(state.daily.zusCases + Number(!appropriate));
+    expect(result.state.daily.fines).toBe(state.daily.fines + (appropriate ? 0 : 100));
+    expect(result.state.papers.filter(paper => paper.kind === 'letter' && paper.patientId === patientId && paper.sender === 'zus'))
+      .toHaveLength(appropriate ? 0 : 1);
+    expect(result.state.visit).toBeNull();
+    expect(result.state.shiftCompleted).toBe(state.shiftCompleted);
+    expect(result.state.story.decisions).toEqual(state.story.decisions);
+    expect(result.state.pendingReferrals).toContainEqual(expect.objectContaining({ test, visit: expect.objectContaining({ patientId }) }));
+    expect(decodeSave(encodeSave(result.state))).toEqual(result.state);
+  });
+
+  it('preserves the sergeant’s discretionary vision assessment after a psychiatric return and report handoff', () => {
+    let state = storyMoment(state => storyPatientForId(state.visit?.patientId ?? -1)?.encounterId === 'E1-VISIT');
+    const patientId = state.visit!.patientId;
+    state = act({ ...state, clockMinutes: 800 }, 'take-document', 'take-additional-referral');
+    const paperId = state.papers.at(-1)!.id;
+    state = act(state, { type: 'select-additional-test', paperId, test: 'psychiatry' }, { type: 'hand-additional-referral', paperId });
+    const returnDay = state.pendingReferrals[0]!.returnDay;
+    state = act({ ...state, clockMinutes: 840 }, 'end-day');
+    while (state.day < returnDay) state = act(state, 'next-day');
+    state = admitPatient({ ...state, clockMinutes: 480 });
+    expect(state.visit).toMatchObject({ patientId, additionalResult: { test: 'psychiatry', fit: true } });
+    expect(expectedVisitDecision(state)).toBe('discretionary');
+    expect(decodeSave(encodeSave(state))).toEqual(state);
+    const daily = state.daily;
+    state = completeAppointment(state, 'fit');
+    expect(state.visit).toBeNull();
+    expect(state.daily).toEqual(daily);
+    expect(state.papers.some(paper => paper.kind === 'additional-result' && paper.patientId === patientId)).toBe(false);
+    expect(decodeSave(encodeSave(state))).toEqual(state);
+  });
+
   it('retains an overnight clinical return after its story window closes without granting late political points', () => {
     let state = storyMoment(state => storyPatientForId(state.visit?.patientId ?? -1)?.encounterId === 'C1');
     const patientId = state.visit!.patientId;

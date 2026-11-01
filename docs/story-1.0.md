@@ -10,6 +10,8 @@ The choices are the existing approval and refusal stamps, committed when the doc
 
 Extra story papers can be kept or discarded without a new filing penalty. Referrals and medical notes still require archiving. The printer's supplied audiometry remains a clinical report: approval requires handing it back attached to the certificate under the established additional-examination rule. A story document that resembles a certificate does not become a stampable blank.
 
+Czarnecki's patrol-sergeant occupation follows the militia rules for additional examinations. A psychiatric referral is compatible with his occupation and does not incur a ZUS fine; tests reserved for other occupations still do. His authored case has no mental-health concern, so the consultation is optional and his borderline vision remains a matter of medical judgement. If he is sent for a consultation and subsequently approved, the returned report must accompany the certificate under the existing attachment rule. This correction changes no save fields and does not recalculate previously recorded fines.
+
 The regional daily and the union weekly offer different accounts of the same events. Published facts depend on completed earlier appointments. An unfinished visit does not count as a refusal. Later appointments may disappear when an earlier condition is unmet; a real medical return can still finish its clinical business without rewriting a missed narrative appointment.
 
 ## Fixed cast and appointment windows

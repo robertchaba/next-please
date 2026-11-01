@@ -40,7 +40,8 @@ export function additionalTestForJob(patient: Pick<PatientCase, 'jobId'>): Addit
     case 'furnace-operator': return 'audiometry';
     case 'offset-operator': return 'audiometry';
     case 'pilot': return 'vestibular';
-    case 'militia-officer': return 'psychiatry';
+    case 'militia-officer':
+    case 'patrol-sergeant': return 'psychiatry';
     case 'miner': return 'chest-xray';
     default: return null;
   }
