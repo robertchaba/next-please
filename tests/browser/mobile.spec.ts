@@ -128,7 +128,7 @@ test.describe('phone reception', () => {
     await expect(page.locator('#mobile-next')).toBeHidden();
     await expect(page.locator('#mobile-note')).toBeVisible();
     await expect(page.locator('#mobile-note')).toContainText('Next, Please!');
-    await expect(page.locator('#mobile-note')).toContainText('Gra działa tylko na prawdziwym desktopie.');
+    await expect(page.locator('#mobile-note')).toContainText('Do gry potrzebny jest komputer lub laptop.');
     await expect(page.locator('#mobile-note')).toContainText(/klawiatur/i);
     await expect(page.locator('#mobile-note')).toContainText(/mysz/i);
     await expectOverlaysFit(page);
@@ -221,7 +221,7 @@ test.describe('phone reception', () => {
     await page.screenshot({ path: testInfo.outputPath('mobile-short-landscape.png'), scale: 'css' });
     await page.keyboard.press('Enter');
     await expect(page.locator('#mobile-reception')).toHaveAttribute('data-step', 'note');
-    await expect(page.locator('#mobile-note')).toContainText(/desktop/i);
+    await expect(page.locator('#mobile-note')).toContainText(/computer or laptop/i);
     await expectControlsFit(page);
     await expectOverlaysFit(page);
   });
@@ -250,7 +250,7 @@ test.describe('tablet reception', () => {
       }
     }
     await expect(page.locator('#mobile-note')).toContainText('Next, Please!');
-    await expect(page.locator('#mobile-note')).toContainText(/desktop/i);
+    await expect(page.locator('#mobile-note')).toContainText(/computer or laptop/i);
     await expect(page.locator('#mobile-note')).toContainText(/keyboard/i);
     await expect(page.locator('#mobile-note')).toContainText(/mouse/i);
     await expectControlsFit(page);
@@ -285,6 +285,7 @@ test('resizing during a shift preserves the live desk and synchronizes preferenc
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.clock.install();
   await page.goto('/');
   await page.locator('#control-start').click();
   for (let step = 0; step < 4; step++) await page.locator('#control-intro-next').click();
@@ -293,6 +294,7 @@ test('resizing during a shift preserves the live desk and synchronizes preferenc
   await page.locator('#control-take-paper').focus();
   await page.keyboard.press('Enter');
   await page.keyboard.press('Escape');
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
   const before = await page.locator('#controls').getAttribute('data-clock-display');
   const paperBefore = await page.locator('#control-paper-1').getAttribute('style');
   await page.locator('#control-sound').click();
@@ -300,6 +302,7 @@ test('resizing during a shift preserves the live desk and synchronizes preferenc
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator('#mobile-reception')).toBeVisible();
   await expect(page.locator('#game')).toBeHidden();
+  await page.clock.runFor(5000);
   await expect.poll(() => page.evaluate(() => (window.Howler?._howls ?? []).some(sound => /\.mp3$/.test(String(sound._src)) && sound.playing()))).toBe(false);
   await page.locator('#mobile-language-en').click();
   await expect.poll(() => playingPhoneSounds(page)).toEqual([{ src: 'phone-tone.wav', muted: false, state: 'loaded' }]);

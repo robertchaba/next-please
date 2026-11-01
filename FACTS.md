@@ -46,7 +46,7 @@ Proper names below use their Polish forms. Other language versions may use consi
 - Doctors address fellow doctors as “kolego” in Polish dialogue, including telephone verification of specialist certificates.
 - A detected mistaken approval brings a letter from ZUS; a detected mistaken refusal brings a letter from the employer. Letters appear after a short delay, once the patient has left. The doctor can open the envelope, read the letter, and discard it.
 - ZUS, employers and the Medical Chamber use visibly different seals on their documents.
-- Ordinary procedural letters use varied administrative wording about proceedings, records and required duties. Chapter warnings additionally identify the doctor’s actual earlier decisions and the subject of the inquiry.
+- Ordinary procedural letters use varied, oblique administrative wording about proceedings, records and required duties. Careful reading of a new complaint indicates the actual issue: referral date or authenticity, identity, medical findings, the choice of additional examination or its missing report. Chapter warnings additionally identify the doctor’s actual earlier decisions and the subject of the inquiry.
 
 ## Medical judgement in borderline cases
 

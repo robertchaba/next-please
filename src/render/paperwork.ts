@@ -29,8 +29,10 @@ export function employerStationery(patientId: number): 'referral' | 'militia' | 
 
 /** Stable archived correspondence: reading, language changes and imports never reroll it. */
 export function letterContent(paper: Extract<Paper, { kind: 'letter' }>, locale: Locale) {
-  const variants = translations[locale].paperwork.letters[paper.reason === 'missing-result' ? 'missingResult' : paper.sender];
-  return variants[((paper.day - 1) * 7 + paper.patientId * 5 + paper.id) % variants.length]!;
+  const copy = translations[locale].paperwork;
+  const variants = copy.letters[paper.reason === 'missing-result' ? 'missingResult' : paper.sender];
+  const variant = variants[((paper.day - 1) * 7 + paper.patientId * 5 + paper.id) % variants.length]!;
+  return paper.concern ? { ...variant, body: `${copy.letterConcerns[paper.concern]} ${variant.body}` } : variant;
 }
 
 export function correspondenceSender(paper: Extract<Paper, { kind: 'letter' | 'directive' }>, locale: Locale): string {

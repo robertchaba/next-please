@@ -7,8 +7,8 @@ import { arrangeStoryRoster, startStoryVisit, completedStoryVisit, finishStorySh
 import { additionalNoteEntry, additionalResultFor, additionalTestForJob, additionalTestForPatient, nextWorkingDay, type AdditionalNoteEntry, type AdditionalTest, type AdditionalResult, type PendingReferral } from './additional-tests';
 import { PATIENTS, CHARACTER_COUNT, randomStep, hasRequiredExaminations, compatiblePressureReading, type ExaminationId, type VisionValues, type PressureValues } from './patients';
 import { BASE_INSURANCE, emptyConsequences, settleDay, type DailyConsequences, type DaySettlement } from './economy';
-import { arrangeProgressionRoster, createAppointmentDetails, createDailyRoster, directiveForDay, emptyCalls, expectedVisitDecision, patientForAppointment, specialistIsValid, workDayNumber,
-  type BribeState, type DirectiveRule, type PhoneConclusions, type ReferralDetails, type SpecialistCertificate } from './progression';
+import { arrangeProgressionRoster, createAppointmentDetails, createDailyRoster, directiveForDay, emptyCalls, assessVisitDecision, patientForAppointment, specialistIsValid, workDayNumber,
+  type BribeState, type DirectiveRule, type LetterConcern, type PhoneConclusions, type ReferralDetails, type SpecialistCertificate } from './progression';
 export type { DaySettlement, DailyConsequences } from './economy';
 
 export const INTRO_SLIDES = 4;
@@ -61,7 +61,7 @@ export type Paper =
   | (PaperBase & { kind: 'directive'; patientId: null; sender: 'zus' | 'chamber'; rule: DirectiveRule; opened: boolean })
   | (PaperBase & { kind: 'inspection-id'; patientId: null; inspectorId: 0 | 1 | 2 })
   | (PaperBase & { kind: 'inspection-fine'; patientId: number; targetDay: number; amount: 50 | 200; inspectorId: 0 | 1 | 2 })
-  | (PaperBase & { kind: 'letter'; patientId: number; sender: 'zus' | 'employer'; opened: boolean; reason?: 'missing-result' });
+  | (PaperBase & { kind: 'letter'; patientId: number; sender: 'zus' | 'employer'; opened: boolean; reason?: 'missing-result'; concern?: LetterConcern });
 
 export interface Visit {
   startedDay: number;
@@ -546,7 +546,7 @@ function transition(state: GameState, action: GameAction): ActionResult {
     const daily = wrongJob ? { ...state.daily, zusCases: state.daily.zusCases + 1,
       fines: state.daily.fines + (state.daily.zusCases === 0 ? 100 : 400) } : state.daily;
     if (wrongJob) papers.push({ id: state.nextPaperId, kind: 'letter', patientId: visit.patientId,
-      day: state.day, location: 'desk', sender: 'zus', opened: false });
+      day: state.day, location: 'desk', sender: 'zus', concern: 'wrong-test', opened: false });
     return changed({ visit: null, roster, pendingReferrals: [...state.pendingReferrals, pending], referralsIssued: state.referralsIssued + 1,
       papers, daily, nextPaperId: state.nextPaperId + Number(wrongJob), rngState: delay.seed,
       paperClips: state.paperClips.map(group => group.filter(id => id !== paper.id && id !== 'certificate')).filter(group => group.length > 0),
@@ -813,7 +813,8 @@ function transition(state: GameState, action: GameAction): ActionResult {
       && paper.test === additionalTestForJob(patient) && paper.test === visit.additionalResult!.test
       && paper.fit === visit.additionalResult!.fit);
   const handedIds = new Set<DocumentId>(['certificate', ...handedResults.map(paper => paper.id)]);
-  const expected = expectedVisitDecision(state);
+  const assessment = assessVisitDecision(state)!;
+  const expected = assessment.decision;
   const wrongDecision = expected !== 'discretionary' && visit.decision !== expected;
   const requiredAdditional = workDayNumber(state.day) >= 7 ? additionalTestForPatient(patient) : null;
   const correct = hasRequiredExaminations(patient, visit) && (!requiredAdditional || visit.additionalResult?.test === requiredAdditional) && !wrongDecision;
@@ -852,7 +853,8 @@ function transition(state: GameState, action: GameAction): ActionResult {
   };
   const letters: Paper[] = [];
   if (detected) letters.push({ id: state.nextPaperId, kind: 'letter', patientId: visit.patientId, day: state.day,
-    location: 'desk', sender: zusOffence ? 'zus' : 'employer', opened: false });
+    location: 'desk', sender: zusOffence ? 'zus' : 'employer', opened: false,
+    concern: authenticityMistake ? 'authentic-referral' : visit.decision === 'unfit' ? 'unjustified-refusal' : assessment.concern! });
   if (resultMissing) letters.push({ id: state.nextPaperId + letters.length, kind: 'letter', patientId: visit.patientId,
     day: state.day, location: 'desk', sender: 'employer', reason: 'missing-result', opened: false });
   const completed = changed({ ...completion,

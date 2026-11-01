@@ -89,7 +89,7 @@ function envelope(overrides: Record<string, unknown> = {}): Uint8Array {
   }
   return gzipSync(strToU8(JSON.stringify({
     game: 'next-please',
-    version: 35,
+    version: 36,
     savedAt: '2026-10-23T12:00:00.000Z',
     state: createInitialState(),
     ...overrides,
@@ -126,6 +126,30 @@ function expectCode(action: () => unknown, code: SaveError['code']): void {
 }
 
 describe('portable saves', () => {
+  it('keeps complaint grounds in v36 and accepts v35 letters without inventing missing evidence', () => {
+    let state = createInitialState();
+    for (const action of ['skip-intro', 'call-patient', 'take-document', 'take-certificate', 'write-certificate', 'stamp-unfit'] as const) state = applyAction(state, action).state;
+    state = applyAction({ ...state, rngState: 1000 }, 'return-document').state;
+    const letter = state.papers.find(paper => paper.kind === 'letter')!;
+    expect(letter).toMatchObject({ concern: 'unjustified-refusal' });
+    expect(decodeSave(encodeSave(state))).toEqual(state);
+    const rawFile = (value: unknown, version = 36) => gzipSync(strToU8(JSON.stringify({ game: 'next-please', version,
+      savedAt: '2026-11-01T12:00:00.000Z', state: value })));
+    expectCode(() => decodeSave(rawFile(state, 35)), 'invalid-state');
+    const legacy = historicalState(state, 35) as GameState;
+    expect(decodeSave(rawFile(legacy, 35))).toEqual(legacy);
+    expect(decodeSave(encodeSave(decodeSave(rawFile(legacy, 35))))).toEqual(legacy);
+    const before = structuredClone(state);
+    for (const patch of [{ concern: 'unknown' }, { concern: null }, { concern: 0 }, { sender: 'zus' },
+      { reason: 'missing-result' }, { concern: 'expired-referral', sender: 'zus' },
+      { concern: 'identity-mismatch', sender: 'zus' }, { concern: 'wrong-test', sender: 'zus' }, { extra: true }]) {
+      const forged = { ...state, papers: state.papers.map(paper => paper.id === letter.id ? { ...paper, ...patch } : paper) };
+      expectCode(() => decodeSave(rawFile(forged)), 'invalid-state');
+    }
+    const wrongKind = { ...state, papers: state.papers.map(paper => paper.kind === 'referral' ? { ...paper, concern: 'vision' } : paper) };
+    expectCode(() => decodeSave(rawFile(wrongKind)), 'invalid-state');
+    expect(state).toEqual(before);
+  });
   it('round-trips an independent state with debt and progressed counters', () => {
     const state = { ...createInitialState(), day: 18, money: -250, patientsProcessed: 127 };
     const decoded = decodeSave(encodeSave(state));
@@ -134,7 +158,7 @@ describe('portable saves', () => {
   });
 
   it('rejects unsupported versions without interpreting their state', () => {
-    expectCode(() => decodeSave(envelope({ version: 36, state: {} })), 'unsupported-version');
+    expectCode(() => decodeSave(envelope({ version: 37, state: {} })), 'unsupported-version');
   });
 
   it('rejects a save for another game', () => {
@@ -220,7 +244,7 @@ describe('portable saves', () => {
   it('accepts gzip metadata produced by standard encoders', () => {
     const bytes = gzipSync(strToU8(JSON.stringify({
       game: 'next-please',
-      version: 35,
+      version: 36,
       savedAt: '2026-10-23T12:00:00.000Z',
       state: createInitialState(),
     })), { filename: 'save.json' });
@@ -277,11 +301,11 @@ describe('portable saves', () => {
     expectCode(() => decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), ...patch }) })), 'invalid-state');
   });
 
-  it('exports version 35 after migrating an older save', () => {
+  it('exports version 36 after migrating an older save', () => {
     const migrated = decodeSave(envelope({ version: 2, state: legacyState({ ...createInitialState(), introStep: 5 }) }));
     const bytes = encodeSave(migrated);
     const exported = JSON.parse(new TextDecoder().decode(gunzipSync(bytes)));
-    expect(exported).toMatchObject({ version: 35, state: { phase: 'cabinet', introStep: 3 } });
+    expect(exported).toMatchObject({ version: 36, state: { phase: 'cabinet', introStep: 3 } });
     expect(decodeSave(bytes)).toEqual(migrated);
   });
 
@@ -509,7 +533,7 @@ describe('version 6 certificate availability', () => {
     expect(migrated).toEqual(withLegacyProgressionDefaults({ ...stamped, clockMinutes: 482, visit: { ...stamped.visit, certificateNamed: true } }, true));
     expect(migrated.visit).toMatchObject({ certificateTaken: true, decision: 'fit' });
     expect(decodeSave(encodeSave(migrated))).toEqual(migrated);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(35);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(migrated)))).version).toBe(36);
     const intake = act(createInitialState(), 'skip-intro', 'call-patient', 'take-document');
     expect(decodeSave(envelope({ version: 5, state: asV5(intake) }))).toEqual(withLegacyProgressionDefaults({ ...intake, visit: { ...intake.visit, certificateTaken: true, certificateNamed: true } }, true));
     const waiting = act(createInitialState(), 'skip-intro', 'call-patient');
@@ -626,7 +650,7 @@ describe('version 8 drawer inventory', () => {
     expect(decoded.drawerItems).not.toBe(state.drawerItems);
     decoded.drawerItems.drawer.clips = 0;
     expect(state.drawerItems.drawer.clips).toBe(2);
-    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(state)))).version).toBe(35);
+    expect(JSON.parse(new TextDecoder().decode(gunzipSync(encodeSave(state)))).version).toBe(36);
   });
 
   it('migrates strictly validated v7 papers in filing order without inventing stored objects', () => {

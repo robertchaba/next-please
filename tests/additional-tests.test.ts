@@ -103,7 +103,7 @@ describe('day seven additional examinations', () => {
     for (const seed of [0, 1, 1234, 0xffffffff]) {
       const state = send(appointment(), 'audiometry', seed);
       expect(state.daily).toMatchObject({ zusCases: 1, fines: 100 });
-      expect(state.papers).toContainEqual(expect.objectContaining({ kind: 'letter', sender: 'zus' }));
+      expect(state.papers).toContainEqual(expect.objectContaining({ kind: 'letter', sender: 'zus', concern: 'wrong-test' }));
       expect(state.shiftCompleted).toBe(0);
       roundTrip(state);
     }

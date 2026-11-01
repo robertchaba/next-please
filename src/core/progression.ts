@@ -65,21 +65,25 @@ export function specialistIsValid(visit: Pick<Visit, 'patientId' | 'specialist'>
   return visit.specialist !== null && visit.specialist.jobId === PATIENTS[visit.patientId]!.jobId;
 }
 
-export function expectedVisitDecision(state: Pick<GameState, 'day' | 'visit'>): MedicalAssessment | null {
+export const LETTER_CONCERNS = ['expired-referral', 'invalid-referral', 'identity-mismatch', 'general', 'additional-test', 'vision', 'pressure', 'authentic-referral', 'unjustified-refusal', 'wrong-test'] as const;
+export type LetterConcern = typeof LETTER_CONCERNS[number];
+
+/** Capture the grounds at the decision, before the visit and its papers can disappear. */
+export function assessVisitDecision(state: Pick<GameState, 'day' | 'visit'>): { decision: MedicalAssessment; concern?: LetterConcern } | null {
   const visit = state.visit;
   if (!visit) return null;
   const day = workDayNumber(state.day), patient = patientForAppointment(visit);
-  if (day >= 3 && visit.referral.ageDays > 3) return 'unfit';
-  if (day >= 5 && !visit.referral.authentic) return 'unfit';
+  if (day >= 3 && visit.referral.ageDays > 3) return { decision: 'unfit', concern: 'expired-referral' };
+  if (day >= 5 && !visit.referral.authentic) return { decision: 'unfit', concern: 'invalid-referral' };
   // The supplied results belong to Lis, while the requested certificate names Sikora.
-  if (storyPatientForId(visit.patientId)?.encounterId === 'I1') return 'unfit';
+  if (storyPatientForId(visit.patientId)?.encounterId === 'I1') return { decision: 'unfit', concern: 'identity-mismatch' };
   const additional = day >= 7 ? additionalTestForPatient(patient) : null;
   const received = additional && visit.additionalResult?.test === additional
     ? additionalAssessment(patient, visit.additionalResult) : null;
   const clearsConcern = (additional === 'psychiatry' || additional === 'chest-xray')
     && received !== null && received !== 'unfit';
-  if (patient.general === 'refer' && !clearsConcern) return 'unfit';
-  if (additional && !additionalResultFor(patient, additional).fit && received !== 'discretionary') return 'unfit';
+  if (patient.general === 'refer' && !clearsConcern) return { decision: 'unfit', concern: 'general' };
+  if (additional && !additionalResultFor(patient, additional).fit && received !== 'discretionary') return { decision: 'unfit', concern: 'additional-test' };
   let discretionary = received === 'discretionary';
   const relevant = REQUIREMENTS[patient.requirementId].disqualifying;
   const pressure = pressureAssessment(patient.pressureValues);
@@ -87,9 +91,14 @@ export function expectedVisitDecision(state: Pick<GameState, 'day' | 'visit'>): 
     relevant.includes('vision') ? visionAssessment(patient.visionValues) : 'fit',
     relevant.includes('pressure') && !(pressure === 'unfit' && day >= 4 && specialistIsValid(visit)) ? pressure : 'fit',
   ];
-  if (findings.includes('unfit')) return 'unfit';
+  if (findings[0] === 'unfit') return { decision: 'unfit', concern: 'vision' };
+  if (findings[1] === 'unfit') return { decision: 'unfit', concern: 'pressure' };
   discretionary ||= findings.includes('discretionary');
-  return discretionary ? 'discretionary' : 'fit';
+  return { decision: discretionary ? 'discretionary' : 'fit' };
+}
+
+export function expectedVisitDecision(state: Pick<GameState, 'day' | 'visit'>): MedicalAssessment | null {
+  return assessVisitDecision(state)?.decision ?? null;
 }
 
 export function createAppointmentDetails(state: Pick<GameState, 'day' | 'shiftCompleted' | 'rngState'>, patientId: number): {

@@ -320,7 +320,7 @@ function acceptResult(previous: GameState, result: ActionResult): void {
       pendingLetters.set(paper.id, { patientId: paper.patientId, remaining: 2000 });
     }
   }
-  if (gameState.papers.some(paper => paper.kind === 'story-document' && !paper.opened && paper.id >= previous.nextPaperId)) {
+  if (gameState.day === previous.day && gameState.papers.some(paper => paper.kind === 'story-document' && !paper.opened && paper.id >= previous.nextPaperId)) {
     notify(t().story.ui.received);
   }
   if (previous.phase === 'cabinet' && previous.clockMinutes < CLEANER_WARNING_MINUTES && gameState.clockMinutes >= CLEANER_WARNING_MINUTES) {

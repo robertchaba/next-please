@@ -54,9 +54,9 @@ test('built desktop loads under the repository path with artwork, music and both
   expect(await response!.text()).not.toContain('/src/main.ts');
   await expect(page.locator('#control-start')).toBeVisible();
   await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
-  await expect(page.locator('#screen-description')).toContainText('WERSJA 1.0.5 / NUMEREK');
+  await expect(page.locator('#screen-description')).toContainText('WERSJA 1.0.6 / DZIURKACZ');
   await page.locator('#control-language-en').click();
-  await expect(page.locator('#screen-description')).toContainText('VERSION 1.0.5 / QUEUE TICKET');
+  await expect(page.locator('#screen-description')).toContainText('VERSION 1.0.6 / HOLE PUNCH');
   await page.locator('#control-sound').click();
   await expect.poll(() => playingAudio(page)).toContain('Bureaucratic March - Opening the Office.mp3');
   await page.locator('#control-start').click();

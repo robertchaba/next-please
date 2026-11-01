@@ -5,7 +5,7 @@ import { Gunzip, gzipSync, strToU8 } from 'fflate';
 import { EARLIEST_ARRIVAL_MINUTES, FIRST_PATIENT_MINUTES, ARRIVAL_MINUTES, CLINIC_CLOSE_MINUTES, createInitialState, GAME_LIMITS, INTRO_SLIDES, PATIENTS, SHIFT_END_MINUTES, SHIFT_START_MINUTES, type GameState as LatestGameState, type Visit as CurrentVisit, type Paper as LatestPaper, type Banknote, type DrawerItems, type StorageLocation, type DocumentId, type NoteEntryId } from './game';
 
 import { CHARACTER_COUNT, JOBS, compatiblePressureReading, type ExaminationId, type PressureValues, type PatientCase } from './patients';
-import { defaultReferral, directiveForDay, emptyCalls, effectivePatient, employerPhone, specialistPhone, workDayNumber, type ReferralDetails, type SpecialistCertificate, type PhoneConclusions } from './progression';
+import { defaultReferral, directiveForDay, emptyCalls, effectivePatient, employerPhone, specialistPhone, workDayNumber, LETTER_CONCERNS, type LetterConcern, type ReferralDetails, type SpecialistCertificate, type PhoneConclusions } from './progression';
 import { BASE_INSURANCE, BASE_PAY, MODEST_WEEKEND_LIVING, PATIENT_BONUS, type DaySettlement as CurrentSettlement, type DailyConsequences } from './economy';
 import { createStory, validateStoryState, STORY_ENCOUNTERS, calendarDayForWorkDay, storyDecision, storyPhoneNoteKey, type NarrativeState, type StoryContactId } from './story';
 import { STORY_CHARACTER_COUNT, STORY_PATIENT_FIRST_ID, storyPatientForId } from './story-patients';
@@ -88,9 +88,9 @@ type GameStateV5 = Omit<GameStateV8, 'visit' | 'paperClips' | 'papers' | 'drawer
 type GameStateV6 = Omit<GameStateV5, 'visit'> & { visit: Omit<VisitV10, 'certificateNamed'> | null };
 type GameStateV7 = Omit<GameStateV8, 'drawerItems'>;
 
-interface SaveV35 {
+interface SaveV36 {
   game: 'next-please';
-  version: 35;
+  version: 36;
   savedAt: string;
   state: LatestGameState;
 }
@@ -1891,12 +1891,38 @@ function validateStateV35(value: unknown): LatestGameState {
     paperClips, visit: restoreVisit(previous.visit), pendingReferrals: previous.pendingReferrals.map(pending => ({ ...pending, visit: restoreVisit(pending.visit)! })) };
 }
 
+/** Validate optional historical grounds without relaxing any earlier paper schema. */
+function validateStateV36(value: unknown): LatestGameState {
+  if (!isRecord(value) || !Array.isArray(value.papers)) throw new SaveError('invalid-state');
+  const concerns = new Map<number, LetterConcern>();
+  const papers = value.papers.map((raw: unknown) => {
+    if (!isRecord(raw) || !('concern' in raw)) return raw;
+    if (raw.kind !== 'letter' || 'reason' in raw
+      || !LETTER_CONCERNS.includes(raw.concern as LetterConcern)
+      || !isIntegerInRange(raw.id, 1, GAME_LIMITS.paperId)
+      || !isIntegerInRange(raw.day, 1, GAME_LIMITS.day)
+      || raw.sender !== (raw.concern === 'unjustified-refusal' ? 'employer' : 'zus')) throw new SaveError('invalid-state');
+    const day = workDayNumber(raw.day);
+    if ((raw.concern === 'expired-referral' && day < 3)
+      || ((raw.concern === 'invalid-referral' || raw.concern === 'authentic-referral') && day < 5)
+      || ((raw.concern === 'wrong-test' || raw.concern === 'additional-test') && day < 7)
+      || (raw.concern === 'identity-mismatch' && (!isIntegerInRange(raw.patientId, 0, PATIENTS.length - 1)
+        || storyPatientForId(raw.patientId)?.encounterId !== 'I1'))) throw new SaveError('invalid-state');
+    concerns.set(raw.id, raw.concern as LetterConcern);
+    const { concern: _concern, ...paper } = raw;
+    return paper;
+  });
+  const state = validateStateV35({ ...value, papers });
+  return { ...state, papers: state.papers.map(paper => paper.kind === 'letter' && concerns.has(paper.id)
+    ? { ...paper, concern: concerns.get(paper.id)! } : paper) };
+}
+
 export function encodeSave(state: LatestGameState): Uint8Array {
-  const envelope: SaveV35 = {
+  const envelope: SaveV36 = {
     game: 'next-please',
-    version: 35,
+    version: 36,
     savedAt: new Date().toISOString(),
-    state: validateStateV35(state),
+    state: validateStateV36(state),
   };
   return gzipSync(strToU8(JSON.stringify(envelope)), { level: 6, mtime: 0 });
 }
@@ -2006,7 +2032,7 @@ function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean })
   if (!isRecord(envelope) || envelope.game !== 'next-please' || !Number.isSafeInteger(envelope.version)) {
     throw new SaveError('invalid-file');
   }
-  if (!isIntegerInRange(envelope.version, 1, 35)) throw new SaveError('unsupported-version');
+  if (!isIntegerInRange(envelope.version, 1, 36)) throw new SaveError('unsupported-version');
   if (
     !hasOnlyKeys(envelope, ['game', 'version', 'savedAt', 'state']) ||
     typeof envelope.savedAt !== 'string' ||
@@ -2016,6 +2042,7 @@ function decodeState(bytes: Uint8Array, migration: { additionalNotes: boolean })
     throw new SaveError('invalid-file');
   }
   migration.additionalNotes = (envelope.version as number) < 27;
+  if (envelope.version === 36) return validateStateV36(envelope.state);
   if (envelope.version === 35) return validateStateV35(envelope.state);
   if (envelope.version >= 30) validateHistoricalCatalog(envelope.state, STORY_PATIENT_FIRST_ID - 1, CHARACTER_COUNT);
   if (envelope.version === 34) return validateStateV34(envelope.state);

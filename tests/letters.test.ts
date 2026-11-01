@@ -3,8 +3,22 @@ import { PATIENTS, type Paper } from '../src/core/game';
 import { translations } from '../src/i18n';
 import { letterContent, correspondenceSender, paperDescription, wrapDocumentLines, employerStationery } from '../src/render/paperwork';
 import { measureDocumentText } from '../src/render/font';
+import { LETTER_CONCERNS } from '../src/core/progression';
 
 describe('signed administrative correspondence', () => {
+  it('keeps every historical clue and variant inside the letter and accessible only after opening', () => {
+    for (const locale of ['pl', 'en'] as const) for (const concern of LETTER_CONCERNS) for (let id = 1; id <= 6; id++) {
+      const paper: Extract<Paper, { kind: 'letter' }> = { id, day: 30, patientId: 0, kind: 'letter',
+        sender: concern === 'unjustified-refusal' ? 'employer' : 'zus', concern, location: 'desk', opened: true };
+      const letter = letterContent(paper, locale), clue = translations[locale].paperwork.letterConcerns[concern];
+      const lines = wrapDocumentLines([letter.body], 166);
+      expect(lines.length, `${locale}/${concern}: ${letter.body}`).toBeLessThanOrEqual(5);
+      for (const line of lines) expect(measureDocumentText(line), line).toBeLessThanOrEqual(166);
+      expect(paperDescription(paper, locale)).toContain(clue);
+      expect(paperDescription({ ...paper, opened: false }, locale)).not.toContain(clue);
+      expect(letterContent(paper, locale)).toEqual(letter);
+    }
+  });
   it('fits every sender on the generated envelope label and keeps service headers separate', () => {
     for (const locale of ['pl', 'en'] as const) {
       const t = translations[locale];
@@ -75,5 +89,6 @@ it('describes records and duties without revealing sanctions in correspondence',
   for (const t of Object.values(translations)) {
     const letters = [...Object.values(t.paperwork.letters).flat(), ...Object.values(t.progression.directives)];
     for (const letter of letters) expect(`${letter.subject} ${letter.body}`).not.toMatch(/sankcj|kar[ayę]|nagan|upomnien|składk|potrącen|\bfines?\b|penalt|premium|reprimand|warning|tariff/i);
+    for (const clue of Object.values(t.paperwork.letterConcerns)) expect(clue).not.toMatch(/sankcj|składk|potrącen|\bfines?\b|penalt|premium|reprimand|warning|tariff/i);
   }
 });

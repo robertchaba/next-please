@@ -30,6 +30,7 @@ export function legacyBudget(state: unknown): unknown {
 export function historicalState(state: unknown, version: number): unknown {
   if (!state || typeof state !== 'object') return state;
   const old = structuredClone(state) as Record<string, unknown>;
+  if (version < 36 && Array.isArray(old.papers)) for (const paper of old.papers) delete paper.concern;
   if (version < 35) {
     delete old.story;
     if (Array.isArray(old.newspaperCopies)) for (const copy of old.newspaperCopies) {
@@ -56,5 +57,9 @@ export function withMigratedNewspaper(state: unknown): unknown {
   const newspaper = { ...createNewspaper((state.rngState ^ state.day) >>> 0), classifiedIds: [] };
   let day = state.day;
   while (isWeekend(day)) day--;
-  return { ...state, story: createStory('legacy-disabled'), newspaper, newspaperCopies: day === 1 ? [] : [newspaperCopy(newspaper, day)] };
+  const papers = 'papers' in state && Array.isArray(state.papers) ? state.papers.map(paper => {
+    const { concern: _concern, ...old } = paper;
+    return old;
+  }) : undefined;
+  return { ...state, ...(papers ? { papers } : {}), story: createStory('legacy-disabled'), newspaper, newspaperCopies: day === 1 ? [] : [newspaperCopy(newspaper, day)] };
 }

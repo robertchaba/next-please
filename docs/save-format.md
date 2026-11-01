@@ -2,6 +2,14 @@
 
 Saves are local `.npsave` files containing one gzip member with UTF-8 JSON. They are neither encrypted nor uploaded. Export uses `next-please-day-N.npsave`; import checks bytes rather than trusting filenames or MIME types. Only locale and audio preferences use localStorage. Import replaces live state only after validation succeeds, preserving all live gameplay and presentation on failure.
 
+## Version 36: complaint grounds
+
+Exports write version 36. Ordinary letters may carry an optional `concern`: `expired-referral`, `invalid-referral`, `identity-mismatch`, `general`, `additional-test`, `vision`, `pressure`, `authentic-referral`, `unjustified-refusal` or `wrong-test`. The value is captured when the detected mistake creates its letter, independently of retained clinical paperwork. It selects a localized clue, never the decision, detection or penalty. When several issues coexist, the existing assessment order chooses the first: expiry, authenticity, identity, general findings, additional findings, vision, pressure. A mistaken refusal of an otherwise eligible patient with an unclear genuine seal records `authentic-referral`; other mistaken refusals record `unjustified-refusal`.
+
+Only letters accept the field; it cannot coexist with `reason: "missing-result"`. `unjustified-refusal` requires the employer sender, all other concerns require ZUS. Date, authenticity and additional-test concerns require their respective working-day gates, and identity mismatch requires the established I1 case. Unknown/non-string values and extra fields fail atomically. The v36 validator strips validated concerns before applying all frozen v35 checks, then restores them to copied letters. No other state, limit or RNG stream changes.
+
+Versions 1–35 keep their exact validators. Earlier letters without a concern remain generic: discarded referrals and historical findings cannot safely be reconstructed. No new concern is fabricated during migration. Existing missing-result letters retain their reason. Re-export writes v36, and failed imports leave live state and presentation intact.
+
 ## Version 35: chapter one, publications and epilogues
 
 Version 35 adds the required `story` object (`NarrativeState`, internal `version: 1`) and the `epilogue` phase. Dates in this object are civil game days K, never working-day numbers W: W26 is K36 (8 December 1983), and continuation starts at K37. The authored catalog contains eighteen visits across ten actors. `scheduled`, `active`, `completed`, `missed` and `cancelled` statuses are distinct; an unfinished appointment never fabricates a refusal. The clinical patient catalog appends IDs 6193–6210, and explicit identity lookup preserves recurring actors independently of old arithmetic IDs. Older case IDs, names and results are unchanged.

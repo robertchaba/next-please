@@ -100,6 +100,24 @@ describe('progression follows working days', () => {
 });
 
 describe('dated referrals and authenticity', () => {
+  it('preserves the actual grounds of detected mistakes after the source records are discarded', () => {
+    const valid = formalValid(appointment(7));
+    const expired = { ...valid, visit: { ...valid.visit!, referral: { ...valid.visit!.referral, ageDays: 4 } } };
+    const invalid = { ...valid, visit: { ...valid.visit!, referral: { ...valid.visit!.referral, seal: 'missing' as const, authentic: false } } };
+    const genuine = { ...valid, visit: { ...valid.visit!, referral: { ...valid.visit!.referral, seal: 'unclear' as const } } };
+    const pressure = formalValid(appointment(1, pressurePatient.id));
+    for (const [state, decision, concern] of [
+      [expired, 'fit', 'expired-referral'], [invalid, 'fit', 'invalid-referral'],
+      [genuine, 'unfit', 'authentic-referral'], [valid, 'unfit', 'unjustified-refusal'],
+      [pressure, 'fit', 'pressure'],
+    ] as const) {
+      let completed = submit(state, decision);
+      const letter = completed.papers.find(paper => paper.kind === 'letter')!;
+      expect(letter).toMatchObject({ concern });
+      for (const paper of completed.papers.filter(paper => paper.kind !== 'letter')) completed = act(completed, { type: 'trash-paper', paperId: paper.id });
+      expect(decodeSave(encodeSave(completed))).toEqual(completed);
+    }
+  });
   it('allows exactly three days and begins refusing older referrals on the third workday', () => {
     const young = formalValid(appointment(5));
     const old = { ...young, visit: { ...young.visit!, referral: { ...young.visit!.referral, ageDays: 4 } } };
