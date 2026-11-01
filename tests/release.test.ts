@@ -7,7 +7,8 @@ import { measureText } from '../src/render/font';
 describe('release identity', () => {
   it('uses the package version and preserves published names in both languages', () => {
     expect(GAME_VERSION).toBe(version);
-    expect(releaseLabel('pl')).toBe('WERSJA 1.0.8 / PAPIEROLOGIA');
+    expect(releaseLabel('pl')).toBe('WERSJA 1.0.9 / KALKA');
+    expect(releaseLabel('pl', '1.0.8')).toBe('WERSJA 1.0.8 / PAPIEROLOGIA');
     expect(releaseLabel('pl', '1.0.7')).toBe('WERSJA 1.0.7 / POCZEKALNIA');
     expect(releaseLabel('pl', '1.0.6')).toBe('WERSJA 1.0.6 / DZIURKACZ');
     expect(releaseLabel('pl', '1.0.5')).toBe('WERSJA 1.0.5 / NUMEREK');
@@ -19,7 +20,8 @@ describe('release identity', () => {
     expect(releaseLabel('pl', '0.8.8')).toBe('WERSJA 0.8.8 / ARCHIWUM');
     expect(releaseLabel('pl', '0.8.7')).toBe('WERSJA 0.8.7 / REJESTRACJA');
     expect(releaseLabel('pl', '0.8.6')).toBe('WERSJA 0.8.6 / PARAFKA');
-    expect(releaseLabel('en')).toBe('VERSION 1.0.8 / PAPERWORK');
+    expect(releaseLabel('en')).toBe('VERSION 1.0.9 / CARBON COPY');
+    expect(releaseLabel('en', '1.0.8')).toBe('VERSION 1.0.8 / PAPERWORK');
     expect(releaseLabel('en', '1.0.7')).toBe('VERSION 1.0.7 / WAITING ROOM');
     expect(releaseLabel('en', '1.0.6')).toBe('VERSION 1.0.6 / HOLE PUNCH');
     expect(releaseLabel('en', '1.0.5')).toBe('VERSION 1.0.5 / QUEUE TICKET');

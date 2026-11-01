@@ -5,6 +5,7 @@ import { HOME_AMOUNT_RIGHT, homePage, homePages } from '../src/scenes/home';
 import { measureText } from '../src/render/font';
 import { translations } from '../src/i18n';
 import type { ExpenseKind } from '../src/core/economy';
+import { arrivalIllustrations, BUDGET_ILLUSTRATIONS } from '../src/scenes/home-art';
 
 function homeState(day = 1, money = 200): GameState {
   const cabinet = applyAction(createInitialState(17), 'skip-intro').state;
@@ -87,7 +88,7 @@ describe('localized home sequence', () => {
     for (const locale of ['pl', 'en'] as const) {
       const h = translations[locale].home;
       const budget = homePage(sunday, locale, homePages(sunday).indexOf('budget'));
-      expect(budget.illustration).toBe('weekend-budget');
+      expect(BUDGET_ILLUSTRATIONS).toContain(budget.illustration);
       expect(budget.rows.map(({ label, value }) => ({ label, value }))).toEqual([
         { label: h.base, value: locale === 'pl' ? '1000 zł' : '1,000 zł' },
         { label: h.bonus, value: '0 zł' },
@@ -120,7 +121,7 @@ describe('localized home sequence', () => {
     // Fix the weekend's own random draw, independently of the patient roster size.
     const comfortable = applyAction({ ...homeState(2, 5000), rngState: 34 }, 'next-day').state;
     expect(homePage(comfortable, 'pl', 0).illustration).toBe('weekend-seaside-resort');
-    expect(homePage(homeState(2, 200), 'pl', 0).illustration).toBe('homecoming');
+    expect(arrivalIllustrations(2)).toContain(homePage(homeState(2, 200), 'pl', 0).illustration);
     expect(homePage(sunday, 'pl', homePages(sunday).indexOf('work')).illustration).toBe('going-to-work');
   });
 
@@ -152,12 +153,12 @@ describe('localized home sequence', () => {
     const state = homeState();
     for (const locale of ['pl', 'en'] as const) {
       const arrival = new Set<string>(), work = new Set<string>();
-      for (let index = 0; index < 12; index++) {
-        const sample = { ...state, rngState: index * 256 };
+      for (let index = 0; index < 512; index++) {
+        const sample = { ...state, rngState: index * 104729 };
         const before = structuredClone(sample);
         for (const page of [0, 2]) {
           const content = homePage(sample, locale, page);
-          (page === 0 ? arrival : work).add(content.body.replaceAll('\n', ' '));
+          if (page === 2 || content.illustration === 'homecoming') (page === 0 ? arrival : work).add(content.body.replaceAll('\n', ' '));
           expect(content.body.split('\n').length).toBeLessThanOrEqual(5);
           for (const line of content.body.split('\n')) expect(measureText(line, 2), line).toBeLessThanOrEqual(312);
           expect(homePage(sample, locale, page)).toEqual(content);

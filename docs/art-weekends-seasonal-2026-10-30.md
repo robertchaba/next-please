@@ -43,7 +43,7 @@ The four non-trip expense comments also appear on their existing weekday event c
 
 Scene selection uses the existing saved RNG shifted by eight bits plus the week index. The two new captions use bits shifted by sixteen plus the day, avoiding a fixed coupling between image and caption. Reading, repainting, changing language and reimporting the same settled state do not change selection or advance the RNG. Selection can recur across different weekends; no unseen-scene history is stored. The final settled date determines the season when a weekend crosses a month or year.
 
-The combined Friday–Sunday budget continues to use `weekend-budget.png`, followed by `going-to-work.png`. Bankruptcy and hospital endings retain their priority. The ordinary expense probability and cost bounds are unchanged. New weekends permit at most one trip; historical settled balances, localStorage use and save version 29 remain unchanged.
+As of 1.0.9, the combined Friday–Sunday budget uses the varied domestic pool described in the [home scene catalog](art-home-scenes-2026-11-01.md), followed by the unchanged `going-to-work.png`. The seasonal arrival rules below remain unchanged. Bankruptcy and hospital endings retain their priority. The ordinary expense probability and cost bounds are unchanged. New weekends permit at most one trip; historical settled balances, localStorage use and save version 29 remain unchanged.
 
 ### Audited trip logic
 

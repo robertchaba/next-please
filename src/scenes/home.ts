@@ -4,6 +4,7 @@ import { translations, type Locale } from '../i18n';
 import { drawHomeIllustration, type HomeIllustration } from '../render/clinic';
 import { drawText, measureText } from '../render/font';
 import { ordinaryWeekendIllustration, weekendTripIllustration } from './weekend';
+import { arrivalIllustration, budgetIllustration } from './home-art';
 
 export const HOME_ACTION = { x: 23, y: 272, w: 318, h: 30 } as const;
 export const HOME_AMOUNT_RIGHT = 319;
@@ -71,18 +72,24 @@ export function homePage(state: GameState, locale: Locale, page: number) {
     : kind === 'work' ? h.workTitle : rest ? h.weekendLedger : h.ledger;
   // Reuse entropy already saved by settlement. Reading, painting or importing a
   // card cannot draw randomness, change the simulation, or reroll its comment.
-  const variant = (lines: readonly string[], offset: number): string => lines[((state.rngState >>> 8) + state.day + offset) % lines.length]!;
+  const variant = (lines: readonly string[], offset: number, shift = 8): string => lines[((state.rngState >>> shift) + state.day + offset) % lines.length]!;
   const result = s ? s.closingBalance - openingBalance : 0;
   const budgetComments = result > 0 ? h.budgetComments.profit : result < 0 ? h.budgetComments.loss : h.budgetComments.even;
-  let comment = kind === 'arrival' ? (modest ? h.modestRest : rest ? event ? h.eventComments[event] : h.rest : variant(h.arrivalComments, 0))
+  let comment = kind === 'arrival' ? (modest ? h.modestRest : rest ? event ? h.eventComments[event] : h.rest : variant(h.arrivalComments, 0, 16))
     : kind === 'event' && event ? h.eventComments[event]
     : kind === 'work' ? variant(h.workComments, 5) : variant(budgetComments, 9);
+  const trip = event === 'mountain-trip' || event === 'seaside-trip' ? weekendTripIllustration(state.day, event) : null;
+  const arrival: HomeIllustration = !rest ? arrivalIllustration(state.day, state.rngState)
+    : modest ? 'weekend-modest' : trip ?? (event ? 'weekend-budget' : ordinaryWeekendIllustration(state.day, state.rngState));
+  const eventIllustration = trip ?? 'home-evening';
   const illustration: HomeIllustration = kind === 'work' ? 'going-to-work'
-    : (kind === 'event' || (rest && kind === 'arrival' && !modest)) && (event === 'mountain-trip' || event === 'seaside-trip') ? weekendTripIllustration(state.day, event)
-    : modest && kind === 'arrival' ? 'weekend-modest'
-    : rest && kind === 'arrival' && !event ? ordinaryWeekendIllustration(state.day, state.rngState)
-    : rest ? 'weekend-budget' : kind === 'arrival' ? 'homecoming' : 'home-evening';
-  if (illustration in h.weekendComments) {
+    : kind === 'arrival' ? arrival
+    : kind === 'event' ? eventIllustration
+    : state.ending === 'bankruptcy' ? rest ? 'weekend-budget' : 'home-evening'
+    : budgetIllustration(state.day, state.rngState, [arrival, ...(!rest && event ? [eventIllustration] : [])]);
+  if (kind === 'arrival' && !rest && illustration in h.arrivalSceneComments) {
+    comment = variant(h.arrivalSceneComments[illustration as keyof typeof h.arrivalSceneComments], 3, 16);
+  } else if (kind === 'arrival' && rest && illustration in h.weekendComments) {
     const comments = h.weekendComments[illustration as keyof typeof h.weekendComments];
     // Separate saved bits from the scene choice so both captions remain reachable.
     comment = comments[((state.rngState >>> 16) + state.day) % comments.length]!;

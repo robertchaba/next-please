@@ -36,6 +36,8 @@ Proper names are presentation text resolved from stable IDs, not serialized iden
 
 Release 1.0.8 replaces selected portrait assets and revises the five name labels of 19 ordinary portraits in both languages, including their historical case labels. Existing saved paperwork displays these current labels and artwork after import. Case IDs, birth dates, sex, occupations, findings, queue order and appearance history remain unchanged; the cast audit needs no schema migration and still exports v36.
 
+Release 1.0.9 expands arrival and budget artwork without adding saved fields or changing v36. Presentation derives from the settled day and existing RNG; loading a previous release’s save may select a newly available background, but never changes recorded events, costs, money or RNG. Reimporting the same state in this release preserves the scene and caption. No appearance history is persisted for home illustrations.
+
 The envelope contains exactly `game: "next-please"`, `version: 35`, a canonical ISO `savedAt` timestamp, and `state`:
 
 ```json

@@ -8,6 +8,7 @@ import { homePage } from '../src/scenes/home';
 import { NEW_WEEKEND_ILLUSTRATIONS, ordinaryWeekendIllustrations, weekendTripIllustration } from '../src/scenes/weekend';
 import { translations } from '../src/i18n';
 import { measureText } from '../src/render/font';
+import { BUDGET_ILLUSTRATIONS } from '../src/scenes/home-art';
 
 function dayFor(year: number, month: number, day: number): number {
   return (Date.UTC(year, month - 1, day) - Date.UTC(1983, 10, 3)) / 86400000 + 1;
@@ -99,7 +100,7 @@ describe('seasonal weekend presentation', () => {
     expect(homePage(state, 'pl', 0).body.replaceAll('\n', ' ')).toBe(translations.pl.home.eventComments['car-repair']);
     state.settlement!.weekend!.modest = true;
     expect(homePage(state, 'pl', 0).illustration).toBe('weekend-modest');
-    expect(homePage(state, 'pl', 1).illustration).toBe('weekend-budget');
+    expect(BUDGET_ILLUSTRATIONS).toContain(homePage(state, 'pl', 1).illustration);
   });
 
   it('allows at most one trip per weekend, including resumed Saturdays and month/year boundaries', () => {
