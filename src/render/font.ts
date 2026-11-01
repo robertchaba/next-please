@@ -96,6 +96,8 @@ GLYPHS['‘'] = GLYPHS["'"];
 GLYPHS['“'] = GLYPHS['"'];
 GLYPHS['”'] = GLYPHS['"'];
 GLYPHS['„'] = ['00000', '00000', '00000', '00000', '00000', '00000', '01010', '01010', '10100'];
+GLYPHS['«'] = ['00000', '00000', '00000', '01001', '10010', '01001', '00000', '00000', '00000'];
+GLYPHS['»'] = ['00000', '00000', '00000', '10010', '01001', '10010', '00000', '00000', '00000'];
 
 function integerScale(scale: number): number {
   return Number.isFinite(scale) ? Math.max(1, Math.floor(scale)) : 1;

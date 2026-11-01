@@ -144,6 +144,35 @@ for (const locale of ['pl','en'] as const) {
     await page.locator('#stage').screenshot({path:info.outputPath(`printing-classified-${locale}.png`)});
   });
 
+  test(`Malec takes back his clipped party card without ending the visit in ${locale}`, async ({ page }, info) => {
+    let state = act(storyMoment(state => storyPatientForId(state.visit?.patientId ?? -1)?.encounterId === 'J1'),
+      'take-document', 'take-certificate', 'write-certificate', 'stamp-fit');
+    const card = state.papers.find(paper => paper.kind === 'story-document' && paper.data.definitionId === 'J-PARTY-CARD')!;
+    const referral = state.papers.find(paper => paper.kind === 'referral' && paper.patientId === state.visit!.patientId)!;
+    state = act(state, { type: 'clip-document', documentId: referral.id }, { type: 'join-documents', documentId: card.id, targetId: referral.id },
+      { type: 'join-documents', documentId: 'certificate', targetId: referral.id });
+    await boot(page, locale); await load(page, state);
+    await key(page, `paper-${card.id}`, 'Space');
+    await expect(page.locator('#control-return-identity-card')).toHaveAccessibleName(translations[locale].returnIdentityCard);
+    await expect(page.locator('#control-return-document')).toHaveCount(0);
+    if (locale === 'pl') {
+      const stage = (await page.locator('#stage').boundingBox())!;
+      await page.mouse.click(stage.x + 80 * stage.width / 570, stage.y + 70 * stage.height / 320);
+    } else await key(page, 'return-identity-card');
+    await expect(page.locator('#announcement')).toHaveText(translations[locale].feedback['identity-card-returned']);
+    await expect(page.locator(`#control-paper-${card.id}`)).toHaveCount(0);
+    await expect(page.locator('#stage')).toHaveAttribute('data-carrying', 'false');
+    const saved = await exported(page, info);
+    expect(saved.visit).toEqual(state.visit);
+    expect(saved.story).toEqual(state.story);
+    expect(saved.patientsProcessed).toBe(state.patientsProcessed);
+    expect(saved.papers).toEqual(state.papers.filter(paper => paper.id !== card.id));
+    expect(saved.paperClips).toContainEqual([referral.id, 'certificate']);
+    await load(page, saved);
+    await expect(page.locator(`#control-paper-${card.id}`)).toHaveCount(0);
+    await expect(page.locator('#control-apply-stamp')).toBeVisible();
+  });
+
   test(`identity clues, the full warehouse job and party-card photograph stay readable in ${locale}`,async({page},info)=>{
     await boot(page,locale);
     for(const encounter of ['I1','H1','J1','G1'] as const) {

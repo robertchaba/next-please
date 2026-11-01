@@ -1,7 +1,8 @@
 import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
-import { applyAction } from '../src/core/game';
+import { applyAction, type DrawerId } from '../src/core/game';
 import { drawerButtons, drawerSheets, DRAWER_BATCH_SIZE, DRAWER_CLOSE } from '../src/render/drawer';
+import { decodeSave, encodeSave } from '../src/core/save';
 import { translations } from '../src/i18n';
 import { measureDocumentText, measureText } from '../src/render/font';
 
@@ -15,7 +16,7 @@ function stockedDrawer(count: number) {
 }
 
 describe('drawer presentation', () => {
-  it('retains filing order across 24 exposed cover labels and reaches every sheet', () => {
+  it('shows the latest filed records first across 24 exposed cover labels and reaches every sheet', () => {
     const state = stockedDrawer(53), ids: number[] = [];
     for (let page = 0; page < 3; page++) {
       const { visible, pages } = drawerSheets(state, page);
@@ -32,7 +33,7 @@ describe('drawer presentation', () => {
         }
       }
     }
-    expect(ids).toEqual(state.papers.map(paper => paper.id));
+    expect(ids).toEqual(state.papers.map(paper => paper.id).reverse());
   });
 
   it('counts a clipped bundle once before pagination and retrieves every member', () => {
@@ -43,7 +44,7 @@ describe('drawer presentation', () => {
     state = applyAction(state, { type: 'store-paper', paperId: 2 }).state;
     const sheets = drawerSheets(state, 0);
     expect(sheets.pages).toBe(1);
-    expect(sheets.visible.map(({ paper }) => paper.id)).toEqual([...Array.from({ length: 23 }, (_, i) => i + 3), 1]);
+    expect(sheets.visible.map(({ paper }) => paper.id)).toEqual([1, ...Array.from({ length: 23 }, (_, i) => 25 - i)]);
     expect(drawerButtons(state, 'pl', 0, () => {}).filter(button => button.id.startsWith('drawer-paper-'))).toHaveLength(24);
     state = applyAction(state, { type: 'retrieve-paper', paperId: 1 }).state;
     expect(state.papers.filter(paper => paper.location === 'desk').map(paper => paper.id)).toEqual([1, 2]);
@@ -54,7 +55,7 @@ describe('drawer presentation', () => {
     let state = stockedDrawer(3);
     state = applyAction(state, { type: 'retrieve-paper', paperId: 1 }).state;
     state = applyAction(state, { type: 'store-paper', paperId: 1 }).state;
-    expect(drawerSheets(state, 0).visible.map(({ paper }) => paper.id)).toEqual([2, 3, 1]);
+    expect(drawerSheets(state, 0).visible.map(({ paper }) => paper.id)).toEqual([1, 3, 2]);
   });
 
   it('gives objects separate targets and the entire lower edge one closing action', () => {
@@ -78,4 +79,20 @@ describe('drawer presentation', () => {
     }
   });
 
+});
+
+it('sorts by date before filing time, uses the newest bundle member and leaves both saved drawers intact', () => {
+  for (const drawer of ['drawer', 'drawer-2'] as DrawerId[]) {
+    const other = drawer === 'drawer' ? 'drawer-2' : 'drawer';
+    const source = stockedDrawer(6);
+    const state = { ...source, day: 5, papers: source.papers.map((paper, index) => ({ ...paper,
+      day: [4, 1, 5, 4, 2, 5][index]!, location: index === 5 ? other : drawer })), paperClips: [[1, 3]] };
+    const before = structuredClone(state);
+    expect(drawerSheets(state, 0, drawer).papers.map(paper => paper.id)).toEqual([1, 4, 5, 2]);
+    expect(drawerSheets(state, 0, other).papers.map(paper => paper.id)).toEqual([6]);
+    expect(state).toEqual(before);
+    // Actual chronological blank paperwork and the tie-break survive an import.
+    const stored = { ...source, papers: source.papers.map(paper => ({ ...paper, location: drawer })) };
+    expect(drawerSheets(decodeSave(encodeSave(stored)), 0, drawer).papers.map(paper => paper.id)).toEqual([6, 5, 4, 3, 2, 1]);
+  }
 });

@@ -478,17 +478,17 @@
     "width": 88,
     "height": 56,
     "alpha": true,
-    "source": "story-source/union-folded.png",
+    "source": "press-revision-source/union-folded.png",
     "destination": "story/union-folded.png",
     "sourceWidth": 1572,
     "sourceHeight": 1001,
     "crop": {
-      "left": 131,
-      "top": 175,
-      "width": 1313,
-      "height": 701
+      "left": 13,
+      "top": 71,
+      "width": 1555,
+      "height": 849
     },
-    "sha256": "166f6ae3385fa95251b147171970ed6621e4084a473db66c75f82bb4e2e59142"
+    "sha256": "e00f07e7cd221c78fb69d87388cdd7da26690fb7e3d8b34d275f2e18941edecf"
   },
   {
     "name": "union-spread",
@@ -496,17 +496,17 @@
     "height": 180,
     "alpha": true,
     "fit": "fill",
-    "source": "story-source/union-spread.png",
+    "source": "press-revision-source/union-spread.png",
     "destination": "story/union-spread.png",
     "sourceWidth": 1619,
     "sourceHeight": 971,
     "crop": {
-      "left": 16,
-      "top": 66,
-      "width": 1588,
-      "height": 843
+      "left": 0,
+      "top": 1,
+      "width": 1615,
+      "height": 969
     },
-    "sha256": "4601d19acd3b0105feed6ed0511330753daad64eeb760817f9a3d3edf6686964"
+    "sha256": "73362cafd0b31ca9a0df8c23712ca046b93a6cd44f7e3326dffa994a0bccae63"
   },
   {
     "name": "union-masthead-pl",
@@ -514,17 +514,17 @@
     "height": 30,
     "alpha": true,
     "fit": "fill",
-    "source": "story-source/union-masthead-pl.png",
+    "source": "press-revision-source/union-masthead-pl.png",
     "destination": "story/union-masthead-pl.png",
-    "sourceWidth": 1967,
-    "sourceHeight": 799,
+    "sourceWidth": 2031,
+    "sourceHeight": 774,
     "crop": {
-      "left": 26,
-      "top": 192,
-      "width": 1923,
-      "height": 427
+      "left": 0,
+      "top": 239,
+      "width": 2030,
+      "height": 235
     },
-    "sha256": "2c7e2ac1f57fbc91635f1a1638519e736a37f9d58fa9ad4bf55f3c95ebd8f0ef"
+    "sha256": "9cd5e9c3bf5e3c108b7160b3592bbff65c003b697945a720d2d497fd4b617ab5"
   },
   {
     "name": "union-masthead-en",
@@ -532,16 +532,16 @@
     "height": 30,
     "alpha": true,
     "fit": "fill",
-    "source": "story-source/union-masthead-en.png",
+    "source": "press-revision-source/union-masthead-en.png",
     "destination": "story/union-masthead-en.png",
-    "sourceWidth": 1983,
-    "sourceHeight": 793,
+    "sourceWidth": 2030,
+    "sourceHeight": 775,
     "crop": {
-      "left": 22,
-      "top": 186,
-      "width": 1941,
-      "height": 426
+      "left": 14,
+      "top": 286,
+      "width": 2003,
+      "height": 220
     },
-    "sha256": "69982e0014815c8597699f4471b4186590dc2c289b2abeb16c1bb0d0560caf12"
+    "sha256": "3fe43cf54a6dc1b7a06276a82b492aeb6a2f198c1940f45461c1b9fa69d809e2"
   }
 ]

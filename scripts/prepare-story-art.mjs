@@ -31,7 +31,8 @@ const definitions = [
 ];
 const report = [];
 for (const d of definitions) {
-  const source = `${art}story-source/${d.name}.png`;
+  const sourcePath = `${d.name.startsWith('union-') ? 'press-revision-source' : 'story-source'}/${d.name}.png`;
+  const source = `${art}${sourcePath}`;
   if (!existsSync(source)) { if(allowMissing) continue; throw new Error(`Missing generated source ${source}`); }
   const metadata = await sharp(source).metadata();
   let pipeline = sharp(source);
@@ -52,7 +53,7 @@ for (const d of definitions) {
   mkdirSync(`${art}${d.destination || 'story'}`,{recursive:true});
   await pipeline.resize(d.width,d.height,{kernel:'nearest',fit:d.fit||(d.alpha?'contain':'cover'),position:d.position||'centre',background:{r:0,g:0,b:0,alpha:0}}).png().toFile(destination);
   const pixels=await sharp(destination).raw().toBuffer();
-  report.push({...d,source:`story-source/${d.name}.png`,destination:`${d.destination||'story'}/${d.name}.png`,sourceWidth:metadata.width,sourceHeight:metadata.height,crop,sha256:createHash('sha256').update(pixels).digest('hex')});
+  report.push({...d,source:sourcePath,destination:`${d.destination||'story'}/${d.name}.png`,sourceWidth:metadata.width,sourceHeight:metadata.height,crop,sha256:createHash('sha256').update(pixels).digest('hex')});
   console.log(`${d.name}: ${d.width}x${d.height}`);
 }
 writeFileSync(`${art}story/preparation.json`,JSON.stringify(report,null,2)+'\n');

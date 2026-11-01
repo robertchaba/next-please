@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { applyAction, GAME_LIMITS } from '../src/core/game';
 import { decodeSave, encodeSave } from '../src/core/save';
 import { storyScore } from '../src/core/story';
-import { storyPatientForId } from '../src/core/story-patients';
+import { storyPatientForEncounter, storyPatientForId } from '../src/core/story-patients';
 import { paperDescription } from '../src/render/paperwork';
 import { newspaperPageCount } from '../src/render/newspaper';
 import { translations } from '../src/i18n';
@@ -124,5 +124,51 @@ describe('story transaction and document boundaries', () => {
       expect(text).toContain(locale==='pl'?'30.11.1983':'30/11/1983');
       expect(text).toContain(locale==='pl'?'06.12.1983':'06/12/1983');
     }
+  });
+});
+
+describe('returning patient identity cards', () => {
+  const malec = () => storyMoment(state => storyPatientForId(state.visit?.patientId ?? -1)?.encounterId === 'J1');
+  it('returns Malec’s card from a clipped bundle without handing over other papers or finishing his visit', () => {
+    let state = act(malec(), 'take-document', 'take-certificate', 'write-certificate', 'stamp-fit');
+    const card = state.papers.find(paper => paper.kind === 'story-document' && paper.data.definitionId === 'J-PARTY-CARD')!;
+    const referral = state.papers.find(paper => paper.kind === 'referral' && paper.patientId === state.visit!.patientId)!;
+    state = act(state, { type: 'clip-document', documentId: referral.id }, { type: 'join-documents', documentId: card.id, targetId: referral.id },
+      { type: 'join-documents', documentId: 'certificate', targetId: referral.id });
+    state = decodeSave(encodeSave(state));
+    const result = applyAction(state, { type: 'return-identity-card', paperId: card.id });
+    expect(result.feedback).toBe('identity-card-returned');
+    expect(result.state.papers).toEqual(state.papers.filter(paper => paper.id !== card.id));
+    expect(result.state.paperClips).toContainEqual([referral.id, 'certificate']);
+    expect(result.state.visit).toBe(state.visit);
+    expect(result.state.story).toBe(state.story);
+    expect(result.state.daily).toBe(state.daily);
+    expect(result.state.money).toBe(state.money);
+    expect(result.state.patientsProcessed).toBe(state.patientsProcessed);
+    expect(result.state.clockMinutes).toBe(state.clockMinutes + 1);
+    expect(decodeSave(encodeSave(result.state))).toEqual(result.state);
+    expect(applyAction(result.state, { type: 'return-identity-card', paperId: card.id }).state).toBe(result.state);
+  });
+  it('accepts the retained card on Malec’s later visit, including after drawer retrieval and import', () => {
+    let state = storyMoment(state => storyPatientForId(state.visit?.patientId ?? -1)?.encounterId === 'J2');
+    const card = state.papers.find(paper => paper.kind === 'story-document' && paper.data.definitionId === 'J-PARTY-CARD')!;
+    state = act(state, { type: 'store-paper', paperId: card.id, drawer: 'drawer-2' });
+    expect(applyAction(state, { type: 'return-identity-card', paperId: card.id }).state).toBe(state);
+    state = act(decodeSave(encodeSave(state)), { type: 'retrieve-paper', paperId: card.id, drawer: 'drawer-2' });
+    const result = applyAction(state, { type: 'return-identity-card', paperId: card.id });
+    expect(result.feedback).toBe('identity-card-returned');
+    expect(decodeSave(encodeSave(result.state))).toEqual(result.state);
+  });
+  it('rejects another owner and preserves the card when closing interrupts the handoff', () => {
+    const state = malec();
+    const card = state.papers.find(paper => paper.kind === 'story-document' && paper.data.definitionId === 'J-PARTY-CARD')!;
+    const other = { ...state, visit: { ...state.visit!, patientId: storyPatientForEncounter('B1').patient.id } };
+    expect(applyAction(other, { type: 'return-identity-card', paperId: card.id })).toEqual({ state: other, feedback: 'identity-card-wrong-owner' });
+    const noVisitor = { ...state, visit: null };
+    expect(applyAction(noVisitor, { type: 'return-identity-card', paperId: card.id }).state).toBe(noVisitor);
+    const closing = applyAction({ ...state, clockMinutes: 1034 }, { type: 'return-identity-card', paperId: card.id });
+    expect(closing.feedback).toBe('visit-interrupted');
+    expect(closing.state.papers).toContainEqual(card);
+    expect(closing.state.story.decisions).toEqual(state.story.decisions);
   });
 });

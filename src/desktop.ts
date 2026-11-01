@@ -10,7 +10,7 @@ import { ClinicClock } from './core/clock';
 import { effectsManifest } from './core/effects';
 import { choosePatientSpeech } from './core/patient-speech';
 import { examinationComment, examinationCommentText, type ExaminationComment } from './core/examination-feedback';
-import { renderCabinet, renderIntro, shiftButtons, shiftDescription, manualPageDescription, paperDescription, carriedAdditionalReferral, visibleDocumentClip, manualPageCount, type SelectedStamp, type ShiftAction, type PatientSpeech } from './scenes/shift';
+import { renderCabinet, renderIntro, shiftButtons, shiftDescription, manualPageDescription, paperDescription, carriedAdditionalReferral, carriedIdentityCard, visibleDocumentClip, manualPageCount, type SelectedStamp, type ShiftAction, type PatientSpeech } from './scenes/shift';
 import { homePage, homePages, renderHome, HOME_ACTION } from './scenes/home';
 import type { Button } from './ui';
 import { isNewspaperItem, newspaperItemId, type NewspaperDeskItemId, createDeskState, addDeskItem, removeDeskItem, itemRect, moveDeskItem, pickUpDeskItem, raiseDeskItem, containsPoint, restRect, dropTargetRect, itemAnchor, desktopItemSize, paperDesktopSize, TRAY, DEFAULT_DOCUMENT, PATIENT_HANDOFF, MANUAL_SHELF_SIZE, MANUAL_OPEN_POSITION, NEWSPAPER_OPEN_POSITION, NEWSPAPER_SHELF_POSITION, NEWSPAPER_SHELF_SIZE, RIGHT_DESK_X, CABINET_HOTSPOTS, type DeskItemId, type Point, type Rect } from './core/desk';
@@ -528,6 +528,10 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
       const callFocus = paper ? `${paper.kind === 'referral' ? 'call-employer' : 'story-call'}-${paper.id}`
         : `${newspaperItemId(action.day ?? gameState.day, gameState.day, 'kurier')}-call-story`;
       announceDesk(response ? t().story.phones[response] : t().feedback[result.feedback], callFocus);
+      return;
+    }
+    if (action.type === 'return-identity-card') {
+      announceDesk(t().feedback[result.feedback], gameState.papers.some(entry => entry.id === action.paperId) ? `paper-${action.paperId}` : 'run-general');
       return;
     }
     if (action.type === 'hand-inspection-paper') {
@@ -1473,6 +1477,20 @@ const deskInput = installDeskInput(stage, {
         deskState = raiseDeskItem(deskState, paperId);
       }
       syncControls(paperId);
+      return true;
+    }
+    const identityCard = carriedIdentityCard(gameState, id, carried);
+    if (identityCard && containsPoint(PATIENT_HANDOFF, target)) {
+      heldItem = null;
+      deskState = deskBeforePickup;
+      handleShiftAction({ type: 'return-identity-card', paperId: identityCard.id });
+      if (gameState.phase === 'cabinet' && gameState.papers.some(paper => paper.id === identityCard.id)) {
+        heldItem = id;
+        deskState = pickUpDeskItem(deskState, id);
+        arrangeDocumentGroup(id, true, true);
+        syncControls(itemControlId(id));
+        return false;
+      }
       return true;
     }
     if (carried.includes('document') && containsPoint(PATIENT_HANDOFF, target)) {

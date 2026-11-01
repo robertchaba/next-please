@@ -22,6 +22,8 @@ Imports of versions 1–34 first pass their frozen historical validators and cat
 
 ## Version 35
 
+Release 1.0.5 adds an identity-card return action without changing the format. Drawer files are sorted at presentation time by descending document date and then descending filing position; saved paper-array order and bundle membership remain intact, so no migration is needed. Returning Malec’s `J-PARTY-CARD` removes its physical paper and clip membership, while `deliveredDocumentIds` preserves delivery and prevents a duplicate. The card may be absent just as other delivered story papers may be absent; current v35 validation already supports this. Matching the owner uses the stable actor across J1/J2, so retained cards in existing files can be returned on the later visit. No score, payment, medical finding or new persistent flag is involved.
+
 Proper names are presentation text resolved from stable IDs, not serialized identity data. The English name adaptation described in [localization.md](localization.md) also applies to imported visits, archived paperwork, inspections and retained newspaper issues. It changes no fields or version: `zus` and `lot` remain internal institution keys even when displayed as SIO and NAL.
 
 The envelope contains exactly `game: "next-please"`, `version: 35`, a canonical ISO `savedAt` timestamp, and `state`:

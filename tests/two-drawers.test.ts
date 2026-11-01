@@ -19,10 +19,10 @@ describe.each(DRAWERS)('%s independent storage', drawer => {
     for (let id = 3; id <= 27; id++) state = act(state, 'take-paper', { type: 'store-paper', paperId: id, drawer });
     state = act(state, 'take-paper', { type: 'store-paper', paperId: 28, drawer: other });
     expect(drawerSheets(state, 0, drawer).pages).toBe(2);
-    expect(drawerSheets(state, 1, drawer).visible.map(entry => entry.paper.id)).toEqual([26, 27]);
+    expect(drawerSheets(state, 1, drawer).visible.map(entry => entry.paper.id)).toEqual([3, 1]);
     expect(drawerSheets(state, 0, other).papers.map(paper => paper.id)).toEqual([28]);
     state = act(decodeSave(encodeSave(state)), { type: 'retrieve-paper', paperId: 1 }, { type: 'store-paper', paperId: 1, drawer: other });
-    expect(drawerSheets(state, 0, other).papers.map(paper => paper.id)).toEqual([28, 1]);
+    expect(drawerSheets(state, 0, other).papers.map(paper => paper.id)).toEqual([1, 28]);
     expect(state.papers.filter(paper => paper.id <= 2).map(paper => paper.location)).toEqual([other, other]);
     expect(state.paperClips).toEqual([[1, 2]]);
   });

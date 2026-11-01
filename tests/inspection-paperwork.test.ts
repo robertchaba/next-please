@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import type { Paper } from '../src/core/game';
-import { drawPaperwork, paperDescription, visiblePaperRect } from '../src/render/paperwork';
+import { drawInspectorIdentity, drawPaperwork, paperDescription, visiblePaperRect } from '../src/render/paperwork';
 import { measureDocumentText, measureDocumentHeading } from '../src/render/font';
 import { translations } from '../src/i18n';
 
@@ -41,6 +41,20 @@ it('prints and describes matching inspector, visit and fine data within both ori
         expect(pixels.length).toBeGreaterThan(100);
         expect(pixels.every(([x, y]) => x >= 0 && x < 200 && y >= 0 && y < 168)).toBe(true);
       }
+    }
+  }
+});
+
+it('fills every compact inspector card with native-pixel identity text in both languages', () => {
+  for (const locale of ['pl', 'en'] as const) for (const inspectorId of [0, 1, 2] as const) {
+    for (const w of [48, 60]) {
+      const h = Math.round(w * 112 / 188);
+      const pixels: [number, number][] = [];
+      const ctx = { save() {}, restore() {}, fillStyle: '', fillRect(x: number, y: number) { pixels.push([x, y]); } } as unknown as CanvasRenderingContext2D;
+      drawInspectorIdentity(ctx, inspectorId, { x: 0, y: 0, w, h }, locale);
+      expect(pixels.length).toBeGreaterThan(30);
+      expect(pixels.every(([x, y]) => Number.isInteger(x) && Number.isInteger(y) && x >= 0 && x < w && y >= 0 && y < h)).toBe(true);
+      for (const top of [4, 12, 20]) expect(pixels.some(([, y]) => y >= top && y < top + 7)).toBe(true);
     }
   }
 });

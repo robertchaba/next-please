@@ -9,7 +9,7 @@ import { drawManualCover } from './manual';
 import { paperDescription } from './paperwork';
 import { drawDocumentText, measureDocumentText } from './font';
 
-/** Two columns of exposed file-cover labels preserve the original filing order. */
+/** Two columns of exposed file-cover labels show the newest records first. */
 export const DRAWER_BATCH_SIZE = 24;
 export const DRAWER_NEWSPAPER_BATCH_SIZE = 8;
 export const DRAWER_CLOSE: Rect = { x: 0, y: 288, w: 570, h: 32 };
@@ -30,12 +30,16 @@ export function drawerNewspapers(state: GameState, page: number, drawer: DrawerI
 
 export function drawerSheets(state: GameState, page: number, drawer: DrawerId = 'drawer') {
   const groups = new Map(state.paperClips.flatMap(group => group.map(id => [id, group] as const)));
+  const filed = new Map(state.papers.map((paper, index) => [paper.id, { paper, index }]));
   const seen = new Set<number>();
   const papers = state.papers.filter(paper => {
     if (paper.location !== drawer || seen.has(paper.id)) return false;
     for (const id of groups.get(paper.id) ?? [paper.id]) if (typeof id === 'number') seen.add(id);
     return true;
-  });
+  }).map(paper => {
+    const members = (groups.get(paper.id) ?? [paper.id]).flatMap(id => typeof id === 'number' && filed.has(id) ? [filed.get(id)!] : []);
+    return { paper, day: Math.max(...members.map(entry => entry.paper.day)), filedIndex: Math.max(...members.map(entry => entry.index)) };
+  }).sort((a, b) => b.day - a.day || b.filedIndex - a.filedIndex).map(entry => entry.paper);
   const pages = Math.max(1, Math.ceil(papers.length / DRAWER_BATCH_SIZE), Math.ceil(state.newspaperCopies.filter(copy => copy.location === drawer).length / DRAWER_NEWSPAPER_BATCH_SIZE));
   const current = Math.max(0, Math.min(pages - 1, page));
   return { papers, pages, current, visible: papers.slice(current * DRAWER_BATCH_SIZE, (current + 1) * DRAWER_BATCH_SIZE).map((paper, index) => ({

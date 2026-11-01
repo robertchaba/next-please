@@ -1,13 +1,13 @@
 import { storyPatientForId } from '../core/story-patients';
 import { storyPaperLayout, storyPhoneRect } from '../render/story-paper';
 import { drawNewspaper, newspaperControls, newspaperPageCount, newspaperDescription, newspaperAds, newspaperIsClassifiedPage, newspaperTitle, type NewspaperViews } from '../render/newspaper';
-import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, drawDeskCalendar, drawBanknote, drawInspectionForm, type CabinetArtOptions } from '../render/clinic';
-import { drawPaperwork, paperDescription, paperActionRect, paperClipTargetRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries, paperPagination } from '../render/paperwork';
+import { drawCabinet, drawDeskItem, drawDeskRests, drawIntroIllustration, drawPaper, drawWorkstationObjects, drawPaperclip, drawDeskCalendar, drawBanknote, type CabinetArtOptions } from '../render/clinic';
+import { drawInspectorIdentity, drawPaperwork, paperDescription, paperActionRect, paperClipTargetRect, paperPhoneRect, additionalTestRect, wrapDocumentLines, drawCertificate, certificateDescription, visionReading, pressureReading, generalReading, visiblePaperRect, noteEntries, paperPagination } from '../render/paperwork';
 import { paginateNoteEntries, notePageControls, notePageLabel } from '../render/note-pages';
 export { paperDescription } from '../render/paperwork';
 import { drawDocumentText, drawText, measureDocumentText } from '../render/font';
 import { drawManual, drawManualCover, manualControls, manualPageCount } from '../render/manual';
-import { DRAWERS, isManualStored, INTRO_SLIDES, canReturnBanknote, canEndDay, isShiftFinished, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
+import { DRAWERS, isManualStored, INTRO_SLIDES, isPatientIdentityCard, canReturnBanknote, canEndDay, isShiftFinished, isDocumentClipped, clippedDocuments, type DocumentId, type GameAction, type GameState } from '../core/game';
 import { ADDITIONAL_TESTS } from '../core/additional-tests';
 import { patientForVisit, workDayNumber } from '../core/progression';
 import { translations, type Locale } from '../i18n';
@@ -55,6 +55,13 @@ export function carriedAdditionalReferral(state: GameState, held: DeskItemId | n
     if (paper?.kind === 'additional-referral') return paper;
   }
   return undefined;
+}
+
+/** Return only the identity card; accompanying clinical records stay with the doctor. */
+export function carriedIdentityCard(state: GameState, held: DeskItemId | null, heldItems: readonly DeskItemId[] = []) {
+  if (!held || !state.visit) return undefined;
+  const carried = [held, ...heldItems];
+  return state.papers.find(paper => carried.includes(`paper-${paper.id}`) && isPatientIdentityCard(paper));
 }
 
 const c = { ink: '#293226', paper: '#ded4ae', muted: '#a6ac8e', red: '#aa5d48', green: '#4e674e' };
@@ -110,6 +117,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
   const certificateBounds = itemRect(view.desk, 'document', false, isLifted(view, 'document'));
   const certificateOnDesk = !isLifted(view, 'document') && certificateBounds.x >= RIGHT_DESK_X;
   const heldCash = state.banknotes.find(note => view.held === `banknote-${note.id}`);
+  const heldCard = carriedIdentityCard(state, view.held, view.heldItems);
   const heldReferral = carriedAdditionalReferral(state, view.held, view.heldItems);
   const heldInspectionPaper = state.inspection && view.held?.startsWith('paper-') ? state.papers.find(paper => `paper-${paper.id}` === view.held) : undefined;
   const pageCorners = manualControls(itemRect(view.desk, 'manual', false, false, view.manualOpen));
@@ -129,9 +137,10 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
     ...(heldCash && canReturnBanknote(state, heldCash) ? [hotspot('return-bribe', t.progression.returnBribe, PATIENT_HANDOFF, { type: 'return-banknote', banknoteId: heldCash.id })] : []),
     ...(heldCash ? [hotspot('store-banknote', t.progression.acceptBribe, dropTargetRect('drawer', view.held), { type: 'store-banknote', banknoteId: heldCash.id })] : []),
     ...(view.held === 'banknote' ? [hotspot('accept-bribe', t.progression.acceptBribe, dropTargetRect('drawer', view.held), 'accept-bribe')] : []),
-    ...(heldReferral ? [hotspot('hand-additional-referral', t.additionalTests.hand, PATIENT_HANDOFF, { type: 'hand-additional-referral', paperId: heldReferral.id })] : []),
+    ...(heldCard ? [hotspot('return-identity-card', t.returnIdentityCard, PATIENT_HANDOFF, { type: 'return-identity-card', paperId: heldCard.id })] : []),
+    ...(!heldCard && heldReferral ? [hotspot('hand-additional-referral', t.additionalTests.hand, PATIENT_HANDOFF, { type: 'hand-additional-referral', paperId: heldReferral.id })] : []),
     ...(state.visit?.document === 'tray' ? [item('take-document', t.takeDocument, 'incoming-referral', 'take-document')] : []),
-    ...(state.visit?.certificateTaken ? [...(!heldReferral ? [hotspot('return-document', t.returnDocument, PATIENT_HANDOFF, 'return-document')] : []),
+    ...(state.visit?.certificateTaken ? [...(!heldCard && !heldReferral ? [hotspot('return-document', t.returnDocument, PATIENT_HANDOFF, 'return-document')] : []),
       item('apply-stamp', `${t.applyStamp}. ${certificateDescription(state, locale)}`, 'document', 'apply-stamp'),
       ...(certificateOnDesk ? [{ ...hotspot('write-certificate', t.paperwork.writeCertificate, paperActionRect(certificateBounds), 'write-certificate'), owner: 'document' as const }] : []),
       ...(!isLifted(view, 'document') && visibleDocumentClip(state, 'certificate', view)
@@ -233,7 +242,7 @@ export function renderCabinet(ctx: CanvasRenderingContext2D, state: GameState, l
   drawDeskRests(ctx);
   drawWorkstationObjects(ctx, state.papers.filter(paper => paper.location !== 'desk').length, workDayNumber(state.day) >= 7);
   drawDeskCalendar(ctx, state.day, locale);
-  if (state.inspection?.stage === 'identity' && !state.inspection.idTaken) drawInspectionForm(ctx, 'id', 18, 157, 60, 36);
+  if (state.inspection?.stage === 'identity' && !state.inspection.idTaken) drawInspectorIdentity(ctx, state.inspection.inspectorId, { x: 18, y: 157, w: 60, h: 36 }, locale);
   if (visit?.specialist && !visit.specialistTaken) drawPaper(ctx, 72, 181, 35, 66);
   for (const id of view.desk.order) {
     const lifted = isLifted(view, id);

@@ -63,7 +63,12 @@ test('identity, drawer names and sequential records work with mouse and keyboard
   await load(page, initial);
   await expect(page.locator('#control-call-patient')).toBeDisabled();
   await expect(page.locator('#control-take-document')).toHaveCount(0);
+  await page.locator('#stage').screenshot({ path: info.outputPath('inspector-id-shelf-pl.png') });
+  await key(page, 'language-en');
+  await page.locator('#stage').screenshot({ path: info.outputPath('inspector-id-shelf-en.png') });
+  await key(page, 'language-pl');
   await page.locator('#control-take-inspection-id').click();
+  await page.locator('#stage').screenshot({ path: info.outputPath('inspector-id-carried.png') });
   await nativeClick(page, 362, 212);
   const card = (await exportState(page)).papers.find(paper => paper.kind === 'inspection-id')!;
   await expect(page.locator(`#control-paper-${card.id}`)).toHaveAccessibleName(/LEGITYMACJA SŁUŻBOWA/);

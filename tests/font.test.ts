@@ -32,6 +32,16 @@ function pixels(value: string, x = 0, y = 0,
   return marks;
 }
 
+it('renders quotation marks distinctly from question marks in headings and every document role', () => {
+  for (const draw of [drawText, drawDocumentText, drawReadingText, drawDocumentHeading]) {
+    for (const mark of '«»„“”‘’\'"') {
+      expect(pixels(mark, 0, 0, draw), mark).not.toEqual(pixels('?', 0, 0, draw));
+      expect(pixels(mark, 0, 0, draw).length).toBeGreaterThan(0);
+    }
+    expect(pixels('«', 0, 0, draw)).not.toEqual(pixels('»', 0, 0, draw));
+  }
+});
+
 describe('upright document reading face', () => {
   it('uses the original four-row lowercase and five-row capitals without cursive variants', () => {
     const height = (value: string, draw: typeof drawReadingText) => {

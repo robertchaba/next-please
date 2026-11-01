@@ -440,21 +440,33 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
   if (clipped) { const clip = paperClipRect(bounds); drawPaperclip(ctx, clip.x, clip.y); }
 }
 
+/** The same filled identity appears on the exchange shelf, either desk and in hand. */
+export function drawInspectorIdentity(ctx: CanvasRenderingContext2D, inspectorId: 0 | 1 | 2, bounds: Rect, locale: Locale): void {
+  const { x, y, w, h } = bounds, t = translations[locale], q = t.inspection;
+  drawInspectionForm(ctx, 'id', x, y, w, h);
+  drawInspector(ctx, inspectorId, x + Math.round(w * 12 / 188), y + Math.round(h * 28 / 112), Math.round(w * 42 / 188), Math.round(h * 43 / 112));
+  if (w >= 188) {
+    drawDocumentText(ctx, wrapDocumentLines([q.identity], w - 78).join('\n'), x + 65, y + 15, { color: DOCUMENT_INK });
+    drawDocumentText(ctx, q.names[inspectorId]!, x + 65, y + 40, { color: HANDWRITING_INK });
+    const rows = [q.role, `${q.number}: K/${41 + inspectorId}`, q.authority];
+    drawDocumentText(ctx, wrapDocumentLines(rows, w - 78).join('\n'), x + 65, y + 52, { color: DOCUMENT_INK });
+    drawDocumentText(ctx, q.validity, x + 65, y + h - 20, { color: '#615a41' });
+  } else {
+    const textX = x + Math.round(w * 65 / 188);
+    const name = q.names[inspectorId]!;
+    const surname = name.split(' ').at(-1)!;
+    const shortName = measureDocumentText(surname) <= x + w - 4 - textX ? surname : name.split(' ').map(part => `${part[0]}.`).join('');
+    drawDocumentText(ctx, t.paperwork.zus, textX, y + 4, { color: DOCUMENT_INK });
+    drawDocumentText(ctx, shortName, textX, y + 12, { color: HANDWRITING_INK });
+    drawDocumentText(ctx, `K/${41 + inspectorId}`, textX, y + 20, { color: DOCUMENT_INK });
+  }
+}
+
 /** Original illustrated forms provide the paper, frames and security ornament. */
 function drawInspectionPaper(ctx: CanvasRenderingContext2D, paper: Extract<Paper, { kind: 'inspection-id' | 'inspection-fine' }>, bounds: Rect, locale: Locale): void {
   const { x, y, w, h } = bounds, t = translations[locale], q = t.inspection;
-  const full = w >= 188;
   if (paper.kind === 'inspection-id') {
-    const { h: height, y: top } = visiblePaperRect(paper, bounds);
-    drawInspectionForm(ctx, 'id', x, top, w, height);
-    drawInspector(ctx, paper.inspectorId, x + Math.round(w * 12 / 188), top + Math.round(height * 28 / 112), Math.round(w * 42 / 188), Math.round(height * 43 / 112));
-    if (full) {
-      drawDocumentText(ctx, wrapDocumentLines([q.identity], w - 78).join('\n'), x + 65, top + 15, { color: DOCUMENT_INK });
-      drawDocumentText(ctx, q.names[paper.inspectorId]!, x + 65, top + 40, { color: HANDWRITING_INK });
-      const rows = [q.role, `${q.number}: K/${41 + paper.inspectorId}`, q.authority];
-      drawDocumentText(ctx, wrapDocumentLines(rows, w - 78).join('\n'), x + 65, top + 52, { color: DOCUMENT_INK });
-      drawDocumentText(ctx, q.validity, x + 65, top + height - 20, { color: '#615a41' });
-    }
+    drawInspectorIdentity(ctx, paper.inspectorId, visiblePaperRect(paper, bounds), locale);
     return;
   }
   drawInspectionForm(ctx, 'fine', x, y, w, h);

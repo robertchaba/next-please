@@ -56,7 +56,7 @@ test('empty drawer opens before and during a visit, closes at the bottom or with
   await expect(page.locator('#control-next-day')).toHaveCount(0);
 });
 
-test('documents retain filing order, selecting a covered sheet carries it out, and refiling moves it to the end', async ({ page }) => {
+test('documents show newest first, selecting a covered sheet carries it out, and refiling moves it to the front', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   await enter(page);
   for (let id = 1; id <= 3; id++) {
@@ -65,14 +65,14 @@ test('documents retain filing order, selecting a covered sheet carries it out, a
   }
   await activate(page, 'drawer');
   const paperIds = () => page.locator('[id^="control-drawer-paper-"]').evaluateAll(elements => elements.map(element => element.id));
-  expect(await paperIds()).toEqual(['control-drawer-paper-1', 'control-drawer-paper-2', 'control-drawer-paper-3']);
+  expect(await paperIds()).toEqual(['control-drawer-paper-3', 'control-drawer-paper-2', 'control-drawer-paper-1']);
   // The second cover's exposed label belongs to that sheet.
   await nativeClick(page, 52, 62);
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'cabinet');
   await expect(page.locator('#control-paper-2')).toHaveAttribute('data-held', 'true');
   await activate(page, 'drawer');
   await activate(page, 'drawer');
-  expect(await paperIds()).toEqual(['control-drawer-paper-1', 'control-drawer-paper-3', 'control-drawer-paper-2']);
+  expect(await paperIds()).toEqual(['control-drawer-paper-2', 'control-drawer-paper-3', 'control-drawer-paper-1']);
   await page.keyboard.press('Escape');
   await expect(page.locator('#control-paper-2')).toHaveCount(0);
   expect(errors).toEqual([]);
@@ -105,7 +105,7 @@ test('separate rulebook and clips persist through an import and can be retrieved
   await expect(page.locator('#control-drawer-clip')).toHaveCount(0);
 });
 
-test('large stacks can be browsed in filing order and closing leaves every sheet stored', async ({ page }) => {
+test('large stacks can be browsed newest first and closing leaves every sheet stored', async ({ page }) => {
   await enter(page);
   let state = applyAction(createInitialState(), 'skip-intro').state;
   for (let id = 1; id <= 29; id++) {
@@ -119,7 +119,7 @@ test('large stacks can be browsed in filing order and closing leaves every sheet
   await expect(page.locator('#controls')).toHaveAttribute('data-screen', 'drawer');
   await activate(page, 'drawer-next');
   await expect(page.locator('[id^="control-drawer-paper-"]')).toHaveCount(5);
-  await expect(page.locator('#control-drawer-paper-25')).toBeAttached();
+  await expect(page.locator('#control-drawer-paper-5')).toBeAttached();
   await activate(page, 'drawer-previous');
   await page.keyboard.press('Escape');
   await expect(page.locator('[id^="control-paper-"]')).toHaveCount(0);

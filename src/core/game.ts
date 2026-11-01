@@ -161,6 +161,7 @@ export type GameAction =
   | 'handle-item' | 'read-manual' | 'take-paper' | 'use-phone'
   | 'take-inspection-id' | 'return-inspection-id' | 'talk-inspector'
   | { type: 'hand-inspection-paper'; paperId: number }
+  | { type: 'return-identity-card'; paperId: number }
   | 'take-additional-referral'
   | { type: 'select-additional-test'; paperId: number; test: AdditionalTest }
   | { type: 'hand-additional-referral'; paperId: number }
@@ -188,6 +189,7 @@ export type GameFeedback = ClassifiedCallResult
   | 'decoration-changed' | 'next-day' | 'shift-unfinished' | 'limit-reached'
   | 'measurements-taken' | 'phone-unavailable' | 'paper-taken' | 'paper-written'
   | 'paper-stored' | 'paper-retrieved' | 'paper-trashed' | 'paper-missing'
+  | 'identity-card-returned' | 'identity-card-wrong-owner'
   | 'paper-wrong-patient' | 'results-needed' | 'letter-opened' | 'paper-clipped'
   | 'paper-unclipped' | 'papers-joined' | 'clip-needed' | 'certificate-in-bundle'
   | 'certificate-written' | 'certificate-name-needed'
@@ -264,6 +266,10 @@ export const pendingBribeCash = (state: Pick<GameState, 'banknotes'>): number =>
 
 export function canReturnBanknote(state: GameState, note: Banknote): boolean {
   return state.visit?.bribe === 'accepted' && note.patientId === state.visit.patientId && note.day === state.visit.startedDay;
+}
+
+export function isPatientIdentityCard(paper: Paper): boolean {
+  return paper.kind === 'story-document' && paper.data.definitionId === 'J-PARTY-CARD';
 }
 
 function settleClinicDay(state: GameState) {
@@ -580,8 +586,8 @@ function transition(state: GameState, action: GameAction): ActionResult {
       const drawer = action.drawer ?? 'drawer';
       if (paper.location === drawer) return unchanged('paper-stored');
       if (group.includes('certificate')) return unchanged('certificate-in-bundle');
-      // Array order records filing order, including an older sheet filed again
-      // after retrieval; browsing the drawer must preserve this order.
+      // Array order records filing history, including a sheet filed again
+      // after retrieval; drawer sorting uses it to break equal-date ties.
       return changed({
         papers: [...state.papers.filter(entry => !group.includes(entry.id)), ...state.papers.filter(entry => group.includes(entry.id)).map(entry => ({ ...entry, location: drawer }))],
         clockMinutes: spend(ACTION_MINUTES.handling),
@@ -594,6 +600,17 @@ function transition(state: GameState, action: GameAction): ActionResult {
       }, 'paper-retrieved');
     }
     if (paper.location !== 'desk') return unchanged('paper-missing');
+    if (action.type === 'return-identity-card') {
+      if (!isPatientIdentityCard(paper)) return unchanged('paper-missing');
+      if (!state.visit) return unchanged('no-patient');
+      const owner = paper.patientId === null ? undefined : storyPatientForId(paper.patientId);
+      if (!owner || storyPatientForId(state.visit.patientId)?.actorId !== owner.actorId) return unchanged('identity-card-wrong-owner');
+      return changed({
+        papers: state.papers.filter(entry => entry.id !== paper.id),
+        paperClips: state.paperClips.map(entries => entries.filter(id => id !== paper.id)).filter(entries => entries.length),
+        clockMinutes: spend(ACTION_MINUTES.handling),
+      }, 'identity-card-returned');
+    }
     if (action.type === 'trash-paper') {
       if (state.papers.some(entry => group.includes(entry.id) && entry.kind === 'inspection-id')) return unchanged('inspection-id-needed');
       if (group.includes('certificate')) return unchanged('certificate-in-bundle');
