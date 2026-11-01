@@ -9,7 +9,7 @@ import { formatGameDate, gameDate } from '../core/calendar';
 import { translations, type Locale } from '../i18n';
 import { drawPaper, drawPaperclip, drawDecisionImprint, drawDocumentSignature, drawUnclearSeal, drawInspectionForm, drawInspector, drawStationery } from './clinic';
 import { drawDocumentText, drawDocumentHeading, measureDocumentText, drawReadingText, measureReadingText, READ_LINE_HEIGHT } from './font';
-import { referralCopy, correspondenceCopy, employerInstitution, specialistIssuer, wrapReadingText, fieldLabelWidth, REFERRAL_BODY_Y, REFERRAL_LINE_HEIGHT } from './document-copy';
+import { referralCopy, referralLayout, correspondenceCopy, employerInstitution, specialistIssuer, wrapReadingText, fieldLabelWidth, REFERRAL_LINE_HEIGHT } from './document-copy';
 import { drawAdministrativeStamp, drawLetterhead, institutionInk } from './document-style';
 import { drawManualArt } from './clinic';
 import { paginateNoteEntries, notePageControls, notePageLabel, NOTE_LINE_HEIGHT } from './note-pages';
@@ -137,8 +137,8 @@ export function additionalResultText(paper: Extract<Paper, { kind: 'additional-r
   return translations[locale].additionalTests.report[paper.test][additionalAssessment(PATIENTS[paper.patientId]!, paper)];
 }
 
-export function paperPhoneRect(bounds: Rect): Rect {
-  return { x: bounds.x + 9, y: bounds.y + bounds.h - 16, w: 105, h: 13 };
+export function paperPhoneRect(bounds: Rect, paginated = false): Rect {
+  return { x: bounds.x + (paginated ? 19 : 9), y: bounds.y + bounds.h - 16, w: paginated ? 95 : 105, h: 13 };
 }
 
 export function paperDescription(paper: Paper, locale: Locale, clipped = false, story?: NarrativeState): string {
@@ -245,11 +245,13 @@ export function wrapDocumentLines(lines: readonly string[], width: number): stri
 export function paperPagination(paper: Paper, locale: Locale, page = 0, story?: NarrativeState) {
   if (paper.kind === 'note') return paginateNoteEntries(noteEntries(paper, locale), CLINICAL_PAPER_SIZE.w - 22, page);
   if (paper.kind === 'story-document' && paper.opened) return storyPaperLayout(paper, locale, page, 200, story);
-  if ((paper.kind !== 'referral' && paper.kind !== 'additional-result') || !storyPatientForId(paper.patientId)) return undefined;
+  if (paper.kind === 'referral') {
+    const layout = referralLayout(paper.patientId, locale, page);
+    return { count: layout.count, page: layout.page, lines: layout.rows.map(row => ({ text: row.label + row.value, color: DOCUMENT_INK })) };
+  }
+  if (paper.kind !== 'additional-result' || !storyPatientForId(paper.patientId)) return undefined;
   const t = translations[locale], p = t.paperwork;
-  const entries = paper.kind === 'referral'
-    ? [p.referral, ...referralLines(paper.patientId, locale), `${p.issued}: ${referralIssueDate(paper, locale)}`, `${p.reference}: ${paper.id}`, p.signed]
-    : [t.additionalTests.resultTitle, t.patientNames[paper.patientId]!, t.patientJobs[paper.patientId]!, t.additionalTests.tests[paper.test], additionalResultText(paper, locale),
+  const entries = [t.additionalTests.resultTitle, t.patientNames[paper.patientId]!, t.patientJobs[paper.patientId]!, t.additionalTests.tests[paper.test], additionalResultText(paper, locale),
       `${p.issued}: ${formatGameDate(paper.day, locale)}`, p.signed];
   const lines = wrapDocumentLines(entries, CLINICAL_PAPER_SIZE.w - 22).map(text => ({ text, color: DOCUMENT_INK }));
   const count = Math.max(1, Math.ceil(lines.length / 14)), current = Math.max(0, Math.min(count - 1, page));
@@ -287,15 +289,13 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
     if (clipped) { const clip = paperClipRect(visiblePaperRect(paper, bounds)); drawPaperclip(ctx, clip.x, clip.y, lifted); }
     return;
   }
-  const clinicalPages = (paper.kind === 'referral' || paper.kind === 'additional-result') && storyPatientForId(paper.patientId)
+  const clinicalPages = paper.kind === 'additional-result' && storyPatientForId(paper.patientId)
     ? paperPagination(paper, locale, page, story) : undefined;
   if (clinicalPages && w >= CLINICAL_PAPER_SIZE.w) {
     drawPaper(ctx, x, y, w, h);
     clinicalPages.lines.forEach((line, index) => drawDocumentText(ctx, line.text, x + 11, y + 10 + index * 8, { color: line.color }));
-    const phone = paper.kind === 'referral' && workDayNumber(paper.day) >= 5 ? `${t.progression.phone} ${paper.details.phone}` : '';
-    if (phone) drawDocumentText(ctx, phone, x + 11, y + h - 26, { color: HANDWRITING_INK });
     drawDocumentSignature(ctx, x + w - 60, y + h - 27, 40, 10);
-    drawAdministrativeStamp(ctx, paper.kind === 'referral' ? employerInstitution(paper.patientId!) : 'chamber', locale, x + w - 42, y + h - 46, true);
+    drawAdministrativeStamp(ctx, 'chamber', locale, x + w - 42, y + h - 46, true);
     drawDocumentText(ctx, `${clinicalPages.page + 1}/${clinicalPages.count}`, x + Math.floor(w / 2), y + h - 12, { color: muted, align: 'center' });
     if (!lifted && showActions) {
       const corners = notePageControls(bounds);
@@ -319,9 +319,9 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
   if (envelope) drawStationery(ctx, 'envelope', x, y, w, h);
   else drawPaper(ctx, x, y, w, h);
   const write = (value: string, dx: number, dy: number, color = ink): void => drawDocumentText(ctx, value, x + dx, y + dy, { color, face: color === HANDWRITING_INK || color === ALERT_INK ? 'handwritten' : dy <= 10 ? 'book' : 'typewriter' });
-  const dateAndReference = (): void => {
+  const dateAndReference = (pageLabel = ''): void => {
     drawDocumentText(ctx, paper.kind === 'referral' ? referralIssueDate(paper, locale) : formatGameDate(paper.day, locale), x + w - 12, y + 9, { color: muted, align: 'right', face: 'typewriter' });
-    drawDocumentText(ctx, `${p.reference} ${paper.id}`, x + w - 12, y + 19, { color: muted, align: 'right', face: 'print' });
+    drawDocumentText(ctx, `${p.reference} ${paper.id}${pageLabel ? `  ${pageLabel}` : ''}`, x + w - 12, y + 19, { color: muted, align: 'right', face: 'print' });
   };
   const authentication = (): void => {
     drawDocumentSignature(ctx, x + 16, y + h - 25, 55, 11);
@@ -349,18 +349,23 @@ export function drawPaperwork(ctx: CanvasRenderingContext2D, paper: Paper, bound
       if (paper.kind !== 'note') drawSeal(x + w - 28, y + h - 18, 12);
     }
   } else if (paper.kind === 'referral') {
-    const copy = referralCopy(paper.patientId, locale);
+    const copy = referralLayout(paper.patientId, locale, page);
     drawLetterhead(ctx, copy.institution, copy.masthead, copy.subheading, x + 11, y + 6);
-    dateAndReference();
-    drawDocumentHeading(ctx, copy.title, x + Math.floor(w / 2), y + 29, { color: institutionInk(copy.institution), face: 'serif', align: 'center' });
-    drawReadingText(ctx, copy.instruction, x + 11, y + 40, { color: ink });
+    dateAndReference(copy.count > 1 ? `${copy.page + 1}/${copy.count}` : '');
+    drawDocumentHeading(ctx, copy.title, x + Math.floor(w / 2), y + copy.titleY, { color: institutionInk(copy.institution), face: 'serif', align: 'center' });
+    drawReadingText(ctx, copy.instruction, x + 11, y + copy.instructionY, { color: ink });
     copy.rows.forEach((row, index) => {
-      const rowY = y + REFERRAL_BODY_Y + index * REFERRAL_LINE_HEIGHT;
+      const rowY = y + copy.bodyY + index * REFERRAL_LINE_HEIGHT;
       drawReadingText(ctx, row.label, x + 11, rowY, { color: '#53563f' });
       drawReadingText(ctx, row.value, x + 11 + fieldLabelWidth(row.label), rowY, { color: ink });
     });
     authentication();
-    if (workDayNumber(paper.day) >= 5) drawReadingText(ctx, `${t.progression.phone} ${paper.details.phone}`, x + 11, y + h - 15, { face: 'handwritten', color: HANDWRITING_INK });
+    if (workDayNumber(paper.day) >= 5) drawReadingText(ctx, `${t.progression.phone} ${paper.details.phone}`, x + (copy.count > 1 ? 21 : 11), y + h - 15, { face: 'handwritten', color: HANDWRITING_INK });
+    if (copy.count > 1 && !lifted && showActions) {
+      const corners = notePageControls(bounds);
+      if (copy.page > 0) drawManualArt(ctx, 'corner-left', corners.previous.x + 2, corners.previous.y + 2, 9, 9);
+      if (copy.page < copy.count - 1) drawManualArt(ctx, 'corner-right', corners.next.x + 2, corners.next.y + 2, 9, 9);
+    }
   } else if (paper.kind === 'additional-referral') {
     const a = t.additionalTests;
     clinicalHeader(t.documentDesign.referral);

@@ -505,7 +505,9 @@ function handleShiftAction(action: ShiftAction, carryNewSheet = true): void {
       notePages[paper.id] = next.page;
       spendTime('read-manual'); playEffect('paper');
       const direction = next.page === next.count - 1 ? 'prev' : next.page === 0 ? 'next' : action.direction === 1 ? 'next' : 'prev';
-      announceDesk(`${t().paperwork.note}. ${notePageLabel(locale, next.page, next.count)}. ${next.lines.map(line => line.text).join(' ')}`, `note-${direction}-${paper.id}`);
+      const pageLabel = paper.kind === 'note' ? `${t().paperwork.note}. ${notePageLabel(locale, next.page, next.count)}`
+        : `${t().story.ui.page} ${next.page + 1}/${next.count}`;
+      announceDesk(`${pageLabel}. ${next.lines.map(line => line.text).join(' ')}`, `note-${direction}-${paper.id}`);
       return;
     }
     if (action.type === 'read-paper') {

@@ -54,4 +54,8 @@ Attaching a second sheet has a twelve-pixel tolerance around the existing clip (
 
 The returned additional-examination report now shares the 176 × 157 reading footprint of the referral, medical note, specialist certificate and final certificate. The complete result and scope note reflow at the unchanged native font size within 154 pixels; the signature and seal remain below them. The additional-examination referral form retains its existing 200 × 168 size. Both carry and placement continue to use the shared paper geometry and aligned semantic controls. Closed correspondence now uses the [generated postage revision](art-envelope-postage-2026-10-29.md).
 
+## Shared referral form after the 1.0 chapter
+
+Story and ordinary employment referrals share the same 176 × 157 form, original letterhead, six numbered fields, ten-pixel field leading, signature and seal. Roman Kurek's first referral fits on one page in both languages, with no page indicator. Only actual content overflow produces additional pages; the complete warehouse referral takes two pages in Polish and one in English. Longer employer headings reserve their measured height before the title and body. Page numbers share the reference line; generated corners and the printed HR number have separate semantic hit areas. The militia sergeant uses the existing militia styling. Artwork, patient facts, gameplay and save v35 remain unchanged.
+
 Verified previews: [Polish report](paperwork-v084-additional-result-pl-screen.png) and [English report](paperwork-v084-additional-result-en-screen.png). Native text checks cover every additional-test outcome in both languages, and the browser test compares the report and certificate hitbox dimensions after public save import.

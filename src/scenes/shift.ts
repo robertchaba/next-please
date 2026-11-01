@@ -179,7 +179,7 @@ export function shiftButtons(state: GameState, locale: Locale, selected: Selecte
           { type: 'select-additional-test', paperId: paper.id, test }), owner: id, pressed: paper.test === test })) : []),
         ...(paper.kind === 'story-document' && paper.opened && storyContact && !isLifted(view, id) && bounds.x >= RIGHT_DESK_X ? [{ ...hotspot(`story-call-${paper.id}`, t.story.ui.call, storyPhoneRect(bounds), { type: 'call-story', paperId: paper.id, contactId: storyContact }), owner: id }] : []),
         ...(callable ? [{ ...hotspot(`${paper.kind === 'specialist' ? 'call-specialist' : 'call-employer'}-${paper.id}`,
-          paper.kind === 'specialist' ? t.progression.callSpecialist : t.progression.callEmployer, paperPhoneRect(bounds),
+          paper.kind === 'specialist' ? t.progression.callSpecialist : t.progression.callEmployer, paperPhoneRect(bounds, !!note && note.count > 1),
           paper.kind === 'specialist' ? 'call-specialist' : paper.kind === 'referral' && storyPatientForId(paper.patientId)?.encounterId === 'H1' ? { type: 'call-story', paperId: paper.id, contactId: 'CALL-WAREHOUSE' } : 'call-employer'), owner: id }] : []),
         ...(canAct ? [{ ...hotspot(`paper-action-${paper.id}`, t.paperwork.open, paperActionRect(bounds), action), owner: id }] : []),
         ...(!isLifted(view, id) && visibleDocumentClip(state, paper.id, view)

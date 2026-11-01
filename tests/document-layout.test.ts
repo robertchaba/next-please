@@ -2,14 +2,14 @@ import { createInitialState } from './fixtures/routine';
 import { describe, expect, it } from 'vitest';
 import { PATIENTS, applyAction, type Paper } from '../src/core/game';
 import { ADDITIONAL_TESTS } from '../src/core/additional-tests';
-import { drawCertificate, drawPaperwork, paperDescription, wrapDocumentLines } from '../src/render/paperwork';
+import { drawCertificate, drawPaperwork, paperDescription, paperPagination, wrapDocumentLines } from '../src/render/paperwork';
 import { paperDesktopSize, CLINICAL_PAPER_SIZE } from '../src/core/desk';
 import { measureReadingText, READ_LINE_HEIGHT } from '../src/render/font';
 import { wrapReadingText } from '../src/render/document-copy';
 import { translations } from '../src/i18n';
 
 /** Generated assets load only in the browser; record the actual native lettering. */
-function letteringBounds(paper: Paper, locale: 'pl' | 'en') {
+function letteringBounds(paper: Paper, locale: 'pl' | 'en', page = 0) {
   const size = paperDesktopSize(paper.kind);
   const outside: { x: number; y: number }[] = [];
   let written = 0;
@@ -22,7 +22,7 @@ function letteringBounds(paper: Paper, locale: 'pl' | 'en') {
       if (x < 0 || x >= size.w - 11 || y < 0 || y >= size.h) outside.push({ x, y });
     },
   } as unknown as CanvasRenderingContext2D;
-  drawPaperwork(ctx, paper, { x: 0, y: 0, ...size }, locale, false);
+  drawPaperwork(ctx, paper, { x: 0, y: 0, ...size }, locale, false, false, true, page);
   return { outside, written };
 }
 
@@ -55,9 +55,11 @@ describe('revised document lettering', () => {
         id: 1, kind: 'referral', day: 9, patientId: patient.id, location: 'desk',
         details: { ageDays: 0, seal: 'clear', authentic: true, phone: '42-1000' },
       };
-      const marks = letteringBounds(paper, locale);
-      expect(marks.written).toBeGreaterThan(100);
-      expect(marks.outside, `${locale}: patient ${patient.id}`).toEqual([]);
+      for (let page = 0; page < paperPagination(paper, locale)!.count; page++) {
+        const marks = letteringBounds(paper, locale, page);
+        expect(marks.written).toBeGreaterThan(100);
+        expect(marks.outside, `${locale}: patient ${patient.id}, page ${page}`).toEqual([]);
+      }
     }
   });
 

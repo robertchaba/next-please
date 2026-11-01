@@ -6,6 +6,7 @@ import { storyPatientForId } from '../../src/core/story-patients';
 import { storyPaperLayout } from '../../src/render/story-paper';
 import { epilogueDocumentPages } from '../../src/scenes/epilogue';
 import { newspaperPageCount } from '../../src/render/newspaper';
+import { paperPagination } from '../../src/render/paperwork';
 import { translations, type Locale } from '../../src/i18n';
 import { act, storyMoment, playStoryRoute } from '../fixtures/story-route';
 
@@ -42,6 +43,36 @@ async function place(page: Page, id: string, x=350, y=210) {
 }
 
 for (const locale of ['pl','en'] as const) {
+  test(`ordinary and story referrals share the form and only long duties paginate in ${locale}`, async ({page},info) => {
+    await boot(page,locale);
+    for (const encounter of ['ordinary','A1','H1','E1-VISIT'] as const) {
+      const state=act(storyMoment(state=>encounter==='ordinary' ? state.day===1 && !!state.visit
+        : storyPatientForId(state.visit?.patientId??-1)?.encounterId===encounter),'take-document');
+      const paper=state.papers.find(paper=>paper.kind==='referral' && paper.patientId===state.visit!.patientId)!;
+      await load(page,state); await place(page,`paper-${paper.id}`);
+      const count=paperPagination(paper,locale)!.count;
+      if(encounter==='A1' || encounter==='ordinary') {
+        expect(count).toBe(1);
+        await expect(page.locator(`#control-note-next-${paper.id}`)).toHaveCount(0);
+        await expect(page.locator(`#control-paper-${paper.id}`)).not.toHaveAccessibleName(new RegExp(`${translations[locale].story.ui.page} 1/1`));
+      }
+      await page.locator('#stage').screenshot({path:info.outputPath(`referral-${encounter}-${locale}.png`)});
+      if(encounter==='H1') {
+        expect(count).toBe(locale==='pl'?2:1);
+        for(let index=1;index<count;index++) await key(page,`note-next-${paper.id}`);
+        if(count>1) await expect(page.locator('#announcement')).toContainText(`${translations[locale].story.ui.page} ${count}/${count}`);
+        await page.locator('#stage').screenshot({path:info.outputPath(`referral-H1-last-${locale}.png`)});
+        // The physical phone label and page corner must have separate hit areas.
+        for(const id of [...(count>1?[`note-prev-${paper.id}`]:[]),`call-employer-${paper.id}`]) {
+          const button=page.locator(`#control-${id}`);
+          expect(await button.evaluate(element=>{const r=element.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.id;})).toBe(`control-${id}`);
+        }
+        await page.locator(`#control-call-employer-${paper.id}`).click();
+        await expect(page.locator('#announcement')).toContainText(translations[locale].story.phones.warehouse);
+        for(let index=1;index<count;index++) await key(page,`note-prev-${paper.id}`);
+      }
+    }
+  });
   for (const route of ['exposed','audit','detained','party','union','independent']) {
     test(`${route} epilogue, complete documents and continuation in ${locale}`,async({page},info)=>{
       const errors:string[]=[]; page.on('pageerror',error=>errors.push(error.message));

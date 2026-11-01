@@ -2,7 +2,7 @@ import { PATIENTS } from '../core/patients';
 import type { Paper } from '../core/game';
 import type { SpecialistCertificate } from '../core/progression';
 import { translations, type Locale } from '../i18n';
-import { measureDocumentText, measureReadingText, type ReadingFace } from './font';
+import { measureDocumentText, measureReadingText, READ_CELL_HEIGHT, type ReadingFace } from './font';
 import { PAPER_SIZE, CLINICAL_PAPER_SIZE } from '../core/desk';
 
 export const DOCUMENT_BODY_WIDTH = PAPER_SIZE.w - 22;
@@ -38,7 +38,7 @@ export interface DocumentRow { label: string; value: string }
 /** Institutional language follows the immutable profession, never the medical result. */
 export function employerInstitution(patientId: number): 'employer' | 'militia' | 'lot' {
   const job = PATIENTS[patientId]!.jobId;
-  return job === 45 ? 'militia' : job === 46 ? 'lot' : 'employer';
+  return job === 45 || job === 52 ? 'militia' : job === 46 ? 'lot' : 'employer';
 }
 
 /** Text stays whole at native resolution; labels are not squeezed to fit. */
@@ -97,6 +97,19 @@ export function referralCopy(patientId: number, locale: Locale) {
     rows,
     lines,
   };
+}
+
+/** Every referral uses the same form. Only the measured content can add pages. */
+export function referralLayout(patientId: number, locale: Locale, requestedPage = 0) {
+  const copy = referralCopy(patientId, locale);
+  const headerLines = copy.institution === 'employer' ? wrapFormText(copy.masthead.toUpperCase(), 104).length : 2;
+  const headerExtra = Math.max(0, headerLines - 2) * 8;
+  const bodyY = REFERRAL_BODY_Y + headerExtra;
+  const capacity = Math.max(1, Math.floor((CLINICAL_PAPER_SIZE.h - 29 - READ_CELL_HEIGHT - bodyY) / REFERRAL_LINE_HEIGHT) + 1);
+  const count = Math.max(1, Math.ceil(copy.rows.length / capacity));
+  const page = Math.max(0, Math.min(count - 1, Math.floor(requestedPage)));
+  return { ...copy, rows: copy.rows.slice(page * capacity, (page + 1) * capacity), bodyY,
+    titleY: 29 + headerExtra, instructionY: 40 + headerExtra, count, page };
 }
 
 /** A clear letterhead replaces the generic "letter about a certificate" heading. */

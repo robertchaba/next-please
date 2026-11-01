@@ -1,10 +1,10 @@
-import { storyPatientForId } from '../src/core/story-patients';
+import { storyPatientForId, storyPatientForEncounter } from '../src/core/story-patients';
 import { paperPagination } from '../src/render/paperwork';
 import { describe, expect, it } from 'vitest';
 import { PATIENTS } from '../src/core/patients';
 import type { Paper } from '../src/core/game';
 import { translations } from '../src/i18n';
-import { correspondenceCopy, referralCopy, wrapFormText, wrapReadingText, fieldLabelWidth, REFERRAL_BODY_WIDTH, REFERRAL_BODY_Y, REFERRAL_LINE_HEIGHT } from '../src/render/document-copy';
+import { correspondenceCopy, referralCopy, referralLayout, wrapFormText, wrapReadingText, fieldLabelWidth, REFERRAL_BODY_WIDTH, REFERRAL_BODY_Y, REFERRAL_LINE_HEIGHT } from '../src/render/document-copy';
 import { measureDocumentHeading, measureDocumentText, measureReadingText, READ_CELL_HEIGHT } from '../src/render/font';
 import { CLINICAL_PAPER_SIZE } from '../src/core/desk';
 
@@ -53,20 +53,36 @@ describe('institutional document copy', () => {
       for (const field of copy.fields) expect(printed).toContain(field.value.replace(/\s+/g, ' '));
       for (const row of copy.rows) expect(fieldLabelWidth(row.label) + measureReadingText(row.value), row.label + row.value).toBeLessThanOrEqual(REFERRAL_BODY_WIDTH);
       expect(measureReadingText(copy.instruction)).toBeLessThanOrEqual(REFERRAL_BODY_WIDTH);
-      if (storyPatientForId(patient.id)) {
+      {
         const paper: Extract<Paper, { kind: 'referral' }> = { kind: 'referral', id: 1, day: 29, patientId: patient.id,
           location: 'desk', details: { ageDays: 0, seal: 'clear', authentic: true, phone: '42-1000' } };
         const first = paperPagination(paper, locale)!;
         const lines = Array.from({ length: first.count }, (_, page) => paperPagination(paper, locale, page)!.lines).flat();
-        const rendered = lines.map(line => line.text).join(' ');
+        const rendered = lines.map(line => line.text).join(' ').replace(/\s+/g, ' ');
         expect(rendered).toContain(t.patientJobs[patient.id]);
         expect(rendered).toContain(t.patientReferrals[patient.id]!.work);
         for (const line of lines) expect(measureDocumentText(line.text)).toBeLessThanOrEqual(REFERRAL_BODY_WIDTH);
-      } else {
+        const pages = Array.from({ length: first.count }, (_, page) => referralLayout(patient.id, locale, page));
+        expect(pages.flatMap(page => page.rows)).toEqual(copy.rows);
+        for (const page of pages) expect(page.bodyY + (page.rows.length - 1) * REFERRAL_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThanOrEqual(CLINICAL_PAPER_SIZE.h - 29);
+      }
+      if (!storyPatientForId(patient.id)) {
         expect(copy.rows.length, `${locale} ${patient.id}: ${copy.lines.join(' | ')}`).toBeLessThanOrEqual(8);
         expect(REFERRAL_BODY_Y + (copy.rows.length - 1) * REFERRAL_LINE_HEIGHT + READ_CELL_HEIGHT).toBeLessThanOrEqual(CLINICAL_PAPER_SIZE.h - 29);
         if (copy.institution === 'employer') expect(wrapFormText(copy.masthead.toUpperCase(), 104).length, copy.masthead).toBeLessThanOrEqual(2);
       }
+    }
+  });
+
+  it('keeps Kurek on one ordinary numbered form and paginates only longer content', () => {
+    for (const locale of ['pl', 'en'] as const) {
+      const kurek = referralLayout(storyPatientForEncounter('A1').patient.id, locale);
+      expect(kurek.count).toBe(1);
+      expect(kurek.bodyY).toBe(REFERRAL_BODY_Y);
+      expect(kurek.rows.filter(row => row.label.trim())).toHaveLength(6);
+      expect(kurek.rows[0]!.label).toBe('01  ');
+      expect(referralLayout(storyPatientForEncounter('H1').patient.id, locale).count).toBe(locale === 'pl' ? 2 : 1);
+      expect(referralLayout(storyPatientForEncounter('E1-VISIT').patient.id, locale).institution).toBe('militia');
     }
   });
 
