@@ -7,6 +7,7 @@ import { encodeSave } from '../../src/core/save';
 import { translations } from '../../src/i18n';
 
 test('five identities share a portrait while names, occupations and ages survive import and language changes', async ({ page }) => {
+  test.setTimeout(90_000);
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -15,8 +16,9 @@ test('five identities share a portrait while names, occupations and ages survive
   for (let index = 0; index < 4; index++) await page.locator('#control-intro-next').click();
   await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
 
-  // Academic, workshop and female professional portraits exercise distinct roles.
-  for (const portraitId of ['patient-72', 'patient-74', 'patient-13', 'patient-29', 'patient-11', 'patient-66']) {
+  // Revised women/men and older portraits exercise both localized names and unchanged case data.
+  for (const portraitId of ['patient-72', 'patient-74', 'patient-13', 'patient-29', 'patient-11', 'patient-66',
+    'patient-139', 'patient-142', 'patient-153', 'patient-169', 'patient-170', 'patient-172', 'patient-176', 'patient-181']) {
     const portraits = new Set<string>();
     const names = new Set<string>();
     for (const identity of PATIENT_IDENTITIES.filter(identity => identity.portraitId === portraitId)) {

@@ -25,7 +25,6 @@ Proper names below use their Polish forms. Other language versions may use consi
 - The clinic has a staff room where doctors and nurses talk over coffee during a break.
 
 - Each ordinary patient portrait has five alternative identities, with names, occupations and ages selected to suit its illustrated appearance. Each identity keeps its occupation and birth date across medical variants. A portrait appears at most once in a daily queue. Across working days, new queues prioritize faces the doctor has not yet seen, followed by those seen longest ago. Returns from additional examinations continue an existing encounter; the scripted sixth-day bribe retains its priority.
-- Selected patient identities have foreign-sounding names; women in this group have two-part surnames, with a Polish second part in the Polish version and its localized equivalent in English. Names do not establish the country of the clinic.
 - Patient birth dates are consistent across case variants and match the intended age of their portraits. Medical notes include age calculated from birth date on the date of the visit.
 - Patients bring occupational-health referrals from specific employers. Referrals distinguish initial, periodic and control examinations and include birth date, sex, job, work conditions, and managerial responsibility.
 - A scale with a height measure provides the patient's weight and height.

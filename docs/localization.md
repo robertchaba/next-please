@@ -53,9 +53,9 @@ Przegląd objął wszystkie 940 aktualnych tożsamości portretów oraz historyc
 | Witold Krawiec | Walter Taylor |
 | Marian Zawadzki | Maurice Shaw |
 | dr Adam Pieczęć | Dr Adam Seale |
-| Amina Diallo-Mazur | Amina Diallo-Mason |
+| Danuta Walczak | Diana Walker |
 
-Nazwy międzynarodowe, np. David Mensah i Kenji Sato, zachowują swój charakter. Kobiece nazwiska dwuczłonowe zachowują obcy pierwszy człon i otrzymują odpowiednik drugiego. Ten zabieg nie dopisuje postaciom narodowości. Nazwisko autora **Roberta Chaby**, jego link oraz historyczna postać Waryńskiego na zaakceptowanym banknocie pozostają bez adaptacji. Waluta nadal jest oznaczana jako zł.
+Audyt obsady 1.0.8 zastępuje wcześniejsze grupy nazw międzynarodowych zwyczajnymi polskimi tożsamościami i ich stałymi angielskimi odpowiednikami. [Tabela korekt](art-prompts/patients-v108-identities.json) obejmuje wszystkie pięć tożsamości 19 portretów; dawne przypadki korzystają z odpowiednika pierwszej tożsamości. Nazwy nie ustalają kraju akcji. Nazwisko autora **Roberta Chaby**, jego link oraz historyczna postać Waryńskiego na zaakceptowanym banknocie pozostają bez adaptacji. Waluta nadal jest oznaczana jako zł.
 
 ## Oznaczenia badań
 

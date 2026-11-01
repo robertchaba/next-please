@@ -34,6 +34,8 @@ Release 1.0.5 adds an identity-card return action without changing the format. D
 
 Proper names are presentation text resolved from stable IDs, not serialized identity data. The English name adaptation described in [localization.md](localization.md) also applies to imported visits, archived paperwork, inspections and retained newspaper issues. It changes no fields or version: `zus` and `lot` remain internal institution keys even when displayed as SIO and NAL.
 
+Release 1.0.8 replaces selected portrait assets and revises the five name labels of 19 ordinary portraits in both languages, including their historical case labels. Existing saved paperwork displays these current labels and artwork after import. Case IDs, birth dates, sex, occupations, findings, queue order and appearance history remain unchanged; the cast audit needs no schema migration and still exports v36.
+
 The envelope contains exactly `game: "next-please"`, `version: 35`, a canonical ISO `savedAt` timestamp, and `state`:
 
 ```json

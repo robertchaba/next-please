@@ -7,21 +7,43 @@ import { applyAction, type GameAction } from '../src/core/game';
 import { ADDITIONAL_PORTRAITS } from '../src/core/patient-identities';
 import { gameDate } from '../src/core/calendar';
 import { translations } from '../src/i18n';
+import castRevisions from '../docs/art-prompts/patients-v108-identities.json';
+
+// Preserve the old snapshots apart from the explicitly approved 1.0.8 name changes.
+const previousPolishName = new Map(castRevisions.flatMap(revision =>
+  revision.pl.map((name, index) => [name, revision.previousPl[index]!] as const)));
+const namesBeforeCastAudit = translations.pl.patientNames.map(name => previousPolishName.get(name) ?? name);
 
 describe('patient and occupation catalog', () => {
   it('preserves all 4003 shipped cases and Polish names when appending portraits 136–185', () => {
     expect(createHash('sha256').update(JSON.stringify(PATIENTS.slice(0, 4003))).digest('hex'))
       .toBe('5ef66400796722d0c0753c3bcbe362e1945d6c10588146202aa9d24dc244ae0c');
-    expect(createHash('sha256').update(JSON.stringify(translations.pl.patientNames.slice(0, 4003))).digest('hex'))
+    expect(createHash('sha256').update(JSON.stringify(namesBeforeCastAudit.slice(0, 4003))).digest('hex'))
       .toBe('c2bfe1f42b9f7f7a7e8912baf32bd321d836a3a487e862cd422a3a88d52da0ca');
   });
   it('preserves all 3378 shipped cases when appending portraits 111–135', () => {
     expect(createHash('sha256').update(JSON.stringify(PATIENTS.slice(0, 3378))).digest('hex'))
       .toBe('4d387c983c4966ed40104c5413bafa6b87038fa31eccd3806eb35276576ce854');
   });
-  it('retains every previously shipped Polish name', () => {
-    expect(createHash('sha256').update(JSON.stringify(translations.pl.patientNames.slice(0, 3378))).digest('hex'))
+  it('retains previously shipped Polish names apart from the approved cast revisions', () => {
+    expect(createHash('sha256').update(JSON.stringify(namesBeforeCastAudit.slice(0, 3378))).digest('hex'))
       .toBe('d0f64396b2346a3333e032ddfb1d57492a03db0b85187e49101dc8af56ec870f');
+  });
+  it('uses revised names for every medical variant and historical case in both languages', () => {
+    for (const revision of castRevisions) {
+      const patients = PATIENTS.filter(patient => patient.portraitId === revision.portraitId);
+      expect(new Set(patients.flatMap(patient => {
+        const identity = patientIdentity(patient);
+        return identity ? [identity.variant] : [];
+      })).size).toBe(5);
+      for (const patient of patients) {
+        const variant = patientIdentity(patient)?.variant ?? 0;
+        for (const locale of ['pl', 'en'] as const) {
+          expect(translations[locale].patientNames[patient.id], `${revision.portraitId}/${patient.id}/${locale}`)
+            .toBe(revision[locale][variant]);
+        }
+      }
+    }
   });
   it('preserves every previously shipped case when appending the ten civilian portraits', () => {
     expect(createHash('sha256').update(JSON.stringify(PATIENTS.slice(0, 3128))).digest('hex'))

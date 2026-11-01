@@ -1,0 +1,591 @@
+[
+  {
+    "portraitId": "patient-11",
+    "pl": [
+      "Halina Kubiak",
+      "Teresa Jaworska",
+      "Irena Malicka",
+      "Zofia Sadowska",
+      "Barbara Rogala"
+    ],
+    "en": [
+      "Helen Cooper",
+      "Teresa Yardley",
+      "Irene Marden",
+      "Sophia Sadler",
+      "Barbara Rogers"
+    ],
+    "previousPl": [
+      "David Mensah",
+      "Peter Owusu",
+      "Joseph Asante",
+      "Samuel Osei",
+      "Daniel Boateng"
+    ],
+    "previousEn": [
+      "David Mensah",
+      "Peter Owusu",
+      "Joseph Asante",
+      "Samuel Osei",
+      "Daniel Boateng"
+    ]
+  },
+  {
+    "portraitId": "patient-23",
+    "pl": [
+      "Danuta Walczak",
+      "Ewa Zawada",
+      "Anna Michalak",
+      "Lidia Sobczak",
+      "Iwona Rataj"
+    ],
+    "en": [
+      "Diana Walker",
+      "Eve Shaw",
+      "Anna Maddox",
+      "Lydia Sorrell",
+      "Yvonne Plowman"
+    ],
+    "previousPl": [
+      "Amina Diallo-Mazur",
+      "Mariam Diop-Kłos",
+      "Fatou Keita-Rój",
+      "Adama Sow-Brzeg",
+      "Hawa Ba-Łan"
+    ],
+    "previousEn": [
+      "Amina Diallo-Mason",
+      "Mariam Diop-Carter",
+      "Fatou Keita-Poole",
+      "Adama Sow-Banks",
+      "Hawa Ba-Vince"
+    ]
+  },
+  {
+    "portraitId": "patient-24",
+    "pl": [
+      "Andrzej Kubiak",
+      "Marek Sadowski",
+      "Paweł Ratajczak",
+      "Roman Marciniak",
+      "Wiesław Sobota"
+    ],
+    "en": [
+      "Andrew Cooper",
+      "Mark Orchard",
+      "Paul Ratcliffe",
+      "Raymond Martin",
+      "Wesley Sutton"
+    ],
+    "previousPl": [
+      "Karim Haddad",
+      "Samir Mansour",
+      "Nabil Nasser",
+      "Rami Khalil",
+      "Adil Farah"
+    ],
+    "previousEn": [
+      "Karim Haddad",
+      "Samir Mansour",
+      "Nabil Nasser",
+      "Rami Khalil",
+      "Adil Farah"
+    ]
+  },
+  {
+    "portraitId": "patient-26",
+    "pl": [
+      "Janusz Adamczyk",
+      "Zbigniew Czerwiński",
+      "Ryszard Pawlak",
+      "Bogdan Woźniak",
+      "Krzysztof Sobczak"
+    ],
+    "en": [
+      "Julian Adams",
+      "Neville Cherry",
+      "Richard Palmer",
+      "Bernard Steer",
+      "Christopher Sorrell"
+    ],
+    "previousPl": [
+      "Samuel Okoro",
+      "James Obi",
+      "Peter Eze",
+      "Daniel Okafor",
+      "Michael Nwosu"
+    ],
+    "previousEn": [
+      "Samuel Okoro",
+      "James Obi",
+      "Peter Eze",
+      "Daniel Okafor",
+      "Michael Nwosu"
+    ]
+  },
+  {
+    "portraitId": "patient-29",
+    "pl": [
+      "Ewa Michalska",
+      "Anna Janicka",
+      "Teresa Walczak",
+      "Iwona Pawlak",
+      "Lidia Wysocka"
+    ],
+    "en": [
+      "Eve Mitchell",
+      "Anna Jennings",
+      "Teresa Walker",
+      "Yvonne Palmer",
+      "Lydia Swift"
+    ],
+    "previousPl": [
+      "Nadia Diop-Biela",
+      "Awa Sow-Śliwa",
+      "Aminata Ba-Bork",
+      "Mariama Diallo-Sitko",
+      "Fatou Sarr-Wrona"
+    ],
+    "previousEn": [
+      "Nadia Diop-Bell",
+      "Awa Sow-Westley",
+      "Aminata Ba-Bourne",
+      "Mariama Diallo-Randall",
+      "Fatou Sarr-Rook"
+    ]
+  },
+  {
+    "portraitId": "patient-34",
+    "pl": [
+      "Józef Kaczmarek",
+      "Kazimierz Wieczorek",
+      "Stanisław Tomczak",
+      "Marian Kubiak",
+      "Henryk Pawlak"
+    ],
+    "en": [
+      "Joseph Kershaw",
+      "Clarence Weston",
+      "Stanley Tomlin",
+      "Maurice Cooper",
+      "Henry Palmer"
+    ],
+    "previousPl": [
+      "Joseph Kamara",
+      "David Sesay",
+      "Peter Conteh",
+      "Samuel Koroma",
+      "Daniel Bangura"
+    ],
+    "previousEn": [
+      "Joseph Kamara",
+      "David Sesay",
+      "Peter Conteh",
+      "Samuel Koroma",
+      "Daniel Bangura"
+    ]
+  },
+  {
+    "portraitId": "patient-38",
+    "pl": [
+      "Jerzy Malicki",
+      "Wiktor Jaworski",
+      "Tadeusz Zawada",
+      "Roman Sobota",
+      "Andrzej Michalak"
+    ],
+    "en": [
+      "George Marden",
+      "Victor Yardley",
+      "Theodore Shaw",
+      "Raymond Sutton",
+      "Andrew Maddox"
+    ],
+    "previousPl": [
+      "Elias Hariri",
+      "Nabil Saad",
+      "Samir Salim",
+      "Karim Barakat",
+      "Rami Aziz"
+    ],
+    "previousEn": [
+      "Elias Hariri",
+      "Nabil Saad",
+      "Samir Salim",
+      "Karim Barakat",
+      "Rami Aziz"
+    ]
+  },
+  {
+    "portraitId": "patient-40",
+    "pl": [
+      "Piotr Marciniak",
+      "Marek Janicki",
+      "Paweł Czerwiński",
+      "Jacek Kaczmarek",
+      "Tomasz Woźniak"
+    ],
+    "en": [
+      "Peter Martin",
+      "Mark Jennings",
+      "Paul Cherry",
+      "Jack Kershaw",
+      "Thomas Steer"
+    ],
+    "previousPl": [
+      "Daniel Dlamini",
+      "Samuel Mokoena",
+      "Joseph Molefe",
+      "Peter Ndlovu",
+      "David Khumalo"
+    ],
+    "previousEn": [
+      "Daniel Dlamini",
+      "Samuel Mokoena",
+      "Joseph Molefe",
+      "Peter Ndlovu",
+      "David Khumalo"
+    ]
+  },
+  {
+    "portraitId": "patient-47",
+    "pl": [
+      "Teresa Kaczmarek",
+      "Barbara Tomczak",
+      "Irena Adamczyk",
+      "Halina Wieczorek",
+      "Danuta Rogala"
+    ],
+    "en": [
+      "Teresa Kershaw",
+      "Barbara Tomlin",
+      "Irene Adams",
+      "Helen Weston",
+      "Diana Rogers"
+    ],
+    "previousPl": [
+      "Leila Rahman-Wrona",
+      "Nadia Karim-Łącka",
+      "Salma Malik-Chmiel",
+      "Amina Khan-Rosa",
+      "Yasmin Ali-Kret"
+    ],
+    "previousEn": [
+      "Leila Rahman-Rook",
+      "Nadia Karim-Watson",
+      "Salma Lowry-Bridger",
+      "Amina Khan-Peel",
+      "Yasmin Ali-Kerr"
+    ]
+  },
+  {
+    "portraitId": "patient-66",
+    "pl": [
+      "Michał Malicki",
+      "Piotr Sobota",
+      "Tomasz Rataj",
+      "Jacek Walczak",
+      "Marek Zawada"
+    ],
+    "en": [
+      "Michael Marden",
+      "Peter Sutton",
+      "Thomas Plowman",
+      "Jack Walker",
+      "Mark Shaw"
+    ],
+    "previousPl": [
+      "Michael Abebe",
+      "Daniel Tesfaye",
+      "Peter Bekele",
+      "Joseph Girma",
+      "Samuel Tadesse"
+    ],
+    "previousEn": [
+      "Michael Abebe",
+      "Daniel Tesfaye",
+      "Peter Bekele",
+      "Joseph Girma",
+      "Samuel Tadesse"
+    ]
+  },
+  {
+    "portraitId": "patient-139",
+    "pl": [
+      "Paweł Cieślak",
+      "Marek Ratajczak",
+      "Piotr Sadowski",
+      "Tomasz Michalak",
+      "Jacek Jaworski"
+    ],
+    "en": [
+      "Paul Cantrell",
+      "Mark Ratcliffe",
+      "Peter Orchard",
+      "Thomas Maddox",
+      "Jack Yardley"
+    ],
+    "previousPl": [
+      "Isaac Adu",
+      "Daniel Kofi",
+      "Samuel Annan",
+      "Peter Appiah",
+      "Joseph Ampofo"
+    ],
+    "previousEn": [
+      "Isaac Adu",
+      "Daniel Kofi",
+      "Samuel Annan",
+      "Peter Appiah",
+      "Joseph Ampofo"
+    ]
+  },
+  {
+    "portraitId": "patient-142",
+    "pl": [
+      "Halina Marciniak",
+      "Teresa Woźniak",
+      "Barbara Janicka",
+      "Irena Czerwińska",
+      "Zofia Pawlak"
+    ],
+    "en": [
+      "Helen Martin",
+      "Teresa Steer",
+      "Barbara Jennings",
+      "Irene Cherry",
+      "Sophia Palmer"
+    ],
+    "previousPl": [
+      "Awa Diop-Buk",
+      "Lea Sow-Róg",
+      "Mina Ba-Żak",
+      "Nora Keita-Lis",
+      "Sara Sarr-Gaj"
+    ],
+    "previousEn": [
+      "Awa Diop-Beaumont",
+      "Lea Sow-Plum",
+      "Mina Ba-Scholar",
+      "Nora Keita-Fox",
+      "Sara Sarr-Grove"
+    ]
+  },
+  {
+    "portraitId": "patient-153",
+    "pl": [
+      "Ryszard Tomczak",
+      "Zbigniew Kubiak",
+      "Jerzy Adamczyk",
+      "Wiesław Wieczorek",
+      "Marian Rogala"
+    ],
+    "en": [
+      "Richard Tomlin",
+      "Neville Cooper",
+      "George Adams",
+      "Wesley Weston",
+      "Maurice Rogers"
+    ],
+    "previousPl": [
+      "Michael Banda",
+      "James Chanda",
+      "David Phiri",
+      "Joseph Tembo",
+      "Samuel Zulu"
+    ],
+    "previousEn": [
+      "Michael Banda",
+      "James Chanda",
+      "David Phiri",
+      "Joseph Tembo",
+      "Samuel Zulu"
+    ]
+  },
+  {
+    "portraitId": "patient-165",
+    "pl": [
+      "Piotr Malicki",
+      "Marek Pawlak",
+      "Paweł Sobczak",
+      "Tomasz Kubiak",
+      "Jacek Sadowski"
+    ],
+    "en": [
+      "Peter Marden",
+      "Mark Palmer",
+      "Paul Sorrell",
+      "Thomas Cooper",
+      "Jack Orchard"
+    ],
+    "previousPl": [
+      "Kwame Antwi",
+      "Kofi Asare",
+      "Kojo Danso",
+      "Yaw Opoku",
+      "Kweku Sarpong"
+    ],
+    "previousEn": [
+      "Kwame Antwi",
+      "Kofi Asare",
+      "Kojo Danso",
+      "Yaw Opoku",
+      "Kweku Sarpong"
+    ]
+  },
+  {
+    "portraitId": "patient-169",
+    "pl": [
+      "Andrzej Kaczmarek",
+      "Wojciech Marciniak",
+      "Janusz Rataj",
+      "Ryszard Zawada",
+      "Zbigniew Walczak"
+    ],
+    "en": [
+      "Andrew Kershaw",
+      "Albert Martin",
+      "Julian Plowman",
+      "Richard Shaw",
+      "Neville Walker"
+    ],
+    "previousPl": [
+      "Kenji Sato",
+      "Hiroshi Mori",
+      "Akio Kato",
+      "Jun Seki",
+      "Isao Hara"
+    ],
+    "previousEn": [
+      "Kenji Sato",
+      "Hiroshi Mori",
+      "Akio Kato",
+      "Jun Seki",
+      "Isao Hara"
+    ]
+  },
+  {
+    "portraitId": "patient-170",
+    "pl": [
+      "Jadwiga Malicka",
+      "Zofia Tomczak",
+      "Genowefa Woźniak",
+      "Helena Sadowska",
+      "Stanisława Kubiak"
+    ],
+    "en": [
+      "Edith Marden",
+      "Sophia Tomlin",
+      "Genevieve Steer",
+      "Helena Sadler",
+      "Stella Cooper"
+    ],
+    "previousPl": [
+      "Ama Adu-Las",
+      "Esi Osei-Buk",
+      "Adwoa Ba-Rój",
+      "Akua Sow-Gaj",
+      "Abena Diop-Żak"
+    ],
+    "previousEn": [
+      "Ama Adu-Wood",
+      "Esi Osei-Beaumont",
+      "Adwoa Ba-Poole",
+      "Akua Sow-Grove",
+      "Abena Diop-Scholar"
+    ]
+  },
+  {
+    "portraitId": "patient-172",
+    "pl": [
+      "Anna Adamczyk",
+      "Ewa Jaworska",
+      "Iwona Marciniak",
+      "Danuta Janicka",
+      "Teresa Rataj"
+    ],
+    "en": [
+      "Anna Adams",
+      "Eve Yardley",
+      "Yvonne Martin",
+      "Diana Jennings",
+      "Teresa Plowman"
+    ],
+    "previousPl": [
+      "Mina Ali-Róg",
+      "Leila Noor-Buk",
+      "Nadia Azad-Las",
+      "Sara Amir-Żak",
+      "Rima Khan-Gaj"
+    ],
+    "previousEn": [
+      "Mina Ali-Plum",
+      "Leila Noor-Beaumont",
+      "Nadia Azad-Wood",
+      "Sara Amir-Scholar",
+      "Rima Khan-Grove"
+    ]
+  },
+  {
+    "portraitId": "patient-176",
+    "pl": [
+      "Ewa Rogala",
+      "Anna Kubiak",
+      "Iwona Malicka",
+      "Lidia Tomczak",
+      "Teresa Sadowska"
+    ],
+    "en": [
+      "Eve Rogers",
+      "Anna Cooper",
+      "Yvonne Marden",
+      "Lydia Tomlin",
+      "Teresa Sadler"
+    ],
+    "previousPl": [
+      "Aya Mori-Buk",
+      "Yuki Sato-Rój",
+      "Emi Kato-Lis",
+      "Aki Seki-Gaj",
+      "Mari Hara-Żak"
+    ],
+    "previousEn": [
+      "Aya Mori-Beaumont",
+      "Yuki Sato-Poole",
+      "Emi Kato-Fox",
+      "Aki Seki-Grove",
+      "Mari Hara-Scholar"
+    ]
+  },
+  {
+    "portraitId": "patient-181",
+    "pl": [
+      "Stanisław Adamczyk",
+      "Henryk Kaczmarek",
+      "Józef Sadowski",
+      "Marian Walczak",
+      "Kazimierz Pawlak"
+    ],
+    "en": [
+      "Stanley Adams",
+      "Henry Kershaw",
+      "Joseph Orchard",
+      "Maurice Walker",
+      "Clarence Palmer"
+    ],
+    "previousPl": [
+      "Emmanuel Dube",
+      "Paul Sibanda",
+      "Simon Ncube",
+      "Thomas Moyo",
+      "Patrick Zondo"
+    ],
+    "previousEn": [
+      "Emmanuel Dube",
+      "Paul Sibanda",
+      "Simon Ncube",
+      "Thomas Moyo",
+      "Patrick Zondo"
+    ]
+  }
+]

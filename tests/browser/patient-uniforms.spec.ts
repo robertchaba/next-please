@@ -5,7 +5,11 @@ import { PATIENTS } from '../../src/core/patients';
 import { encodeSave } from '../../src/core/save';
 import { translations } from '../../src/i18n';
 
-for (const batch of [{ first: 76, count: 35, caseStart: 2503 }, { first: 111, count: 25, caseStart: 3378 }, { first: 136, count: 50, caseStart: 4003 }]) {
+for (const batch of [
+  { first: 1, count: 25, caseStart: 628 }, { first: 26, count: 25, caseStart: 1253 },
+  { first: 76, count: 35, caseStart: 2503 }, { first: 111, count: 25, caseStart: 3378 },
+  { first: 136, count: 50, caseStart: 4003 },
+]) {
   test(`portraits ${batch.first}–${batch.first + batch.count - 1} render with matching jobs in both languages`, async ({ page }, testInfo) => {
     test.setTimeout(90_000);
     const missingAssets: string[] = [];
@@ -34,6 +38,9 @@ for (const batch of [{ first: 76, count: 35, caseStart: 2503 }, { first: 111, co
         await page.locator(`#control-language-${locale}`).click();
         await expect(page.locator('#screen-description')).toContainText(translations[locale].patientNames[patient.id]!);
         await expect(page.locator('#screen-description')).toContainText(translations[locale].patientJobs[patient.id]!);
+        if ([11, 117, 169].includes(batch.first + person)) {
+          await page.locator('#stage').screenshot({ path: testInfo.outputPath(`patient-${batch.first + person}-${locale}.png`) });
+        }
       }
       portraits.add(await page.locator('#game').evaluate(async canvas => {
         await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
