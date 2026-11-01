@@ -1,4 +1,7 @@
 import { devices, expect, test, type Page } from '@playwright/test';
+import { GOOGLE_TAG_URL, stubGoogleTag } from '../fixtures/analytics';
+
+test.beforeEach(async ({ page }) => { await stubGoogleTag(page); });
 
 function observeDeployment(page: Page, baseURL: string) {
   const errors: string[] = [];
@@ -25,9 +28,11 @@ function observeDeployment(page: Page, baseURL: string) {
       expect(errors).toEqual([]);
       expect(builtTypes).toEqual(new Set(['javascript', 'css']));
       expect(requests.length).toBeGreaterThan(0);
+      expect(requests).toContain(GOOGLE_TAG_URL);
       const deployment = new URL(baseURL);
       for (const address of requests) {
         if (!address.startsWith('http')) continue;
+        if (address === GOOGLE_TAG_URL) continue;
         const url = new URL(address);
         expect(url.origin, address).toBe(deployment.origin);
         expect(url.pathname, address).toMatch(/^\/next-please\//);
@@ -49,9 +54,9 @@ test('built desktop loads under the repository path with artwork, music and both
   expect(await response!.text()).not.toContain('/src/main.ts');
   await expect(page.locator('#control-start')).toBeVisible();
   await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
-  await expect(page.locator('#screen-description')).toContainText('WERSJA 1.0.2 / SPINACZ');
+  await expect(page.locator('#screen-description')).toContainText('WERSJA 1.0.3 / KARTOTEKA');
   await page.locator('#control-language-en').click();
-  await expect(page.locator('#screen-description')).toContainText('VERSION 1.0.2 / PAPERCLIP');
+  await expect(page.locator('#screen-description')).toContainText('VERSION 1.0.3 / CARD INDEX');
   await page.locator('#control-sound').click();
   await expect.poll(() => playingAudio(page)).toContain('Bureaucratic March - Opening the Office.mp3');
   await page.locator('#control-start').click();

@@ -3,6 +3,9 @@ import { PATIENTS } from '../../src/core/patients';
 import { test, expect, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createInitialState, decodeSave, encodeSave } from '../../src/core/save';
+import { GOOGLE_TAG_URL, stubGoogleTag } from '../fixtures/analytics';
+
+test.beforeEach(async ({ page }) => { await stubGoogleTag(page); });
 
 async function expectSurroundFit(page: Page): Promise<void> {
   await expect.poll(() => page.evaluate(() => {
@@ -36,7 +39,7 @@ test('Polish default, English persistence, credits and keyboard controls', async
   await expect(page.locator('html')).toHaveAttribute('lang', 'pl');
   await expect(page.getByRole('button', { name: 'ROZPOCZNIJ DYŻUR' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Udostępnij', exact: true })).toBeVisible();
-  await expect(page.locator('#screen-description')).toContainText('WERSJA 1.0.2 / SPINACZ');
+  await expect(page.locator('#screen-description')).toContainText('WERSJA 1.0.3 / KARTOTEKA');
   await page.waitForFunction(() => performance.getEntriesByType('resource').some(entry => entry.name.endsWith('title-clinic.png')));
   await page.screenshot({ path: testInfo.outputPath('welcome-pl.png') });
   await page.getByRole('button', { name: 'O AUTORZE', exact: true }).click();
@@ -48,7 +51,7 @@ test('Polish default, English persistence, credits and keyboard controls', async
   await page.reload();
   await expect(page.getByRole('button', { name: 'BEGIN YOUR SHIFT' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible();
-  await expect(page.locator('#screen-description')).toContainText('VERSION 1.0.2 / PAPERCLIP');
+  await expect(page.locator('#screen-description')).toContainText('VERSION 1.0.3 / CARD INDEX');
   await page.screenshot({ path: testInfo.outputPath('welcome-en.png') });
   await page.getByRole('button', { name: 'CREDITS', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Robert Chaba');
@@ -69,7 +72,8 @@ test('Polish default, English persistence, credits and keyboard controls', async
   await page.getByRole('button', { name: 'Enable audio' }).click();
   await expect(page.getByRole('button', { name: 'Mute audio' })).toBeVisible();
   expect(errors).toEqual([]);
-  expect(requests.every(url => url.startsWith('http://127.0.0.1:4173/'))).toBe(true);
+  expect(requests).toContain(GOOGLE_TAG_URL);
+  expect(requests.every(url => url === GOOGLE_TAG_URL || url.startsWith('http://127.0.0.1:4173/'))).toBe(true);
 });
 
 test('save files round-trip and reject corrupt imports without replacing state', async ({ page }, testInfo) => {

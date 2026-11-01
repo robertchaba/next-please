@@ -4,7 +4,9 @@ Established game-world facts and open questions live in [FACTS.md](../FACTS.md);
 
 ## Runtime and tooling
 
-Next, Please! is a browser-only, client-side game. Vite and strict TypeScript produce static HTML, CSS, JavaScript, and local assets. There is no backend, account system, runtime API, CDN dependency, or remotely loaded font. The browser supplies Canvas 2D, file selection/download, and fullscreen support. Outside the game canvas, the page uses system monospace fonts.
+Next, Please! is a browser-only, client-side game. Vite and strict TypeScript produce static HTML, CSS, JavaScript, and local game assets. Gameplay has no backend, account system, runtime API, CDN dependency, or remotely loaded font. The browser supplies Canvas 2D, file selection/download, and fullscreen support. Outside the game canvas, the page uses system monospace fonts.
+
+Version 1.0.3 adds the explicitly requested Google tag (`G-2MWJLWH08G`) in `src/index.html`, included in both desktop and mobile pages and copied into the published root by the build. This is the approved exception to local-only requests: `gtag.js` loads asynchronously from `www.googletagmanager.com` and sends analytics to Google. It also runs on local development/preview pages. Gameplay does not depend on the tag loading. The welcome, mobile and Pages checks stub the tag request to avoid sending test visits, while continuing to enforce local URLs for game assets.
 
 Use Node 22.12+ on the Node 22 release line, Node 24, or Node 26+ to satisfy the current tooling. Install from the committed lockfile with `npm ci`. Keep runtime dependencies focused: `fflate` handles save compression; Howler handles local music and effects. Add libraries only when they solve an actual game requirement.
 

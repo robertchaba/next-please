@@ -1,4 +1,7 @@
 import { devices, expect, test, type Page } from '@playwright/test';
+import { GOOGLE_TAG_URL, stubGoogleTag } from '../fixtures/analytics';
+
+test.beforeEach(async ({ page }) => { await stubGoogleTag(page); });
 
 const { defaultBrowserType: _phoneBrowser, ...phone } = devices['iPhone 13'];
 const { defaultBrowserType: _tabletBrowser, ...tablet } = devices['iPad Pro 11'];
@@ -136,7 +139,8 @@ test.describe('phone reception', () => {
     await page.screenshot({ path: testInfo.outputPath('mobile-note-pl.png') });
     expect(requests.filter(url => /\.(mp3|wav)(?:\?|$)/.test(url))).toEqual([]);
     expect(requests.filter(url => /\/assets\/art\/(title-clinic|cabinet-|intro-|sprites\/)/.test(url))).toEqual([]);
-    expect(requests.every(url => url.startsWith('http://127.0.0.1:4173/'))).toBe(true);
+    expect(requests).toContain(GOOGLE_TAG_URL);
+    expect(requests.every(url => url === GOOGLE_TAG_URL || url.startsWith('http://127.0.0.1:4173/'))).toBe(true);
     expect(errors).toEqual([]);
   });
 
