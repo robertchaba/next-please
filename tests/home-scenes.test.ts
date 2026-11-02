@@ -79,14 +79,16 @@ describe('daily and weekend home artwork', () => {
     expect(seen).toEqual(new Set(BUDGET_ILLUSTRATIONS));
   });
 
-  it('retains the hospital and bankruptcy presentation and prepares eight opaque native assets', () => {
+  it('uses the new budgets before bankruptcy, retains ending art and prepares eight opaque native assets', () => {
     const baseline = homeSceneState('homecoming', 'arrival');
     const hospital = { ...baseline, ending: 'hospital' as const };
     expect(homePages(hospital)).toEqual(['hospital']);
     expect(homePage(hospital, 'pl', 0).illustration).toBe('hospital-ending');
     const bankruptcy = { ...baseline, ending: 'bankruptcy' as const };
     expect(homePages(bankruptcy)).toEqual(['budget', 'bankruptcy']);
-    expect(homePage(bankruptcy, 'pl', 0).illustration).toBe('home-evening');
+    for (const roster of [bankruptcy.roster, []]) for (const locale of ['pl', 'en'] as const) {
+      expect(BUDGET_ILLUSTRATIONS).toContain(homePage({ ...bankruptcy, roster }, locale, 0).illustration);
+    }
     expect(homePage(bankruptcy, 'pl', 1).illustration).toBe('bankruptcy-cloakroom');
     expect(NEW_HOME_ILLUSTRATIONS).toHaveLength(8);
     for (const scene of NEW_HOME_ILLUSTRATIONS) {

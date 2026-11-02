@@ -12,7 +12,7 @@ const results = new URL('test-results/', root);
 const captures = readdirSync(results, { recursive: true }).filter(path => path.endsWith('.png'));
 const scenes = [...entries,
   ...['weekend-radio', 'weekend-reading', 'weekend-soup', 'weekend-rain-tram'].map(name => ({ name, role: 'arrival' })),
-  ...['weekend-budget', 'weekend-radio'].map(name => ({ name, role: 'budget' })),
+  { name: 'weekend-budget', role: 'arrival' },
 ];
 for (const locale of ['pl', 'en']) {
   const tiles = await Promise.all(scenes.map(async ({ name, role }, index) => {

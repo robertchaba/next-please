@@ -4,7 +4,7 @@ export const NEW_ARRIVAL_ILLUSTRATIONS = [
   'home-stairwell', 'home-courtyard', 'home-supper', 'home-kettle',
 ] as const;
 export const NEW_BUDGET_ILLUSTRATIONS = [
-  'budget-lamplight', 'budget-kitchen', 'budget-sideboard', 'budget-window',
+  'budget-notebook-warm', 'budget-notebook-cool', 'budget-notebook-coins', 'budget-notebook-cash',
 ] as const;
 export const NEW_HOME_ILLUSTRATIONS = [...NEW_ARRIVAL_ILLUSTRATIONS, ...NEW_BUDGET_ILLUSTRATIONS] as const;
 export type NewHomeIllustration = typeof NEW_HOME_ILLUSTRATIONS[number];
@@ -14,9 +14,7 @@ const INDOOR_ARRIVALS = [
   'weekend-budget', 'weekend-reading', 'weekend-radio', 'weekend-soup',
 ] as const;
 export type ArrivalIllustration = typeof INDOOR_ARRIVALS[number] | 'weekend-rain-tram';
-export const BUDGET_ILLUSTRATIONS = [
-  'home-evening', ...NEW_BUDGET_ILLUSTRATIONS, 'weekend-budget', 'weekend-radio',
-] as const;
+export const BUDGET_ILLUSTRATIONS = NEW_BUDGET_ILLUSTRATIONS;
 
 export function arrivalIllustrations(day: number): ArrivalIllustration[] {
   // Share the existing in-game season window, including its month boundaries.

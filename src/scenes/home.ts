@@ -85,7 +85,6 @@ export function homePage(state: GameState, locale: Locale, page: number) {
   const illustration: HomeIllustration = kind === 'work' ? 'going-to-work'
     : kind === 'arrival' ? arrival
     : kind === 'event' ? eventIllustration
-    : state.ending === 'bankruptcy' ? rest ? 'weekend-budget' : 'home-evening'
     : budgetIllustration(state.day, state.rngState, [arrival, ...(!rest && event ? [eventIllustration] : [])]);
   if (kind === 'arrival' && !rest && illustration in h.arrivalSceneComments) {
     comment = variant(h.arrivalSceneComments[illustration as keyof typeof h.arrivalSceneComments], 3, 16);
