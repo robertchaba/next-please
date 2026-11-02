@@ -4,7 +4,7 @@ export const NEW_ARRIVAL_ILLUSTRATIONS = [
   'home-stairwell', 'home-courtyard', 'home-supper', 'home-kettle',
 ] as const;
 export const NEW_BUDGET_ILLUSTRATIONS = [
-  'budget-notebook-warm', 'budget-notebook-cool', 'budget-notebook-coins', 'budget-notebook-cash',
+  'budget-written-notebook', 'budget-polish-cash', 'budget-savings-book', 'budget-coin-purse',
 ] as const;
 export const NEW_HOME_ILLUSTRATIONS = [...NEW_ARRIVAL_ILLUSTRATIONS, ...NEW_BUDGET_ILLUSTRATIONS] as const;
 export type NewHomeIllustration = typeof NEW_HOME_ILLUSTRATIONS[number];

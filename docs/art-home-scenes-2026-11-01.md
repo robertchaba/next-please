@@ -2,7 +2,7 @@
 
 Four original return-home illustrations were created on 1 November 2026 with the built-in `image_gen` tool and the `imagegen` skill. The approved hallway, evening room, radio and kitchen were inspected before generation. No stock assets, extracted game art or API/CLI generation fallback were used.
 
-The four budget illustrations originally delivered alongside them were rejected and removed in 1.0.10, including their source/reference images. The entire former budget pool is superseded by the [minimal notebook-and-pen catalog](art-budget-scenes-2026-11-02.md). This page and its galleries now cover the retained home scenes only.
+The four budget illustrations originally delivered alongside them were rejected and removed in 1.0.10, including their source/reference images. The entire former budget pool is superseded by the [current four-subject budget catalog](art-budget-objects-2026-11-02.md). This page and its galleries now cover the retained home scenes only.
 
 ## Active home catalog
 
@@ -37,7 +37,7 @@ These are original generated project assets; no separate acquired-asset license 
 
 ## Review
 
-The 1.0.10 check reruns the home, weekend, budget, localization and release tests and refreshes these galleries. See the [current budget verification record](art-budget-scenes-2026-11-02.md#review).
+The 1.0.11 check reruns the home, weekend, budget, localization and release tests. These retained home galleries show the unchanged artwork; the budget galleries are refreshed separately. See the [current budget verification record](art-budget-objects-2026-11-02.md#review).
 
 Gallery order: four new arrivals, reused radio/reading/soup/tram arrivals, then the retained kitchen arrival. Each tile is a real 570 × 320 game capture with keyboard focus. The empty last tile only fills the two-column contact sheet.
 

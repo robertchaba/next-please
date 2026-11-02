@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const sharp = createRequire(import.meta.url)(process.argv[2] || 'sharp');
 const root = new URL('../', import.meta.url);
-const entries = JSON.parse(readFileSync(new URL('docs/art-prompts/budget-scenes-2026-11-02.json', root), 'utf8'));
+const entries = JSON.parse(readFileSync(new URL('docs/art-prompts/budget-objects-2026-11-02.json', root), 'utf8'));
 const results = new URL('test-results/', root);
 const captures = readdirSync(results, { recursive: true }).filter(path => path.endsWith('.png'));
 for (const locale of ['pl', 'en']) {
