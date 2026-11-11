@@ -5,7 +5,7 @@ Read [FACTS.md](FACTS.md) for established facts about the game world, characters
 - Preserve the approved analog clinic atmosphere and follow the presentation constraints in the art direction. The location/country is unspecified; whether it is fictional is undecided. Language selection does not define its location.
 - Keep the game client-side and statically deployable: Vite, strict TypeScript, Canvas 2D, and local assets. Do not introduce a backend, runtime API, remote font, or CDN dependency.
 - Preserve the 570 × 320 logical viewport, integer coordinates, nearest-neighbor rendering, and whole-number scaling whenever at least 1× fits. Keep semantic DOM controls aligned with their canvas hit areas and usable by keyboard.
-- Polish is the default. Add every user-facing string and accessible label to both dictionaries in `src/i18n.ts`; verify Polish glyphs and label widths.
+- English is the fallback; use the first supported language (English or Polish) in the browser's preference list unless the player has saved a language choice. Add every user-facing string and accessible label to both dictionaries in `src/i18n.ts`; verify Polish glyphs and label widths.
 - Keep gameplay state separate from rendering. Do not mutate state or generate time/random values inside drawing code.
 - Persist only preferences in `localStorage`. Gameplay saves go through the validated, versioned gzip JSON import/export code in `src/core/save.ts`; preserve live state when an import fails.
 - Keep artwork, font, cursor, and game identity original. Record provenance and redistribution terms for acquired assets. Register local audio with Howler, respect mute settings, and unlock playback from a user gesture.

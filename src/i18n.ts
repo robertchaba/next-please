@@ -4869,15 +4869,27 @@ export const translations = {
 
 export type Locale = keyof typeof translations;
 
+function browserLocale(): Locale {
+  if (typeof navigator === 'undefined') return 'en';
+  const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
+  for (const language of languages) {
+    const locale = language?.toLowerCase().split('-')[0];
+    if (locale === 'pl' || locale === 'en') return locale;
+  }
+  return 'en';
+}
+
 export function readPreferences(): { locale: Locale; muted: boolean; musicVolume: number } {
+  const defaultLocale = browserLocale();
   try {
     const preferences = JSON.parse(localStorage.getItem('next-please.preferences') ?? '{}');
     const volume = preferences?.musicVolume;
     return {
-      locale: preferences?.locale === 'en' ? 'en' : 'pl', muted: preferences?.muted !== false,
+      locale: preferences?.locale === 'en' || preferences?.locale === 'pl' ? preferences.locale : defaultLocale,
+      muted: preferences?.muted !== false,
       musicVolume: typeof volume === 'number' && Number.isFinite(volume) && volume >= 0 && volume <= 1 ? volume : 0.4,
     };
-  } catch { return { locale: 'pl', muted: true, musicVolume: 0.4 }; }
+  } catch { return { locale: defaultLocale, muted: true, musicVolume: 0.4 }; }
 }
 
 export function savePreferences(locale: Locale, muted: boolean, musicVolume: number): void {

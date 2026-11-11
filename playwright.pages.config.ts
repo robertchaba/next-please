@@ -6,6 +6,7 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:4174/next-please/',
     viewport: { width: 1440, height: 900 },
     channel: 'chrome',
+    locale: 'en-US',
   },
   webServer: {
     command: 'node tests/deployment/serve-pages.mjs',

@@ -54,9 +54,12 @@ test('built desktop loads under the repository path with artwork, music and both
   expect(await response!.text()).not.toContain('/src/main.ts');
   await expect(page.locator('#control-start')).toBeVisible();
   await expect(page.locator('#stage')).toHaveAttribute('data-art-ready', 'true');
-  await expect(page.locator('#screen-description')).toContainText('WERSJA 1.0.11 / PIECZĄTKA');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(page.locator('#screen-description')).toContainText('VERSION 1.0.12 / QUEUE');
+  await page.locator('#control-language-pl').click();
+  await expect(page.locator('#screen-description')).toContainText('WERSJA 1.0.12 / KOLEJKA');
   await page.locator('#control-language-en').click();
-  await expect(page.locator('#screen-description')).toContainText('VERSION 1.0.11 / STAMP');
+  await expect(page.locator('#screen-description')).toContainText('VERSION 1.0.12 / QUEUE');
   await page.locator('#control-sound').click();
   await expect.poll(() => playingAudio(page)).toContain('Bureaucratic March - Opening the Office.mp3');
   await page.locator('#control-start').click();
@@ -79,6 +82,7 @@ test.describe('mobile deployment', () => {
     await page.goto('./');
     const reception = page.locator('#mobile-reception');
     await expect(reception).toHaveAttribute('data-step', 'tone');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.locator('#game')).toHaveCount(0);
     await page.locator('#mobile-sound').tap();
     await expect.poll(() => playingAudio(page)).toContain('phone-tone.wav');

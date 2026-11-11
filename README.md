@@ -6,7 +6,15 @@ The approved visual direction is an old-fashioned institutional clinic. Its sett
 
 Created by **[Robert Chaba](https://github.com/robertchaba)**.
 
-![Polish welcome screen](docs/welcome-screen.png)
+[Play Next, Please!](https://robertchaba.github.io/next-please/)
+
+![English title screen](assets/screenshots/next-please-title-en.png)
+
+![Consulting room with referral and stamped certificate](assets/screenshots/next-please-gameplay-en.png)
+
+Full-size screenshots: [title screen](https://robertchaba.github.io/next-please/assets/screenshots/next-please-title-en.png) · [gameplay](https://robertchaba.github.io/next-please/assets/screenshots/next-please-gameplay-en.png).
+
+These original PNG captures were supplied for this release on 11 November 2026 and are reproduced without edits. They show version 1.0.11; the title-screen version label is part of the original capture. Source files are retained in `public/assets/screenshots/` and included in the static build under `assets/screenshots/`.
 
 ## Run locally
 
@@ -38,7 +46,9 @@ Commit the generated root `index.html`, `favicon.svg`, `assets/` and `.nojekyll`
 
 Play on a computer with a keyboard and a mouse or trackpad. Phones, tablets, and narrow portrait desktop windows receive a separate full-screen telephone vignette: an oversized olive receiver, an exchange tone, rotary dialing, and two brief replies from the clinic. Four presses of **Next** lead to a handwritten **Next, Please!** note asking for a computer, “a proper one”, with a keyboard and a mouse or trackpad. Large pixel-lettered PL / EN and Next controls remain keyboard accessible; a generated speaker icon toggles sound. Sound captions appear only while muted. The loose, untaped note uses enlarged handwriting, and the speech balloon points to the receiver's upper speaker. The mobile view omits the header title and creator footer; Robert Chaba's credit and link remain in the desktop credits. Sound begins only after an unmuted gesture; enable it or tap the receiver to hear the initial tone. The mobile route loads its own generated artwork and two local effects, without starting gameplay or the music playlist. Device detection is stable across rotation. Desktop windows also show the telephone when their width is at most 900 CSS pixels and at most 85% of their height. Widening the window restores the live game without reloading; the phone conversation also keeps its place. Hidden gameplay, shortcuts, and music pause, and preferences follow the visible view. [Mobile artwork and preparation](docs/art-mobile-2026-10-25.md).
 
-## Current build — 1.0.11 / PIECZĄTKA
+## Current build — 1.0.12 / KOLEJKA
+
+Version 1.0.12 prepares the game for distribution: English is the fallback language on desktop and mobile, with Polish selected when it is the first supported language in the browser's ordered preferences. A saved PL / EN choice takes precedence. The release also includes the two original English screenshots above. Gameplay and save v36 are unchanged.
 
 Version 1.0.11 gives the budget four distinct generated subjects: a used notebook on a kitchen table, researched Polish 100/50/20 zł banknotes and coins, a vintage PKO savings book in a drawer, and a leather clasp purse on wool. The repeated notebook variations from 1.0.10 are retired. Daily, weekend and pre-bankruptcy ledgers use these scenes; approved home scenes, finances and save v36 remain unchanged. See the [new gallery, historical references and exact prompts](docs/art-budget-objects-2026-11-02.md).
 
@@ -94,11 +104,11 @@ The additional-examination report now matches the other clinical sheets at 176 �
 
 - The welcome illustration fills the full 570 × 320 scene without header or footer bars. The clinic name, **Udostępnij / Share** and version sit directly on the original artwork. Its native resolution already fits the viewport, so the approved image needs no regeneration. Sharing passes the current page URL and a clinic joke to the system share sheet; browsers without sharing support copy the link instead. If clipboard access is blocked, a native text dialog lets the player copy the address manually. Cancelling the share sheet leaves the clipboard alone.
 - **Instrukcja / Instructions** opens a paper dialog with a beginner's guide to carrying items, the first appointment, filing records, breaks and explicit save files. Share, credits, instructions and the version appear in one line at the bottom of the title screen; keyboard focus moves through the three actions from left to right. The existing generated paper and original bitmap lettering match the credits. Mouse wheel, scrollbar and keyboard scroll the instructions; the Back action stays visible. Escape closes the dialog and returns focus to its link. See the [Polish guide](docs/help-pl-screen.png) and [English guide](docs/help-en-screen.png).
-- The displayed version comes from `package.json`. A fixed mathematical rule selects a localized clinic-themed codename for the full version, including its patch number: **1.0.11 / PIECZĄTKA** in Polish, **1.0.11 / STAMP** in English. See [versioning](docs/versioning.md) for the formula and stable list.
+- The displayed version comes from `package.json`. A fixed mathematical rule selects a localized clinic-themed codename for the full version, including its patch number: **1.0.12 / KOLEJKA** in Polish, **1.0.12 / QUEUE** in English. See [versioning](docs/versioning.md) for the formula and stable list.
 - Specialists are addressed as colleagues: “Czy kolega potwierdza to zaświadczenie?”. Rotary dialing appears in the existing speech balloon as “Trrr… cyk-cyk-cyk…” (“Whirr… click-click…” in English), alongside the existing local sound.
 
 - Original generated artwork for the title, introduction, cabinet, patients, and tools, with separately rendered pixel lettering and a custom cursor. The “O autorze” / “Credits” sheet names Robert Chaba, links his GitHub profile, and acknowledges support from AI tools in two lines, with Codex, OpenAI models, and Suno below the introduction. Robert’s black-and-white pixel portrait is slightly tilted and attached to the top edge of the credits sheet with a drawn paperclip.
-- Polish by default; English available through the PL / EN buttons. The title remains **Next, Please!** in both languages; the Polish welcome screen also displays **Następny, proszę!**.
+- English is the fallback; the first supported language (English or Polish) in the browser's ordered preferences is selected on first use. A saved choice from the PL / EN buttons takes precedence, on desktop and mobile. The title remains **Next, Please!** in both languages; the Polish welcome screen also displays **Następny, proszę!**.
 - Fixed **570 × 320** Canvas 2D graphics on desktop. Whole-number enlargement, nearest-neighbor display, and letterboxing; small desktop windows fit proportionally below 1×. The mobile telephone uses a separate responsive layout.
 - Working fullscreen button and **F** shortcut. Use **Tab / Enter** for controls and **Escape** to close a panel.
 - Start opens four original illustrated cards: scalpel, catheter, pen, and stamp. Each carries one short sentence and a single **Next** action; the fourth enters the cabinet. Text appears with a mechanical typewriter sound; reduced motion shows it immediately.
