@@ -8,6 +8,8 @@ Created by **[Robert Chaba](https://github.com/robertchaba)**.
 
 [Play Next, Please!](https://robertchaba.github.io/next-please/)
 
+All original project code was generated using **OpenAI Codex** under Robert Chaba's direction. Read the [development log and AI-use record](docs/devlog.md) for the history from the first prototype to version 1.0.12, linked commits, artwork prompts and music provenance.
+
 ![English title screen](assets/screenshots/next-please-title-en.png)
 
 ![Consulting room with referral and stamped certificate](assets/screenshots/next-please-gameplay-en.png)
@@ -225,6 +227,7 @@ The runtime uses **fflate** and **Howler**. **Vite**, **TypeScript**, **Vitest**
 
 ## Documentation
 
+- [Development log and AI-use record, 23 October–11 November 2026](docs/devlog.md)
 - [First story chapter and 1.0 contracts](docs/story-1.0.md)
 - [Game-world facts and open questions](FACTS.md)
 - [Technical guidelines](docs/technical-guidelines.md)
